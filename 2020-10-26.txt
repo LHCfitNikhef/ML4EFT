@@ -1,0 +1,75 @@
+*********************************
+           ML-EFT 
+     2020/10/26 Minutes
+*********************************
+
+* When assembling our own version of the parametrised classifier,
+we should aim a single, large feed-forward neural network rather than
+Nop*(Nop+1)/2 individual neural nets.
+
+* The loss function depends in an implicit way on the weights
+and thresholds of the underlying neural networks, these would be
+the arguments of the optimisation process.
+
+* In the case that
+systematic uncertainties are also accounted for, they can be
+estimated by means of adding suitable nuisance parameters
+to the loss function. This needs to be worked out explicitely, although
+perhaps this is not that urgent
+
+* For the time being let's start with top quark pair production
+as a proof of concept. We can evaluate the cross-section
+analytically, both in the SM and in the case of some EFT operators,
+and verify the results with the help of numerical simulations
+in madgraph. Then one can evaluate analytically in this toy
+model what is the optimal sensitivity, to us as benchmark.
+
+* One can then generate a large sample of MC events and evaluate
+the sensitivity wrt EFT operators in two ways: by means
+of a binned distribution, and using the event-by-event estimator
+with NN-parametrised classifier. For all this we use pseudo-data,
+so that we have full control of all our inputs.
+
+* We can start with one or two representative operators, such as
+OtG or one of the two-light-two-heavy operators. Both
+affect top quark pair production in a marked way. Let's start
+with the linear term, and afterwards we aim to extend the calculation
+to include also the quadratic term.
+
+* When comparing the binned vs unbinned analysis, we should make
+sure to use common selection cuts so that the events that enter
+the two analysis are the same
+
+* It would be a nice exercise to work out explicitely the
+expressions for the likelihood ratio, classifier etc in the case
+of ttbar production, for example assuming that OtG is going
+to be varied.
+
+* For the calculation of EFT corrections at NLO in QCD we should use
+the SMEFT at NLO package, available here
+http://feynrules.irmp.ucl.ac.be/wiki/SMEFTatNLO
+although probably we can start using LO theory in the SM and EFT to
+make our lives simpler, since we work with pseudo-data anyway.
+
+
+Action items
+------------
+
+1) Evaluate ttbar cross-sections at LO analytically, in particular
+the mtt differential distribution. This is to be done in the SM
+and in the presence of one representative non-zero EFT operator.
+For the time being, only at the linear term.
+
+2) We benchmark this analytical calculation with madgraph.
+
+3) Evaluate analytically the optimal sensitivity using the toy
+model.
+
+4) Compare this sensitivity with the one that one can achieve using
+binned distributions (mtt)
+
+5) Once 1-4) is done, we can start implementing the parametrised
+classifier, now with a single neural net (since we keep only
+the linear term in this approximation).
+
+************************************************
