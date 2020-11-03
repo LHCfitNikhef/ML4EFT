@@ -1,0 +1,228 @@
+Update notes for MadAnalysis 5 (in reverse time order)
+
+191           (2020/05/01) fuks:    Small bug in the MG5_aMC interface 
+
+190           (2020/04/17) fuks:    Small bug fix with error extrapolations (recasting module) 
+
+189           (2020/04/09) fuks:    Adding a new option for the extrapolation opf the background errors 
+                                   (recasting) 
+
+188           (2020/04/03) fuks:    Adding a new option for background error extrapolations 
+                                   (user-defined) 
+
+184           (2020/02/16) fuks:    Fixing a few bugs in the pyhf interface + improved efficiency 
+
+177           (2020/01/29) fuks:    Fixing a major bug in job reader and a few improvements in the 
+                                   likelihood stuff 
+
+175           (2020/01/23) fuks:    Fixing bugs in the pyhf interface (+ fine-tuning) 
+
+174           (2020/01/21) fuks:    Adding the PYHF interface + fixing a small bug in the covariance 
+                                   routines 
+
+173           (2020/01/15) fuks:    Fixing the covariance treatment 
+
+168           (2019/12/13) econte:  bug reports, SAF in output 
+
+167           (2019/12/10) fuks:    Fixing bugs in the SFS and the covariance module 
+
+166           (2019/12/04) fuks:    Adding the firs tbuilding block of the PADForSFS module 
+
+165           (2019/12/02) fuks:    Fixing small issues with the covariance treatment (recasting) 
+
+164           (2019/12/02) fuks:    Compatibility with Catalina + small fix in the latest PAD analysis 
+
+163           (2019/11/06) fuks:    Bug fix in the pad installation (when called from mg5) 
+
+162           (2019/11/06) fuks:    Fixing a bug in the tautagger and in the madgraph interface 
+
+161           (2019/10/30) fuks:    Adding the treatment of covariance information within the recasting 
+                                   module 
+
+160           (2019/09/26) fuks:    Fixing the treatment of the systematics in the recasting case 
+
+159           (2019/09/19) fuks:    Generalising the treatment of the uncertainties when extrapolations 
+                                   are at stake for recasting 
+
+158           (2019/09/03) fuks:    Fixing a few bugs for the fastsim module (important only in special 
+                                   cases) 
+
+157           (2019/08/20) fuks:    Bug fix for the old PADMA5Tune 
+
+156           (2019/07/19) fuks:    Small bug in the fastsim module (HT/MHT calculations ignoring 
+                                   hadronic taus) 
+
+155           (2019/07/18) fuks:    Recasting can now handle uncertainties 
+
+154           (2019/07/09) fuks:    Making the lepton mistagging more efficient 
+
+153           (2019/06/27) fuks:    Upgrading and extending the super fastsim module 
+
+152           (2019/06/25) fuks:    Adding a few useful hidden functions for recasting correlation 
+                                   studies 
+
+151           (2019/06/11) fuks:    Adding two options for jet smearing and reco 
+
+150           (2019/06/11) fuks:    Fixing a bug and improving the LHE writer/reader 
+
+149           (2019/06/05) fuks:    Fixing a few bugs with the reco efficiencies 
+
+147           (2019/06/05) fuks:    Adding the reconstrution efficiencies 
+
+146           (2019/06/03) fuks:    Fixing the MET/MHT calculation after smearing. 
+
+145           (2019/06/03) fuks:    Fixing a bug with the tagger (double loops) 
+
+144           (2019/05/29) fuks:    Final version of the tagger/smearer 
+
+143           (2019/05/24) fuks:    Finalizing the smearer 
+
+142           (2019/05/17) fuks:    Adding a few security protections for the tagger module 
+
+141           (2019/05/02) fuks:    Small bug fix with the tagger (when exponents are used) 
+
+140           (2019/04/30) fuks:    Fixinga few bugs with the tagger 
+
+139           (2019/04/30) fuks:    Small bug fix: avoid multiple delphes simulations in the recast mode 
+                                   (when not needed) 
+
+138           (2019/04/26) fuks:    Superfastsim: tagger functionalities added (b-tagging, c-tagging and 
+                                   tau-tagging) 
+
+137           (2019/04/09) fuks:    Adding the C++ structure required for the generic tagger 
+
+136           (2019/04/04) fuks:    Fixing a last thing with the mg5 interface 
+
+135           (2019/04/04) fuks:    Updating the mg5_amc interface 
+
+134           (2019/04/03) fuks:    Abstract syntax trees + tagger at the python level 
+
+133           (2019/03/19) fuks:    Fixing a small issue with the LHE writer (the final closing xml tag 
+                                   was missing) 
+
+132           (2019/03/18) fuks:    Adding a ymax/ymin option for histograms 
+
+125  1.7   (2019/02/07) ma5team:    - Simplification of the multiple PAD management (externalisation)
+                                    - Simplification of the multiple delphes management
+                                    - Restoring compatibility with the older PAD4MA5tune (root6)
+                                    - Upgrading the RecJetFormat class
+                                    - Various bug fixes
+
+122  1.6   (2018/05/04) ma5team:    - Finalization of the interface with mg5
+                                    - Two jet collections are now allowed in the expert mode
+                                    - Support for multiple signal regions in the normal mode
+                                    - Refactorization of the recastig module
+                                    - Multiweight support (LHE3, HPEMC3)
+                                    - Extension of the LHC analysis database
+                                    - Various bug fixes
+
+116  1.5   (2016/11/14) ma5team:    - embedded into MadGraph
+                                    - FIFO mode for MadGraph
+                                    - No more RecastingTools
+                                    - review isolation definitions
+                                    - all loggers become logging.getLogger("MA5")
+                                    - display error message if not-supported file extension
+                                    - improve gzip installation / detection
+                                    - protections added for PADMA5tune and delphesMA5tune -> not 
+                                      compatible with root 6 
+                                    - extend the list of recasted analyses
+
+111  1.4    (2016/07/20) ma5team:   - Root is now optional and Pyroot is not a requirement anymore
+                                    - matplotlib can be used for the histograms
+                                    - Improvement of the plot layout
+                                    - Improvement of the recasting module + PAD
+                                    - Developments for the madGraph5 interface
+                                    - A few bug fixes
+
+109  1.3.   (2016/03/01) ma5team:   - New structure for the PAD; automated recasting methods
+                                    - Compatiblity with delphes 3.3
+                                    - Several system-dependent bug fixes
+                                    - Bug fixes: selections, report writer
+                                    - Development: new observables, better debugging mode, Delphes3 handling
+                                         pythia8 compatiblitity for the merging plots
+
+ 91  1.2    (2015/10/28) ma5team:   - Bug fixes (LHE writer, HepMC reader, merging plots, etc.)
+                                    - PAD features
+
+ 82  1.1.11 (2014/07/17) ma5team:   - new structure for the detection of the user system
+                                    - new structure for installing the external packages
+                                    - the user can choose which package to use via the user_isntall.dat file
+                                    - first steps for the externalization of extra modules such as root, numpy, etc...
+                                    - first steps for a dedicated interface to root, gnuplot and matplotlib
+                                    - official release of the MA5Tune for Delphes
+                                    - interface to the recasting package
+                                    - many bug fixes
+                                    - improved portability with mac OS
+
+ 81  1.1.10 (2014/05/17) ma5team:   - new compilation procedure for library and job
+                                    - adding job test to check the compilation procedure
+                                    - adding restart command and possibility to restart MA5 after 
+                                      the installation of a package
+                                    - adding new simulation detector package = tuned release of Delphes
+                                    - compatible with the "new" STDHEP format
+                                    - new structure for plots/cuts in the expert mode for 
+                                      recasting analysis
+                                    - revisiting physics services
+                                    - adding Transverse Observable services with MT2, MTW variables 
+
+80   1.1.9  (2013/10/28) ma5team:   - adding Delphes interface + CMS/ATLAS cards
+                                    - adding Delphes cards including pile-up
+                                    - the electric charge is now an integer at the reco level 
+                                    - modifying the default range for the sdphi and dphi observables 
+                                    - wrong normalization of the LHE file constructed by madgraph5 once 
+                                      pythia6 has been run (bug 1183739) 
+                                    - compatibility with mac improved 
+                                    - Fixing the computation of observables with differences 
+
+84   1.1.8  (2013/08/06) ma5team:   - installing Delphes3 from MadAnalysis5 console : install delphes
+                                    - reading default Delphes3 ROOT file
+                                    - identifying generator or shower program used when reading a sample
+                                    - improving the compatibility with samples produced by HERWIG
+                                    - improving the simplified LHE output (mother-daughter relations 
+                                      between reco objects and MC particles)
+                                    - adding MT_MET observable required for computing the W transverse mass
+                                    - fixing a bug related to the reading of the MET in simplified LHE file
+                                    - fixing a bug related to histogram normalization
+                                    - fixing minor other bugs
+
+60   1.1.7   (2013/06/13) ma5team:  - LHCO output
+                                    - Compatibility with pythia-8 output
+                                    - Improvement of the jet clustering / object identification
+                                    - Few bug fixes
+                                    - Photons added in the reco mode
+
+54   1.1.6   (2013/05/17) ma5team:  - Many bug fixes (special thanks to Adam Alloul and Jose Ruiz).
+                                    - Simplified LHE output added, LHCO writer at the beta level.
+                                    - Clustering and b, c and tau (mis)ident. improved.
+                                    - zlib updated to the most recent version.
+                                    - New version of the expert mode.
+                                    - Adding the photons in the reco mode.
+                                    - New structure for the working directory.
+                                    - Adding alpha_T in the observable lists.
+                                    - Screen output improved.
+                                    - Event weights included in the HEPmc reader.
+
+737  1.1.5   (2012/11/28) ma5team: Compilation bug fixes.
+
+729  1.1.4   (2012/11/28) ma5team: New treatment of the plots.
+                                   New structure for the generated directory.
+                                   New routines to check the integrity of StdHep files.
+                                   Layout improvements (screen output, HTML, TeX).
+                                   Possiblity to write the history in a file.
+                                   Several bug fixes
+
+666  1.1.3   (2012/11/10) ma5team: MA5 can now use fastjet if installed on the system (usr/lib, ...) 
+                                   Positive and negative weighted events supported.
+                                   New layout for the HTML report. 
+                                   Simplified submission/resubmission procedure (submit and resumbmit). 
+                                   Simplification of the usage of the command 'open'.
+                                   No more 'generate_xxx' commands (included now in 'submit'/'resubmit'). 
+                                   Checks at startup if pdflatex, latex and dvipdf are installed. 
+
+591  1.1.0   (2012/09/29) ma5team: Official release of version 1.1.0 
+                                     - Interface with FastJet
+                                     - Jet clustering from HAD-level events
+                                     - Merging check plots
+
+471  1.0.0   (2012/06/08) ma5team: Official release of version 1.0.0 
+

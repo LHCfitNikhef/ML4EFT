@@ -1,0 +1,16 @@
+set main.currentdir = /home/jaco/Documents/ML4EFT/code/MG5_aMC_v2.8.2/MG5_aMC_v2_8_2/bin
+import /home/jaco/Documents/ML4EFT/code/MG5_aMC_v2.8.2/MG5_aMC_v2_8_2/bin/PROC_sm_1/bin/internal/ufomodel
+import /home/jaco/Documents/ML4EFT/code/MG5_aMC_v2.8.2/MG5_aMC_v2_8_2/bin/PROC_sm_1/Events/run_01/unweighted_events.lhe.gz as unweighted_events
+define vl = 12 14 16
+define vl~ = -16 -14 -12
+define invisible = ve ve~ vm vm~ vt vt~ vl vl~
+set main.graphic_render = matplotlib
+plot THT   40 0 500 [logY]
+plot MET   40 0 500 [logY]
+plot SQRTS 40 0 500 [logY]
+plot  PT(t~[1]) 40 0  500 [logY]
+plot ETA(t~[1]) 40 -10 10 [logY]
+plot  PT(t[1]) 40 0  500 [logY]
+plot ETA(t[1]) 40 -10 10 [logY]
+plot M(t~[1] t[1]) 40 0  500 [logY ]
+plot DELTAR(t~[1],t[1]) 40 0 10 [logY ]

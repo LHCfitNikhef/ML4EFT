@@ -1,0 +1,52 @@
+# WARNING! MA5 SHOULD DETECT AUTOMATICALLY YOUR CONFIGURATION
+# IF THIS AUTOMATED MODE FAILS, YOU CAN FORCE SOME 
+# OPTIONS THROUGH THIS FILE
+
+# ----GENERAL----
+# tmp_dir = /tmp/ma5/
+# download_dir = /tmp/downloadma5/
+# webaccess_veto = 0 # 0=No, 1=Yes
+
+# -----ROOT-----
+# root_veto     = 0 # 0=No, 1=Yes
+# root_bin_path = /home/root/bin
+
+# -----MATPLOTLIB-----
+# matplotlib_veto = 0 # 0=No, 1=Yes
+
+# -----DELPHES----- 
+# delphes_veto     = 0 # 0=No, 1=Yes
+# delphes_includes = /home/delphes/delphes/include/
+# delphes_libs     = /home/delphes/delphes/lib/
+
+# -----DELPHESMA5TUNE-----
+# delphesMA5tune_veto     = 0 # 0=No, 1=Yes
+# delphesMA5tune_includes = /home/delphesMA5tune/include
+# delphesMA5tune_libs     = /home/delphesMA5tune/lib
+
+# -----ZLIB-----
+# zlib_veto     = 0 # 0=No, 1=Yes
+zlib_includes = /home/jaco/Documents/ML4EFT/code/MG5_aMC_v2.8.2/MG5_aMC_v2_8_2/HEPTools/zlib/include
+zlib_libs = /home/jaco/Documents/ML4EFT/code/MG5_aMC_v2.8.2/MG5_aMC_v2_8_2/HEPTools/zlib/lib
+
+# -----FASTJET-----
+# fastjet_veto     = 0 # 0=No, 1=Yes
+# fastjet_bin_path = /home/fastjet/build/bin/
+
+# -----PAD-----
+# pad_veto = 0 # 0=No, 1=Yes
+# pad_build_path = /home/PAD/build/
+
+# -----PADForMA5Tune-----
+# padma5_veto = 0 # 0=No, 1=Yes
+# padma5_build_path = /home/PADForMA5tune/build/
+
+# -----PDFLATEX-----
+# pdflatex_veto = 0 # 0=No, 1=Yes
+
+# -----LATEX-----
+# latex_veto = 0 # 0=No, 1=Yes
+
+# -----SCIPY-----
+# scipy_veto = 0 # 0=No, 1=Yes
+

@@ -1,0 +1,19 @@
+<SAFheader>
+</SAFheader>
+
+<SampleGlobalInfo>
+# xsection     xsection_error nevents        sum_weight+    sum_weight-    
+-1.314295e-01  2.527837e-04   10000          0.000000e+00   1.314515e+03   
+</SampleGlobalInfo>
+
+<FileInfo>
+"/home/jaco/Documents/ML4EFT/code/MG5_aMC_v2.8.2/MG5_aMC_v2_8_2/bin/eft_benchmark/Events/run_03/unweighted_events.lhe.gz" # file 1 / 1
+</FileInfo>
+
+<SampleDetailedInfo>
+# xsection     xsection_error nevents        sum_weight+    sum_weight-    
+-1.314295e-01  2.527837e-04   10000          0.000000e+00   1.314515e+03    # file 1 / 1
+</SampleDetailedInfo>
+
+<SAFfooter>
+</SAFfooter>

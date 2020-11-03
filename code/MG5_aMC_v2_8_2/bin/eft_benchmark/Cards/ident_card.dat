@@ -1,0 +1,947 @@
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c      written by the UFO converter
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+dim6 1 mdl_Lambda
+
+dim6 2 mdl_ctp
+
+dim6 3 mdl_ctpI
+
+dim6 4 mdl_cpQM
+
+dim6 5 mdl_cpQ3
+
+dim6 6 mdl_cpt
+
+dim6 7 mdl_cpb
+
+dim6 8 mdl_cptb
+
+dim6 9 mdl_cptbI
+
+dim6 10 mdl_ctW
+
+dim6 11 mdl_ctZ
+
+dim6 12 mdl_ctWI
+
+dim6 13 mdl_ctZI
+
+dim6 14 mdl_cbW
+
+dim6 15 mdl_cbWI
+
+dim6 16 mdl_ctG
+
+dim6 17 mdl_ctGI
+
+dim6 18 mdl_cQlM1
+
+dim6 19 mdl_cQlM2
+
+dim6 20 mdl_cQlM3
+
+dim6 21 mdl_cQl31
+
+dim6 22 mdl_cQl32
+
+dim6 23 mdl_cQl33
+
+dim6 24 mdl_cQe1
+
+dim6 25 mdl_cQe2
+
+dim6 26 mdl_cQe3
+
+dim6 27 mdl_ctl1
+
+dim6 28 mdl_ctl2
+
+dim6 29 mdl_ctl3
+
+dim6 30 mdl_cte1
+
+dim6 31 mdl_cte2
+
+dim6 32 mdl_cte3
+
+dim6 33 mdl_ctlS1
+
+dim6 34 mdl_ctlSI1
+
+dim6 35 mdl_ctlS2
+
+dim6 36 mdl_ctlSI2
+
+dim6 37 mdl_ctlS3
+
+dim6 38 mdl_ctlSI3
+
+dim6 39 mdl_ctlT1
+
+dim6 40 mdl_ctlTI1
+
+dim6 41 mdl_ctlT2
+
+dim6 42 mdl_ctlTI2
+
+dim6 43 mdl_ctlT3
+
+dim6 44 mdl_ctlTI3
+
+dim6 45 mdl_cblS1
+
+dim6 46 mdl_cblSI1
+
+dim6 47 mdl_cblS2
+
+dim6 48 mdl_cblSI2
+
+dim6 49 mdl_cblS3
+
+dim6 50 mdl_cblSI3
+
+dim6 51 mdl_cQq83
+
+dim6 52 mdl_cQq81
+
+dim6 53 mdl_cQu8
+
+dim6 54 mdl_cQd8
+
+dim6 55 mdl_ctq8
+
+dim6 56 mdl_ctu8
+
+dim6 57 mdl_ctd8
+
+dim6 58 mdl_cQq13
+
+dim6 59 mdl_cQq11
+
+dim6 60 mdl_cQu1
+
+dim6 61 mdl_cQd1
+
+dim6 62 mdl_ctq1
+
+dim6 63 mdl_ctu1
+
+dim6 64 mdl_ctd1
+
+dim6 65 mdl_cQQ1
+
+dim6 66 mdl_cQQ8
+
+dim6 67 mdl_cQt1
+
+dim6 68 mdl_cQb1
+
+dim6 69 mdl_ctt1
+
+dim6 70 mdl_ctb1
+
+dim6 71 mdl_cQt8
+
+dim6 72 mdl_cQb8
+
+dim6 73 mdl_ctb8
+
+dim6 74 mdl_ctQqu1
+
+dim6 75 mdl_ctQqu1I
+
+dim6 76 mdl_ctQqu8
+
+dim6 77 mdl_ctQqu8I
+
+dim6 78 mdl_cbQqd1
+
+dim6 79 mdl_cbQqd1I
+
+dim6 80 mdl_cbQqd8
+
+dim6 81 mdl_cbQqd8I
+
+dim6 82 mdl_cQtqd1
+
+dim6 83 mdl_cQtqd1I
+
+dim6 84 mdl_cQtqd8
+
+dim6 85 mdl_cQtqd8I
+
+dim6 86 mdl_cQbqu1
+
+dim6 87 mdl_cQbqu1I
+
+dim6 88 mdl_cQbqu8
+
+dim6 89 mdl_cQbqu8I
+
+dim6 90 mdl_ctQqu1T
+
+dim6 91 mdl_ctQqu1TI
+
+dim6 92 mdl_ctQqu8T
+
+dim6 93 mdl_ctQqu8TI
+
+dim6 94 mdl_cbQqd1T
+
+dim6 95 mdl_cbQqd1TI
+
+dim6 96 mdl_cbQqd8T
+
+dim6 97 mdl_cbQqd8TI
+
+dim6 98 mdl_cQtqd1T
+
+dim6 99 mdl_cQtqd1TI
+
+dim6 100 mdl_cQtqd8T
+
+dim6 101 mdl_cQtqd8TI
+
+dim6 102 mdl_cQbqu1T
+
+dim6 103 mdl_cQbqu1TI
+
+dim6 104 mdl_cQbqu8T
+
+dim6 105 mdl_cQbqu8TI
+
+dim6 106 mdl_cbtud1
+
+dim6 107 mdl_cbtud1I
+
+dim6 108 mdl_cbtud8
+
+dim6 109 mdl_cbtud8I
+
+dim6 110 mdl_cQtQb1
+
+dim6 111 mdl_cQtQb8
+
+dim6 112 mdl_cQtQb1I
+
+dim6 113 mdl_cQtQb8I
+
+fcnc 1 mdl_ctpx13
+
+fcnc 2 mdl_ctpx23
+
+fcnc 3 mdl_ctpx31
+
+fcnc 4 mdl_ctpx32
+
+fcnc 5 mdl_ctpIx13
+
+fcnc 6 mdl_ctpIx23
+
+fcnc 7 mdl_ctpIx31
+
+fcnc 8 mdl_ctpIx32
+
+fcnc 9 mdl_cpQMx31
+
+fcnc 10 mdl_cpQMx32
+
+fcnc 11 mdl_cpQMIx31
+
+fcnc 12 mdl_cpQMIx32
+
+fcnc 13 mdl_cpQ3x31
+
+fcnc 14 mdl_cpQ3x32
+
+fcnc 15 mdl_cpQ3Ix31
+
+fcnc 16 mdl_cpQ3Ix32
+
+fcnc 17 mdl_cptx31
+
+fcnc 18 mdl_cptx32
+
+fcnc 19 mdl_cptIx31
+
+fcnc 20 mdl_cptIx32
+
+fcnc 21 mdl_cptbx13
+
+fcnc 22 mdl_cptbx23
+
+fcnc 23 mdl_cptbx31
+
+fcnc 24 mdl_cptbx32
+
+fcnc 25 mdl_cptbIx13
+
+fcnc 26 mdl_cptbIx23
+
+fcnc 27 mdl_cptbIx31
+
+fcnc 28 mdl_cptbIx32
+
+fcnc 29 mdl_ctAx13
+
+fcnc 30 mdl_ctAx23
+
+fcnc 31 mdl_ctAx31
+
+fcnc 32 mdl_ctAx32
+
+fcnc 33 mdl_ctAIx13
+
+fcnc 34 mdl_ctAIx23
+
+fcnc 35 mdl_ctAIx31
+
+fcnc 36 mdl_ctAIx32
+
+fcnc 37 mdl_ctZx13
+
+fcnc 38 mdl_ctZx23
+
+fcnc 39 mdl_ctZx31
+
+fcnc 40 mdl_ctZx32
+
+fcnc 41 mdl_ctZIx13
+
+fcnc 42 mdl_ctZIx23
+
+fcnc 43 mdl_ctZIx31
+
+fcnc 44 mdl_ctZIx32
+
+fcnc 45 mdl_cbWx13
+
+fcnc 46 mdl_cbWx23
+
+fcnc 47 mdl_cbWx31
+
+fcnc 48 mdl_cbWx32
+
+fcnc 49 mdl_cbWIx13
+
+fcnc 50 mdl_cbWIx23
+
+fcnc 51 mdl_cbWIx31
+
+fcnc 52 mdl_cbWIx32
+
+fcnc 53 mdl_ctGx13
+
+fcnc 54 mdl_ctGx23
+
+fcnc 55 mdl_ctGx31
+
+fcnc 56 mdl_ctGx32
+
+fcnc 57 mdl_ctGIx13
+
+fcnc 58 mdl_ctGIx23
+
+fcnc 59 mdl_ctGIx31
+
+fcnc 60 mdl_ctGIx32
+
+fcnc 61 mdl_cQl3x1x31
+
+fcnc 62 mdl_cQl3x1x32
+
+fcnc 63 mdl_cQl3x2x31
+
+fcnc 64 mdl_cQl3x2x32
+
+fcnc 65 mdl_cQl3x3x31
+
+fcnc 66 mdl_cQl3x3x32
+
+fcnc 67 mdl_cQl3Ix1x31
+
+fcnc 68 mdl_cQl3Ix1x32
+
+fcnc 69 mdl_cQl3Ix2x31
+
+fcnc 70 mdl_cQl3Ix2x32
+
+fcnc 71 mdl_cQl3Ix3x31
+
+fcnc 72 mdl_cQl3Ix3x32
+
+fcnc 73 mdl_cQlMx1x31
+
+fcnc 74 mdl_cQlMx1x32
+
+fcnc 75 mdl_cQlMx2x31
+
+fcnc 76 mdl_cQlMx2x32
+
+fcnc 77 mdl_cQlMx3x31
+
+fcnc 78 mdl_cQlMx3x32
+
+fcnc 79 mdl_cQlMIx1x31
+
+fcnc 80 mdl_cQlMIx1x32
+
+fcnc 81 mdl_cQlMIx2x31
+
+fcnc 82 mdl_cQlMIx2x32
+
+fcnc 83 mdl_cQlMIx3x31
+
+fcnc 84 mdl_cQlMIx3x32
+
+fcnc 85 mdl_cQex1x31
+
+fcnc 86 mdl_cQex1x32
+
+fcnc 87 mdl_cQex2x31
+
+fcnc 88 mdl_cQex2x32
+
+fcnc 89 mdl_cQex3x31
+
+fcnc 90 mdl_cQex3x32
+
+fcnc 91 mdl_cQeIx1x31
+
+fcnc 92 mdl_cQeIx1x32
+
+fcnc 93 mdl_cQeIx2x31
+
+fcnc 94 mdl_cQeIx2x32
+
+fcnc 95 mdl_cQeIx3x31
+
+fcnc 96 mdl_cQeIx3x32
+
+fcnc 97 mdl_ctlx1x31
+
+fcnc 98 mdl_ctlx1x32
+
+fcnc 99 mdl_ctlx2x31
+
+fcnc 100 mdl_ctlx2x32
+
+fcnc 101 mdl_ctlx3x31
+
+fcnc 102 mdl_ctlx3x32
+
+fcnc 103 mdl_ctlIx1x31
+
+fcnc 104 mdl_ctlIx1x32
+
+fcnc 105 mdl_ctlIx2x31
+
+fcnc 106 mdl_ctlIx2x32
+
+fcnc 107 mdl_ctlIx3x31
+
+fcnc 108 mdl_ctlIx3x32
+
+fcnc 109 mdl_ctex1x31
+
+fcnc 110 mdl_ctex1x32
+
+fcnc 111 mdl_ctex2x31
+
+fcnc 112 mdl_ctex2x32
+
+fcnc 113 mdl_ctex3x31
+
+fcnc 114 mdl_ctex3x32
+
+fcnc 115 mdl_cteIx1x31
+
+fcnc 116 mdl_cteIx1x32
+
+fcnc 117 mdl_cteIx2x31
+
+fcnc 118 mdl_cteIx2x32
+
+fcnc 119 mdl_cteIx3x31
+
+fcnc 120 mdl_cteIx3x32
+
+fcnc 121 mdl_ctlSx1x13
+
+fcnc 122 mdl_ctlSx1x23
+
+fcnc 123 mdl_ctlSx1x31
+
+fcnc 124 mdl_ctlSx1x32
+
+fcnc 125 mdl_ctlSx2x13
+
+fcnc 126 mdl_ctlSx2x23
+
+fcnc 127 mdl_ctlSx2x31
+
+fcnc 128 mdl_ctlSx2x32
+
+fcnc 129 mdl_ctlSx3x13
+
+fcnc 130 mdl_ctlSx3x23
+
+fcnc 131 mdl_ctlSx3x31
+
+fcnc 132 mdl_ctlSx3x32
+
+fcnc 133 mdl_ctlSIx1x13
+
+fcnc 134 mdl_ctlSIx1x23
+
+fcnc 135 mdl_ctlSIx1x31
+
+fcnc 136 mdl_ctlSIx1x32
+
+fcnc 137 mdl_ctlSIx2x13
+
+fcnc 138 mdl_ctlSIx2x23
+
+fcnc 139 mdl_ctlSIx2x31
+
+fcnc 140 mdl_ctlSIx2x32
+
+fcnc 141 mdl_ctlSIx3x13
+
+fcnc 142 mdl_ctlSIx3x23
+
+fcnc 143 mdl_ctlSIx3x31
+
+fcnc 144 mdl_ctlSIx3x32
+
+fcnc 145 mdl_ctlTx1x13
+
+fcnc 146 mdl_ctlTx1x23
+
+fcnc 147 mdl_ctlTx1x31
+
+fcnc 148 mdl_ctlTx1x32
+
+fcnc 149 mdl_ctlTx2x13
+
+fcnc 150 mdl_ctlTx2x23
+
+fcnc 151 mdl_ctlTx2x31
+
+fcnc 152 mdl_ctlTx2x32
+
+fcnc 153 mdl_ctlTx3x13
+
+fcnc 154 mdl_ctlTx3x23
+
+fcnc 155 mdl_ctlTx3x31
+
+fcnc 156 mdl_ctlTx3x32
+
+fcnc 157 mdl_ctlTIx1x13
+
+fcnc 158 mdl_ctlTIx1x23
+
+fcnc 159 mdl_ctlTIx1x31
+
+fcnc 160 mdl_ctlTIx1x32
+
+fcnc 161 mdl_ctlTIx2x13
+
+fcnc 162 mdl_ctlTIx2x23
+
+fcnc 163 mdl_ctlTIx2x31
+
+fcnc 164 mdl_ctlTIx2x32
+
+fcnc 165 mdl_ctlTIx3x13
+
+fcnc 166 mdl_ctlTIx3x23
+
+fcnc 167 mdl_ctlTIx3x31
+
+fcnc 168 mdl_ctlTIx3x32
+
+fcnc 169 mdl_cqq11x3331
+
+fcnc 170 mdl_cqq11x3332
+
+fcnc 171 mdl_cqq11Ix3331
+
+fcnc 172 mdl_cqq11Ix3332
+
+fcnc 173 mdl_cqq13x3331
+
+fcnc 174 mdl_cqq13x3332
+
+fcnc 175 mdl_cqq13Ix3331
+
+fcnc 176 mdl_cqq13Ix3332
+
+fcnc 177 mdl_cuu1x3331
+
+fcnc 178 mdl_cuu1x3332
+
+fcnc 179 mdl_cuu1Ix3331
+
+fcnc 180 mdl_cuu1Ix3332
+
+fcnc 181 mdl_cqu1x3331
+
+fcnc 182 mdl_cqu1x3332
+
+fcnc 183 mdl_cqu1Ix3331
+
+fcnc 184 mdl_cqu1Ix3332
+
+fcnc 185 mdl_cqu1x3133
+
+fcnc 186 mdl_cqu1x3233
+
+fcnc 187 mdl_cqu1Ix3133
+
+fcnc 188 mdl_cqu1Ix3233
+
+fcnc 189 mdl_cqu8x3331
+
+fcnc 190 mdl_cqu8x3332
+
+fcnc 191 mdl_cqu8Ix3331
+
+fcnc 192 mdl_cqu8Ix3332
+
+fcnc 193 mdl_cqu8x3233
+
+fcnc 194 mdl_cqu8x3133
+
+fcnc 195 mdl_cqu8Ix3133
+
+fcnc 196 mdl_cqu8Ix3233
+
+fcnc 197 mdl_cqd1x3331
+
+fcnc 198 mdl_cqd1x3332
+
+fcnc 199 mdl_cqd1Ix3331
+
+fcnc 200 mdl_cqd1Ix3332
+
+fcnc 201 mdl_cqd1x3133
+
+fcnc 202 mdl_cqd1x3233
+
+fcnc 203 mdl_cqd1Ix3133
+
+fcnc 204 mdl_cqd1Ix3233
+
+fcnc 205 mdl_cqd8x3331
+
+fcnc 206 mdl_cqd8x3332
+
+fcnc 207 mdl_cqd8Ix3331
+
+fcnc 208 mdl_cqd8Ix3332
+
+fcnc 209 mdl_cqd8x3133
+
+fcnc 210 mdl_cqd8x3233
+
+fcnc 211 mdl_cqd8Ix3133
+
+fcnc 212 mdl_cqd8Ix3233
+
+fcnc 213 mdl_cud1x3331
+
+fcnc 214 mdl_cud1x3332
+
+fcnc 215 mdl_cud1Ix3331
+
+fcnc 216 mdl_cud1Ix3332
+
+fcnc 217 mdl_cud1x3133
+
+fcnc 218 mdl_cud1x3233
+
+fcnc 219 mdl_cud1Ix3133
+
+fcnc 220 mdl_cud1Ix3233
+
+fcnc 221 mdl_cud8x3331
+
+fcnc 222 mdl_cud8x3332
+
+fcnc 223 mdl_cud8Ix3331
+
+fcnc 224 mdl_cud8Ix3332
+
+fcnc 225 mdl_cud8x3133
+
+fcnc 226 mdl_cud8x3233
+
+fcnc 227 mdl_cud8Ix3133
+
+fcnc 228 mdl_cud8Ix3233
+
+fcnc 229 mdl_cquqd1x3331
+
+fcnc 230 mdl_cquqd1x3332
+
+fcnc 231 mdl_cquqd1x3313
+
+fcnc 232 mdl_cquqd1x3323
+
+fcnc 233 mdl_cquqd1x3133
+
+fcnc 234 mdl_cquqd1x3233
+
+fcnc 235 mdl_cquqd1x1333
+
+fcnc 236 mdl_cquqd1x2333
+
+fcnc 237 mdl_cquqd1Ix3331
+
+fcnc 238 mdl_cquqd1Ix3332
+
+fcnc 239 mdl_cquqd1Ix3313
+
+fcnc 240 mdl_cquqd1Ix3323
+
+fcnc 241 mdl_cquqd1Ix3133
+
+fcnc 242 mdl_cquqd1Ix3233
+
+fcnc 243 mdl_cquqd1Ix1333
+
+fcnc 244 mdl_cquqd1Ix2333
+
+fcnc 245 mdl_cquqd8x3331
+
+fcnc 246 mdl_cquqd8x3332
+
+fcnc 247 mdl_cquqd8x3313
+
+fcnc 248 mdl_cquqd8x3323
+
+fcnc 249 mdl_cquqd8x3133
+
+fcnc 250 mdl_cquqd8x3233
+
+fcnc 251 mdl_cquqd8x1333
+
+fcnc 252 mdl_cquqd8x2333
+
+fcnc 253 mdl_cquqd8Ix3331
+
+fcnc 254 mdl_cquqd8Ix3332
+
+fcnc 255 mdl_cquqd8Ix3313
+
+fcnc 256 mdl_cquqd8Ix3323
+
+fcnc 257 mdl_cquqd8Ix3133
+
+fcnc 258 mdl_cquqd8Ix3233
+
+fcnc 259 mdl_cquqd8Ix1333
+
+fcnc 260 mdl_cquqd8Ix2333
+
+fcnc 261 mdl_cqq11x31ii
+
+fcnc 262 mdl_cqq11x32ii
+
+fcnc 263 mdl_cqq11Ix31ii
+
+fcnc 264 mdl_cqq11Ix32ii
+
+fcnc 265 mdl_cqq13x31ii
+
+fcnc 266 mdl_cqq13x32ii
+
+fcnc 267 mdl_cqq13Ix31ii
+
+fcnc 268 mdl_cqq13Ix32ii
+
+fcnc 269 mdl_cqq81x31ii
+
+fcnc 270 mdl_cqq81x32ii
+
+fcnc 271 mdl_cqq81Ix31ii
+
+fcnc 272 mdl_cqq81Ix32ii
+
+fcnc 273 mdl_cqq83x31ii
+
+fcnc 274 mdl_cqq83x32ii
+
+fcnc 275 mdl_cqq83Ix31ii
+
+fcnc 276 mdl_cqq83Ix32ii
+
+fcnc 277 mdl_cuu1x31ii
+
+fcnc 278 mdl_cuu1x32ii
+
+fcnc 279 mdl_cuu1Ix31ii
+
+fcnc 280 mdl_cuu1Ix32ii
+
+fcnc 281 mdl_cuu8x31ii
+
+fcnc 282 mdl_cuu8x32ii
+
+fcnc 283 mdl_cuu8Ix31ii
+
+fcnc 284 mdl_cuu8Ix32ii
+
+fcnc 285 mdl_cud1x31ii
+
+fcnc 286 mdl_cud1x32ii
+
+fcnc 287 mdl_cud1Ix31ii
+
+fcnc 288 mdl_cud1Ix32ii
+
+fcnc 289 mdl_cud8x31ii
+
+fcnc 290 mdl_cud8x32ii
+
+fcnc 291 mdl_cud8Ix31ii
+
+fcnc 292 mdl_cud8Ix32ii
+
+fcnc 293 mdl_cqu1x31ii
+
+fcnc 294 mdl_cqu1x32ii
+
+fcnc 295 mdl_cqu1Ix31ii
+
+fcnc 296 mdl_cqu1Ix32ii
+
+fcnc 297 mdl_cqu8x31ii
+
+fcnc 298 mdl_cqu8x32ii
+
+fcnc 299 mdl_cqu8Ix31ii
+
+fcnc 300 mdl_cqu8Ix32ii
+
+fcnc 301 mdl_cqu1xii31
+
+fcnc 302 mdl_cqu1xii32
+
+fcnc 303 mdl_cqu1Ixii31
+
+fcnc 304 mdl_cqu1Ixii32
+
+fcnc 305 mdl_cqu8xii31
+
+fcnc 306 mdl_cqu8xii32
+
+fcnc 307 mdl_cqu8Ixii31
+
+fcnc 308 mdl_cqu8Ixii32
+
+fcnc 309 mdl_cqd1x31ii
+
+fcnc 310 mdl_cqd1x32ii
+
+fcnc 311 mdl_cqd1Ix31ii
+
+fcnc 312 mdl_cqd1Ix32ii
+
+fcnc 313 mdl_cqd8Ix31ii
+
+fcnc 314 mdl_cqd8Ix32ii
+
+fcnc 315 mdl_cqd8x31ii
+
+fcnc 316 mdl_cqd8x32ii
+
+fcnc 317 mdl_cpbIx31
+
+fcnc 318 mdl_cpbIx32
+
+fcnc 319 mdl_cpbx31
+
+fcnc 320 mdl_cpbx32
+
+fcnc 321 mdl_cblSx1x13
+
+fcnc 322 mdl_cblSx1x23
+
+fcnc 323 mdl_cblSx1x31
+
+fcnc 324 mdl_cblSx1x32
+
+fcnc 325 mdl_cblSx2x13
+
+fcnc 326 mdl_cblSx2x23
+
+fcnc 327 mdl_cblSx2x31
+
+fcnc 328 mdl_cblSx2x32
+
+fcnc 329 mdl_cblSx3x13
+
+fcnc 330 mdl_cblSx3x23
+
+fcnc 331 mdl_cblSx3x31
+
+fcnc 332 mdl_cblSx3x32
+
+fcnc 333 mdl_cblSIx1x13
+
+fcnc 334 mdl_cblSIx1x23
+
+fcnc 335 mdl_cblSIx1x31
+
+fcnc 336 mdl_cblSIx1x32
+
+fcnc 337 mdl_cblSIx2x13
+
+fcnc 338 mdl_cblSIx2x23
+
+fcnc 339 mdl_cblSIx2x31
+
+fcnc 340 mdl_cblSIx2x32
+
+fcnc 341 mdl_cblSIx3x13
+
+fcnc 342 mdl_cblSIx3x23
+
+fcnc 343 mdl_cblSIx3x31
+
+fcnc 344 mdl_cblSIx3x32
+
+sminputs 2 mdl_Gf
+
+sminputs 3 aS
+
+yukawa 5 mdl_ymb
+
+yukawa 6 mdl_ymt
+
+yukawa 15 mdl_ymtau
+
+mass 23 mdl_MZ
+
+mass 15 mdl_MTA
+
+mass 6 mdl_MT
+
+mass 5 mdl_MB
+
+mass 25 mdl_MH
+
+decay 23 mdl_WZ
+
+decay 24 mdl_WW
+
+decay 6 mdl_WT
+
+decay 25 mdl_WH
+
+sminputs 1 aEWM1
