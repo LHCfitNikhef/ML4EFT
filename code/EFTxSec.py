@@ -12,14 +12,13 @@ from scipy import optimize
 import matplotlib.patches as patches
 import matplotlib.colors
 import sys
-import pylhe
 
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 mt = 173.3 #Top quark mass in GeV
 s = (13*10**3)**2#GeV^2
 v = 125
 asQCD = 0.118
-cSMEFT = 10*10**(-6)
+cSMEFT = 100*10**(-6)
 
 def partonicCrossGluon_dtheta(sqrts, theta):
     def disgmadt(sqrts, t):
@@ -74,10 +73,8 @@ def diffCrossHadronicSMQuark(sqrts):
 def renScale(theta, sqrts):
     sP = sqrts**2
     p_T = np.sqrt((sP/4)-mt**2)*np.sin(theta)
-    m_T = np.sqrt(sP/2-p_T**2)
     H_T = 2*(np.sqrt(mt**2+p_T**2))
-    return (H_T/2)**2
-
+    return (H_T/4)**2
 
 def diffCrossSM(sqrts):
     if sqrts >= 2*mt:
@@ -89,13 +86,9 @@ def diffCrossBSM(sqrts):
     """Continuous version"""
     sP = sqrts**2
     partonicCross = (45/(128*np.sqrt(2)))*(v*mt/sP)*(4*asQCD/np.sqrt(np.pi))**(3/2)*np.sqrt(1-4*mt**2/sP)*np.real(cSMEFT)
-    integrand = lambda y: (s/sP)*(p.xfxQ(21, np.sqrt(sP/s)*np.exp(y), (1/3)*(sP-4*mt**2*np.cosh(y)**2))*p.xfxQ(21, np.sqrt(sP/s)*np.exp(-y), (1/3)*(sP-4*mt**2*np.cosh(y)**2)))
+    integrand = lambda y: (s/sP)*(p.xfxQ(21, np.sqrt(sP/s)*np.exp(y), sP)*p.xfxQ(21, np.sqrt(sP/s)*np.exp(-y), sP))
     diffCrossBSM = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*partonicCross*integrate.quad(integrand, -0.5*np.log(s/sP), 0.5*np.log(s/sP))[0]
     return diffCrossBSM
-
-def invariant_mass(p1,p2):
-    return np.sqrt(sum((1 if mu=='e' else -1)*(getattr(p1,mu)+getattr(p2,mu))**2 for mu in ['e','px','py','pz']))
-
 
 def generateData():
     crossSection = []
@@ -110,41 +103,28 @@ def generateData():
     plot(x, crossSection, crossSectionBSM)
 
 def plot(x, crossSection, crossSectionBSM):
+    fig = plt.figure(figsize=(8.2,5))
+    grid = plt.GridSpec(4,1)
+    plt.subplot(grid[:3,:])
 
-    data_sm = []
-    data_eft = []
-    for e in pylhe.readLHE('unweighted_events_sm_dynscale.lhe'):
-        data_sm.append(invariant_mass(e.particles[-1],e.particles[-2]))
-    for e in pylhe.readLHE('unweighted_events_eft_dynscale.lhe'):
-        data_eft.append(invariant_mass(e.particles[-1],e.particles[-2]))
-
-    binWidth = 20
-
-    hist_sm, bins_sm = np.histogram(data_sm,bins=np.arange(2*mt,np.max(data_sm),binWidth), density=True)
-    hist_eft, bins_eft = np.histogram(data_eft, bins=np.arange(2*mt,np.max(data_eft),binWidth), density=True)
-
-    hist_sm *= 518.4
-    hist_eft *= 658.6
-    #check area
-    #20*np.sum(hist_sm)
-
-    plt.plot(x, crossSection, label=r'$\mathrm{SM}^2\;\mathrm{(ana)}$')
-    plt.plot(x, crossSectionBSM+crossSection, label=r'$\mathrm{SM}^2+\mathrm{SM}\times \mathrm{BSM\;\mathrm{(ana)}}$')
-
-    plot_sm, = plt.plot(bins_sm[:-1]+binWidth/2, hist_sm, label = r'$\mathrm{SM}^2$')
-    plot_sm.set_drawstyle('steps')
-
-    plot_eft, = plt.plot(bins_eft[:-1]+binWidth/2, hist_eft, label = r'$\mathrm{SM}^2+\mathrm{SM}\times \mathrm{BSM}$')
-    plot_eft.set_drawstyle('steps')
-
-    plt.xlabel(r'$m_{tt}$')
-    plt.ylabel(r'$d\sigma/dm_{tt}\;\mathrm{[pb\:GeV^{-1}]}$')
-    plt.xlim((2*mt, 1000))
-    #plt.xticks(np.arange(2*mt, 1000, step=20), labels = None)
-    #ax.text(2, 6, 'test',horizontalalignment='center',verticalalignment='center')
-    plt.title('SM versus EFT with ctG'+r'$=1$')
+    plt.plot(x, crossSection, label='SM')
+    plt.plot(x, crossSectionBSM+crossSection, label='EFT')
+    plt.ylabel(r'$d\sigma/d\sqrt{\^{s}}\;\mathrm{[pb\:GeV^{-1}]}$')
+    plt.xlim((0, 2500))
+    plt.title('SM versus EFT with OtG')
     plt.yscale('log')
     plt.legend()
+
+    plt.subplot(grid[-1,:])
+
+    plt.plot(x, (crossSectionBSM+crossSection)/crossSection)
+    plt.ylim((-3, 2.8))
+    plt.xlim((0, 2500))
+    plt.axhline(y=0, color='k', linestyle ='--', linewidth = 0.5)
+    plt.ylabel('BSM/SM')
+    plt.subplots_adjust(hspace = 0.5)
+
+    plt.xlabel(r'$\sqrt{\^{s}}\;\mathrm{[GeV]}$')
     plt.show()
 
 generateData()

@@ -1,3 +1,0 @@
-P1_bbx_ttx
-P1_gg_ttx
-P1_qq_ttx
