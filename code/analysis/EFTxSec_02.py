@@ -22,22 +22,12 @@ asQCD = 0.118
 cSMEFT = 10*10**(-6)
 
 def partonicCrossGluon_dtheta(sqrts, theta):
-    def disgmadt(sqrts, t):
-        s = sqrts**2
-        u = 2*mt**2 -t-s
-        Mss = (4/s**2)*(t-mt**2)*(u-mt**2)
-        Mtt = 2/((t-mt**2)**2)*((t-mt**2)*(u-mt**2)-2*mt**2*(u+mt**2))
-        Mtu = 4*mt**2/((t-mt**2)*(u-mt**2))*(s-4*mt**2)
-        Mst = 4/(s*(t-mt**2))*(mt**4-t*(s+t))
-        Muu = 2/((u-mt**2)**2)*((u-mt**2)*(t-mt**2)-2*mt**2*(t+mt**2))
-        Msu = 4/(s*(u-mt**2))*(mt**4-u*(s+u))
-        dsigmadt = 0.3894*(10**9)*(np.pi*asQCD**2)/(64*s**2)*(12*Mss +16/3*(Mtt+Muu)-(2/3)*Mtu+6*(Mst + Msu))
-        return dsigmadt
-
-    t = mt**2 - 2*(sqrts/2)**2-2*(sqrts/2)*np.sqrt((sqrts/2)**2-mt**2)*np.cos(theta)
-
-    dtdtheta = sqrts*np.sqrt((sqrts/2)**2-mt**2)*np.sin(theta)
-    dsigmadtheta = disgmadt(sqrts, t)*dtdtheta
+    s = sqrts**2
+    g = np.sqrt(4*np.pi*asQCD)
+    numerator = -g**4*(np.sqrt(1-4*mt**2/s))*(-36*np.cos(theta)**2*mt**2+9*s*np.cos(theta)**2+7*s)*(-8*s*np.cos(theta)**4*mt**2*8*s*np.cos(theta)**2*mt**2-8*s*mt**2+16*np.cos(theta)**4*mt**4-32*np.cos(theta)**2*mt**4+32*mt**4+s**2*np.cos(theta)**4-s**2)
+    denominator = 3072*np.pi**2*s**4*(np.cos(theta)*np.sqrt(1-4*mt**2/s)-1)**2*(np.cos(theta)*np.sqrt(1-4*mt**2/s)+1)**2
+    dsigmadOmega = numerator/denominator
+    dsigmadtheta = 2*np.pi*np.sin(theta)*dsigmadOmega
     return dsigmadtheta
 
 def diffCrossHadronicSMGluon(sqrts):
@@ -58,6 +48,7 @@ def diffCrossHadronicSMGluon(sqrts):
 
     res_fixed_quad = integrate.fixed_quad(lambda theta: fint_fixed_quad(theta), 0, np.pi, n = 15)[0]
     diffCrossSM = (2*np.sqrt(sP)/s)*res_fixed_quad
+    print(diffCrossSM)
     return diffCrossSM
 
 def diffCrossHadronicSMQuark(sqrts):
@@ -76,7 +67,7 @@ def renScale(theta, sqrts):
     p_T = np.sqrt((sP/4)-mt**2)*np.sin(theta)
     m_T = np.sqrt(sP/2-p_T**2)
     H_T = 2*(np.sqrt(mt**2+p_T**2))
-    return (H_T/2)**2
+    return (H_T/4)**2
 
 
 def diffCrossSM(sqrts):
@@ -113,9 +104,9 @@ def plot(x, crossSection, crossSectionBSM):
 
     data_sm = []
     data_eft = []
-    for e in pylhe.readLHE('../unweighted_events_sm.lhe'):
+    for e in pylhe.readLHE('lhe_events/unweighted_events_sm_572_1.lhe'):
         data_sm.append(invariant_mass(e.particles[-1],e.particles[-2]))
-    for e in pylhe.readLHE('../unweighted_events_eft.lhe'):
+    for e in pylhe.readLHE('lhe_events/unweighted_events_eft.lhe'):
         data_eft.append(invariant_mass(e.particles[-1],e.particles[-2]))
 
     binWidth = 20
@@ -123,7 +114,7 @@ def plot(x, crossSection, crossSectionBSM):
     hist_sm, bins_sm = np.histogram(data_sm,bins=np.arange(2*mt,np.max(data_sm),binWidth), density=True)
     hist_eft, bins_eft = np.histogram(data_eft, bins=np.arange(2*mt,np.max(data_eft),binWidth), density=True)
 
-    hist_sm *= 518.4
+    hist_sm *= 572.1
     hist_eft *= 658.6
     #check area
     #20*np.sum(hist_sm)
