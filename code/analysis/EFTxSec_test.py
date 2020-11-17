@@ -15,10 +15,11 @@ import sys
 import pylhe
 
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
-mt = 173.3 #Top quark mass in GeV
+mt = 172 #Top quark mass in GeV
 s = (13*10**3)**2#GeV^2
-v = 246.22
-asQCD = 0.118
+Gf = 0.0000116637
+v = 1/np.sqrt(Gf*np.sqrt(2))
+asQCD = 0.1184
 cSMEFT = 1
 LambdaSMEFT = 10**3
 
@@ -49,6 +50,13 @@ theta = np.linspace(0, np.pi, 100)
 #plt.show()
 #print("Benchmark value:", partonicCrossGluon_dtheta(400, 1))
 #
+# def diffCrossHadronicSMGluon(sqrts):
+#     sP = sqrts**2
+#     #integrand = lambda y, theta:(s/sP)*p.xfxQ(21, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(21, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))*(asQCD**2*np.sqrt(1-4*mt**2/s)*(-36*np.cos(theta)**2*mt**2+9*s*np.cos(theta)**2+7*s)*(-8*s*np.cos(theta)**4*mt**2+8*s*np.cos(theta)**2*mt**2-8*s*mt**2+16*np.cos(theta)**4*mt**4-32*np.cos(theta)**2*mt**4+32*mt**4+s**2*np.cos(theta)**4-s**2))/(192*s**4*(np.cos(theta)*np.sqrt(1-4*mt**2/s)-1)**2*(np.cos(theta)*np.sqrt(1-4*mt**2/s)+1)**2)
+#     #factor 2*np.sqrt(sP) comes from the chain rule
+#     diffCrossSM = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.dblquad(integrand,0, np.pi, lambda theta: -0.5*np.log(s/sP), lambda theta : 0.5*np.log(s/sP))[0]
+#     return diffCrossSM
+
 def diffCrossHadronicSMGluon(sqrts):
     sP = sqrts**2
     def integrand(y, theta):
@@ -75,7 +83,7 @@ def diffCrossHadronicSMQuark(sqrts):
                 +p.xfxQ(2, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-2, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
                 +p.xfxQ(3, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-3, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
                 +p.xfxQ(4, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-4, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
-                +p.xfxQ(5, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-5, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts)))*(2*np.pi)*np.sin(theta)*(2/9)*((asQCD**2)/(4*sP))*np.sqrt(1-4*mt**2/sP)*(1+4*mt**2/sP+(1-4*mt**2/sP)*(np.cos(theta)**2))
+                +p.xfxQ(5, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-5, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts)))*asQCD**2*np.sqrt(1-4*mt**2/s)*(-4*np.cos(theta)**2*mt**2+4*mt**2+s*np.cos(theta)**2+s)/(18*s**2)
     #factor 2*np.sqrt(sP) comes from the chain rule
     diffCrossSM = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.dblquad(integrand,0, np.pi, lambda theta: -0.5*np.log(s/sP), lambda theta : 0.5*np.log(s/sP))[0]
     return diffCrossSM
@@ -97,14 +105,9 @@ def diffCrossSM(sqrts):
 def partonicCrossGluonBSM_dtheta(sqrts, theta):
     s = sqrts**2
     gs = np.sqrt(4*np.pi*asQCD)
-    numerator = -cSMEFT*(gs**3)*v*mt*np.sqrt(1-(4*(mt**2))/s)*(-108*(np.cos(theta)**2)*(mt**2)+27*s*(np.cos(theta)**2)+28*s)
-
-    denominator = 1536*np.sqrt(2)*(np.pi**2)*(LambdaSMEFT**2)*(s**2)*(np.cos(theta)*np.sqrt(1-4*(mt**2)/s)-1)*(np.cos(theta)*np.sqrt(1-4*(mt**2)/s)+1)
-    # if (np.cos(theta)*np.sqrt(1-4*(mt**2)/s)-1 < 0):
-    #     print("negative numerator")
-    # else:
-    #     print("positive numerator")
-    dsigmadtheta = 2*np.pi*np.sin(theta)*(numerator/denominator)
+    num = -cSMEFT*v*mt*asQCD**(3/2)*np.sqrt(1-4*mt**2/s)*(-36*np.cos(theta)**2*mt**2 + 9*s*np.cos(theta)**2+7*s)
+    den = 24*np.sqrt(2*np.pi)*LambdaSMEFT**2*s**2*(np.cos(theta)*np.sqrt(1-4*mt**2/s)-1)*(np.cos(theta)*np.sqrt(1-4*mt**2/s)+1)
+    dsigmadtheta = 2*np.pi*np.sin(theta)*(num/den)
     return dsigmadtheta
 
 def diffCrossHadronicBSMGluon(sqrts):
@@ -134,7 +137,7 @@ def diffCrossHadronicBSMQuark(sqrts):
                 +p.xfxQ(2, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-2, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
                 +p.xfxQ(3, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-3, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
                 +p.xfxQ(4, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-4, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
-                +p.xfxQ(5, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-5, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts)))*(cSMEFT*gs**3*v*mt*np.sqrt(1-4*mt**2/sP))/(36*np.sqrt(2)*np.pi**2*LambdaSMEFT**2*sP)
+                +p.xfxQ(5, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-5, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts)))*(2*np.sqrt(2/np.pi)*cSMEFT*v*mt*asQCD**(3/2)*np.sqrt(1-4*mt**2/s))/(9*LambdaSMEFT**2*s)
     #factor 2*np.sqrt(sP) comes from the chain rule
     diffCrossBSM = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.dblquad(integrand,0, np.pi, lambda theta: -0.5*np.log(s/sP), lambda theta : 0.5*np.log(s/sP))[0]
     return diffCrossBSM
@@ -157,10 +160,14 @@ def generateData():
     x = np.arange(2*mt, 2500, 10)
     for i in x:
         print(i)
-        crossSection.append(diffCrossHadronicSMGluon(i)+diffCrossHadronicSMQuark(i))
+        crossSection.append(diffCrossSM(i))
         crossSectionBSM.append(diffCrossBSM(i))
     crossSection = np.array(crossSection)
     crossSectionBSM = np.array(crossSectionBSM)
+    xsecSM = integrate.quad(lambda x: diffCrossSM(x), 2*mt, 4000)[0]
+    xsecBSM = integrate.quad(lambda x: diffCrossBSM(x), 2*mt, 4000)[0]
+    print("xsec SM: ", xsecSM)
+    print("xsec BSM: ", xsecBSM + xsecSM)
     plot(x, crossSection, crossSectionBSM)
 
 def plot(x, crossSection, crossSectionBSM):
@@ -169,7 +176,7 @@ def plot(x, crossSection, crossSectionBSM):
     data_eft = []
     for e in pylhe.readLHE('lhe_events/unweighted_events_sm.lhe'):
         data_sm.append(invariant_mass(e.particles[-1],e.particles[-2]))
-    for e in pylhe.readLHE('lhe_events/unweighted_events_eft.lhe'):
+    for e in pylhe.readLHE('lhe_events/unweighted_events_eft_ctG_L2.lhe'):
         data_eft.append(invariant_mass(e.particles[-1],e.particles[-2]))
 
     binWidth = 20
@@ -177,8 +184,8 @@ def plot(x, crossSection, crossSectionBSM):
     hist_sm, bins_sm = np.histogram(data_sm,bins=np.arange(2*mt,np.max(data_sm),binWidth), density=True)
     hist_eft, bins_eft = np.histogram(data_eft, bins=np.arange(2*mt,np.max(data_eft),binWidth), density=True)
 
-    hist_sm *= 457.4
-    hist_eft *= 585.9
+    hist_sm *= 459.4
+    hist_eft *= 585
     #check area
     #20*np.sum(hist_sm)
 
