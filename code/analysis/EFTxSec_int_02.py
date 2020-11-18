@@ -35,7 +35,6 @@ def partonicCrossGluon_dtheta(sqrts, theta):
         Muu = 2/((u-mt**2)**2)*((u-mt**2)*(t-mt**2)-2*mt**2*(t+mt**2))
         Msu = 4/(s*(u-mt**2))*(mt**4-u*(s+u))
         dsigmadt = 0.3894*(10**9)*(np.pi*asQCD**2)/(64*s**2)*(12*Mss +16/3*(Mtt+Muu)-(2/3)*Mtu+6*(Mst + Msu))
-        #print(dsigmadt)
         return dsigmadt
 
     t = mt**2 - 2*(sqrts/2)**2-2*(sqrts/2)*np.sqrt((sqrts/2)**2-mt**2)*np.cos(theta)
@@ -45,18 +44,6 @@ def partonicCrossGluon_dtheta(sqrts, theta):
     return dsigmadtheta
 
 theta = np.linspace(0, np.pi, 100)
-#disgmadt = partonicCrossGluon_dtheta(400, theta)
-#plt.figure()
-#plt.plot(theta, disgmadt)
-#plt.show()
-#print("Benchmark value:", partonicCrossGluon_dtheta(400, 1))
-#
-# def diffCrossHadronicSMGluon(sqrts):
-#     sP = sqrts**2
-#     #integrand = lambda y, theta:(s/sP)*p.xfxQ(21, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(21, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))*(asQCD**2*np.sqrt(1-4*mt**2/s)*(-36*np.cos(theta)**2*mt**2+9*s*np.cos(theta)**2+7*s)*(-8*s*np.cos(theta)**4*mt**2+8*s*np.cos(theta)**2*mt**2-8*s*mt**2+16*np.cos(theta)**4*mt**4-32*np.cos(theta)**2*mt**4+32*mt**4+s**2*np.cos(theta)**4-s**2))/(192*s**4*(np.cos(theta)*np.sqrt(1-4*mt**2/s)-1)**2*(np.cos(theta)*np.sqrt(1-4*mt**2/s)+1)**2)
-#     #factor 2*np.sqrt(sP) comes from the chain rule
-#     diffCrossSM = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.dblquad(integrand,0, np.pi, lambda theta: -0.5*np.log(s/sP), lambda theta : 0.5*np.log(s/sP))[0]
-#     return diffCrossSM
 
 def diffCrossHadronicSMGluon(sqrts):
     sP = sqrts**2
@@ -73,7 +60,6 @@ def diffCrossHadronicSMGluon(sqrts):
             value = integrate.fixed_quad(integrand, -0.5*np.log(s/sP), 0.5*np.log(s/sP), args=(thetai,), n = 15)[0]
             result.append(value)
         return result
-
     res_fixed_quad = integrate.fixed_quad(lambda theta: fint_fixed_quad(theta), 0, np.pi, n = 15)[0]
     diffCrossSM = (2*np.sqrt(sP)/s)*res_fixed_quad
     return diffCrossSM
@@ -147,7 +133,7 @@ def diffCrossHadronicBSMQuark(sqrts):
 def diffCrossBSM(sqrts):
     """Continuous version"""
     if sqrts >= 2*mt:
-        return diffCrossHadronicBSMGluon(sqrts)+diffCrossHadronicBSMQuark(sqrts)
+        return diffCrossHadronicBSMGluon(sqrts)#+diffCrossHadronicBSMQuark(sqrts)
     else:
         return 0
 
@@ -177,7 +163,7 @@ def plot(x, crossSection, crossSectionBSM):
     data_eft = []
     for e in pylhe.readLHE('lhe_events/unweighted_events_sm.lhe'):
         data_sm.append(invariant_mass(e.particles[-1],e.particles[-2]))
-    for e in pylhe.readLHE('lhe_events/unweighted_events_eft_int.lhe'):
+    for e in pylhe.readLHE('lhe_events/unweighted_events_eft_ggtt.lhe'):
         data_eft.append(invariant_mass(e.particles[-1],e.particles[-2]))
 
     binWidth = 20
@@ -186,7 +172,7 @@ def plot(x, crossSection, crossSectionBSM):
     hist_eft, bins_eft = np.histogram(data_eft, bins=np.arange(2*mt,np.max(data_eft),binWidth), density=True)
 
     hist_sm *= 459.4
-    hist_eft *= 127.2
+    hist_eft *= 110.5
     #check area
     #20*np.sum(hist_sm)
 
