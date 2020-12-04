@@ -7,44 +7,31 @@ from scipy import integrate
 import pylhe
 import time
 import lhapdf
-#Generate and plot differential distribution in mtt
 
-plot1DDist = True
-plot2DDist = False
 
 luminosity = 6*10**6#in pb^-1
 ECM = 14000
 s = ECM**2
-eff = 10**-5
+eff = 10**-5#selection efficiency
 pb_convert = 3.894E8
-cSMEFT = 1	
-
-#Compute the partonic cross sections as a function of c
-# def xsec_part_gg(mtt, cSMEFT):
-# 	dsigma_dtheta_gg = lambda theta: ExS.dsigmadThetaggSM(mtt, theta) + ExS.dsigmadThetaggEFT(mtt, theta, cSMEFT)
-# 	return integrate.quad(dsigma_dtheta_gg, 0.0, np.pi)[0]
-
-# def xsec_part_qq(mtt, cSMEFT):
-# 	dsigma_dtheta_qq = lambda theta: ExS.dsigmadThetaqqSM(mtt, theta) + ExS.dsigmadThetaqqEFT(mtt, theta, cSMEFT)
-# 	return integrate.quad(dsigma_dtheta_qq, 0.0, np.pi)[0]
+cSMEFT = 1
+xSec_SM = 2.643116#101.347543074 #MadGraph result  in pb
+xSec_EFT = 3.25015#125.640073926
 
 
+#diff x-sec in mtt and y as a function of the ctG
 def dsigma_dmtt_dy(mtt, y, cSMEFT):
 	x1 = mtt/np.sqrt(s)*np.exp(y)
 	x2 = mtt/np.sqrt(s)*np.exp(-y)
 	dsigma_dmtt_dy = 2*mtt/s*ExS.v_weight(mtt, 91.188, x1, x2, cSMEFT)/(x1*x2)
 	return pb_convert*dsigma_dmtt_dy
 
-#print(dsigma_dmtt_dy(400, 2.4, 1))
 #print("Computing the inclusive cross sections in the SM and EFT at c = %2f.:" %(cSMEFT))
 
 #xSec_SM, w_max_SM = MCgenToy.MC_xSec(Nsamples = 10**4, cSMEFT = 0)
 #xSec_EFT, w_max_EFT = MCgenToy.MC_xSec(Nsamples = 10**4, cSMEFT = 1)
 
-
 def N_mean(cSMEFT):#Only works up to linear order in the EFT cross section
-	xSec_SM = 101.347543074 #MadGraph result  in pb
-	xSec_EFT = 125.640073926
 	xSec = xSec_SM + cSMEFT*(xSec_EFT-xSec_SM)
 	return xSec*luminosity*eff
 
@@ -63,8 +50,8 @@ def load_data(data_exist = False, cSMEFT = cSMEFT, use_MG = True, w_max = 0):
 		return data
 	if use_MG == True:
 		cnt = 0
-		N_MC_samples = 10**6
-		for e in pylhe.readLHE('lhe_events/SM_10E6_mtt_700.lhe'):
+		N_MC_samples = 10**5
+		for e in pylhe.readLHE('lhe_events/gg_tt_SM_1500_10E5.lhe'):
 			sys.stdout.write("progress: %d%%   \r" % (float(cnt)*100./(N_MC_samples)) )
 			sys.stdout.flush()
 			mtt = ExS.invariant_mass(e.particles[-1],e.particles[-2])
@@ -74,21 +61,25 @@ def load_data(data_exist = False, cSMEFT = cSMEFT, use_MG = True, w_max = 0):
 		data = np.array(data)
 		return data
     	
-#load the data, or generate it if it does not exist with cSMEFT
+#load the data, or generate it if it does not exist
 print("Loading the dataset: ")
 data = load_data(data_exist = True)
-nMCsamples = data.shape[0]#number of monte carlo samples
+nMCsamples = data.shape[0]#number of Monte Carlo samples 
 print("Successfully loaded the entire dataset with %f samples"%(nMCsamples))
+
+#t_c_med = []
+#for c in np.arange(0, 1, 0.1):
 
 
 #the expected number of events under H0 (EFT) and H1 (SM)
 N_H0 = N_mean(cSMEFT= cSMEFT)
 N_H1 = N_mean(cSMEFT=0)
 
-print("N_H1= ", N_H1)
+#print("expected counts:", N_H1)
 
 
 t_c = []
+
 N_datasets = 10**4#Number of datasets for which we compute t_c
 
 print("Computing the test statistic tc for %f datasets"%(N_datasets))
@@ -108,14 +99,13 @@ while cnt < N_datasets:
 	y = dataset[:,1]
 
 	
-	start = time.time()
+	#start = time.time()
 	#Construct tau_c
 	dsigma_dmtt_dy_EFT = dsigma_dmtt_dy(mtt, y, cSMEFT = cSMEFT)
 	dsigma_dmtt_dy_SM = dsigma_dmtt_dy(mtt, y, cSMEFT = 0)
 	
-	end = time.time()
-	print(end - start)
-
+	#end = time.time()
+	#print(end - start)
 
 	# for i in range(dataset.shape[0]):
 	# 	dsigma_dmtt_dy_EFT.append(dsigma_dmtt_dy(mtt[i], y[i], cSMEFT = cSMEFT))
@@ -132,17 +122,28 @@ while cnt < N_datasets:
 	
 	sys.stdout.flush()
 t_c = np.array(t_c)
-np.savetxt('tc.dat', t_c)
+#t_c_med.append(np.median(t_c))
 
-hist_tc, bins_tc = np.histogram(t_c, bins=30, density=True)
+#np.savetxt('tc_%.2f.dat'%c, t_c)
+np.savetxt('t1_H1.dat', t_c)
 
-fig, ax = plt.subplots()
-ax.step(bins_tc[:-1], hist_tc, where ='post')
-plt.title(r'$\mathrm{pdf}(t_c|H_1)$ for c = 1')
-plt.show()
+	# hist_tc, bins_tc = np.histogram(t_c, bins=30, density=True)
+
+	# fig, ax = plt.subplots()
+	# ax.step(bins_tc[:-1], hist_tc, where ='post')
+	# plt.title(r'$\mathrm{pdf}(t_c|H_1)$ for c = 1')
+	# plt.show()
 
 #MCgenToy.generate_histo(t_c, 'tc')
+# t_c_med = np.array(t_c_med)
+# fig, ax = plt.subplots()
+# ax.scatter(np.arange(0, 1, 0.1), t_c_med)
+# plt.title("Median value")
+# plt.show()
 
+
+plot1DDist = False
+plot2DDist = False
 
 # if plot1DDist == True:
 #  	ExS.plotData(binWidth = 5, mtt_max = 1000, cSMEFT = 1)

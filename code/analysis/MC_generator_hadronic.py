@@ -281,6 +281,7 @@ while jj < Neve:
         sinphi = math.sin(phi)
         cosphi = math.cos(phi)
         sinth = math.sqrt( 1 - costh_ii**2 )
+        #Only when we accept the event do we store the momenta. Theta and phi are defined within the parton com frame. They need to be boosted first. 
         pq1 = [ 0.5 * x1 * ECM, 0., 0., 0.5 * x1 * ECM ]
         pq2 = [ 0.5 * x2 * ECM, 0., 0., - 0.5 * x2 * ECM ]
         pem = [ 0.5 * Q, 0.5 * Q * sinth * cosphi, 0.5 * Q * sinth * sinphi, 0.5 * Q * costh_ii ]

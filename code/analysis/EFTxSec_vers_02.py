@@ -35,6 +35,25 @@ def dsigmadThetaqqSM(sqrts, theta):
     dsigmadTheta = 2*np.pi*np.sin(theta)*dsigmadOmega
     return dsigmadTheta
 
+# def sigma_part_qq(sqrts, cSMEFT):
+#     hats = sqrts**2
+#     num = np.sqrt(1-4*mt**2/hats)*(cSMEFT*8*np.sqrt(2*np.pi)*hats*v*mt*asQCD**(3/2)+np.pi*LambdaSMEFT**2*asQCD**2*(4*mt**2+3*hats))
+#     den = 36*LambdaSMEFT**2*hats**2
+#     return num/den
+def sigma_part_gg(sqrts, cSMEFT):#correct
+    hats = sqrts**2
+    num = asQCD**(3/2)*(np.sqrt(2*np.pi)*cSMEFT*hats*v*mt*(16*hats*np.arctanh(np.sqrt(1-4*mt**2/hats))-9*np.sqrt(hats*(hats-4*mt**2)))+8*np.pi*LambdaSMEFT**2*np.sqrt(asQCD)*(4*hats*mt**2+mt**4+hats**2)*np.arctanh(np.sqrt(1-4*mt**2/hats))-31*np.pi*LambdaSMEFT**2*mt**2*np.sqrt(hats*asQCD*(hats-4*mt**2))-7*np.pi*LambdaSMEFT**2*hats*np.sqrt(hats*asQCD*(hats-4*mt**2)))
+    den = 12*LambdaSMEFT**2*hats**3
+    return num/den
+
+def sigma_part_qq(sqrts, cSMEFT):#correct
+    hats = sqrts**2
+    num = 8*asQCD**(3/2)*np.sqrt(1-4*mt**2/hats)*(3*np.sqrt(2*np.pi)*cSMEFT*hats*v*mt+np.pi*LambdaSMEFT**2*np.sqrt(asQCD)*(2*mt**2+hats))
+    den = 27*LambdaSMEFT**2*hats**2
+    return num/den
+
+
+    
 def dsigmadThetaggSM(sqrts, theta):
     sP = sqrts**2
     t = mt**2-(sP/2)*(1-np.cos(theta)*np.sqrt(1-4*mt**2/sP))
@@ -70,6 +89,9 @@ def dsigmadThetaggEFT(sqrts, theta, cSMEFT):
     dsigmadOmega = phaseSpaceFac*Me2
     dsigmadTheta = 2*np.pi*np.sin(theta)*dsigmadOmega
     return dsigmadTheta
+
+#print("python: ", integrate.quad(lambda theta: dsigmadThetaggSM(400, theta) + dsigmadThetaggEFT(400, theta, 1), 0, np.pi)[0])
+#print("math: ", sigma_part_gg(400, 1))
 
 #Hadronic cross sections
 
