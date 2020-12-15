@@ -142,6 +142,7 @@ np.savetxt('t1_H1.dat', t_c)
 # plt.show()
 
 
+#Uncomment the below plot1DDist if statement to plot the diff xsec in mtt
 plot1DDist = False
 plot2DDist = False
 
