@@ -1,5 +1,5 @@
-import EFTxSec_vers_03 as ExS 
-import MC_generator_hadronic_own as MCgenToy
+import EFTxSec as ExS 
+import MC_generator as MCgenToy
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -9,137 +9,152 @@ import time
 import lhapdf
 
 
+#Parameters 
 luminosity = 6*10**6#in pb^-1
 ECM = 14000
 s = ECM**2
-eff = 10**-5#selection efficiency
 pb_convert = 3.894E8
-cSMEFT = 1
-xSec_SM = 2.643116#101.347543074 #MadGraph result  in pb
-xSec_EFT = 3.25015#125.640073926
+eff = 1
+mt = 172
+mtt_min = 2*mt#apply cuts
+mtt_max = ECM
 
 
-#diff x-sec in mtt and y as a function of the ctG
-def dsigma_dmtt_dy(mtt, y, cSMEFT):
-	x1 = mtt/np.sqrt(s)*np.exp(y)
-	x2 = mtt/np.sqrt(s)*np.exp(-y)
-	dsigma_dmtt_dy = 2*mtt/s*ExS.v_weight(mtt, 91.188, x1, x2, cSMEFT)/(x1*x2)
-	return pb_convert*dsigma_dmtt_dy
+#Setup
+xSec_SM = MCgenToy.MC_genEvents(10**5, 0, mtt_min = mtt_min, mtt_max = mtt_max, gen_events = False)[0]
+xSec_EFT = MCgenToy.MC_genEvents(10**5, 1, mtt_min = mtt_min, mtt_max = mtt_max, gen_events = False)[0]
+
+
 
 def N_mean(cSMEFT):#Only works up to linear order in the EFT cross section
 	xSec = xSec_SM + cSMEFT*(xSec_EFT-xSec_SM)
 	return xSec*luminosity*eff
 
-#Generate samples with cSMEFT and save to hard disk for later use
-def load_data(data_exist = False, cSMEFT = cSMEFT, use_MG = True, w_max = 0):
-	if data_exist == False:
-		smp_mtt, smp_y = MCgenToy.MC_genEvents(Nsamples = 10**4, w_max = w_max_EFT, cSMEFT = cSMEFT)
-		np.savetxt('data.dat', np.transpose([smp_mtt,smp_y]))
-	data = []
-	if use_MG == False:
-		with open('data.dat') as f:
-			for line in f.readlines():
-				row = [float(x) for x in line.split()] 
-				data.append(row)
-		data = np.array(data)   
-		return data
-	if use_MG == True:
-		cnt = 0
-		N_MC_samples = 10**5
-		for e in pylhe.readLHE('lhe_events/gg_tt_SM_1500_10E5.lhe'):
-			sys.stdout.write("progress: %d%%   \r" % (float(cnt)*100./(N_MC_samples)) )
-			sys.stdout.flush()
-			mtt = ExS.invariant_mass(e.particles[-1],e.particles[-2])
-			y = ExS.rapidity(e.particles[-1],e.particles[-2])
-			data.append([mtt, y])
-			cnt += 1
-		data = np.array(data)
-		return data
-    	
-#load the data, or generate it if it does not exist
-print("Loading the dataset: ")
-data = load_data(data_exist = True)
-nMCsamples = data.shape[0]#number of Monte Carlo samples 
-print("Successfully loaded the entire dataset with %f samples"%(nMCsamples))
 
-#t_c_med = []
-#for c in np.arange(0, 1, 0.1):
+def load_data(cSMEFT, n_samples):
+	""" Returns samples of the invariant mass mtt and the rapidity y under hypothesis H.
+	Format of output: 
+		1st column: mtt
+		2nd column: y
+	One can indicate the region of phase space to use for generating pseudo data.
+	"""
+	
+	mtt, y = MCgenToy.MC_genEvents(n_samples, cSMEFT, mtt_min = mtt_min, mtt_max = mtt_max)
+	data = np.transpose([mtt, y])
+	return data
+
+def draw_hist(data, bins):
+	for i in range(len(data)):
+		hist, bins = np.histogram(data[i], bins = bins, density= False)
+		plt.step(bins, np.append(hist, hist[-1]), where ='post', label = i)
+	plt.legend()
+	plt.show()
 
 
-#the expected number of events under H0 (EFT) and H1 (SM)
-N_H0 = N_mean(cSMEFT= cSMEFT)
-N_H1 = N_mean(cSMEFT=0)
+def find_pdf_tc(c, H, data):
+	""" Return the mean and standard deviation of the pdf of tc under hypothesis H with Wilson coefficient c.
+	Input: the Wilson coeffcient c, hypothesis H (SM or EFT), pseudo data (first column the invariant mass mtt, second column the rapidity y)
 
-#print("expected counts:", N_H1)
+	"""
+	
+	#The expected number of events in the EFT and the SM
+	N_H0 = N_mean(c)
+	N_H1 = N_mean(0)
 
-
-mu = []
-sigma = []
-
-#The invariant mass and rapidity data points
-mtt = data[:10**3,0]
-y = data[:10**3,1]
-
-for c in np.arange(0, 1, 0.1):
-
-	dsigma_dmtt_dy_EFT = dsigma_dmtt_dy(mtt, y, cSMEFT = c)
-	dsigma_dmtt_dy_SM = dsigma_dmtt_dy(mtt, y, cSMEFT = 0)
-
+	mtt = data[:,0]
+	y = data[:,1]
+	
+	dsigma_dmtt_dy_EFT = ExS.dsigma_dmtt_dy(mtt, y, c)
+	dsigma_dmtt_dy_SM = ExS.dsigma_dmtt_dy(mtt, y, 0)
 
 	r_c = dsigma_dmtt_dy_EFT/dsigma_dmtt_dy_SM
 	tau_c = np.log(r_c)
-
-	#Construct the test statistic t_c and strore it
 	mu_tauc = np.mean(tau_c)
-	sigma_tauc = 1/(np.sqrt(N_H1))*np.sqrt(np.mean(tau_c**2))
+	
+	if H == 0:
+		sigma_tauc = 1/(np.sqrt(N_H0))*np.sqrt(np.mean(tau_c**2))
+		sigma_tc = N_H0*sigma_tauc
+		mu_tc = N_H0-N_H1-N_H0*mu_tauc
+	else:#H=1
+		sigma_tauc = 1/(np.sqrt(N_H1))*np.sqrt(np.mean(tau_c**2))
+		sigma_tc = N_H1*sigma_tauc
+		mu_tc = N_H0-N_H1-N_H1*mu_tauc
 
-	mu_tc = N_H0-N_H1-N_H1*mu_tauc
-	sigma_tc = N_H1*sigma_tauc
-	mu.append(mu_tc)
-	sigma.append(sigma_tc)
-mu = np.array(mu)
-sigma = np.array(sigma)
+	return mu_tc, sigma_tc
 
-print(mu, sigma)
+def find_pdf_tc_MC(c, H, data):
 
-tc_hor = np.linspace(-10, 40, 1000)
-def gaus(x, sigma, mean):
-	return (1/np.sqrt(2*np.pi*sigma**2))*np.exp(-(x-mean)**2/(2*sigma**2))
-for i in range(len(mu)):
-	plt.plot(tc_hor, gaus(tc_hor, sigma[i], mu[i]))
+	#the expected number of events under H0 (EFT) and H1 (SM)
+	N_H0 = N_mean(c)
+	N_H1 = N_mean(0)
 
-plt.xlabel(r'$t_c$')
-plt.legend()
-plt.title(r'$pdf(t_{1}|H_1)$')
-plt.show()
-#t_c_med.append(np.median(t_c))
+	nMCsamples = data.shape[0]
 
-#np.savetxt('tc_%.2f.dat'%c, t_c)
-#print("the mean is given by: ", mu_tc)
-#print("the std dev is given by: ", sigma_tc)
+	print("test", N_H1, nMCsamples)
 
-	# hist_tc, bins_tc = np.histogram(t_c, bins=30, density=True)
+	#print("expected counts:", N_H1)
+	t_c = []
 
-	# fig, ax = plt.subplots()
-	# ax.step(bins_tc[:-1], hist_tc, where ='post')
-	# plt.title(r'$\mathrm{pdf}(t_c|H_1)$ for c = 1')
-	# plt.show()
+	N_datasets = 10**3#Number of datasets for which we compute t_c
 
-#MCgenToy.generate_histo(t_c, 'tc')
-# t_c_med = np.array(t_c_med)
-# fig, ax = plt.subplots()
-# ax.scatter(np.arange(0, 1, 0.1), t_c_med)
-# plt.title("Median value")
-# plt.show()
+	print("Computing the test statistic tc for %f datasets"%(N_datasets))
+	cnt = 0
+	while cnt < N_datasets:
+		
+		sys.stdout.write("progress: %d%%   \r" % (float(cnt)*100./(N_datasets)) )
+		
+		#The size of the dataset is drawn from a Poisson distribution with mean N(X|H_1)
+		n_cal = np.random.poisson(lam=N_H1, size=1)[0]
+		#choose n_cal samples from the dataset of size nMCsamples
+		random_indices = np.random.choice(nMCsamples, size = n_cal, replace = False)
+		dataset = data[random_indices,:]
+
+		#The invariant mass and rapidity data points
+		mtt = dataset[:,0]
+		y = dataset[:,1]
+
+		#Construct tau_c
+		dsigma_dmtt_dy_EFT = ExS.dsigma_dmtt_dy(mtt, y, c)
+		dsigma_dmtt_dy_SM = ExS.dsigma_dmtt_dy(mtt, y, 0)
+		tau_c = dsigma_dmtt_dy_EFT/dsigma_dmtt_dy_SM
+
+		#Construct the test statistic t_c and store it
+		tc = N_H0 - N_H1 - np.sum(np.log(tau_c))
+		t_c.append(tc)
+
+		cnt += 1
+		
+		sys.stdout.flush()
+	t_c = np.array(t_c)
+	return t_c
 
 
-plot1DDist = False
-plot2DDist = False
+# calculate bin centers
+#bin_centers = 0.5 * (bins[:-1] + bins[1:])
 
-# if plot1DDist == True:
-#  	ExS.plotData(binWidth = 5, mtt_max = 1000, cSMEFT = 1)
+def nu_tot(cSMEFT):
+	bins = np.array([344, 2500])#np.array([344, 360, 430, 500, 580, 680, 800, 1000, 1200, 1500, 2500])
+	xsec_bin = np.array([MCgenToy.MC_genEvents(10**4, cSMEFT, mtt_min = bins[i], mtt_max = bins[i+1], gen_events = False) for i in range(len(bins)-1)])[:,0]
+	xsec_tot = np.sum(xsec_bin)
+	nu_tot = luminosity*eff*xsec_tot
+	nu_i = (xsec_bin/xsec_tot)*nu_tot
+	return nu_tot, nu_i
 
-# if plot2DDist == True:
-# 	coeffs=[0.001, 0.01, 0.1, 1, 10, 100]
-# 	xSec = [MCgenToy.MC_xSec(Nsamples = 10**4, cSMEFT = c, EFT = True, SM = True) for c in coeffs]
-# 	ExS.plot2Ddist(coeffs, xSec = xSec)
+def tc_binned(cSMEFT, H):
+	nu_tot_0, nu_i_0 = nu_tot(0)
+	nu_tot_1, nu_i_1 = nu_tot(1)
+	nu_tot_c = nu_tot_0 + cSMEFT*(nu_tot_1- nu_tot_0) 
+	nu_i_c = nu_i_0 + cSMEFT*(nu_i_1- nu_i_0)
+	n_samples = 10**6
+	tc_list = []
+	for i in range(n_samples):
+		if H == 0:#EFT
+			n_i = np.random.poisson(nu_i_c, len(nu_i_c))
+		else:
+			n_i = np.random.poisson(nu_i_0, len(nu_i_0))
+		tc = nu_tot_c - nu_tot_0 - np.sum(n_i*np.log(nu_i_c/nu_i_0))
+		tc_list.append(tc)
+	tc = np.array(tc_list)
+	return tc
+
+	

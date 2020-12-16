@@ -20,8 +20,35 @@ Gf = 0.0000116637
 v = 1/np.sqrt(Gf*np.sqrt(2))
 asQCD = 0.1184
 LambdaSMEFT = 10**3
+pb_convert = 3.894E8
 
 #Partonic cross sections
+
+def sigma_part_gg(sqrts, cSMEFT):#correct
+    hats = sqrts**2
+    num = asQCD**(3/2)*(np.sqrt(2*np.pi)*cSMEFT*hats*v*mt*(16*hats*np.arctanh(np.sqrt(1-4*mt**2/hats))-9*np.sqrt(hats*(hats-4*mt**2)))+8*np.pi*LambdaSMEFT**2*np.sqrt(asQCD)*(4*hats*mt**2+mt**4+hats**2)*np.arctanh(np.sqrt(1-4*mt**2/hats))-31*np.pi*LambdaSMEFT**2*mt**2*np.sqrt(hats*asQCD*(hats-4*mt**2))-7*np.pi*LambdaSMEFT**2*hats*np.sqrt(hats*asQCD*(hats-4*mt**2)))
+    den = 12*LambdaSMEFT**2*hats**3
+    return num/den
+
+def sigma_part_qq(sqrts, cSMEFT):#correct
+    hats = sqrts**2
+    num = 8*asQCD**(3/2)*np.sqrt(1-4*mt**2/hats)*(3*np.sqrt(2*np.pi)*cSMEFT*hats*v*mt+np.pi*LambdaSMEFT**2*np.sqrt(asQCD)*(2*mt**2+hats))
+    den = 27*LambdaSMEFT**2*hats**2
+    return num/den
+
+def weight(sqrts, mu, x1, x2, cSMEFT):
+    w_ii = sigma_part_gg(sqrts, cSMEFT)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
+    #Uncomment line below to turn on quark contribution 
+    #w_ii += 2*sigma_part_qq(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution  
+    return w_ii
+
+v_weight = np.vectorize(weight)
+
+def dsigma_dmtt_dy(mtt, y, cSMEFT):
+    x1 = mtt/np.sqrt(s)*np.exp(y)
+    x2 = mtt/np.sqrt(s)*np.exp(-y)
+    dsigma_dmtt_dy = 2*mtt/s*v_weight(mtt, 91.188, x1, x2, cSMEFT)/(x1*x2)
+    return pb_convert*dsigma_dmtt_dy
 
 #SM
 def dsigmadThetaqqSM(sqrts, theta):
@@ -34,7 +61,7 @@ def dsigmadThetaqqSM(sqrts, theta):
     dsigmadOmega = phaseSpaceFac*Me2
     dsigmadTheta = 2*np.pi*np.sin(theta)*dsigmadOmega
     return dsigmadTheta
-
+    
 def dsigmadThetaggSM(sqrts, theta):
     sP = sqrts**2
     t = mt**2-(sP/2)*(1-np.cos(theta)*np.sqrt(1-4*mt**2/sP))
@@ -71,43 +98,31 @@ def dsigmadThetaggEFT(sqrts, theta, cSMEFT):
     dsigmadTheta = 2*np.pi*np.sin(theta)*dsigmadOmega
     return dsigmadTheta
 
+#print("python: ", integrate.quad(lambda theta: dsigmadThetaqqSM(400, theta) + dsigmadThetaqqEFT(400, theta, 1), 0, np.pi)[0])
+#print("math: ", sigma_part_qq(400, 1))
+
 #Hadronic cross sections
 
 #SM
-def diffCrossHadronicSMQuark(sqrts):
+def diffCrossHadronicQuark(sqrts, cSMEFT):
     sP = sqrts**2
-    integrand = lambda y, theta:(s/sP)*(p.xfxQ(1, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-1, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
-                +p.xfxQ(2, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-2, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
-                +p.xfxQ(3, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-3, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
-                +p.xfxQ(4, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-4, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts)))*dsigmadThetaqqSM(sqrts, theta)+(s/sP)*(p.xfxQ(1, np.sqrt(sP/s)*np.exp(y), renScale(np.pi-theta, sqrts))*p.xfxQ(-1, np.sqrt(sP/s)*np.exp(-y), renScale(np.pi-theta, sqrts))+p.xfxQ(2, np.sqrt(sP/s)*np.exp(y), renScale(np.pi-theta, sqrts))*p.xfxQ(-2, np.sqrt(sP/s)*np.exp(-y), renScale(np.pi-theta, sqrts))+p.xfxQ(3, np.sqrt(sP/s)*np.exp(y), renScale(np.pi-theta, sqrts))*p.xfxQ(-3, np.sqrt(sP/s)*np.exp(-y), renScale(np.pi-theta, sqrts))+p.xfxQ(4, np.sqrt(sP/s)*np.exp(y), renScale(np.pi-theta, sqrts))*p.xfxQ(-4, np.sqrt(sP/s)*np.exp(-y), renScale(np.pi-theta, sqrts)))*dsigmadThetaqqSM(sqrts, np.pi-theta)
+    #Factor of two to account for the pi-theta contribution. dsigma/dtheta only depends on theta through cos^2, hence just a factor of two
+    integrand = lambda y:2*(s/sP)*(p.xfxQ(1, np.sqrt(sP/s)*np.exp(y), 91.188)*p.xfxQ(-1, np.sqrt(sP/s)*np.exp(-y), 91.188)
+                +p.xfxQ(2, np.sqrt(sP/s)*np.exp(y), 91.188)*p.xfxQ(-2, np.sqrt(sP/s)*np.exp(-y), 91.188)
+                +p.xfxQ(3, np.sqrt(sP/s)*np.exp(y), 91.188)*p.xfxQ(-3, np.sqrt(sP/s)*np.exp(-y), 91.188)
+                +p.xfxQ(4, np.sqrt(sP/s)*np.exp(y), 91.188)*p.xfxQ(-4, np.sqrt(sP/s)*np.exp(-y), 91.188))*sigma_part_qq(sqrts, cSMEFT)
     #factor 2*np.sqrt(sP) comes from the chain rule
-    diffCrossBSMqq = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.dblquad(integrand,0, np.pi, lambda theta: -0.5*np.log(s/sP), lambda theta : 0.5*np.log(s/sP))[0]
-    return diffCrossBSMqq
+    diffCrossqq = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.quad(integrand, -0.5*np.log(s/sP), 0.5*np.log(s/sP))[0]
+    return diffCrossqq
 
-def diffCrossHadronicSMGluon(sqrts):
+def diffCrossHadronicGluon(sqrts, cSMEFT):
     sP = sqrts**2
-    integrand = lambda y, theta:(s/sP)*p.xfxQ(21, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(21, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))*dsigmadThetaggSM(sqrts, theta)
+    integrand = lambda y:(s/sP)*(p.xfxQ(21, np.sqrt(sP/s)*np.exp(y), 91.188)*p.xfxQ(21, np.sqrt(sP/s)*np.exp(-y), 91.188))*sigma_part_gg(sqrts, cSMEFT)
     #factor 2*np.sqrt(sP) comes from the chain rule
-    diffCrossBSMgg = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.dblquad(integrand,0, np.pi, lambda theta: -0.5*np.log(s/sP), lambda theta : 0.5*np.log(s/sP))[0]
-    return diffCrossBSMgg
+    diffCrossgg = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.quad(integrand, -0.5*np.log(s/sP), 0.5*np.log(s/sP))[0]
+    return diffCrossgg
 
-#BSM
-def diffCrossHadronicBSMQuark(sqrts, cSMEFT):
-    sP = sqrts**2
-    integrand = lambda y, theta:(s/sP)*(p.xfxQ(1, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-1, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
-                +p.xfxQ(2, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-2, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
-                +p.xfxQ(3, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-3, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))
-                +p.xfxQ(4, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(-4, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts)))*dsigmadThetaqqEFT(sqrts, theta, cSMEFT)+(s/sP)*(p.xfxQ(1, np.sqrt(sP/s)*np.exp(y), renScale(np.pi-theta, sqrts))*p.xfxQ(-1, np.sqrt(sP/s)*np.exp(-y), renScale(np.pi-theta, sqrts))+p.xfxQ(2, np.sqrt(sP/s)*np.exp(y), renScale(np.pi-theta, sqrts))*p.xfxQ(-2, np.sqrt(sP/s)*np.exp(-y), renScale(np.pi-theta, sqrts))+p.xfxQ(3, np.sqrt(sP/s)*np.exp(y), renScale(np.pi-theta, sqrts))*p.xfxQ(-3, np.sqrt(sP/s)*np.exp(-y), renScale(np.pi-theta, sqrts))+p.xfxQ(4, np.sqrt(sP/s)*np.exp(y), renScale(np.pi-theta, sqrts))*p.xfxQ(-4, np.sqrt(sP/s)*np.exp(-y), renScale(np.pi-theta, sqrts)))*dsigmadThetaqqEFT(sqrts, np.pi-theta,cSMEFT)
-    #factor 2*np.sqrt(sP) comes from the chain rule
-    diffCrossBSMqq = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.dblquad(integrand,0, np.pi, lambda theta: -0.5*np.log(s/sP), lambda theta : 0.5*np.log(s/sP))[0]
-    return diffCrossBSMqq
 
-def diffCrossHadronicBSMGluon(sqrts, cSMEFT):
-    sP = sqrts**2
-    integrand = lambda y, theta:(s/sP)*p.xfxQ(21, np.sqrt(sP/s)*np.exp(y), renScale(theta, sqrts))*p.xfxQ(21, np.sqrt(sP/s)*np.exp(-y), renScale(theta, sqrts))*dsigmadThetaggEFT(sqrts, theta, cSMEFT)
-    #factor 2*np.sqrt(sP) comes from the chain rule
-    diffCrossBSMgg = 0.3894*(10**9)*(2*np.sqrt(sP)/s)*integrate.dblquad(integrand,0, np.pi, lambda theta: -0.5*np.log(s/sP), lambda theta : 0.5*np.log(s/sP))[0]
-    return diffCrossBSMgg
 
 
 def renScale(theta, sqrts):
@@ -120,14 +135,14 @@ def renScale(theta, sqrts):
 
 def diffCrossSM(sqrts):
     if sqrts >= 2*mt:
-        return diffCrossHadronicSMQuark(sqrts)+ diffCrossHadronicSMGluon(sqrts)
+        return diffCrossHadronicQuark(sqrts, 0)+ diffCrossHadronicGluon(sqrts, 0)
     else:
         return 0
 
 def diffCrossBSM(sqrts, cSMEFT):
     """Continuous version"""
     if sqrts >= 2*mt:
-        return diffCrossHadronicBSMQuark(sqrts, cSMEFT)+diffCrossHadronicBSMGluon(sqrts, cSMEFT)
+        return diffCrossHadronicQuark(sqrts, cSMEFT)+diffCrossHadronicGluon(sqrts, cSMEFT)
     else:
         return 0
 
@@ -150,7 +165,7 @@ def generateData(binWidth, mtt_max, cSMEFT):
     for shat_i in shat:
         sys.stdout.write("progress: %d%%   \r" % (cnt*100./(len(shat))) )
         sys.stdout.flush() 
-        crossSection.append(diffCrossSM(shat_i))
+        #crossSection.append(diffCrossSM(shat_i))
         crossSectionBSM.append(diffCrossBSM(shat_i, cSMEFT))
         cnt += 1
     crossSection = np.array(crossSection)
@@ -185,7 +200,7 @@ def plotData(binWidth, mtt_max, cSMEFT):
     ax1 = fig.add_axes([0.1, 0.35, 0.75, 0.55], xticklabels=[], xlim=(2*mt, 1000), ylim = (10**-2, 6))
     
     #plt.plot(x, crossSection, '--', label=r'$\mathrm{SM}^2\;\mathrm{(ana)}$')
-    ax1.plot(x, crossSectionBSM + crossSection, '--' , label=r'$\mathrm{SM}^2+\mathrm{SM}\times \mathrm{BSM\;\mathrm{(ana)}}$')
+    ax1.plot(x, crossSectionBSM, '--' , label=r'$\mathrm{SM}^2+\mathrm{SM}\times \mathrm{BSM\;\mathrm{(ana)}}$')
     #plt.plot(x, crossSectionBSM, '--', label=r'$\mathrm{SM}\times \mathrm{BSM\;\mathrm{(ana)}}$')
    
     #plot_sm, = plt.plot(bins_sm[:-1], hist_sm, label = r'$\mathrm{SM}^2$')
@@ -199,7 +214,7 @@ def plotData(binWidth, mtt_max, cSMEFT):
     plt.legend()
 
     ax2 = fig.add_axes([0.1, 0.1, 0.75, 0.2], ylim = (0.9, 1.1) )
-    ax2.scatter(x, hist_eft_smint[:len(x)]/(crossSectionBSM+crossSection), s = 10)
+    ax2.scatter(x, hist_eft_smint[:len(x)]/(crossSectionBSM), s = 10)
     ax2.hlines(1, 2*mt, 1000, colors='k', linestyles ='dashed')
 
     # plot_eft_int, = plt.plot(bins_eft_int[:-1], hist_eft_int, label = r'$\mathrm{SM}\times \mathrm{BSM}$')
