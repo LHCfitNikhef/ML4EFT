@@ -30,24 +30,88 @@ def sigma_part_gg(sqrts, cSMEFT):#correct
     den = 12*LambdaSMEFT**2*hats**3
     return num/den
 
+def sigma_part_gg_SM(sqrts):
+    hats = sqrts**2
+    num = np.pi*asQCD**2*(8*(4*hats*mt**2+mt**4+hats**2)*np.arctanh(np.sqrt(1-4*mt**2/hats))-31*mt**2*np.sqrt(hats*(hats-4*mt**2))-7*hats*np.sqrt(hats*(hats-4*mt**2)))
+    den = 12*hats**3
+    return num/den
+
+def sigma_part_gg_LO(sqrts, cSMEFT):
+    hats = sqrts**2
+    num = np.sqrt(np.pi/2)*cSMEFT*v*mt*asQCD**(3/2)*np.sqrt(1-4*mt**2/hats)*(16*np.sqrt(hats/(hats-4*mt**2))*np.arctanh(np.sqrt(1-4*mt**2/hats))-9)
+    den = 6*LambdaSMEFT**2*hats
+    return num/den
+
+
+def sigma_part_gg_NLO(sqrts, cSMEFT):
+    hats = sqrts**2
+    num = cSMEFT**2*v**2*asQCD*np.sqrt(1-4*mt**2/hats)*(mt**2*(16*np.sqrt(hats/(hats-4*mt**2))*np.arctanh(np.sqrt(1-4*mt**2/hats))-3)+6*hats)
+    den = 24*LambdaSMEFT**4*hats
+    return num/den
+
+def sigma_part_qq_SM(sqrts):
+    hats = sqrts**2
+    num = 8*np.pi*asQCD**2*(2*mt**2+hats)*np.sqrt(1-4*mt**2/hats)
+    den = 27*hats**2
+    return num/den
+
+def sigma_part_qq_LO(sqrts, cSMEFT):
+    hats = sqrts**2
+    num = 8*np.sqrt(2*np.pi)*cSMEFT*v*mt*asQCD**(3/2)*np.sqrt(1-4*mt**2/hats)
+    den = 9*LambdaSMEFT**2*hats
+    return num/den
+
+def sigma_part_qq_NLO(sqrts, cSMEFT):
+    hats = sqrts**2
+    num = 2*cSMEFT**2*v**2*asQCD*(8*mt**2+hats)*np.sqrt(1-4*mt**2/hats)
+    den = 27*LambdaSMEFT**4*hats
+    return num/den
+
+
 def sigma_part_qq(sqrts, cSMEFT):#correct
     hats = sqrts**2
     num = 8*asQCD**(3/2)*np.sqrt(1-4*mt**2/hats)*(3*np.sqrt(2*np.pi)*cSMEFT*hats*v*mt+np.pi*LambdaSMEFT**2*np.sqrt(asQCD)*(2*mt**2+hats))
     den = 27*LambdaSMEFT**2*hats**2
     return num/den
 
-def weight(sqrts, mu, x1, x2, cSMEFT):
-    w_ii = sigma_part_gg(sqrts, cSMEFT)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
-    #Uncomment line below to turn on quark contribution 
-    #w_ii += 2*sigma_part_qq(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution  
+# print("xsec new = ", sigma_part_gg_SM(400) + sigma_part_gg_LO(400, 1))
+# print("xsec old = ", sigma_part_gg(400, 1))
+# sys.exit()
+
+
+def weight(sqrts, mu, x1, x2, cSMEFT, order, NP):
+    if NP == 0:
+        w_ii = sigma_part_gg_SM(sqrts)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
+        #Uncomment line below to turn on quark contribution 
+        w_ii += 2*sigma_part_qq_SM(sqrts)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
+    if NP == 1:
+        w_ii = (sigma_part_gg_SM(sqrts)+sigma_part_gg_LO(sqrts, cSMEFT))*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
+        #Uncomment line below to turn on quark contribution 
+        w_ii += 2*(sigma_part_qq_SM(sqrts)+sigma_part_qq_LO(sqrts, cSMEFT))*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
+    if NP == 2:
+        w_ii = (sigma_part_gg_SM(sqrts)+sigma_part_gg_LO(sqrts, cSMEFT)+sigma_part_gg_NLO(sqrts, cSMEFT))*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
+        #Uncomment line below to turn on quark contribution 
+        w_ii += 2*(sigma_part_qq_SM(sqrts)+sigma_part_qq_LO(sqrts, cSMEFT)+sigma_part_qq_NLO(sqrts, cSMEFT))*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
+    if order == "SM":
+        w_ii = sigma_part_gg_SM(sqrts)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
+        #Uncomment line below to turn on quark contribution 
+        w_ii += 2*sigma_part_qq_SM(sqrts)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
+    if order == "NHO":
+        w_ii = sigma_part_gg_LO(sqrts, cSMEFT)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
+        #Uncomment line below to turn on quark contribution 
+        w_ii += 2*sigma_part_qq_LO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution  
+    if order == "HO":
+        w_ii = sigma_part_gg_NLO(sqrts, cSMEFT)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
+        #Uncomment line below to turn on quark contribution 
+        w_ii += 2*sigma_part_qq_NLO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
     return w_ii
 
 v_weight = np.vectorize(weight)
 
-def dsigma_dmtt_dy(mtt, y, cSMEFT):
+def dsigma_dmtt_dy(mtt, y, cSMEFT, order = None, NP = None):
     x1 = mtt/np.sqrt(s)*np.exp(y)
     x2 = mtt/np.sqrt(s)*np.exp(-y)
-    dsigma_dmtt_dy = 2*mtt/s*v_weight(mtt, 91.188, x1, x2, cSMEFT)/(x1*x2)
+    dsigma_dmtt_dy = 2*mtt/s*v_weight(mtt, 91.188, x1, x2, cSMEFT, order, NP)/(x1*x2)
     return pb_convert*dsigma_dmtt_dy
 
 #SM

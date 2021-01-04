@@ -39,7 +39,7 @@ s = ECM**2
 def renScale():
     return 91.188
 
-def MC_genEvents(Nsamples, cSMEFT, mtt_min = 1500, mtt_max = ECM, gen_events = True):
+def MC_genEvents(Nsamples, cSMEFT, order = None, NP = None, mtt_min = 1500, mtt_max = ECM, gen_events = True):
 
     print("Hadron com energy:", ECM, "GeV")
     print('\n')
@@ -107,7 +107,7 @@ def MC_genEvents(Nsamples, cSMEFT, mtt_min = 1500, mtt_max = ECM, gen_events = T
         # set the scale for the pdfs
         mu = renScale() 
         # calc. phase space point weight
-        w_ii = ExS.weight(np.sqrt(hats), mu, x1, x2, cSMEFT) * deltarho * deltay * Jac  / (x1 * x2)
+        w_ii = ExS.weight(np.sqrt(hats), mu, x1, x2, cSMEFT, order, NP) * deltarho * deltay * Jac  / (x1 * x2)
         # add to the sums
         sum_w = sum_w + w_ii
         sum_w_sq = sum_w_sq + w_ii**2
@@ -164,7 +164,7 @@ def MC_genEvents(Nsamples, cSMEFT, mtt_min = 1500, mtt_max = ECM, gen_events = T
         # set the scale for the pdfs
         mu = renScale() 
         # calc. phase space point weight
-        w_ii = ExS.weight(np.sqrt(hats), mu, x1, x2, cSMEFT) * deltarho * deltay * Jac  / (x1 * x2)
+        w_ii = ExS.weight(np.sqrt(hats), mu, x1, x2, cSMEFT, order, NP) * deltarho * deltay * Jac  / (x1 * x2)
         # now divide by maximum and compare to probability
         prob = w_ii / w_max
         rand_num = random.random()

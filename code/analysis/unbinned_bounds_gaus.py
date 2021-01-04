@@ -4,14 +4,17 @@ from decimal import Decimal
 import EFTxSec as ExS 
 import MC_generator as MCgenToy
 import tauc as tau
+import sys
 
 
 def gaus(x, mean, sigma):
  	return (1/np.sqrt(2*np.pi*sigma**2))*np.exp(-(x-mean)**2/(2*sigma**2))
 
 #Generate data in the SM and the EFT at a chosen Wilson coefficient
-data_sm = tau.load_data(0, 10**4)#load SM data
-data_eft = tau.load_data(9.95*10**-5, 10**4)
+n_samples = 10**4
+#NP = 0: SM data, NP = 1: linear EFT, NP = 2: quadratic EFT
+data_sm = tau.load_data(0, n_samples, NP = 0)#load SM data
+data_eft = tau.load_data(9.95*10**-5, 10**4, NP = 1)#load
 
 coeffs = np.array([9.95*10**-5])#-np.linspace(1.79*10**-3, 1.87*10**-3,9)
 npar = len(coeffs)

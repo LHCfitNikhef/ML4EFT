@@ -21,8 +21,8 @@ mtt_max = ECM
 
 
 #Setup
-xSec_SM = MCgenToy.MC_genEvents(10**5, 0, mtt_min = mtt_min, mtt_max = mtt_max, gen_events = False)[0]
-xSec_EFT = MCgenToy.MC_genEvents(10**5, 1, mtt_min = mtt_min, mtt_max = mtt_max, gen_events = False)[0]
+xSec_SM = MCgenToy.MC_genEvents(10**5, 0, NP = 0, mtt_min = mtt_min, mtt_max = mtt_max, gen_events = False)[0]
+xSec_EFT = MCgenToy.MC_genEvents(10**5, 1, NP = 1, mtt_min = mtt_min, mtt_max = mtt_max, gen_events = False)[0]
 
 
 
@@ -31,7 +31,7 @@ def N_mean(cSMEFT):#Only works up to linear order in the EFT cross section
 	return xSec*luminosity*eff
 
 
-def load_data(cSMEFT, n_samples):
+def load_data(cSMEFT, n_samples, order = None, NP = None):
 	""" Returns samples of the invariant mass mtt and the rapidity y under hypothesis H.
 	Format of output: 
 		1st column: mtt
@@ -39,7 +39,7 @@ def load_data(cSMEFT, n_samples):
 	One can indicate the region of phase space to use for generating pseudo data.
 	"""
 	
-	mtt, y = MCgenToy.MC_genEvents(n_samples, cSMEFT, mtt_min = mtt_min, mtt_max = mtt_max)
+	mtt, y = MCgenToy.MC_genEvents(n_samples, cSMEFT, order, NP, mtt_min = mtt_min, mtt_max = mtt_max)
 	data = np.transpose([mtt, y])
 	return data
 
@@ -61,11 +61,13 @@ def find_pdf_tc(c, H, data):
 	N_H0 = N_mean(c)
 	N_H1 = N_mean(0)
 
+	
+
 	mtt = data[:,0]
 	y = data[:,1]
 	
-	dsigma_dmtt_dy_EFT = ExS.dsigma_dmtt_dy(mtt, y, c)
-	dsigma_dmtt_dy_SM = ExS.dsigma_dmtt_dy(mtt, y, 0)
+	dsigma_dmtt_dy_EFT = ExS.dsigma_dmtt_dy(mtt, y, c, NP = 1)
+	dsigma_dmtt_dy_SM = ExS.dsigma_dmtt_dy(mtt, y, 0,  NP = 0)
 
 	r_c = dsigma_dmtt_dy_EFT/dsigma_dmtt_dy_SM
 	tau_c = np.log(r_c)
@@ -88,14 +90,16 @@ def find_pdf_tc_MC(c, H, data):
 	N_H0 = N_mean(c)
 	N_H1 = N_mean(0)
 
+
 	nMCsamples = data.shape[0]
+
 
 	print("test", N_H1, nMCsamples)
 
 	#print("expected counts:", N_H1)
 	t_c = []
 
-	N_datasets = 10**3#Number of datasets for which we compute t_c
+	N_datasets = 10**5#Number of datasets for which we compute t_c
 
 	print("Computing the test statistic tc for %f datasets"%(N_datasets))
 	cnt = 0
@@ -133,8 +137,8 @@ def find_pdf_tc_MC(c, H, data):
 #bin_centers = 0.5 * (bins[:-1] + bins[1:])
 
 def nu_tot(cSMEFT):
-	bins = np.array([344, 2500])#np.array([344, 360, 430, 500, 580, 680, 800, 1000, 1200, 1500, 2500])
-	xsec_bin = np.array([MCgenToy.MC_genEvents(10**4, cSMEFT, mtt_min = bins[i], mtt_max = bins[i+1], gen_events = False) for i in range(len(bins)-1)])[:,0]
+	bins = np.array([344, 360, 430, 500, 580, 680, 800, 1000, 1200, 1500, 2500])
+	xsec_bin = np.array([MCgenToy.MC_genEvents(10**4, cSMEFT, NP = 1, mtt_min = bins[i], mtt_max = bins[i+1], gen_events = False) for i in range(len(bins)-1)])[:,0]
 	xsec_tot = np.sum(xsec_bin)
 	nu_tot = luminosity*eff*xsec_tot
 	nu_i = (xsec_bin/xsec_tot)*nu_tot
@@ -145,6 +149,7 @@ def tc_binned(cSMEFT, H):
 	nu_tot_1, nu_i_1 = nu_tot(1)
 	nu_tot_c = nu_tot_0 + cSMEFT*(nu_tot_1- nu_tot_0) 
 	nu_i_c = nu_i_0 + cSMEFT*(nu_i_1- nu_i_0)
+
 	n_samples = 10**6
 	tc_list = []
 	for i in range(n_samples):
