@@ -42,7 +42,6 @@ def sigma_part_gg_LO(sqrts, cSMEFT):
     den = 6*LambdaSMEFT**2*hats
     return num/den
 
-
 def sigma_part_gg_NLO(sqrts, cSMEFT):
     hats = sqrts**2
     num = cSMEFT**2*v**2*asQCD*np.sqrt(1-4*mt**2/hats)*(mt**2*(16*np.sqrt(hats/(hats-4*mt**2))*np.arctanh(np.sqrt(1-4*mt**2/hats))-3)+6*hats)
@@ -67,7 +66,6 @@ def sigma_part_qq_NLO(sqrts, cSMEFT):
     den = 27*LambdaSMEFT**4*hats
     return num/den
 
-
 def sigma_part_qq(sqrts, cSMEFT):#correct
     hats = sqrts**2
     num = 8*asQCD**(3/2)*np.sqrt(1-4*mt**2/hats)*(3*np.sqrt(2*np.pi)*cSMEFT*hats*v*mt+np.pi*LambdaSMEFT**2*np.sqrt(asQCD)*(2*mt**2+hats))
@@ -80,6 +78,10 @@ def sigma_part_qq(sqrts, cSMEFT):#correct
 
 
 def weight(sqrts, mu, x1, x2, cSMEFT, order, NP):
+    """
+    NP parameter: order in the EFT
+    order parameter: work at one specific order
+    """
     if NP == 0:
         w_ii = sigma_part_gg_SM(sqrts)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
         #Uncomment line below to turn on quark contribution 
@@ -109,10 +111,15 @@ def weight(sqrts, mu, x1, x2, cSMEFT, order, NP):
 v_weight = np.vectorize(weight)
 
 def dsigma_dmtt_dy(mtt, y, cSMEFT, order = None, NP = None):
-    x1 = mtt/np.sqrt(s)*np.exp(y)
-    x2 = mtt/np.sqrt(s)*np.exp(-y)
-    dsigma_dmtt_dy = 2*mtt/s*v_weight(mtt, 91.188, x1, x2, cSMEFT, order, NP)/(x1*x2)
-    return pb_convert*dsigma_dmtt_dy
+    #check whether x = {mtt, y} falls inside the kinematically allowed region
+    if mtt == 2*mt: return 0
+    if np.abs(y) < np.log(np.sqrt(s)/mtt):
+        x1 = mtt/np.sqrt(s)*np.exp(y)
+        x2 = mtt/np.sqrt(s)*np.exp(-y)
+        dsigma_dmtt_dy = 2*mtt/s*v_weight(mtt, 91.188, x1, x2, cSMEFT, order, NP)/(x1*x2)
+        return pb_convert*dsigma_dmtt_dy
+    else:
+        return 0
 
 #SM
 def dsigmadThetaqqSM(sqrts, theta):
@@ -238,6 +245,13 @@ def generateData(binWidth, mtt_max, cSMEFT):
     #plot(shat, crossSection, crossSectionBSM)
 
 def plotData(binWidth, mtt_max, cSMEFT):
+    """
+    Plot the differential cross section in M(tt) and compare it with the MG5 result
+    inputs: 
+        - binWidth = bin width of the MG5 events
+        - mtt_max = plot goes from [2*mt, mtt_max]
+        - cSMEFT = Value of ctG in TeV^-2
+    """
     x, crossSection, crossSectionBSM = generateData(binWidth, mtt_max, cSMEFT)
 
     data_sm = []
@@ -350,3 +364,7 @@ def plot2Ddist(coeffs, xSec):
         cnt+=1
     plt.tight_layout()
     plt.show()
+
+print("plotting the data")
+plotData(40, 1000, 1)
+print("plotted the data)
