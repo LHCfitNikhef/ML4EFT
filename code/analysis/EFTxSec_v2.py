@@ -15,7 +15,7 @@ import pylhe
 
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 mt = 172 #Top quark mass in GeV
-s = (13*10**3)**2#GeV^2
+s = (14*10**3)**2#GeV^2
 Gf = 0.0000116637
 v = 1/np.sqrt(Gf*np.sqrt(2))
 asQCD = 0.1184
@@ -118,6 +118,15 @@ def dsigma_dmtt(mtt, cSMEFT, order = None, NP = None):
     dsigma_dmtt = integrate.quad(dsigma_dmtt_dy, y_min, y_max, args = (mtt, cSMEFT, order, NP))[0]
     return dsigma_dmtt
 
+def likelihood_ratio(y, mtt, cSMEFT, order = None, NP = None):
+    """
+    Compute the analytic likelihood ratio r(x, c)
+    """
+    dsigma_0 = dsigma_dmtt_dy(y, mtt, cSMEFT, order, NP)#EFT
+    dsigma_1 = dsigma_dmtt_dy(y, mtt, 0, order, NP = 0)#SM
+    ratio = dsigma_0/dsigma_1 if dsigma_1 != 0 else 0
+    return ratio
+
 def renScale(theta, sqrts):
     sP = sqrts**2
     p_T = np.sqrt((sP/4)-mt**2)*np.sin(theta)
@@ -169,42 +178,84 @@ def plotData(binWidth, mtt_max, cSMEFT, order = None, NP = None):
     
     #compute the analytical result
     x, y = crossSection(binWidth, mtt_max, cSMEFT, order, NP)
+    _, y_sm = crossSection(binWidth, mtt_max, 0, NP = 0)
 
     #load the madgraph result
     data_madgraph = []
     found_weight = False
-    for e in pylhe.readLHE('lhe_events/NHO_10E6.lhe'):
+    for e in pylhe.readLHE('lhe_events/eft_50.lhe'):
         data_madgraph.append(invariant_mass(e.particles[-1],e.particles[-2]))
         if found_weight == False:
             weight = e.eventinfo.weight
             found_weight = True
-    
+    print("madgraph xsec = ", weight)
     hist_mg, bins_mg = np.histogram(data_madgraph, bins = np.arange(2*mt, np.max(data_madgraph), binWidth), density = True)
     hist_mg *= weight
     
     #show analytical result and mg5 in one plot
     fig = plt.figure()
     
-    ax1 = fig.add_axes([0.1, 0.35, 0.75, 0.55], xticklabels = [], xlim = (2 * mt, 1000), ylim = (10**-2, 6))
-    ax1.plot(x, y, '--' , label=r'$\mathrm{SM}^2+\mathrm{SM}\times \mathrm{BSM\;\mathrm{(ana)}}$')
+    ax1 = fig.add_axes([0.1, 0.40, 0.75, 0.50], xticklabels = [], xlim = (2 * mt, 1000), ylim = (10**-2, 6))
+    ax1.plot(x, y, '--' , label='EFT NLO (ana)')
     
-    ax1.step(bins_mg[:-1], hist_mg, where ='post', label = r'$\mathrm{SM}^2+\mathrm{SM}\times \mathrm{BSM}$')
-    plt.title('Analytic SMEFT versus MadGraph with ctG'+r'$=1$')
+    ax1.step(bins_mg[:-1], hist_mg, where ='post', label = 'EFT NLO (mg5)')
+    plt.title('Analytic SMEFT versus MadGraph with ctG'+r'$=0.5$')
 
     plt.yscale('log')
     plt.ylabel(r'$d\sigma/dm_{tt}\;\mathrm{[pb\:GeV^{-1}]}$')
     plt.legend()
 
     #add a subplot that shows the ratio analytical/madgraph
-    ax2 = fig.add_axes([0.1, 0.1, 0.75, 0.2], ylim = (0.9, 1.1) )
+    ax2 = fig.add_axes([0.1, 0.25, 0.75, 0.10], ylim = (0.9, 1.1) )
     ax2.scatter(x, hist_mg[:len(x)]/(y), s = 10)
     ax2.hlines(1, 2*mt, mtt_max, colors='k', linestyles ='dashed')
 
+    
+    plt.ylabel('num/ana')
+    plt.xlim((2*mt, mtt_max))
+
+    ax3 = fig.add_axes([0.1, 0.1, 0.75, 0.10], ylim = (1.1, 1.2) )
+    ax3.scatter(x, y/y_sm, s = 10)
+
     plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
-    plt.ylabel('num/ana ratio')
+    plt.ylabel('BSM/SM')
     plt.xlim((2*mt, mtt_max))
     
     plt.show()
 
-plotData(10, 1000, 1, NP = 1)
+def plot_likelihood_ratio():
+    
+    y_max = np.log(np.sqrt(s)/(2*mt))
+    y_min = -y_max
+
+    vlikelihood_ratio = np.vectorize(likelihood_ratio)
+
+    plt.figure()
+    mtt_max = 1000
+    x = np.arange(2.001*mt, mtt_max, 1)
+    y = np.arange(y_min, y_max, 0.01)
+
+    X, Y = np.meshgrid(x, y)
+    Z = vlikelihood_ratio(Y, X, 20, NP = 2)
+
+    Z_mask = np.ma.masked_equal(Z,0)
+    mean = Z_mask.mean()
+    std = Z_mask.std()
+    
+    im = plt.imshow(Z, cmap = plt.cm.Blues, aspect = (mtt_max-2*mt)/(y_max-y_min), extent=[2*mt, mtt_max, y_min, y_max], vmin = mean - 3*std, vmax = mean + 3*std, interpolation='quadric')
+    plt.colorbar(im)
+
+    plt.ylabel(r'Rapidity $Y = \log\sqrt{x_1/x_2}$')
+    plt.xlabel(r'$m_{tt}\;\mathrm{GeV}$')
+    plt.title('Likelihood ratio')
+
+    #plt.title(r'$pdf(x|H_1(c=10^{%d}))$'%(-3+3))
+    plt.show()
+
+
+plotData(10, 1000, 0.5, NP = 2)
+#plot_likelihood_ratio()
+
+#print(np.array([0, 1, 2, 0]) == 0)
 #print(dsigma_dmtt(400, 1, NP = 1))
+
