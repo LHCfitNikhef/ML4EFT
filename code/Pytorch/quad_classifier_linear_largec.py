@@ -1,15 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import torch
 print("Using torch", torch.__version__)
-
-
-# In[2]:
-
 
 from torch import nn
 from functools import reduce
@@ -20,18 +13,7 @@ import numpy as np
 import datetime
 import sys
 import matplotlib.pyplot as plt
-import math 
-
-
-# In[3]:
-
-
-#%matplotlib auto
-get_ipython().run_line_magic('matplotlib', 'inline')
-
-
-# In[4]:
-
+import math
 
 class MLP(nn.Module):
     def __init__(self):
@@ -52,10 +34,6 @@ class MLP(nn.Module):
         #x = self.fc3(x)
         return x
 
-
-# In[5]:
-
-
 class Predictor(nn.Module):
     def __init__(self):
         super().__init__()
@@ -67,10 +45,6 @@ class Predictor(nn.Module):
         n_beta_out = self.n_beta(x)
         return 1 / (1 + (1 + c*n_alpha_out)**2 + (c*n_beta_out)**2)
 
-
-# In[6]:
-
-
 def loss_fn(outputs, labels, weights):
     # outputs.shape = (batch_size, 1), output \in (0, 1)
     # labels.shape = (batch_size, 1), labels \in {0, 1}
@@ -80,10 +54,6 @@ def loss_fn(outputs, labels, weights):
     #add up all the losses in the batch and divide by the length of the minibatch, i.e. average 
     #over the number of datapoint in the mini-batch
     return torch.sum(loss, dim = 0)
-
-
-# In[7]:
-
 
 class eventDataset(data.Dataset):
     
