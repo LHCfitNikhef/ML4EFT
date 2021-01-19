@@ -198,7 +198,7 @@ def plotData(binWidth, mtt_max, cSMEFT, order = None, NP = None):
     ax1 = fig.add_axes([0.1, 0.40, 0.75, 0.50], xticklabels = [], xlim = (2 * mt, 1000), ylim = (10**-2, 6))
     ax1.plot(x, y, '--' , label='EFT NLO (ana)')
     
-    ax1.step(bins_mg[:-1], hist_mg, where ='post', label = 'EFT NLO (mg5)')
+    # ax1.step(bins_mg[:-1], hist_mg, where ='post', label = 'EFT NLO (mg5)')
     plt.title('Analytic SMEFT versus MadGraph with ctG'+r'$=0.5$')
 
     plt.yscale('log')
@@ -214,7 +214,7 @@ def plotData(binWidth, mtt_max, cSMEFT, order = None, NP = None):
     plt.ylabel('num/ana')
     plt.xlim((2*mt, mtt_max))
 
-    ax3 = fig.add_axes([0.1, 0.1, 0.75, 0.10], ylim = (1.1, 1.2) )
+    ax3 = fig.add_axes([0.1, 0.1, 0.75, 0.10], ylim = (0.9*(y/y_sm).min(), 1.1*(y/y_sm).max()))
     ax3.scatter(x, y/y_sm, s = 10)
 
     plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
@@ -231,31 +231,32 @@ def plot_likelihood_ratio():
     vlikelihood_ratio = np.vectorize(likelihood_ratio)
 
     plt.figure()
-    mtt_max = 1000
-    x = np.arange(2.001*mt, mtt_max, 1)
+    mtt_max = 2500
+    mtt_min = 700
+    x = np.arange(mtt_min, mtt_max, 1)
     y = np.arange(y_min, y_max, 0.01)
 
     X, Y = np.meshgrid(x, y)
-    Z = vlikelihood_ratio(Y, X, 20, NP = 2)
+    Z = vlikelihood_ratio(Y, X, 10, NP = 2)
 
     Z_mask = np.ma.masked_equal(Z,0)
     mean = Z_mask.mean()
     std = Z_mask.std()
     
-    im = plt.imshow(Z, cmap = plt.cm.Blues, aspect = (mtt_max-2*mt)/(y_max-y_min), extent=[2*mt, mtt_max, y_min, y_max], vmin = mean - 3*std, vmax = mean + 3*std, interpolation='quadric')
+    im = plt.imshow(Z, cmap = plt.cm.Blues, aspect = (mtt_max-2*mt)/(y_max-y_min), extent=[mtt_min, mtt_max, y_min, y_max], vmin = mean - 3*std, vmax = mean + 3*std, interpolation='quadric', origin='lower')
     plt.colorbar(im)
 
     plt.ylabel(r'Rapidity $Y = \log\sqrt{x_1/x_2}$')
     plt.xlabel(r'$m_{tt}\;\mathrm{GeV}$')
-    plt.title('Likelihood ratio')
+    plt.title('Likelihood ratio: EFT NLO')
 
     #plt.title(r'$pdf(x|H_1(c=10^{%d}))$'%(-3+3))
     plt.show()
 
 
-plotData(10, 1000, 0.5, NP = 2)
+plotData(10, 2500, 10, NP = 2)
 #plot_likelihood_ratio()
-
+#print(likelihood_ratio(2,500, 10, NP = 2))
 #print(np.array([0, 1, 2, 0]) == 0)
 #print(dsigma_dmtt(400, 1, NP = 1))
 
