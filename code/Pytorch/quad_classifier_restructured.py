@@ -176,7 +176,7 @@ class EventDataset(data.Dataset):
             weight.append(e.eventinfo.weight)
             event_data.append([mtt, y])
             cnt += 1
-            if cnt == 50:
+            if cnt == 10:
                 break
         event_data = torch.tensor(event_data)
         n_events = event_data.size()[0]
@@ -435,7 +435,7 @@ def make_predictions(network_path, train_dataset, val_dataset):
     plt.ylim(y.min(), y.max())
     plt.legend()
     plt.show()
-    fig.savefig('overfitting.pdf')
+    fig.savefig('overfitting_10_high_res.pdf')
 
 
 def main(trained, path):
@@ -455,7 +455,7 @@ def main(trained, path):
 
 if __name__ == '__main__':
     trained = True
-    path = 'QC_overfit_50.pt'
+    path = 'QC_overfit_10.pt'
     main(trained, path)
 
 
