@@ -281,32 +281,19 @@ class EventDataset(data.Dataset):
         return data_tuple, weight_tuple, label_tuple
 
 
-train_dataset = EventDataset(train=True)
-val_dataset = EventDataset(train=False)
-
-print("Lenth of the training set = ", len(train_dataset))
-print("Lenth of the validation set = ", len(val_dataset))
-
-train_dataset.rescale(0.1, 0.9)
-val_dataset.rescale(0.1, 0.9)
-train_dataset.standardize()
-val_dataset.standardize()  # standardize the validation set by the same mean and variance
-
-# change getitem settings if needed:
-# train_dataset.resc = True
-# train_dataset.std = False
+def plot_training_report(train_loss, val_loss):
+    f = plt.figure()
+    plt.plot(np.array(train_loss), label='train')
+    plt.plot(np.array(val_loss), label='val')
+    plt.xlabel('epochs')
+    plt.ylabel('loss')
+    plt.legend()
+    plt.show()
+    f.savefig('loss.pdf')
 
 
-# data can be accessed by first providing the value of c as the first element
-# and then 0, 1, 2 indicate the data, weights and labels respectively.
-# len(train_dataset.data_sm_std['10'][0]), train_dataset.data_eft['5'][0], len(train_dataset)
-
-
-c_values = train_dataset.c_values
-loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
-
-
-def training_loop(n_epochs, optimizer, model, train_loader, val_loader):
+def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values, path):
+    loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
     for epoch in range(1, n_epochs + 1):
         loss_train, loss_val = 0.0, 0.0
         cnt = 0
@@ -347,25 +334,13 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader):
             loss_train += train_loss.item()
             loss_val += val_loss.item()
 
-        print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train/len(train_data_loader)),
-              'Validation loss {}'.format(loss_val/len(val_data_loader)))
-        loss_list_train.append(loss_train/len(train_data_loader))
-        loss_list_val.append(loss_val/len(val_data_loader))
+        print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train/len(train_loader)),
+              'Validation loss {}'.format(loss_val/len(val_loader)))
+        loss_list_train.append(loss_train/len(train_loader))
+        loss_list_val.append(loss_val/len(val_loader))
 
-
-model = Predictor(num_inputs=2, num_hidden=70, num_outputs=1)
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
-train_data_loader = data.DataLoader(train_dataset, batch_size=train_dataset.__len__(), shuffle=True)
-val_data_loader = data.DataLoader(val_dataset, batch_size=val_dataset.__len__(), shuffle=False)
-
-training_loop(
-    n_epochs=6000,
-    optimizer=optimizer,
-    model=model,
-    train_loader=train_data_loader,
-    val_loader=val_data_loader
-)
-
+        torch.save(model.state_dict(), path)
+    plot_training_report(loss_list_train, loss_list_val)
 
 def visualize(data, labels):
 
@@ -381,87 +356,107 @@ def visualize(data, labels):
     #fig.savefig('loss_train_val.png')
 
 
-visualize([val_dataset.data_eft_std['10'][0], val_dataset.data_sm_std['10'][0]], [10, 0])
-visualize([train_dataset.data_eft_std['10'][0], train_dataset.data_sm_std['10'][0]], [10, 0])
-#
-#
-plt.plot(np.array(loss_list_train), label='train')
-plt.plot(np.array(loss_list_val), label='val')
-plt.xlabel('epochs')
-plt.ylabel('loss')
-plt.legend()
-plt.show()
-#
-#
-#
-#
-torch.save(model.state_dict(), 'QC_overfit.pt')
-#
-#
-#
-#
-loaded_model = Predictor(num_inputs=2, num_hidden=70, num_outputs=1)
-loaded_model.load_state_dict(torch.load('QC_overfit.pt'))
+# visualize([val_dataset.data_eft_std['10'][0], val_dataset.data_sm_std['10'][0]], [10, 0])
+# visualize([train_dataset.data_eft_std['10'][0], train_dataset.data_sm_std['10'][0]], [10, 0])
 
-def likelihood_ratio_nn(x, c):
+
+def likelihood_ratio_nn(loaded_model, x, c):
     alpha_x = loaded_model.n_alpha
     beta_x = loaded_model.n_beta
     ratio = (1.0 + c*alpha_x(x))**2 + (c*beta_x(x))**2
     return ratio
 
 
-def f(x, c):
-    ratio = likelihood_ratio_nn(x, c)
+def f(loaded_model, x, c):
+    ratio = likelihood_ratio_nn(loaded_model, x, c)
     return 1/(1+ratio)
 
-fig, ax = plt.subplots(facecolor='w')
-mt = 172
-s = (14*10**3)**2
-y_max = np.log(np.sqrt(s)/(2*mt))
-y_min = -y_max
-mtt = torch.arange(2*mt, 1000, 1)
-y = torch.arange(y_min, y_max, 0.1)
 
-Z = []
+def train_classifier(path, train_dataset, val_dataset):
+    model = Predictor(num_inputs=2, num_hidden=70, num_outputs=1)
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    train_data_loader = data.DataLoader(train_dataset, batch_size=train_dataset.__len__(), shuffle=True)
+    val_data_loader = data.DataLoader(val_dataset, batch_size=val_dataset.__len__(), shuffle=False)
+
+    training_loop(
+        n_epochs=6000,
+        optimizer=optimizer,
+        model=model,
+        train_loader=train_data_loader,
+        val_loader=val_data_loader,
+        c_values=train_dataset.c_values,
+        path=path
+    )
 
 
-for i in range(len(y)):
-    print(i/len(y))
-    for j in range(len(mtt)):
-        mtt_j = mtt[j].item()
-        y_i = y[i].item()
-        x_features = (torch.tensor([mtt_j, y_i])-train_dataset.mean)/train_dataset.std
-        f_pred = f(x_features.float(), 10).item()
-        Z.append(f_pred)
-Z = np.array(Z)
-Z = np.reshape(Z, (len(y), len(mtt)))
-print(Z)
-im = plt.imshow(Z, cmap = plt.cm.Blues, aspect = (1000-2*mt)/(y_max-y_min), extent=[2*mt, 1000, y_min, y_max], origin='lower')
-plt.colorbar(im)
+def make_predictions(network_path, train_dataset, val_dataset):
+    loaded_model = Predictor(num_inputs=2, num_hidden=70, num_outputs=1)
+    loaded_model.load_state_dict(torch.load(network_path))
 
-plt.ylabel(r'Rapidity $Y = \log\sqrt{x_1/x_2}$')
-plt.xlabel(r'$m_{tt}\;\mathrm{GeV}$')
-plt.title('Likelihood ratio')
+    fig, ax = plt.subplots(facecolor='w')
+    mt = 172
+    s = (14 * 10 ** 3) ** 2
+    y_max = np.log(np.sqrt(s) / (2 * mt))
+    y_min = -y_max
+    mtt = torch.arange(2 * mt, 1000, 1)
+    y = torch.arange(y_min, y_max, 0.01)
+    Z = []
 
-mtt = train_dataset.data_sm['10'][0][:,0].numpy()
-y = train_dataset.data_sm['10'][0][:,1].numpy()
+    for i in range(len(y)):
+        print(i / len(y))
+        for j in range(len(mtt)):
+            mtt_j = mtt[j].item()
+            y_i = y[i].item()
+            x_features = (torch.tensor([mtt_j, y_i]) - train_dataset.mean) / train_dataset.std
+            f_pred = f(loaded_model, x_features.float(), 10).item()
+            Z.append(f_pred)
+    Z = np.array(Z)
+    Z = np.reshape(Z, (len(y), len(mtt)))
+    im = plt.imshow(Z, cmap=plt.cm.Blues, aspect=(1000 - 2 * mt) / (y_max - y_min), extent=[2 * mt, 1000, y_min, y_max], origin='lower')
+    plt.colorbar(im)
 
-mtt_5 = train_dataset.data_sm['5'][0][:,0].numpy()
-y_5 = train_dataset.data_sm['5'][0][:,1].numpy()
+    plt.ylabel(r'Rapidity $Y = \log\sqrt{x_1/x_2}$')
+    plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
+    plt.title(r'$f(x,c)$ ')
 
-ax.scatter(mtt, y, c='orange')
-ax.scatter(mtt_5, y_5, c='red')
+    mtt_sm = torch.cat((train_dataset.data_sm['5'][0][:, 0], train_dataset.data_sm['10'][0][:, 0])).numpy()
+    y_sm = torch.cat((train_dataset.data_sm['5'][0][:, 1], train_dataset.data_sm['5'][0][:, 1])).numpy()
 
-#plt.title(r'$pdf(x|H_1(c=10^{%d}))$'%(-3+3))
-plt.show()
+    mtt_5 = train_dataset.data_eft['5'][0][:, 0].numpy()
+    y_5 = train_dataset.data_eft['5'][0][:, 1].numpy()
 
-def main():
+    mtt_10 = train_dataset.data_eft['10'][0][:, 0].numpy()
+    y_10 = train_dataset.data_eft['10'][0][:, 1].numpy()
+
+    ax.scatter(mtt_sm, y_sm, c='orange', label='SM', s=10)
+    ax.scatter(mtt_5, y_5, c='red', label='EFT 5', s=10)
+    ax.scatter(mtt_10, y_10, c='green', label='EFT 10', s=10)
+    plt.xlim(mtt.min(), mtt.max())
+    plt.ylim(y.min(), y.max())
+    plt.legend()
+    plt.show()
+    fig.savefig('overfitting.pdf')
+
+
+def main(trained, path):
     train_dataset = EventDataset(train=True)
     val_dataset = EventDataset(train=False)
 
+    train_dataset.rescale(0.1, 0.9)
+    val_dataset.rescale(0.1, 0.9)
+    train_dataset.standardize()
+    val_dataset.standardize()  # standardize the validation set by the same mean and variance
+
+    if trained:  # classifier is trained already
+        make_predictions(path, train_dataset, val_dataset)
+    else:
+        train_classifier(path, train_dataset, val_dataset)
+
 
 if __name__ == '__main__':
-    main()
+    trained = True
+    path = 'QC_overfit_50.pt'
+    main(trained, path)
 
 
 
