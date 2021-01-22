@@ -14,53 +14,67 @@ import sys
 import pylhe
 
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
-mt = 172 #Top quark mass in GeV
-s = (14*10**3)**2#GeV^2
+mt = 0.172  # 172 #Top quark mass in GeV
+s = 14**2  # (14*10**3)**2#GeV^2
 Gf = 0.0000116637
-v = 1/np.sqrt(Gf*np.sqrt(2))
+v = 1/np.sqrt(Gf*np.sqrt(2))*10**-3  # 1/np.sqrt(Gf*np.sqrt(2))
 asQCD = 0.1184
-LambdaSMEFT = 10**3
+LambdaSMEFT = 1  # 10**3
 pb_convert = 3.894E8
 
 #Partonic cross sections
 
 def sigma_part_gg(sqrts, cSMEFT):#correct
+    if sqrts == 2*mt:
+        return 0
     hats = sqrts**2
     num = asQCD**(3/2)*(np.sqrt(2*np.pi)*cSMEFT*hats*v*mt*(16*hats*np.arctanh(np.sqrt(1-4*mt**2/hats))-9*np.sqrt(hats*(hats-4*mt**2)))+8*np.pi*LambdaSMEFT**2*np.sqrt(asQCD)*(4*hats*mt**2+mt**4+hats**2)*np.arctanh(np.sqrt(1-4*mt**2/hats))-31*np.pi*LambdaSMEFT**2*mt**2*np.sqrt(hats*asQCD*(hats-4*mt**2))-7*np.pi*LambdaSMEFT**2*hats*np.sqrt(hats*asQCD*(hats-4*mt**2)))
     den = 12*LambdaSMEFT**2*hats**3
     return num/den
 
 def sigma_part_gg_SM(sqrts):
+    if sqrts == 2*mt:
+        return 0
     hats = sqrts**2
     num = np.pi*asQCD**2*(8*(4*hats*mt**2+mt**4+hats**2)*np.arctanh(np.sqrt(1-4*mt**2/hats))-31*mt**2*np.sqrt(hats*(hats-4*mt**2))-7*hats*np.sqrt(hats*(hats-4*mt**2)))
     den = 12*hats**3
     return num/den
 
 def sigma_part_gg_LO(sqrts, cSMEFT):
+    if sqrts == 2*mt:
+        return 0
     hats = sqrts**2
     num = np.sqrt(np.pi/2)*cSMEFT*v*mt*asQCD**(3/2)*np.sqrt(1-4*mt**2/hats)*(16*np.sqrt(hats/(hats-4*mt**2))*np.arctanh(np.sqrt(1-4*mt**2/hats))-9)
     den = 6*LambdaSMEFT**2*hats
     return num/den
 
 def sigma_part_gg_NLO(sqrts, cSMEFT):
+    if sqrts == 2*mt:
+        return 0
     hats = sqrts**2
     num = cSMEFT**2*v**2*asQCD*np.sqrt(1-4*mt**2/hats)*(mt**2*(16*np.sqrt(hats/(hats-4*mt**2))*np.arctanh(np.sqrt(1-4*mt**2/hats))-3)+6*hats)
     den = 24*LambdaSMEFT**4*hats
     return num/den
 
 def sigma_part_qq_SM(sqrts):
+    if sqrts == 2*mt:
+        return 0
     hats = sqrts**2
     num = 8*np.pi*asQCD**2*(2*mt**2+hats)*np.sqrt(1-4*mt**2/hats)
     den = 27*hats**2
     return num/den
 
 def sigma_part_qq_LO(sqrts, cSMEFT):
+    if sqrts == 2*mt:
+        return 0
     hats = sqrts**2
     num = 8*np.sqrt(2*np.pi)*cSMEFT*v*mt*asQCD**(3/2)*np.sqrt(1-4*mt**2/hats)
     den = 9*LambdaSMEFT**2*hats
     return num/den
 
 def sigma_part_qq_NLO(sqrts, cSMEFT):
+    if sqrts == 2*mt:
+        return 0
     hats = sqrts**2
     num = 2*cSMEFT**2*v**2*asQCD*(8*mt**2+hats)*np.sqrt(1-4*mt**2/hats)
     den = 27*LambdaSMEFT**4*hats
@@ -88,16 +102,31 @@ def weight(sqrts, mu, x1, x2, cSMEFT, order, NP):
         #Uncomment line below to turn on quark contribution 
         w_ii += 2*sigma_part_qq_SM(sqrts)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
     if order == "NHO":
-        w_ii = sigma_part_gg_LO(sqrts, cSMEFT)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
+        w_ii = sigma_part_gg_LO(sqrts, cSMEFT)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))
         #Uncomment line below to turn on quark contribution 
-        w_ii += 2*sigma_part_qq_LO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution  
+        w_ii += 2*sigma_part_qq_LO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution
     if order == "HO":
         w_ii = sigma_part_gg_NLO(sqrts, cSMEFT)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))  
         #Uncomment line below to turn on quark contribution 
         w_ii += 2*sigma_part_qq_NLO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
     return w_ii
 
-v_weight = np.vectorize(weight)
+def n_alpha_ana(mtt, y):
+    """
+    :param mtt: invariant mass of the top-quark pair
+    :param y: rapidity of the top-quark pair
+    :return: r(x,c) = 1 + c*n_alpha at the linear level in the EFT. This function gives n_alpha (analytically).
+    """
+    x1 = mtt / np.sqrt(s) * np.exp(y)
+    x2 = mtt / np.sqrt(s) * np.exp(-y)
+    if np.abs(y) < np.log(np.sqrt(s) / mtt):
+        return weight(mtt, 91.188, x1, x2, 1, order="NHO", NP=None)/weight(mtt, 91.188, x1, x2, 1, order="SM", NP=None)
+    else:
+        return 0
+
+
+v_weight = np.vectorize(weight, otypes=[np.float])
+
 
 def dsigma_dmtt_dy(y, mtt, cSMEFT, order = None, NP = None):
     """
@@ -123,7 +152,7 @@ def likelihood_ratio(y, mtt, cSMEFT, order = None, NP = None):
     Compute the analytic likelihood ratio r(x, c)
     """
     dsigma_0 = dsigma_dmtt_dy(y, mtt, cSMEFT, order, NP)#EFT
-    dsigma_1 = dsigma_dmtt_dy(y, mtt, 0, order, NP = 0)#SM
+    dsigma_1 = dsigma_dmtt_dy(y, mtt, 0, order=None, NP=0)#SM
     ratio = dsigma_0/dsigma_1 if dsigma_1 != 0 else 0
     return ratio
 
@@ -230,16 +259,17 @@ def plot_likelihood_ratio():
     y_max = np.log(np.sqrt(s)/(2*mt))
     y_min = -y_max
 
-    vlikelihood_ratio = np.vectorize(likelihood_ratio)
+    # Important to include otypes = [np.float], else all the output is int by default
+    vlikelihood_ratio = np.vectorize(likelihood_ratio, otypes=[np.float])
 
     fig = plt.figure()
-    mtt_max = 2500
-    mtt_min = 700
-    x = np.arange(mtt_min, mtt_max, 1)
+    mtt_max = 2.500
+    mtt_min = 0.700
+    x = np.arange(mtt_min, mtt_max, 10**-3)
     y = np.arange(y_min, y_max, 0.01)
 
     X, Y = np.meshgrid(x, y)
-    Z = vlikelihood_ratio(Y, X, 10, NP = 1)
+    Z = vlikelihood_ratio(Y, X, 10.0, NP=2)
 
     Z_mask = np.ma.masked_equal(Z,0)
     mean = Z_mask.mean()
@@ -249,16 +279,26 @@ def plot_likelihood_ratio():
     plt.colorbar(im)
 
     plt.ylabel(r'Rapidity $Y = \log\sqrt{x_1/x_2}$')
-    plt.xlabel(r'$m_{tt}\;\mathrm{GeV}$')
-    plt.title('Likelihood ratio: EFT LO')
+    plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
+    plt.title('Likelihood ratio: Quadratic EFT')
 
     #plt.title(r'$pdf(x|H_1(c=10^{%d}))$'%(-3+3))
     plt.show()
-    fig.savefig('likelihood_ratio_EFT_LO.pdf')
+    fig.savefig('likelihood_ratio_EFT_Quadratic.pdf')
 
-#plotData(15, 2500, 10, NP = 2)
-plot_likelihood_ratio()
-#print(likelihood_ratio(2,500, 10, NP = 2))
-#print(np.array([0, 1, 2, 0]) == 0)
+# plotData(15, 2500, 10, NP = 2)
+# plot_likelihood_ratio()
+
 #print(dsigma_dmtt(400, 1, NP = 1))
+
+x = np.arange(0.75, 2.5, 10**-3)[1:]
+n_alpha = np.array([n_alpha_ana(x_i, 0) for x_i in x])
+fig = plt.figure()
+plt.plot(x, 1+10*n_alpha)
+plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
+plt.ylabel(r'$r = 1+10*n_\alpha$')
+plt.title('Analytic likelihood ratio at y=0 and ctG = 10')
+plt.ylim(3.2, 3.6)
+plt.show()
+fig.savefig('n_alpha.pdf')
 
