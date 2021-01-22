@@ -19,13 +19,13 @@ class MLP(nn.Module):
         self.fc1 = nn.Linear(num_inputs, num_hidden)
         self.fc2 = nn.Linear(num_hidden, num_hidden)
         self.fc3 = nn.Linear(num_hidden, num_outputs)
-        self.relu = nn.Tanh()
-    
+        self.relu = nn.ReLU()
+
     def forward(self, x):
         x = self.fc1(x)
         x = self.relu(x)
-        x = self.fc2(x)
-        x = self.relu(x)
+        # x = self.fc2(x)
+        # x = self.relu(x)
         # x = self.fc2(x)
         # x = self.relu(x)
         # x = self.fc2(x)
@@ -41,11 +41,11 @@ class Predictor(nn.Module):
         super().__init__()
         self.n_alpha = MLP(num_inputs, num_hidden, num_outputs)
         self.n_beta = MLP(num_inputs, num_hidden, num_outputs)
-        
+
     def forward(self, x, c):
         n_alpha_out = self.n_alpha(x)
         n_beta_out = self.n_beta(x)
-        return 1 / (1 + (1 + c*n_alpha_out)**2 + (c*n_beta_out)**2)
+        return 1 / (1 + (1 + c * n_alpha_out) ** 2 + (c * n_beta_out) ** 2)
 
 
 def loss_fn(outputs, labels, w_e):
@@ -182,7 +182,7 @@ class EventDataset(data.Dataset):
             event_data.append([mtt, y, np.log(mtt)])
             # event_data.append([mtt, y])
             cnt += 1
-            if cnt == 50:
+            if cnt == 10000:
                 break
         event_data = torch.tensor(event_data)
         n_events = event_data.size()[0]
@@ -200,7 +200,7 @@ class EventDataset(data.Dataset):
         # # path_eft_dict = {'5': 'eft_5.lhe', '10': 'eft_lo_30.lhe'}
         # path_sm_dict = {'5': 'lhe_cut/sm_5_cut.lhe', '10': 'lhe_cut/sm_10_cut.lhe', '30': 'lhe_cut/sm_30_cut.lhe'}
 
-        path_eft_dict = {'5': 'eft_5.lhe', '10': 'eft_10.lhe', '30': 'eft_30.lhe'}
+        path_eft_dict = {'5': 'eft_lo_5.lhe', '10': 'eft_lo_10.lhe', '30': 'eft_lo_30.lhe'}
         path_sm_dict = {'5': 'sm_5.lhe', '10': 'sm_10.lhe', '30': 'sm_m50.lhe'}
 
         # set the seed for reproducibility and to make sure the training and validation sets do not overlap
@@ -387,7 +387,7 @@ def f(loaded_model, x, c):
 
 
 def train_classifier(path, train_dataset, val_dataset):
-    model = Predictor(num_inputs=3, num_hidden=70, num_outputs=1)
+    model = Predictor(num_inputs=3, num_hidden=20, num_outputs=1)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
     train_data_loader = data.DataLoader(train_dataset, batch_size=train_dataset.__len__(), shuffle=True)
     val_data_loader = data.DataLoader(val_dataset, batch_size=val_dataset.__len__(), shuffle=False)
@@ -397,7 +397,7 @@ def train_classifier(path, train_dataset, val_dataset):
     # val_data_loader = data.DataLoader(val_dataset, batch_size=int(val_dataset.__len__()/4), shuffle=False)
 
     training_loop(
-        n_epochs=500,
+        n_epochs=100,
         optimizer=optimizer,
         model=model,
         train_loader=train_data_loader,
@@ -481,8 +481,8 @@ def main(trained, path):
 
 
 if __name__ == '__main__':
-    trained = False
-    path = 'QC_fit.pt'
+    trained = True
+    path = 'QC_linear.pt'
     main(trained, path)
 
 
