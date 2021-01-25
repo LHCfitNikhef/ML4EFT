@@ -300,7 +300,7 @@ def plot_likelihood_ratio_1D(mtt_min, mtt_max, ctG):
     x = np.arange(mtt_min, mtt_max, 10 ** -2)
     #print(likelihood_ratio_1D(2.0, 10, NP=1))
     # sys.exit()
-    y = [likelihood_ratio_1D(x_i, ctG, NP=1) for x_i in x]
+    y = [1/(1+likelihood_ratio_1D(x_i, ctG, NP=1)) for x_i in x]
     # fig = plt.figure()
     # plt.plot(x, y)
     # plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
@@ -314,7 +314,7 @@ def plot_likelihood_ratio_1D(mtt_min, mtt_max, ctG):
 
 # plotData(15, 2500, 10, NP = 2)
 #plot_likelihood_ratio()
-plot_likelihood_ratio_1D()
+#plot_likelihood_ratio_1D()
 
 #print(dsigma_dmtt(400, 1, NP = 1))
 
