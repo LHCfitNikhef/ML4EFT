@@ -296,11 +296,12 @@ def plot_likelihood_ratio():
     plt.show()
     fig.savefig('likelihood_ratio_EFT_Linear.pdf')
 
-def plot_likelihood_ratio_1D(mtt_min, mtt_max, ctG):
+
+def plot_likelihood_ratio_1D(mtt_min, mtt_max, ctg, np_order=None):
     x = np.arange(mtt_min, mtt_max, 10 ** -2)
     #print(likelihood_ratio_1D(2.0, 10, NP=1))
     # sys.exit()
-    y = [1/(1+likelihood_ratio_1D(x_i, ctG, NP=1)) for x_i in x]
+    y = [1/(1+likelihood_ratio_1D(x_i, ctg, NP=np_order)) for x_i in x]
     # fig = plt.figure()
     # plt.plot(x, y)
     # plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')

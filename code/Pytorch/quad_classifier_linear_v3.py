@@ -6,8 +6,11 @@ import torch.optim as optim
 import pylhe
 import numpy as np
 import datetime
-import matplotlib.pyplot as plt
 import math
+import matplotlib; matplotlib.use("TkAgg")
+from matplotlib import pyplot as plt
+from matplotlib import animation
+import EFTxSec_v2 as ExS
 from torch import nn
 import sys
 # print("Using torch", torch.__version__)
@@ -34,7 +37,7 @@ class MLP(nn.Module):
         return x
 
 
-class Predictor(nn.Module):
+class Predictor_linear(nn.Module):
     def __init__(self, num_inputs, num_hidden, num_outputs):
         super().__init__()
         self.n_alpha = MLP(num_inputs, num_hidden, num_outputs)
@@ -42,6 +45,19 @@ class Predictor(nn.Module):
     def forward(self, x, c):
         n_alpha_out = self.n_alpha(x)
         return 1 / (1 + (1 + c*n_alpha_out**2))
+
+
+class Predictor_quadratic(nn.Module):
+    def __init__(self, num_inputs, num_hidden, num_outputs):
+        super().__init__()
+        self.n_alpha = MLP(num_inputs, num_hidden, num_outputs)
+        self.n_beta = MLP(num_inputs, num_hidden, num_outputs)
+
+    def forward(self, x, c):
+        n_alpha_out = self.n_alpha(x)
+        n_beta_out = self.n_beta(x)
+        r = (1+c*n_alpha_out)**2 + (c*n_beta_out)**2
+        return 1 / (1 + r)
 
 
 def loss_fn(outputs, labels, w_e):
@@ -176,7 +192,7 @@ class EventDataset(data.Dataset):
             weight.append(e.eventinfo.weight)
             event_data.append([mtt])
             cnt += 1
-            if cnt == 30000:
+            if cnt == 20000:
                 break
         event_data = torch.tensor(event_data)
         weight = torch.tensor(weight)
@@ -192,8 +208,13 @@ class EventDataset(data.Dataset):
         # # path_eft_dict = {'5': 'eft_5.lhe', '10': 'eft_lo_30.lhe'}
         # path_sm_dict = {'5': 'lhe_cut/sm_5_cut.lhe', '10': 'lhe_cut/sm_10_cut.lhe', '30': 'lhe_cut/sm_30_cut.lhe'}
 
-        path_eft_dict = {'5': 'lo_1000_500K/eft_5.lhe', '10': 'lo_1000_500K/eft_10.lhe', '15': 'lo_1000_500K/eft_15.lhe'}
-        path_sm_dict = {'5': 'lo_1000_500K/sm_5.lhe', '10': 'lo_1000_500K/sm_10.lhe', '15': 'lo_1000_500K/sm_15.lhe'}
+        # path_eft_dict = {'5': 'linear_1000_500K/eft_5.lhe', '10': 'linear_1000_500K/eft_10.lhe', '15': 'linear_1000_500K/eft_15.lhe'}
+        # path_sm_dict = {'5': 'linear_1000_500K/sm_5.lhe', '10': 'linear_1000_500K/sm_10.lhe', '15': 'linear_1000_500K/sm_15.lhe'}
+
+        path_eft_dict = {'5': 'quadratic/eft_5.lhe', '10': 'quadratic/eft_10.lhe',
+                         '15': 'quadratic/eft_15.lhe'}
+        path_sm_dict = {'5': 'quadratic/sm_5.lhe', '10': 'quadratic/sm_10.lhe',
+                        '15': 'quadratic/sm_15.lhe'}
 
         # set the seed for reproducibility and to make sure the training and validation sets do not overlap
         torch.manual_seed(0)
@@ -334,8 +355,8 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values
               'Validation loss {}'.format(loss_val/len(val_loader)))
         loss_list_train.append(loss_train/len(train_loader))
         loss_list_val.append(loss_val/len(val_loader))
+        torch.save(model.state_dict(), 'trained_nn/' + path + '_{}.pt'.format(epoch))
 
-        torch.save(model.state_dict(), path)
     plot_training_report(loss_list_train, loss_list_val)
 
 
@@ -351,19 +372,22 @@ def visualize(data_eft, data_sm):
     plt.show()
 
 
-def likelihood_ratio_nn(loaded_model, x, c):
-    alpha_x = loaded_model.n_alpha
-    ratio = 1.0 + c*alpha_x(x)
-    return ratio
+# def likelihood_ratio_nn(loaded_model, x, c):
+#     alpha_x = loaded_model.n_alpha
+#     ratio = 1.0 + c*alpha_x(x)
+#     return ratio
 
 
-def f(loaded_model, x, c):
-    ratio = likelihood_ratio_nn(loaded_model, x, c)
-    return 1/(1+ratio)
+# def f(loaded_model, x, c):
+#     ratio = likelihood_ratio_nn(loaded_model, x, c)
+#     return 1/(1+ratio)
 
 
-def train_classifier(path, train_dataset, val_dataset):
-    model = Predictor(num_inputs=1, num_hidden=25, num_outputs=1)
+def train_classifier(path, train_dataset, val_dataset, quadratic=True):
+    if quadratic:
+        model = Predictor_quadratic(num_inputs=1, num_hidden=25, num_outputs=1)
+    else:
+        model = Predictor_linear(num_inputs=1, num_hidden=25, num_outputs=1)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
     train_data_loader = data.DataLoader(train_dataset, batch_size=train_dataset.__len__(), shuffle=True)
     val_data_loader = data.DataLoader(val_dataset, batch_size=val_dataset.__len__(), shuffle=False)
@@ -372,7 +396,7 @@ def train_classifier(path, train_dataset, val_dataset):
     # val_data_loader = data.DataLoader(val_dataset, batch_size=int(val_dataset.__len__()/4), shuffle=False)
 
     training_loop(
-        n_epochs=2,
+        n_epochs=30,
         optimizer=optimizer,
         model=model,
         train_loader=train_data_loader,
@@ -381,46 +405,97 @@ def train_classifier(path, train_dataset, val_dataset):
         path=path
     )
 
-import EFTxSec_v2 as ExS
 
+def f_linear(x, n_alpha, ctg):
+    f_nn = [1 / (1 + 1 + ctg * n_alpha(x_i.float()).item() ** 2) for x_i in x]
+    return np.array(f_nn)
+
+def f_quadratic(x, n_alpha, n_beta, ctg):
+    f_nn = [1 / (1 + (1 + ctg * n_alpha(x_i.float()).item()) ** 2 + (ctg*n_beta(x_i.float()).item())**2)for x_i in x]
+    return np.array(f_nn)
 
 def make_predictions(network_path, train_dataset):
-    loaded_model = Predictor(num_inputs=1, num_hidden=25, num_outputs=1)
+    """
+    :param network_path: path to the saved NN to be loaded
+    :param train_dataset: training data needed to find the mean and std
+    :return: comparison between NN prediction and analytically known result for the likelihood ratio
+    """
+
+    # Be careful to use the same network architecture as during training
+    loaded_model = Predictor_quadratic(num_inputs=1, num_hidden=25, num_outputs=1)
     loaded_model.load_state_dict(torch.load(network_path))
 
     fig = plt.figure()
-    mt = 172
-    ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(800, 4000))
+    # mt = 172
+    mtt_min, mtt_max = 800, 4000
+    # ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(mtt_min, mtt_max))
+    ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[])
 
-    mtt = torch.arange(800, 4000, 10).unsqueeze(1)
-    x = (mtt - train_dataset.mean) / train_dataset.std
-    ctG = 10
-    f_pred = np.array([1/(1+1+ctG*loaded_model.n_alpha(x_i.float()).item()**2) for x_i in x])
+    # Set up coordinates
+    mtt = torch.arange(mtt_min, mtt_max, 10).unsqueeze(1)
+    x = (mtt - train_dataset.mean) / train_dataset.std  # rescale the inputs
+    n_alpha_trained = loaded_model.n_alpha
+    n_beta_trained = loaded_model.n_beta
+    f_pred = f_quadratic(x, n_alpha_trained, n_beta_trained, ctg=5)
+    # f_pred = np.array([1/(1+1+ctG*loaded_model.n_alpha(x_i.float()).item()**2) for x_i in x])
 
+    # Plot the NN prediction
     ax1.plot(mtt.numpy(), f_pred, label='NN prediction')
 
-    x, y = ExS.plot_likelihood_ratio_1D(0.8, 4.0, ctG)
+    # Compute the analytic likelihood ratio and plot
+    x, y = ExS.plot_likelihood_ratio_1D(mtt_min*10**-3, mtt_max*10**-3, ctg=5, np_order=2)
     x = np.array(x)
     y = np.array(y)
-    ax1.plot(x*10**3, y, '--', c='red', label='Analytical result')
+    ax1.plot(x*1e3, y, '--', c='red', label='Analytical result')
 
     plt.ylabel(r'$f\;(m_{tt}, c)$')
-
-    # plt.xlim((1000, 2500))
+    plt.xlim((800, 4000))
     plt.ylim((0, 1))
-    plt.title('Likelihood ratio: NN versus analytical at ctG = 10')
+    plt.title('NN versus analytical at ctG = 5')
     plt.legend()
 
-    ax3 = fig.add_axes([0.15, 0.1, 0.75, 0.20], ylim=(0.8, 1.2))
-    ax3.plot(x*10**3, y/f_pred)
+    # ax2 = fig.add_axes([0.15, 0.1, 0.75, 0.20], ylim=(0.8, 1.2))
+    ax2 = fig.add_axes([0.15, 0.1, 0.75, 0.20])
+    ax2.plot(x*1e3, y/f_pred)
+    plt.xlabel(r'$m_{tt}\;[GeV]$')
     plt.ylabel('ana/NN')
     plt.xlim((800, 4000))
-
-    plt.xlabel(r'$m_{tt}\;[GeV]$')
+    plt.ylim(((y/f_pred).min(), (y/f_pred).max()))
 
     plt.show()
-    fig.savefig('NNvsAna_v4.pdf')
-    # return np.array(output)
+    fig.savefig('NNvsAna_v10.pdf')
+
+def animate_learning():
+
+    # First set up the figure, the axis, and the plot element we want to animate
+    fig = plt.figure()
+    ax = plt.axes(xlim=(0, 2), ylim=(-2, 2))
+    line, = ax.plot([], [], lw=2)
+
+    # initialization function: plot the background of each frame
+    def init():
+        line.set_data([], [])
+        return line,
+
+    # animation function.  This is called sequentially
+    def animate(i):
+        x = np.linspace(0, 2, 1000)
+        y = np.sin(2 * np.pi * (x - 0.01 * i))
+        line.set_data(x, y)
+        return line,
+
+    # call the animator.  blit=True means only re-draw the parts that have changed.
+    anim = animation.FuncAnimation(fig, animate, init_func=init,
+                                   frames=200, interval=20, blit=True)
+
+    # save the animation as an mp4.  This requires ffmpeg or mencoder to be
+    # installed.  The extra_args ensure that the x264 codec is used, so that
+    # the video can be embedded in html5.  You may need to adjust this for
+    # your system: for more information, see
+    # http://matplotlib.sourceforge.net/api/animation_api.html
+    anim.save('basic_animation.gif', fps=30)
+
+    plt.show()
 
 
 def main(trained, path):
@@ -432,6 +507,7 @@ def main(trained, path):
     train_dataset.standardize()
     val_dataset.standardize()  # standardize the validation set by the same mean and variance
 
+    # Uncomment to use rescaled data between [0.1, 0.9]
     # train_dataset.resc = True
     # val_dataset.resc = True
 
@@ -440,12 +516,12 @@ def main(trained, path):
     if trained:  # classifier is trained already
         make_predictions(path, train_dataset)
     else:
-        train_classifier(path, train_dataset, val_dataset)
+        train_classifier(path, train_dataset, val_dataset, quadratic=True)
 
 
 if __name__ == '__main__':
     trained = False
-    path = 'QC_fit_random.pt'
+    path = 'QC_quadratic'
     main(trained, path)
 
 
