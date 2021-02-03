@@ -1,0 +1,1 @@
+{"name": 5, "epochs": 200, "input_size": 1, "output_size": 1, "hidden_sizes": [30, 30, 30, 30], "trained": 0, "animate": 0, "n_dat": 100, "quadratic": 1, "coeff": [{"op": "ctg", "value": 7.5}, {"op": "ctgI", "value": 0}]}
