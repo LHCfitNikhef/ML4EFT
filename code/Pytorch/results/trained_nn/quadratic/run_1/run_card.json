@@ -1,0 +1,1 @@
+{"name": 1, "epochs": 100, "trained": 1, "description": "my_first_json_run", "animate": 0, "n_dat": 100, "quadratic": 1, "coeff": [{"op": "ctg", "value": 5}, {"op": "ctgI", "value": 0}]}

@@ -7,8 +7,10 @@ import pylhe
 import numpy as np
 import datetime
 import math
-# import matplotlib
-# matplotlib.use("TkAgg")
+import matplotlib
+import json
+import os
+matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
 from matplotlib import animation
 import EFTxSec_v2 as ExS
@@ -24,9 +26,9 @@ class MLP(nn.Module):
         self.fc2 = nn.Linear(num_hidden, num_hidden)
         self.fc3 = nn.Linear(num_hidden, num_hidden)
         self.fc4 = nn.Linear(num_hidden, num_hidden)
-        self.fc5 = nn.Linear(num_hidden, num_outputs)
-        # self.fc6 = nn.Linear(num_hidden, num_hidden)
-        # self.fc7 = nn.Linear(num_hidden, num_outputs)
+        self.fc5 = nn.Linear(num_hidden, num_hidden)
+        self.fc6 = nn.Linear(num_hidden, num_hidden)
+        self.fc7 = nn.Linear(num_hidden, num_outputs)
         self.relu = nn.ReLU()
     
     def forward(self, x):
@@ -39,6 +41,10 @@ class MLP(nn.Module):
         x = self.fc4(x)
         x = self.relu(x)
         x = self.fc5(x)
+        x = self.relu(x)
+        x = self.fc6(x)
+        x = self.relu(x)
+        x = self.fc7(x)
         return x
 
 
@@ -327,21 +333,22 @@ class EventDataset(data.Dataset):
         return data_tuple, weight_tuple, label_tuple
 
 
-def plot_training_report(train_loss, val_loss):
+def plot_training_report(train_loss, val_loss, path):
     f = plt.figure()
     plt.plot(np.array(train_loss), label='train')
     plt.plot(np.array(val_loss), label='val')
     plt.xlabel('epochs')
     plt.ylabel('loss')
     plt.legend()
-    plt.show()
-    f.savefig('loss.pdf')
+    f.savefig(path + 'plots/loss.pdf')
 
 
 def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values, path, make_animation=False):
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
     for epoch in range(1, n_epochs + 1):
         loss_train, loss_val = 0.0, 0.0
+        if make_animation:
+            torch.save(model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
         for (training_data, train_weights, train_labels), (val_data, val_weights, val_labels) in zip(train_loader, val_loader):
 
             train_loss, val_loss = torch.zeros(1), torch.zeros(1)
@@ -378,39 +385,10 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values
               'Validation loss {}'.format(loss_val/len(val_loader)))
         loss_list_train.append(loss_train/len(train_loader))
         loss_list_val.append(loss_val/len(val_loader))
+        np.savetxt(path + 'loss.out', loss_list_train)
+        torch.save(model.state_dict(), path + 'trained_nn.pt')
 
-        # save the intermediate weights during training when animate is true
-        if make_animation:
-            torch.save(model.state_dict(), 'trained_nn/' + path + '_{}.pt'.format(epoch))
-        if not make_animation:
-            torch.save(model.state_dict(), path)
-
-    plot_training_report(loss_list_train, loss_list_val)
-    np.savetxt('loss.out', loss_list_train)
-
-
-
-# def visualize(data_eft, data_sm):
-#     fig, ax = plt.subplots(facecolor='w')
-#     mtt_eft = data_eft.numpy()
-#     mtt_sm = data_sm.numpy()
-#     # plt.hist(mtt_eft, 10, range=(1000, 2500), histtype='step', label='EFT_hist')
-#     # plt.hist(mtt_sm, 10, range=(1000, 2500), label='SM_hist')
-#     plt.scatter(mtt_eft, np.zeros(len(mtt_eft)), label='EFT')
-#     plt.scatter(mtt_sm, np.ones(len(mtt_sm)), label='SM')
-#     plt.legend()
-#     plt.show()
-
-
-# def likelihood_ratio_nn(loaded_model, x, c):
-#     alpha_x = loaded_model.n_alpha
-#     ratio = 1.0 + c*alpha_x(x)
-#     return ratio
-
-
-# def f(loaded_model, x, c):
-#     ratio = likelihood_ratio_nn(loaded_model, x, c)
-#     return 1/(1+ratio)
+    plot_training_report(loss_list_train, loss_list_val, path)
 
 
 def train_classifier(path, train_dataset, val_dataset, epochs, quadratic=True, make_animation=False):
@@ -446,30 +424,13 @@ def f_quadratic(x, n_alpha, n_beta, ctg):
     f_nn = [1 / (1 + (1 + ctg * n_alpha(x_i.float()).item()) ** 2 + (ctg*n_beta(x_i.float()).item())**2)for x_i in x]
     return np.array(f_nn)
 
-def n_alpha(mtt, train_dataset):
-    mtt = torch.tensor([mtt])
-    loaded_model = Predictor_quadratic(num_inputs=1, num_hidden=30, num_outputs=1)
-    n_alpha_trained = loaded_model.n_alpha
-    mtt_rescaled = (mtt - train_dataset.mean) / train_dataset.std
-    return n_alpha_trained(mtt_rescaled.float()).item()
-
-
-
-def n_beta(mtt, train_dataset):
-    mtt = torch.tensor([mtt])
-    loaded_model = Predictor_quadratic(num_inputs=1, num_hidden=30, num_outputs=1)
-    n_beta_trained = loaded_model.n_beta
-    mtt_rescaled = (mtt - train_dataset.mean) / train_dataset.std
-    return n_beta_trained(mtt_rescaled.float()).item()
-
-
 
 def plot_predictions(network_path, train_dataset, quadratic, ctg):
     if quadratic:
-        mtt, f_pred, n_alpha_nn, n_alpha_n_beta_nn = make_predictions(network_path, train_dataset, quadratic, ctg)
+        mtt, f_pred, n_alpha_nn, n_alpha_n_beta_nn = make_predictions(network_path + 'trained_nn.pt', train_dataset, quadratic, ctg)
         n_alpha_n_beta_nn = np.array(n_alpha_n_beta_nn)
     else:
-        mtt, f_pred, n_alpha_nn = make_predictions(network_path, train_dataset, quadratic, ctg)
+        mtt, f_pred, n_alpha_nn = make_predictions(network_path + 'trained_nn.pt', train_dataset, quadratic, ctg)
     n_alpha_nn = np.array(n_alpha_nn)
 
     fig = plt.figure()
@@ -498,8 +459,8 @@ def plot_predictions(network_path, train_dataset, quadratic, ctg):
     plt.xlim((mtt_min, mtt_max))
     plt.ylim(((y / f_pred).min(), (y / f_pred).max()))
 
-    plt.show()
-    fig.savefig('NNvsAna_v13.pdf')
+
+    fig.savefig(network_path + 'plots/NNvsAna_f.pdf')
 
     # Compare r_NN to r_ana
     fig = plt.figure()
@@ -511,8 +472,10 @@ def plot_predictions(network_path, train_dataset, quadratic, ctg):
     plt.title('Likelihood ratio: NN versus analytical at c = {}'.format(ctg))
     plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
     plt.ylabel(r'$r\;(m_{tt}, c)$')
-    plt.show()
 
+    fig.savefig(network_path + 'plots/likelihoodratio_reconstructed.pdf')
+
+    fig = plt.figure()
     # Compare n_alpha to alpha
     n_alpha_ana = np.array([ExS.n_alpha_ana_1D(mtt_i * 1e-3) for mtt_i in mtt])
     plt.plot(mtt, n_alpha_ana, '--', c='red', label='Analytical result')
@@ -521,8 +484,10 @@ def plot_predictions(network_path, train_dataset, quadratic, ctg):
     plt.ylabel(r'$\alpha(m_{tt})$')
     plt.legend()
     plt.title('reconstruction of alpha')
-    plt.show()
 
+    fig.savefig(network_path + 'plots/alpha_reconstructed.pdf')
+
+    fig = plt.figure()
     # Compare n_alpha**2 + n_beta**2 to alpha**2 + beta**2
     n_alpha_n_beta_ana = np.array([ExS.n_alpha_n_beta_ana_1D(mtt_i * 1e-3) for mtt_i in mtt])
     plt.plot(mtt, n_alpha_n_beta_ana, '--', c='red', label='Analytical result')
@@ -531,9 +496,11 @@ def plot_predictions(network_path, train_dataset, quadratic, ctg):
     plt.ylabel(r'$\alpha(m_{tt})^2+\beta(m_{tt})^2$')
     plt.legend()
     plt.title('reconstruction of alpha and beta')
-    plt.show()
+
+    fig.savefig(network_path + 'plots/alpha_beta_reconstructed.pdf')
 
     # show r(x,c) as a function of c at fixed mtt and compare analytical and NN
+    fig = plt.figure()
     n_alpha_ana = ExS.n_alpha_ana_1D(2500*1e-3)
     # n_alpha_nn = n_alpha(1010, train_dataset)
 
@@ -555,7 +522,8 @@ def plot_predictions(network_path, train_dataset, quadratic, ctg):
     # plt.scatter(np.array([10, 1 + 2*10*n_alpha_nn + 10**2*n_alpha_n_beta_nn]), c='k')
     # plt.scatter(np.array([15, 1 + 2*15*n_alpha_nn + 15**2*n_alpha_n_beta_nn]), c='k')
     plt.legend()
-    plt.show()
+
+    fig.savefig(network_path + 'plots/ratio_parabola.pdf')
 
 
 def make_predictions(network_path, train_dataset, quadratic, ctg):
@@ -591,14 +559,14 @@ def make_predictions(network_path, train_dataset, quadratic, ctg):
         return mtt.numpy(), f_pred, n_alpha
 
 
-def animate_learning(train_dataset):
+def animate_learning(path, train_dataset, quadratic, ctg, epochs):
     mtt_min, mtt_max = 1000, 4000
     # First set up the figure, the axis, and the plot element we want to animate
     fig, ax = plt.subplots()
     ax = plt.axes(xlim=(mtt_min, mtt_max), ylim=(0, 1))
 
     # Compute the analytic likelihood ratio and plot
-    x, y = ExS.plot_likelihood_ratio_1D(mtt_min*10**-3, mtt_max*10**-3, ctg=5, np_order=2)
+    x, y = ExS.plot_likelihood_ratio_1D(mtt_min*10**-3, mtt_max*10**-3, ctg, np_order=2)
     x = np.array(x)
     y = np.array(y)
     ax.plot(x*1e3, y, '--', c='red', label='Analytical result')
@@ -607,13 +575,13 @@ def animate_learning(train_dataset):
     plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
     plt.xlim((mtt_min, mtt_max))
     plt.ylim((0, 1))
-    plt.title('NN versus analytical at ctG = 5')
-    plt.legend()
+    plt.title('NN versus analytical at ctG = {}'.format(ctg))
 
     line, = ax.plot([], [], lw=2, label='NN prediction')
     epoch_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
     loss_text = ax.text(0.02, 0.90, '', transform=ax.transAxes)
     loss = np.loadtxt('loss.out')
+    plt.legend()
 
     # initialization function: plot the background of each frame
     def init():
@@ -624,7 +592,7 @@ def animate_learning(train_dataset):
 
     # animation function.  This is called sequentially
     def animate(i):
-        x, f_pred = make_predictions('trained_nn/quadratic/QC_quadratic_100K_3hidden_neg_v2_{}.pt'.format(i+1), train_dataset)
+        x, f_pred, _, _ = make_predictions(path + 'trained_nn_{}.pt'.format(i+1), train_dataset, quadratic, ctg)
         line.set_data(x, f_pred)
         epoch_text.set_text('epoch = {}'.format(i))
         loss_text.set_text('loss = {:.4f}'.format(loss[i]))
@@ -632,10 +600,10 @@ def animate_learning(train_dataset):
 
     # call the animator.  blit=True means only re-draw the parts that have changed.
     anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                   frames=70, interval=200, blit=True)
+                                   frames=epochs, interval=200, blit=True)
 
-    anim.save('training_animation_v2.gif')
-    plt.show()
+    anim.save(path + 'animation/training_animation.gif')
+
 
 
 
@@ -657,7 +625,7 @@ def main(trained, path, n_dat, epochs, make_animation, quadratic, ctg):
     # visualize(train_dataset.data_eft['10'][0], train_dataset.data_sm['10'][0])
     if trained:  # classifier is trained already
         if make_animation:
-            animate_learning(train_dataset)
+            animate_learning(path, train_dataset, quadratic, ctg, epochs)
         else:
             plot_predictions(path, train_dataset, quadratic, ctg)
     else:
@@ -671,9 +639,34 @@ def main(trained, path, n_dat, epochs, make_animation, quadratic, ctg):
 
 
 if __name__ == '__main__':
-    trained = False
-    path = 'trained_nn/quadratic/QC_quadratic_100K_3hidden_neg_v3.pt'
-    main(trained, '', n_dat=100000, epochs=500, make_animation=False, quadratic=True, ctg=5)
+    # read the json run card
+    with open(sys.argv[1]) as json_data:
+        run_options = json.load(json_data)
+        trained = run_options['trained']
+        order = 'quadratic' if run_options['quadratic'] else 'linear'
+        run_nr = run_options['name']
+        path = 'results/trained_nn/{}/run_{}/'.format(order, run_nr)
+        n_dat = run_options['n_dat']
+        epochs = run_options['epochs']
+        make_animation = run_options['animate']
+        quadratic = run_options['quadratic']
+        ctg = run_options['coeff'][0]['value']
+
+        # if not run_options['trained']:
+        #     print("The network has not been trained yet!")
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+        os.makedirs(path + 'plots')
+        os.makedirs(path + 'animation')
+
+    # copy run card to the appropriate folder
+    with open(path + 'run_card.json', 'w') as outfile:
+        json.dump(run_options, outfile)
+
+    # start the training
+    main(trained, path, n_dat, epochs, make_animation, quadratic, ctg)
+
 
 
 
