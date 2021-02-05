@@ -221,6 +221,10 @@ def likelihood_ratio(y, mtt, cSMEFT, order = None, NP = None):
     ratio = dsigma_0/dsigma_1 if dsigma_1 != 0 else 0
     return ratio
 
+def f_analytic(mtt, y, cSMEFT, order = None, NP = None):
+    r = likelihood_ratio(y, mtt, cSMEFT, order, NP)
+    return 1/(1+r)
+
 def likelihood_ratio_1D(mtt, cSMEFT, order = None, NP = None):
     """
     Compute the 1D analytic likelihood ratio r(x, c)
@@ -274,7 +278,7 @@ def crossSection(binWidth, mtt_max, cSMEFT, order = None, NP = None):
 def plotData(binWidth, mtt_max, cSMEFT, order = None, NP = None):
     """
     Plot the differential cross section in M(tt) and compare it with the MG5 result
-    inputs:
+    inputs: 
         - binWidth = bin width of the MG5 events
         - mtt_max = plot goes from [2*mt, mtt_max]
         - cSMEFT = Value of ctG in TeV^-2
@@ -329,37 +333,15 @@ def plotData(binWidth, mtt_max, cSMEFT, order = None, NP = None):
     plt.show()
     fig.savefig('energy_growing_effects.pdf')
 
-def plot_likelihood_ratio():
-
-    y_max = np.log(np.sqrt(s)/(2*mt))
-    y_min = -y_max
+def plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, np_order=None):
 
     # Important to include otypes = [np.float], else all the output is int by default
-    vlikelihood_ratio = np.vectorize(likelihood_ratio, otypes=[np.float])
-
-    fig = plt.figure()
-    mtt_max = 2.500
-    mtt_min = 2*mt
-    x = np.arange(mtt_min, mtt_max, 10**-3)
-    y = np.arange(y_min, y_max, 0.01)
-
-    X, Y = np.meshgrid(x, y)
-    Z = vlikelihood_ratio(Y, X, 10.0, NP=1)
-
-    Z_mask = np.ma.masked_equal(Z,0)
-    mean = Z_mask.mean()
-    std = Z_mask.std()
-
-    im = plt.imshow(Z, cmap = plt.cm.Blues, aspect = (mtt_max-mtt_min)/(y_max-y_min), extent=[mtt_min, mtt_max, y_min, y_max], vmin = mean - 3*std, vmax = mean + 3*std, interpolation='quadric', origin='lower')
-    plt.colorbar(im)
-
-    plt.ylabel(r'Rapidity $Y = \log\sqrt{x_1/x_2}$')
-    plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
-    plt.title('Likelihood ratio: Linear EFT')
-
-    #plt.title(r'$pdf(x|H_1(c=10^{%d}))$'%(-3+3))
-    plt.show()
-    fig.savefig('likelihood_ratio_EFT_Linear.pdf')
+    vf_ana = np.vectorize(f_analytic, otypes=[np.float])
+    x = np.arange(mtt_min*10**-3, mtt_max*10**-3, x_spacing*10**-3)
+    y = np.arange(y_min, y_max, y_spacing)
+    xx, yy = np.meshgrid(x, y)
+    Z = vf_ana(xx, yy, ctg, NP=np_order)
+    return Z
 
 
 def plot_likelihood_ratio_1D(mtt_min, mtt_max, ctg, np_order=None):
@@ -395,3 +377,4 @@ def plot_likelihood_ratio_1D(mtt_min, mtt_max, ctg, np_order=None):
 # plt.ylim(3.2, 3.6)
 # plt.show()
 # fig.savefig('n_alpha.pdf')
+
