@@ -1,7 +1,4 @@
 from __future__ import division
-
-import time
-
 import lhapdf
 import sys
 import numpy as np
@@ -106,9 +103,12 @@ def weight(sqrts, mu, x1, x2, cSMEFT, order=None, NP=None):
         # Uncomment line below to turn on quark contribution
         w_ii += 2 * sigma_part_qq_SM(sqrts) * np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
     if order == "NHO":
-        w_ii = sigma_part_gg_LO(sqrts, cSMEFT) * (p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))
-        #Uncomment line below to turn on quark contribution
-        w_ii += 2*sigma_part_qq_LO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution
+        # w_ii = sigma_part_gg_LO(sqrts, cSMEFT) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
+        # #Uncomment line below to turn on quark contribution
+        # w_ii += 2*sigma_part_qq_LO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution
+        w_ii = (p.xfxQ(21, x1, mu) )
+        # #Uncomment line below to turn on quark contribution
+        #w_ii += 2*sigma_part_qq_LO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution
     if order == "HO":
         w_ii = sigma_part_gg_NLO(sqrts, cSMEFT)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))
         #Uncomment line below to turn on quark contribution
@@ -193,31 +193,28 @@ def n_alpha_n_beta_ana_1D(mtt):
 
 # print(1+10*n_alpha_ana(0, 2.5))
 
-v_weight = np.vectorize(weight, otypes=[np.float])
+v_weight = np.vectorize(weight, otypes=[np.float64])
 
-
+x_coord = []
+y_coord = []
 def dsigma_dmtt_dy(y, mtt, cSMEFT, order = None, NP = None):
     """
     Compute the doubly differential cross section in mtt and y at any order NP
     """
     if mtt == 2*mt: return 0 #if at threshold return zero
 
-    if np.abs(y) < np.log(np.sqrt(s)/mtt): #check whether x = {mtt, y} falls inside the physically allowed region
+    if np.abs(y) < 0.9 * np.log(np.sqrt(s)/mtt): #check whether x = {mtt, y} falls inside the physically allowed region
         x1 = mtt/np.sqrt(s)*np.exp(y)
         x2 = mtt/np.sqrt(s)*np.exp(-y)
 
         dsigma_dmtt_dy = 2*mtt/s*v_weight(mtt, 91.188, x1, x2, cSMEFT, order, NP)/(x1*x2)
-
         return pb_convert*dsigma_dmtt_dy
     else:
         return 0
 
-dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float])
-
-
 def dsigma_dmtt(mtt, cSMEFT, order = None, NP = None):
     y_min, y_max = -0.5 * np.log(s / mtt), 0.5 * np.log(s / mtt)
-    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args = (mtt, cSMEFT, order, NP), n=100)[0] # TODO: speed up the integration using fixed_quad instead of quad
+    dsigma_dmtt = integrate.quad(dsigma_dmtt_dy, y_min, y_max, args = (mtt, cSMEFT, order, NP))[0]
     return dsigma_dmtt
 
 def likelihood_ratio(y, mtt, cSMEFT, order = None, NP = None):
@@ -227,7 +224,13 @@ def likelihood_ratio(y, mtt, cSMEFT, order = None, NP = None):
     dsigma_0 = dsigma_dmtt_dy(y, mtt, cSMEFT, order, NP)#EFT
     dsigma_1 = dsigma_dmtt_dy(y, mtt, 0, order=None, NP=0)#SM
     ratio = dsigma_0/dsigma_1 if dsigma_1 != 0 else 0
-    return ratio
+    return dsigma_1
+
+def f_analytic(mtt, y, cSMEFT, order = None, NP = None):
+    r = likelihood_ratio(y, mtt, cSMEFT, order, NP)
+    return r
+    #return 1/(1+r)
+
 
 def likelihood_ratio_1D(mtt, cSMEFT, order = None, NP = None):
     """
@@ -282,7 +285,7 @@ def crossSection(binWidth, mtt_max, cSMEFT, order = None, NP = None):
 def plotData(binWidth, mtt_max, cSMEFT, order = None, NP = None):
     """
     Plot the differential cross section in M(tt) and compare it with the MG5 result
-    inputs:
+    inputs: 
         - binWidth = bin width of the MG5 events
         - mtt_max = plot goes from [2*mt, mtt_max]
         - cSMEFT = Value of ctG in TeV^-2
@@ -337,42 +340,39 @@ def plotData(binWidth, mtt_max, cSMEFT, order = None, NP = None):
     plt.show()
     fig.savefig('energy_growing_effects.pdf')
 
-def plot_likelihood_ratio():
-
-    y_max = np.log(np.sqrt(s)/(2*mt))
-    y_min = -y_max
+def plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, np_order=None):
 
     # Important to include otypes = [np.float], else all the output is int by default
-    vlikelihood_ratio = np.vectorize(likelihood_ratio, otypes=[np.float])
-
-    fig = plt.figure()
-    mtt_max = 2.500
-    mtt_min = 2*mt
-    x = np.arange(mtt_min, mtt_max, 10**-3)
-    y = np.arange(y_min, y_max, 0.01)
-
-    X, Y = np.meshgrid(x, y)
-    Z = vlikelihood_ratio(Y, X, 10.0, NP=1)
-
-    Z_mask = np.ma.masked_equal(Z,0)
-    mean = Z_mask.mean()
-    std = Z_mask.std()
-
-    im = plt.imshow(Z, cmap = plt.cm.Blues, aspect = (mtt_max-mtt_min)/(y_max-y_min), extent=[mtt_min, mtt_max, y_min, y_max], vmin = mean - 3*std, vmax = mean + 3*std, interpolation='quadric', origin='lower')
-    plt.colorbar(im)
-
-    plt.ylabel(r'Rapidity $Y = \log\sqrt{x_1/x_2}$')
-    plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
-    plt.title('Likelihood ratio: Linear EFT')
-
-    #plt.title(r'$pdf(x|H_1(c=10^{%d}))$'%(-3+3))
-    plt.show()
-    fig.savefig('likelihood_ratio_EFT_Linear.pdf')
+    vf_ana = np.vectorize(f_analytic, otypes=[np.float])
+    x = np.arange(mtt_min*10**-3, mtt_max*10**-3, x_spacing*10**-3)
+    y = np.arange(y_min, y_max, y_spacing)
+    xx, yy = np.meshgrid(x, y)
+    Z = vf_ana(xx, yy, ctg, NP=np_order)
+    return Z
 
 
 def plot_likelihood_ratio_1D(mtt_min, mtt_max, ctg, np_order=None):
     x = np.arange(mtt_min, mtt_max, 100*1e-3)
     y = [1/(1+likelihood_ratio_1D(x_i, ctg, NP=np_order)) for x_i in x]
     return x, y
+
+
+
+y = np.arange(1.4, 1.6, 0.0001)
+#f1 = np.array([f_analytic(2.5, y_i, 7.5, order = 'NHO') for y_i in y])
+f2 = [dsigma_dmtt_dy(y_i, 3.0, 7.5, order = 'NHO')/dsigma_dmtt_dy(y_i, 3.0, 7.5, order = 'SM') if dsigma_dmtt_dy(y_i, 3.0, 7.5, order = 'SM') !=0 else 0 for y_i in y]
+f3 = [dsigma_dmtt_dy(y_i, 3.0, 7.5, order = 'NHO') for y_i in y]
+f4 = [dsigma_dmtt_dy(y_i, 3.0, 7.5, order = 'SM') for y_i in y] #TODO: problem is here
+plt.plot(y,f2)
+plt.show()
+plt.plot(y,f3)
+plt.show()
+plt.plot(y,f4)
+plt.show()
+plt.plot(x_coord, y_coord)
+plt.show()
+#plt.ylim((20, 40))
+
+# dsigma_dmtt_dy
 
 

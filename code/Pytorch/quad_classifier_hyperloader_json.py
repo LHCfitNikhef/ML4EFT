@@ -16,6 +16,7 @@ from matplotlib import animation
 import EFTxSec_v2 as ExS
 from torch import nn
 import sys
+import time
 # print("Using torch", torch.__version__)
 
 
@@ -53,7 +54,7 @@ class Predictor_linear(nn.Module):
     def __init__(self, architecture):
         super().__init__()
         self.n_alpha = MLP(architecture)
-        
+
     def forward(self, x, c):
         n_alpha_out = self.n_alpha(x)
         return 1 / (1 + (1 + c*n_alpha_out**2))
@@ -82,11 +83,11 @@ def loss_fn(outputs, labels, w_e):
 
 
 class EventDataset(data.Dataset):
-    
+
     def __init__(self, n_dat, train, quadratic):
         """
-        Inputs: 
-            c - value of the Wilson coefficient 
+        Inputs:
+            c - value of the Wilson coefficient
         """
         super().__init__()
         self.train = train
@@ -107,22 +108,22 @@ class EventDataset(data.Dataset):
         self.load_events()
         self.find_min_max()
         self.find_mean_std()
-        
+
     def invariant_mass(self, p1, p2):
         """
         Computes the invariant mass of an event
         """
         return np.sqrt(sum((1 if mu=='e' else -1)*(getattr(p1,mu)+getattr(p2,mu))**2 for mu in ['e','px','py','pz']))
 
-    def rapidity(self, p1, p2): 
+    def rapidity(self, p1, p2):
         """
         Computes the rapidity of an event
         """
         q0 = getattr(p1, 'e') + getattr(p2, 'e') # energy of the top quark pair in the pp COM frame
         q3 = getattr(p1, 'pz') + getattr(p2, 'pz')
         y = 0.5*np.log((q0 + q3)/(q0 - q3))
-        return y  
-    
+        return y
+
     def standardize(self):
         """
         Standardize the dataset so that neurons are more likely to have nonzero gradients
@@ -137,12 +138,12 @@ class EventDataset(data.Dataset):
         for k, v in self.data_sm.items():
             data_std = (v[0] - self.mean)/self.std
             self.data_sm_std[k] = data_std, v[1], v[2]
-    
+
     def find_mean_std(self):
         """
         Find the mean and standard deviation of the data
         """
-        dataset = []    
+        dataset = []
         for c_i in self.c_values:
             dataset.append(torch.cat((self.data_eft['{}'.format(c_i)][0], self.data_sm['{}'.format(c_i)][0])))
         dataset = torch.cat(dataset)
@@ -153,9 +154,9 @@ class EventDataset(data.Dataset):
         """
         Find the minimum and maximum of the data
         """
-        
+
         min_values, max_values = [], []
-        
+
         for c_i in self.c_values:
             dataset_eft = self.data_eft['{}'.format(c_i)][0]
             dataset_sm = self.data_sm['{}'.format(c_i)][0]
@@ -170,7 +171,7 @@ class EventDataset(data.Dataset):
             self.max_value, _ = torch.max(torch.stack((max_value_eft, max_value_sm)), dim=0)
             max_values.append(self.max_value)
 
-        min_values = torch.stack(min_values) 
+        min_values = torch.stack(min_values)
         max_values = torch.stack(max_values)
 
         self.min_value, _ = torch.min(min_values, dim=0)
@@ -193,7 +194,7 @@ class EventDataset(data.Dataset):
         for k, v in self.data_sm.items():
             data_resc = low + (up - low)/(self.max_value - self.min_value)*(v[0] - self.min_value)
             self.data_sm_resc[k] = data_resc, v[1], v[2]
-        
+
     def lhe_loader(self, path):
         """
         Les Houches Event file reader
@@ -211,13 +212,62 @@ class EventDataset(data.Dataset):
         event_data = torch.tensor(event_data)
         weight = torch.tensor(weight)
         return event_data, weight
-    
+
+
+    def loss_ana(self):
+        """
+        Compute the analytic loss associated with the dataset to serve as normalisation
+        :return: analytic loss
+        """
+        loss = 0
+        for c_i in self.c_values:
+            # copy prevents the original numpy array from getting updated as well
+            data_sm = self.data_sm[str(c_i)][0].view(-1).numpy()[:100].copy()
+            data_eft = self.data_eft[str(c_i)][0].view(-1).numpy()[:100].copy()
+
+            weights_sm = self.data_sm[str(c_i)][1].view(-1).numpy()[:100].copy()
+            weights_sm *= len(self)/100
+            weights_eft = self.data_eft[str(c_i)][1].view(-1).numpy()[:100].copy()
+            weights_eft *= len(self)/100
+
+            labels_sm = self.data_sm[str(c_i)][2].view(-1).numpy()[:100].copy()
+            labels_eft = self.data_eft[str(c_i)][2].view(-1).numpy()[:100].copy()
+
+            # print("fixed quad")
+            # start = time.time()
+            r_eft = np.array([ExS.likelihood_ratio_1D(x_i*1e-3, c_i, NP=2) for x_i in data_eft])
+            # end = time.time()
+            # print(end-start)
+
+            # print("normal quad")
+            # start = time.time()
+            # r_eft_q = np.array([ExS.likelihood_ratio_1D(x_i * 1e-3, c_i, NP=2) for x_i in data_eft])
+            # end = time.time()
+            # print(end - start)
+            #
+            # plt.plot(data_eft, r_eft_q, label='quad')
+            # plt.plot(data_eft, r_eft_fq, label='fixed quad')
+            # plt.legend()
+            # plt.show()
+
+
+            f_eft = 1 / (1 + r_eft)
+
+
+            r_sm = np.array([ExS.likelihood_ratio_1D(x_i*1e-3, c_i, NP=2) for x_i in data_sm])
+            f_sm = 1 / (1 + r_sm)
+
+            # Accumulate all the losses
+            loss += np.sum(weights_eft*(labels_eft-f_eft)**2) + np.sum(weights_sm*(labels_sm-f_sm)**2)
+            print(loss)
+        return loss
+
     def load_events(self):
         """
-        Load the datasets (eft and sm) from the les Houches event files. 
+        Load the datasets (eft and sm) from the les Houches event files.
         """
         print("Loading training data...\n") if self.train is True else print("Loading validation set...\n")
-        
+
         # path_eft_dict = {'5': 'lhe_cut/eft_5_cut.lhe', '10': 'lhe_cut/eft_10_cut.lhe', '30': 'lhe_cut/eft_30_cut.lhe'}
         # # path_eft_dict = {'5': 'eft_5.lhe', '10': 'eft_lo_30.lhe'}
         # path_sm_dict = {'5': 'lhe_cut/sm_5_cut.lhe', '10': 'lhe_cut/sm_10_cut.lhe', '30': 'lhe_cut/sm_30_cut.lhe'}
@@ -241,10 +291,10 @@ class EventDataset(data.Dataset):
         torch.manual_seed(0)
 
         print("Loading eft data...\n")
-        cnt = 0                                   
+        cnt = 0
         for c, path in path_eft_dict.items():
             print("Progress: {:.2f}".format(cnt/len(path_eft_dict)))
-            cnt += 1                               
+            cnt += 1
 
             dataset_full, weights_full = self.lhe_loader(path)
             labels_full = torch.zeros(dataset_full.size()[0])
@@ -270,10 +320,10 @@ class EventDataset(data.Dataset):
         print("EFT data loaded successfully!\n")
 
         cnt = 0
-        print("Loading sm data...\n") 
+        print("Loading sm data...\n")
         for c, path in path_sm_dict.items():
             print("Progress: {:.2f}".format(cnt/len(path_sm_dict)))
-            cnt += 1                                
+            cnt += 1
             dataset_full, weights_full = self.lhe_loader(path)
             labels_full = torch.ones(dataset_full.size()[0])
 
@@ -315,7 +365,7 @@ class EventDataset(data.Dataset):
     def __len__(self):
         # Number of data points we have.
         return self.n_train if self.train else self.n_val
-    
+
     def __getitem__(self, idx):
         """
         Return a tuple (eft, sm) with info on the idx-th data point of the dataset
@@ -323,7 +373,7 @@ class EventDataset(data.Dataset):
             - data tuple: (eft event, sm event)
             - label tuple: label = 0 for the eft, label = 1 for the sm
             - weight tuple: weight per event
-        """          
+        """
         if self.resc:
             data_tuple = (self.data_eft_resc['5'][0][idx], self.data_sm_resc['5'][0][idx], self.data_eft_resc['10'][0][idx],self.data_sm_resc['10'][0][idx], self.data_eft_resc['15'][0][idx], self.data_sm_resc['15'][0][idx])
             weight_tuple = (self.data_eft_resc['5'][1][idx], self.data_sm_resc['5'][1][idx], self.data_eft_resc['10'][1][idx],self.data_sm_resc['10'][1][idx], self.data_eft_resc['15'][1][idx], self.data_sm_resc['15'][1][idx])
@@ -350,8 +400,12 @@ def plot_training_report(train_loss, val_loss, path):
     f.savefig(path + 'plots/loss.pdf')
 
 
-def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values, path, make_animation=False):
+
+def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values, path, make_animation, loss_ana):
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
+
+    # unpack the analytical loss into training and validation loss
+    loss_ana_train, loss_ana_val = loss_ana
     for epoch in range(1, n_epochs + 1):
         loss_train, loss_val = 0.0, 0.0
         if make_animation:
@@ -388,24 +442,32 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values
             loss_train += train_loss.item()
             loss_val += val_loss.item()
 
-        print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train/len(train_loader)),
-              'Validation loss {}'.format(loss_val/len(val_loader)))
-        loss_list_train.append(loss_train/len(train_loader))
-        loss_list_val.append(loss_val/len(val_loader))
+        # Print only the loss averaged over the batches
+        print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train/len(train_loader)), 'normalised: {}'.format(loss_train/loss_ana_train/len(train_loader)),
+              'Validation loss {}'.format(loss_val/len(val_loader)), 'normalised: {}'.format(loss_val/loss_ana_val/len(val_loader)))
+
+        # Store the loss of epoch i and save the current version of the list to an external file
+        loss_list_train.append(loss_train/loss_ana_train/len(train_loader))
+        loss_list_val.append(loss_val/loss_ana_val/len(val_loader))
         np.savetxt(path + 'loss.out', loss_list_train)
-        # save_model(model, 'trained_nn/quadratic/run')
+
+        # Save the current state of the network
         torch.save(model.state_dict(), path + 'trained_nn.pt')
 
+    # Once training is done, plot a training report that shows the loss per epoch
     plot_training_report(loss_list_train, loss_list_val, path)
 
 
 def train_classifier(path, architecture, train_dataset, val_dataset, epochs, quadratic=True, make_animation=False):
     model = Predictor_quadratic(architecture) if quadratic else Predictor_linear(architecture)
-
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    # train_data_loader = data.DataLoader(train_dataset, batch_size=train_dataset.__len__(), shuffle=True)
-    # val_data_loader = data.DataLoader(val_dataset, batch_size=val_dataset.__len__(), shuffle=False)
 
+    loss_train_ana = train_dataset.loss_ana()
+    loss_val_ana = val_dataset.loss_ana()
+
+    print(loss_train_ana, loss_val_ana)
+
+    test = train_dataset.data_eft['-15'][1].detach().numpy() # TODO: first 100 values are 3.73776
     train_data_loader = data.DataLoader(train_dataset, batch_size=int(train_dataset.__len__()), shuffle=True)
     val_data_loader = data.DataLoader(val_dataset, batch_size=int(val_dataset.__len__()), shuffle=False)
 
@@ -418,6 +480,7 @@ def train_classifier(path, architecture, train_dataset, val_dataset, epochs, qua
         c_values=train_dataset.c_values,
         path=path,
         make_animation=make_animation,
+        loss_ana=(loss_train_ana, loss_val_ana)
     )
 
 
@@ -586,7 +649,7 @@ def animate_learning(path, network_size, train_dataset, quadratic, ctg, epochs):
     line, = ax.plot([], [], lw=2, label='NN prediction')
     epoch_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
     loss_text = ax.text(0.02, 0.90, '', transform=ax.transAxes)
-    loss = np.loadtxt('loss.out')
+    loss = np.loadtxt(path + 'loss.out')
     plt.legend()
 
     # initialization function: plot the background of each frame
@@ -598,6 +661,7 @@ def animate_learning(path, network_size, train_dataset, quadratic, ctg, epochs):
 
     # animation function.  This is called sequentially
     def animate(i):
+        print(i)
         x, f_pred, _, _ = make_predictions(path + 'trained_nn_{}.pt'.format(i+1), network_size, train_dataset, quadratic, ctg)
         line.set_data(x, f_pred)
         epoch_text.set_text('epoch = {}'.format(i))

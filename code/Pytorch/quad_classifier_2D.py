@@ -1,5 +1,12 @@
+# Author: Jaco ter Hoeve
+# This file implements the training of the quadratic classifier
+
 #!/usr/bin/env python
 # coding: utf-8
+import copy
+import glob
+from time import sleep
+
 import torch
 import torch.utils.data as data
 import torch.optim as optim
@@ -15,7 +22,9 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 import EFTxSec_v3 as ExS
 from torch import nn
+from progress.bar import Bar
 import sys
+import shutil
 # print("Using torch", torch.__version__)
 
 
@@ -23,6 +32,8 @@ class MLP(nn.Module):
 
     def __init__(self, architecture):
         """
+        Set up the NN architecture
+
         Inputs:
             act_fn - Object of the activation function that should be used as non-linearity in the network.
             input_size - Size of the input images in pixels
@@ -43,13 +54,15 @@ class MLP(nn.Module):
         layers += [nn.Linear(layer_sizes[-1], output_size)]
         self.layers = nn.Sequential(*layers)  # nn.Sequential summarizes a list of modules into a single module, applying them in sequence
 
-
     def forward(self, x):
         out = self.layers(x)
         return out
 
 
 class Predictor_linear(nn.Module):
+    """
+    Returns the function f(x,c) from the paper (Wulzer et al.) in the linear case
+    """
     def __init__(self, architecture):
         super().__init__()
         self.n_alpha = MLP(architecture)
@@ -60,6 +73,9 @@ class Predictor_linear(nn.Module):
 
 
 class Predictor_quadratic(nn.Module):
+    """
+        Returns the function f(x,c) from the paper (Wulzer et al.) in the quadratic case
+    """
     def __init__(self, architecture):
         super().__init__()
         self.n_alpha = MLP(architecture)
@@ -73,23 +89,30 @@ class Predictor_quadratic(nn.Module):
 
 
 def loss_fn(outputs, labels, w_e):
-    # outputs.shape = (batch_size, 1), output \in (0, 1)
-    # labels.shape = (batch_size, 1), labels \in {0, 1}
-    # w_e.shape = (batch_size, 1), w_e \in [0, \infty)
+    """
+    :param outputs: outputs.shape = (batch_size, 1), output \in (0, 1)
+    :param labels: labels.shape = (batch_size, 1), labels \in {0, 1}
+    :param w_e: w_e.shape = (batch_size, 1), w_e \in [0, \infty)
+    :return: contribution to loss from a sample x ~ pdf(x|H_0,1)
+    """
+
     loss = (1 - labels)*w_e*outputs**2 + labels*w_e*(1 - outputs)**2
     # add up all the losses in the batch
     return torch.sum(loss, dim=0)
 
 
 class EventDataset(data.Dataset):
-    
-    def __init__(self, n_dat, train, quadratic):
+
+    def __init__(self, path, n_dat, switch_2d, train, quadratic, trained):
         """
         Inputs: 
             c - value of the Wilson coefficient 
         """
         super().__init__()
         self.train = train
+        self.switch_2d = switch_2d
+        self.trained = trained
+        self.path = path
         self.resc = False
         self.standardized = False
         self.mean = None
@@ -104,8 +127,10 @@ class EventDataset(data.Dataset):
         self.data_eft_std, self.data_sm_std = {}, {}
         self.data_eft, self.data_sm = {}, {}
         self.c_values = [-15, -10, -5, 5, 10, 15] # TODO: raise error when not complete
-        self.load_events()
-        self.find_min_max()
+        # only load data when the model has not been trained yet
+        if not self.trained:
+            self.load_events()
+        # self.find_min_max()
         self.find_mean_std()
         
     def invariant_mass(self, p1, p2):
@@ -140,14 +165,21 @@ class EventDataset(data.Dataset):
     
     def find_mean_std(self):
         """
-        Find the mean and standard deviation of the data
+        Find the mean and standard deviation of the data and save to disk
         """
-        dataset = []    
-        for c_i in self.c_values:
-            dataset.append(torch.cat((self.data_eft['{}'.format(c_i)][0], self.data_sm['{}'.format(c_i)][0])))
-        dataset = torch.cat(dataset)
-        self.mean = torch.mean(dataset, dim=0)
-        self.std = torch.std(dataset, dim=0)
+        if not self.trained: # if the nn still has to be trained
+            dataset = []
+            for c_i in self.c_values:
+                dataset.append(torch.cat((self.data_eft['{}'.format(c_i)][0], self.data_sm['{}'.format(c_i)][0])))
+            dataset = torch.cat(dataset)
+            self.mean = torch.mean(dataset, dim=0)
+            self.std = torch.std(dataset, dim=0)
+
+            rescale_factor = torch.stack((self.mean, self.std))
+            torch.save(rescale_factor, path + 'rescale.pt')
+        else:  # nn has already been trained, load rescale factor
+            self.mean, self.std = torch.load(path + 'rescale.pt')
+
 
     def find_min_max(self):
         """
@@ -193,7 +225,7 @@ class EventDataset(data.Dataset):
         for k, v in self.data_sm.items():
             data_resc = low + (up - low)/(self.max_value - self.min_value)*(v[0] - self.min_value)
             self.data_sm_resc[k] = data_resc, v[1], v[2]
-        
+
     def lhe_loader(self, path):
         """
         Les Houches Event file reader
@@ -203,15 +235,117 @@ class EventDataset(data.Dataset):
         cnt = 0
         for e in pylhe.readLHE(path):
             mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
-            y = self.rapidity(e.particles[-1], e.particles[-2])
+            if self.switch_2d:
+                y = self.rapidity(e.particles[-1], e.particles[-2])
+                event_data.append([mtt, y])
+            else:
+                event_data.append([mtt])
             weight.append(e.eventinfo.weight)
-            event_data.append([mtt, y])
+
             cnt += 1
             if cnt == self.n_dat:
                 break
         event_data = torch.tensor(event_data)
         weight = torch.tensor(weight)
         return event_data, weight
+        
+    def lhe_loader_v2(self, path): # TODO: the current implementation is too slow: it runs over all the events in the file (500K)
+        """
+        Les Houches Event file reader. Randomly read self.n_dat events from the lhe file
+        """
+        weight = []
+        event_data = []
+        n_events = pylhe.readNumEvents(path)
+        mask = np.random.permutation(n_events)[:self.n_dat]
+
+        for i, e in enumerate(pylhe.readLHE(path)):
+            if i not in mask:
+                continue
+            mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
+            y = self.rapidity(e.particles[-1], e.particles[-2])
+            weight.append(e.eventinfo.weight)
+            event_data.append([mtt, y])
+
+        event_data = torch.tensor(event_data)
+        weight = torch.tensor(weight)
+        return event_data, weight
+
+    def loss_ana_1d(self):
+        """
+        Compute the analytic loss associated with the dataset to serve as normalisation
+        :return: analytic loss
+        """
+        loss = 0
+        for c_i in self.c_values:
+            # copy prevents the original numpy array from getting updated as well
+            data_sm = self.data_sm[str(c_i)][0].view(-1).numpy()[:100].copy()
+            data_eft = self.data_eft[str(c_i)][0].view(-1).numpy()[:100].copy()
+
+            weights_sm = self.data_sm[str(c_i)][1].view(-1).numpy()[:100].copy()
+            weights_sm *= len(self)/100
+            weights_eft = self.data_eft[str(c_i)][1].view(-1).numpy()[:100].copy()
+            weights_eft *= len(self)/100
+
+            labels_sm = self.data_sm[str(c_i)][2].view(-1).numpy()[:100].copy()
+            labels_eft = self.data_eft[str(c_i)][2].view(-1).numpy()[:100].copy()
+
+            # print("fixed quad")
+            # start = time.time()
+            r_eft = np.array([ExS.likelihood_ratio_1D(x_i*1e-3, c_i, NP=2) for x_i in data_eft])
+            # end = time.time()
+            # print(end-start)
+
+            # print("normal quad")
+            # start = time.time()
+            # r_eft_q = np.array([ExS.likelihood_ratio_1D(x_i * 1e-3, c_i, NP=2) for x_i in data_eft])
+            # end = time.time()
+            # print(end - start)
+            #
+            # plt.plot(data_eft, r_eft_q, label='quad')
+            # plt.plot(data_eft, r_eft_fq, label='fixed quad')
+            # plt.legend()
+            # plt.show()
+
+
+            f_eft = 1 / (1 + r_eft)
+
+
+            r_sm = np.array([ExS.likelihood_ratio_1D(x_i*1e-3, c_i, NP=2) for x_i in data_sm])
+            f_sm = 1 / (1 + r_sm)
+
+            # Accumulate all the losses
+            loss += np.sum(weights_eft*(labels_eft-f_eft)**2) + np.sum(weights_sm*(labels_sm-f_sm)**2)
+            print(loss)
+        return loss
+
+
+    def loss_ana_2d(self):
+        """
+        Compute the analytic loss associated with the dataset to serve as normalisation
+        :return: analytic loss
+        """
+        loss = 0
+        for c_i in self.c_values:
+            # copy prevents the original numpy array from getting updated as well
+
+            data_sm = self.data_sm[str(c_i)][0].numpy().copy()
+            r_sm = np.array([ExS.likelihood_ratio(x_i[1], x_i[0]*1e-3, c_i, NP=2) for x_i in data_sm])
+            f_sm = 1 / (1 + r_sm)
+
+            data_eft = self.data_sm[str(c_i)][0].numpy().copy()
+            r_eft = np.array([ExS.likelihood_ratio(x_i[1], x_i[0] * 1e-3, c_i, NP=2) for x_i in data_eft])
+            f_eft = 1 / (1 + r_eft)
+
+            weights_sm = self.data_sm[str(c_i)][1].view(-1).numpy().copy()
+            weights_eft = self.data_eft[str(c_i)][1].view(-1).numpy().copy()
+
+            labels_sm = self.data_sm[str(c_i)][2].view(-1).numpy().copy()
+            labels_eft = self.data_eft[str(c_i)][2].view(-1).numpy().copy()
+
+            # Accumulate all the losses
+            loss += np.sum(weights_eft*(labels_eft-f_eft)**2) + np.sum(weights_sm*(labels_sm-f_sm)**2)
+            print(loss)
+        return loss
     
     def load_events(self):
         """
@@ -341,7 +475,12 @@ class EventDataset(data.Dataset):
         return data_tuple, weight_tuple, label_tuple
 
 
-def plot_training_report(train_loss, val_loss, path):
+def plot_training_report(train_loss, val_loss, path, stopping_point):
+
+    file = open(path + "stopping.txt", "w")
+    file.write(str(stopping_point))
+    file.close()
+
     f = plt.figure()
     plt.plot(np.array(train_loss), label='train')
     plt.plot(np.array(val_loss), label='val')
@@ -351,12 +490,16 @@ def plot_training_report(train_loss, val_loss, path):
     f.savefig(path + 'plots/loss.pdf')
 
 
-def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values, path, make_animation=False):
+def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values, path, loss_ana):
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
+    patience = 0 # variable that keeps track of overfitting. If patience > n, then the val_loss has increased for n epochs
+    loss_ana_train, loss_ana_val = loss_ana
     for epoch in range(1, n_epochs + 1):
         loss_train, loss_val = 0.0, 0.0
-        if make_animation:
-            torch.save(model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
+
+        # We save the model parameters at the start of each epoch
+        torch.save(model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
+
         for (training_data, train_weights, train_labels), (val_data, val_weights, val_labels) in zip(train_loader, val_loader):
 
             train_loss, val_loss = torch.zeros(1), torch.zeros(1)
@@ -389,21 +532,47 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, c_values
             loss_train += train_loss.item()
             loss_val += val_loss.item()
 
-        print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train/len(train_loader)),
-              'Validation loss {}'.format(loss_val/len(val_loader)))
-        loss_list_train.append(loss_train/len(train_loader))
-        loss_list_val.append(loss_val/len(val_loader))
+        print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train / len(train_loader)),
+              'normalised: {}'.format(loss_train / loss_ana_train / len(train_loader)),
+              'Validation loss {}'.format(loss_val / len(val_loader)),
+              'normalised: {}'.format(loss_val / loss_ana_val / len(val_loader)))
+
+
+        loss_list_train.append(loss_train/loss_ana_train/len(train_loader))
+        loss_list_val.append(loss_val/loss_ana_val/len(val_loader))
+
+        # if the validation loss increases wrt the previous epoch, increase patience by one
+        if epoch > 1 and loss_list_val[epoch - 1] > loss_list_val[epoch - 2]:
+            patience += 1
+        else:
+            patience = 0  # reset patience if the streak is broken
+
         np.savetxt(path + 'loss.out', loss_list_train)
         # save_model(model, 'trained_nn/quadratic/run')
-        torch.save(model.state_dict(), path + 'trained_nn.pt')
+        if patience == 10:
+            stopping_point = epoch - patience
+            shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt'.format(stopping_point))
+            #os.rename(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn_optimal_{}.pt'.format(stopping_point))
+            print("The model has been overfitting for 10 epochs now, terminate the training.")
+            break
 
-    plot_training_report(loss_list_train, loss_list_val, path)
+    plot_training_report(loss_list_train, loss_list_val, path, stopping_point)
 
 
-def train_classifier(path, architecture, train_dataset, val_dataset, epochs, quadratic=True, make_animation=False):
+def train_classifier(path, architecture, train_dataset, val_dataset, epochs, switch_2d, quadratic=True):
     model = Predictor_quadratic(architecture) if quadratic else Predictor_linear(architecture)
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+    if switch_2d:
+        loss_train_ana = train_dataset.loss_ana_2d()
+        loss_val_ana = val_dataset.loss_ana_2d()
+    else:
+        loss_train_ana = train_dataset.loss_ana_1d()
+        loss_val_ana = val_dataset.loss_ana_1d()
+
+    print(loss_train_ana, loss_val_ana)
+
     # train_data_loader = data.DataLoader(train_dataset, batch_size=train_dataset.__len__(), shuffle=True)
     # val_data_loader = data.DataLoader(val_dataset, batch_size=val_dataset.__len__(), shuffle=False)
 
@@ -418,7 +587,7 @@ def train_classifier(path, architecture, train_dataset, val_dataset, epochs, qua
         val_loader=val_data_loader,
         c_values=train_dataset.c_values,
         path=path,
-        make_animation=make_animation,
+        loss_ana=(loss_train_ana, loss_val_ana)
     )
 
 
@@ -427,26 +596,140 @@ def f_linear(x, n_alpha, ctg):
     return np.array(f_nn)
 
 
-def f_quadratic(grid, n_alpha, n_beta, ctg):
+def f_quadratic(x, n_alpha, n_beta, ctg):
     f_nn = [1 / (1 + (1 + ctg * n_alpha(x_i.float()).item()) ** 2 + (ctg*n_beta(x_i.float()).item())**2)for x_i in x]
     return np.array(f_nn)
 
 
-def plot_predictions(network_path, network_size, train_dataset, quadratic, ctg):
+def plot_predictions_1d(network_path, network_size, train_dataset, quadratic, ctg, epochs):
+
+    animate_learning_1d(path, network_size, train_dataset, quadratic, ctg, epochs)
+
     if quadratic:
-        xx, yy, f_pred, n_alpha_nn, n_alpha_n_beta_nn, f_ana = make_predictions(network_path + 'trained_nn.pt', network_size, train_dataset, quadratic, ctg)
+        mtt, f_pred, n_alpha_nn, n_alpha_n_beta_nn = make_predictions_1d(network_path + 'trained_nn.pt', network_size, train_dataset, quadratic, ctg)
+        n_alpha_n_beta_nn = np.array(n_alpha_n_beta_nn)
     else:
-        xx, yy, f_pred, n_alpha_nn, f_ana = make_predictions(network_path + 'trained_nn.pt', network_size, train_dataset, quadratic, ctg)
+        mtt, f_pred, n_alpha_nn = make_predictions_1d(network_path + 'trained_nn.pt', network_size, train_dataset, quadratic, ctg)
+    n_alpha_nn = np.array(n_alpha_nn)
 
     fig = plt.figure()
     mtt_min, mtt_max = 1000, 4000
-    s = (14 * 10 ** 3) ** 2
-    y_min, y_max = - np.log(np.sqrt(s) / mtt_min), np.log(np.sqrt(s) / mtt_min)
-    # ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[])
+    ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[])
 
     # Plot the NN prediction
-    # f_contour = plt.contourf(xx, yy, f_pred, 20, cmap = plt.cm.Blues, label='NN prediction')
+    ax1.plot(mtt, f_pred, label='NN prediction')
 
+    # Compute the analytic likelihood ratio and plot
+    x, y = ExS.plot_likelihood_ratio_1D(mtt_min * 10 ** -3, mtt_max * 10 ** -3, ctg, np_order=2 if quadratic else 1)
+    x = np.array(x)
+    y = np.array(y)
+    ax1.plot(x * 1e3, y, '--', c='red', label='Analytical result')
+
+    plt.ylabel(r'$f\;(m_{tt}, c)$')
+    plt.xlim((mtt_min, mtt_max))
+    plt.ylim((0, 1))
+    plt.title('NN versus analytical at ctG = {}'.format(ctg))
+    plt.legend()
+
+    ax2 = fig.add_axes([0.15, 0.1, 0.75, 0.20])
+    ax2.plot(x * 1e3, y / f_pred)
+    plt.xlabel(r'$m_{tt}\;[GeV]$')
+    plt.ylabel('ana/NN')
+    plt.xlim((mtt_min, mtt_max))
+    plt.ylim(((y / f_pred).min(), (y / f_pred).max()))
+
+
+    fig.savefig(network_path + 'plots/NNvsAna_f.pdf')
+
+    # Compare r_NN to r_ana
+    fig = plt.figure()
+    n_alpha_ana = np.array([ExS.n_alpha_ana_1D(mtt_i*1e-3) for mtt_i in mtt])
+    n_alpha_n_beta_ana = np.array([ExS.n_alpha_n_beta_ana_1D(mtt_i*1e-3) for mtt_i in mtt])
+    plt.plot(mtt, 1 + 2*ctg*n_alpha_ana + ctg**2*n_alpha_n_beta_ana, '--', c='red', label='Analytical result')
+    plt.plot(mtt, 1 + 2*ctg*n_alpha_nn + ctg**2*n_alpha_n_beta_nn, '-', label='NN')
+    plt.legend()
+    plt.title('Likelihood ratio: NN versus analytical at c = {}'.format(ctg))
+    plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
+    plt.ylabel(r'$r\;(m_{tt}, c)$')
+
+    fig.savefig(network_path + 'plots/likelihoodratio_reconstructed.pdf')
+
+    fig = plt.figure()
+    # Compare n_alpha to alpha
+    n_alpha_ana = np.array([ExS.n_alpha_ana_1D(mtt_i * 1e-3) for mtt_i in mtt])
+    plt.plot(mtt, n_alpha_ana, '--', c='red', label='Analytical result')
+    plt.plot(mtt, n_alpha_nn, '-', label='NN')
+    plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
+    plt.ylabel(r'$\alpha(m_{tt})$')
+    plt.legend()
+    plt.title('reconstruction of alpha')
+
+    fig.savefig(network_path + 'plots/alpha_reconstructed.pdf')
+
+    fig = plt.figure()
+    # Compare n_alpha**2 + n_beta**2 to alpha**2 + beta**2
+    n_alpha_n_beta_ana = np.array([ExS.n_alpha_n_beta_ana_1D(mtt_i * 1e-3) for mtt_i in mtt])
+    plt.plot(mtt, n_alpha_n_beta_ana, '--', c='red', label='Analytical result')
+    plt.plot(mtt, n_alpha_n_beta_nn, '-', label='NN')
+    plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
+    plt.ylabel(r'$\alpha(m_{tt})^2+\beta(m_{tt})^2$')
+    plt.legend()
+    plt.title('reconstruction of alpha and beta')
+
+    fig.savefig(network_path + 'plots/alpha_beta_reconstructed.pdf')
+
+    # show r(x,c) as a function of c at fixed mtt and compare analytical and NN
+    fig = plt.figure()
+    n_alpha_ana = ExS.n_alpha_ana_1D(2500*1e-3)
+    # n_alpha_nn = n_alpha(1010, train_dataset)
+
+    n_alpha_n_beta_ana = ExS.n_alpha_n_beta_ana_1D(2500*1e-3)
+    # n_beta_nn = n_beta(1010, train_dataset)
+
+
+    ctg_range = np.arange(-15, 15, 1)
+    r_ana = 1 + 2*ctg_range*n_alpha_ana + ctg_range**2*n_alpha_n_beta_ana
+    # print("ana: ", 1 + 2*5*n_alpha_ana + 5**2*n_alpha_n_beta_ana)
+    r_nn = 1 + 2*ctg_range*n_alpha_nn[15] + ctg_range**2*n_alpha_n_beta_nn[15]
+    # print("NN:", r_nn)
+
+    plt.plot(ctg_range, r_ana, c='red', label='Ana')
+    plt.plot(ctg_range, r_nn, label='NN')
+    plt.xlabel(r'c')
+    plt.ylabel(r'$r(m_{tt}=2.5, c)$')
+    # plt.scatter(np.array([5, 1 + 2*5*n_alpha_nn + 5**2*n_alpha_n_beta_nn]), c='k')
+    # plt.scatter(np.array([10, 1 + 2*10*n_alpha_nn + 10**2*n_alpha_n_beta_nn]), c='k')
+    # plt.scatter(np.array([15, 1 + 2*15*n_alpha_nn + 15**2*n_alpha_n_beta_nn]), c='k')
+    plt.legend()
+
+    fig.savefig(network_path + 'plots/ratio_parabola.pdf')
+
+
+def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ctg, epochs):
+    """
+    Plot several plots that gauge the performance of the NN
+    :param network_path: p
+    :param network_size: network architecture
+    :param train_dataset:
+    :param quadratic: Include Quadratic EFT (Boolean)
+    :param ctg: Wilson coefficient (Float)
+    :return:
+    """
+
+    animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, epochs)
+
+    if quadratic:
+        xx, yy, x_span, y_span, f_pred, n_alpha_nn, n_alpha_n_beta_nn, f_ana = make_predictions_2d(network_path + 'trained_nn.pt', network_size, train_dataset, quadratic, ctg, False)
+    else:
+        xx, yy, f_pred, n_alpha_nn, f_ana = make_predictions_2d(network_path + 'trained_nn.pt', network_size, train_dataset, quadratic, ctg)
+
+
+    mtt_min, mtt_max = 1000, 4000
+    s = (14 * 10 ** 3) ** 2
+    y_min, y_max = - np.log(np.sqrt(s) / mtt_min), np.log(np.sqrt(s) / mtt_min)
+
+    # plot the nn prediction
+    fig = plt.figure()
     plt.imshow(f_pred, extent=[mtt_min, mtt_max, y_min, y_max], origin = 'lower', cmap = plt.cm.Blues, aspect = (mtt_max-mtt_min)/(y_max-y_min), interpolation='quadric')
     plt.colorbar()
     plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
@@ -455,11 +738,15 @@ def plot_predictions(network_path, network_size, train_dataset, quadratic, ctg):
     plt.show()
     fig.savefig(network_path + 'plots/f_nn.pdf')
 
+    # plot the analytical result
     fig = plt.figure()
-    f_ana = np.where(f_ana == 1, 0, f_ana)
+    # mask values outside the physical region
+    # f_ana = np.where(f_ana == 1.0, -1.0, f_ana)
+    f_ana = np.ma.masked_where(f_ana == 1.0, f_ana)
+    cmap = copy.copy(plt.get_cmap("Blues"))  # Can be any colormap that you want after the cm
+    cmap.set_bad(color='white')
 
-    # Compute the analytic likelihood ratio and plot
-    plt.imshow(f_ana, extent=[mtt_min, mtt_max, y_min, y_max], origin = 'lower', cmap = plt.cm.Blues, aspect = (mtt_max-mtt_min)/(y_max-y_min), interpolation='quadric')
+    plt.imshow(f_ana, extent=[mtt_min, mtt_max, y_min, y_max], origin = 'lower', cmap = cmap, aspect = (mtt_max-mtt_min)/(y_max-y_min), interpolation='quadric')
     plt.colorbar()
     plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
     plt.ylabel('y')
@@ -467,15 +754,26 @@ def plot_predictions(network_path, network_size, train_dataset, quadratic, ctg):
     plt.show()
     fig.savefig(network_path + 'plots/f_ana.pdf')
 
+    # plot the ratio analytical/nn_prediction
     fig = plt.figure()
+    cmap2 = copy.copy(plt.get_cmap("seismic"))
+    cmap2.set_bad(color='#c8c9cc')
     f_comp = f_ana/f_pred
-    plt.imshow(f_comp, extent=[mtt_min, mtt_max, y_min, y_max], origin='lower', cmap=plt.cm.Blues, vmin = 0.8, vmax= 1.2, aspect=(mtt_max - mtt_min) / (y_max - y_min), interpolation='quadric')
+    plt.imshow(f_comp, extent=[mtt_min, mtt_max, y_min, y_max], origin='lower', cmap=cmap2, vmin = 0.8, vmax= 1.2, aspect=(mtt_max - mtt_min) / (y_max - y_min), interpolation='quadric')
     plt.colorbar()
     plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
     plt.ylabel('y')
     plt.title('ratio at ctG = {}'.format(ctg))
     plt.show()
     fig.savefig(network_path + 'plots/f_comp.pdf')
+
+    fig = plt.figure()
+    mtt_index = np.where(x_span == 1100)[0][0]
+    plt.plot(yy[:, mtt_index], f_pred[:, mtt_index], label = 'NN prediction')
+    plt.plot(yy[:, mtt_index], f_ana[:, mtt_index], label='analytical')
+    plt.xlabel('y')
+    plt.legend()
+    plt.show()
 
 
     # ax2 = fig.add_axes([0.15, 0.1, 0.75, 0.20])
@@ -553,7 +851,40 @@ def plot_predictions(network_path, network_size, train_dataset, quadratic, ctg):
     # fig.savefig(network_path + 'plots/ratio_parabola.pdf')
 
 
-def make_predictions(network_path, network_size, train_dataset, quadratic, ctg):
+def make_predictions_1d(network_path, network_size, train_dataset, quadratic, ctg):
+    """
+    :param network_path: path to the saved NN to be loaded
+    :param train_dataset: training data needed to find the mean and std
+    :param ctg: value of the Wilson coefficient ctg
+    :return: comparison between NN prediction and analytically known result for the likelihood ratio
+    """
+
+    # Be careful to use the same network architecture as during training
+    if quadratic:
+        loaded_model = Predictor_quadratic(network_size)
+    else:
+        loaded_model = Predictor_linear(network_size)
+    loaded_model.load_state_dict(torch.load(network_path))
+
+    # Set up coordinates and compute f
+    mtt_min, mtt_max = 1000, 4000
+    mtt = torch.arange(mtt_min, mtt_max, 100).unsqueeze(1)
+    # x = -1 + 2 / (train_dataset.max_value - train_dataset.min_value) * (mtt - train_dataset.min_value)
+    x = (mtt - train_dataset.mean) / train_dataset.std  # rescale the inputs
+    n_alpha_trained = loaded_model.n_alpha
+    if quadratic:
+        n_beta_trained = loaded_model.n_beta
+        f_pred = f_quadratic(x, n_alpha_trained, n_beta_trained, ctg)
+        n_alpha = [n_alpha_trained(x_i.float()).item() for x_i in x]
+        n_alpha_n_beta = [n_alpha_trained(x_i.float()).item()**2 + n_beta_trained(x_i.float()).item()**2  for x_i in x]
+        return mtt.numpy(), f_pred, n_alpha, n_alpha_n_beta
+    else:
+        f_pred = f_linear(x, n_alpha_trained, ctg)
+        n_alpha = [n_alpha_trained(x_i.float()).item() for x_i in x]
+        return mtt.numpy(), f_pred, n_alpha
+
+
+def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ctg, make_animation):
     """
     :param network_path: path to the saved NN to be loaded
     :param train_dataset: training data needed to find the mean and std
@@ -589,76 +920,155 @@ def make_predictions(network_path, network_size, train_dataset, quadratic, ctg):
     n_alpha = loaded_model.n_alpha(grid.float())
     n_alpha = n_alpha.view(xx.shape).detach().numpy()
 
-    f_ana = ExS.plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, np_order=2)
+    # if make_animation is true, don't compute the analytic prediction
+    if make_animation and quadratic:
+        n_beta = loaded_model.n_beta(grid.float())
+        n_beta = n_beta.view(xx.shape).detach().numpy()
+        n_alpha_n_beta = n_alpha ** 2 + n_beta ** 2
+        return xx, yy, x_span, y_span, f_pred, n_alpha, n_alpha_n_beta
 
+    f_ana = ExS.plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, np_order=2)
 
     if quadratic:
         n_beta = loaded_model.n_beta(grid.float())
         n_beta = n_beta.view(xx.shape).detach().numpy()
         n_alpha_n_beta = n_alpha**2 + n_beta**2
-        return xx, yy, f_pred, n_alpha, n_alpha_n_beta, f_ana
+        return xx, yy, x_span, y_span, f_pred, n_alpha, n_alpha_n_beta, f_ana
     else:
         return xx, yy, f_pred, n_alpha, f_ana
 
 
-def animate_learning(path, network_size, train_dataset, quadratic, ctg, epochs):
-    mtt_min, mtt_max = 1000.0, 4000.0
-    s = (14 * 10 ** 3) ** 2
-    y_min, y_max = - np.log(np.sqrt(s) / mtt_min), np.log(np.sqrt(s) / mtt_min)
-    x_spacing = 10
-    y_spacing = 0.01
+def animate_learning_1d(path, network_size, train_dataset, quadratic, ctg, epochs):
+
+    with open(path + 'stopping.txt') as f:
+        stopping_point = int(f.read())
+
+
+    mtt_min, mtt_max = 1000, 4000
     # First set up the figure, the axis, and the plot element we want to animate
     fig, ax = plt.subplots()
+    ax = plt.axes(xlim=(mtt_min, mtt_max), ylim=(0, 1))
 
-    f_ana = ExS.plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, np_order=2)
-    f_ana = np.where(f_ana == 1, 0, f_ana)
+    # Compute the analytic likelihood ratio and plot
+    x, y = ExS.plot_likelihood_ratio_1D(mtt_min*10**-3, mtt_max*10**-3, ctg, np_order=2)
+    x = np.array(x)
+    y = np.array(y)
+    ax.plot(x*1e3, y, '--', c='red', label='Analytical result')
 
+    plt.ylabel(r'$f\;(m_{tt}, c)$')
+    plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
+    plt.xlim((mtt_min, mtt_max))
+    plt.ylim((0, 1))
+    plt.title('NN versus analytical at ctG = {}'.format(ctg))
 
-    img = plt.imshow(np.zeros(f_ana.shape), extent=[mtt_min, mtt_max, y_min, y_max], origin='lower', cmap=plt.cm.Blues, aspect=(mtt_max - mtt_min) / (y_max - y_min), interpolation='quadric', vmin = 0.8, vmax= 1.2)
-    plt.colorbar()
+    line, = ax.plot([], [], lw=2, label='NN prediction')
     epoch_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
     loss_text = ax.text(0.02, 0.90, '', transform=ax.transAxes)
-    loss = np.loadtxt('loss.out')
+    loss = np.loadtxt(path + 'loss.out')
+    plt.legend()
+
+    # initialization function: plot the background of each frame
+    def init():
+        line.set_data([], [])
+        epoch_text.set_text('')
+        loss_text.set_text('')
+        return line, epoch_text, loss_text
+
+    # animation function.  This is called sequentially
+    def animate(i):
+        print(i)
+        x, f_pred, _, _ = make_predictions_1d(path + 'trained_nn_{}.pt'.format(i+1), network_size, train_dataset, quadratic, ctg)
+        line.set_data(x, f_pred)
+        epoch_text.set_text('epoch = {}'.format(i))
+        loss_text.set_text('loss = {:.4f}'.format(loss[i]))
+        return line, epoch_text, loss_text
+
+    # call the animator.  blit=True means only re-draw the parts that have changed.
+    anim = animation.FuncAnimation(fig, animate, init_func=init,
+                                   frames=stopping_point, interval=200, blit=True)
+
+    anim.save(path + 'animation/training_animation.gif')
+
+
+def animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, epochs):
+
+    # stopping_point = int(glob.glob(path + "/trained_nn_*.pt", recursive=False)[0][-6:-3])
+    # print(stopping_point)
+    # sys.exit()
+
+    with open(path + 'stopping.txt') as f:
+        stopping_point = int(f.read())
+
+    def reference():
+        mtt_min, mtt_max = 1000.0, 4000.0
+        s = (14 * 10 ** 3) ** 2
+        reference.y_min, reference.y_max = - np.log(np.sqrt(s) / mtt_min), np.log(np.sqrt(s) / mtt_min)
+        x_spacing = 10
+        y_spacing = 0.01
+        # First set up the figure, the axis, and the plot element we want to animate
+        reference.f_ana = ExS.plot_f_ana(mtt_min, mtt_max, reference.y_min, reference.y_max, x_spacing, y_spacing, ctg, np_order=2)
+        reference.f_ana = np.ma.masked_where(reference.f_ana == 1.0, reference.f_ana)
+
+    reference()
+
+    cmap = copy.copy(plt.get_cmap("seismic"))
+    cmap.set_bad(color='#c8c9cc')
+
+    fig, ax = plt.subplots()
+    img = plt.imshow(np.zeros(reference.f_ana.shape), extent=[1000.0, 4000.0, reference.y_min, reference.y_max], origin='lower', cmap=cmap, aspect=(4000.0 - 1000.0) / (reference.y_max - reference.y_min), interpolation='quadric', vmin = 0.8, vmax= 1.2)
+    plt.colorbar()
+    plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
+    plt.ylabel('Rapidity y')
+    plt.title('NN performance at ctG = {}'.format(ctg))
+    epoch_text = ax.text(0.70, 0.95, '', transform=ax.transAxes)
+    loss_text = ax.text(0.70, 0.90, '', transform=ax.transAxes)
+    loss = np.loadtxt(path + 'loss.out')
 
 
     # initialization function: plot the background of each frame
     def init():
-        img.set_data(np.zeros(f_ana.shape))
+        img.set_data(np.zeros(reference.f_ana.shape))
         epoch_text.set_text('')
         loss_text.set_text('')
         return img, epoch_text, loss_text
 
+
     # animation function.  This is called sequentially
+
+    bar = Bar('Processing', max=stopping_point)
     def animate(i):
-        global f_ana
-        xx, yy, f_pred, n_alpha_nn, n_alpha_n_beta_nn, f_ana = make_predictions(path + 'trained_nn_{}.pt'.format(i+1),network_size, train_dataset, quadratic, ctg)
-        img.set_array(f_ana/f_pred)
+        sys.stdout.write('\r')
+        sys.stdout.flush()
+        xx, yy, _, _, f_pred, n_alpha_nn, n_alpha_n_beta_nn = make_predictions_2d(path + 'trained_nn_{}.pt'.format(i+1),network_size, train_dataset, quadratic, ctg, make_animation = True)
+        img.set_array(reference.f_ana/f_pred)
         epoch_text.set_text('epoch = {}'.format(i))
         loss_text.set_text('loss = {:.4f}'.format(loss[i]))
+        bar.next()
         return img, epoch_text, loss_text
 
     # call the animator.  blit=True means only re-draw the parts that have changed.
+    print("Creating the animation")
     anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                   frames=epochs, interval=200, blit=True)
-
+                                   frames=stopping_point, interval=200, blit=True)
+    bar.finish()
     anim.save(path + 'animation/training_animation.gif')
 
 
 def main(path, **run_dict):
 
     trained = run_dict['trained']
-    make_animation = run_dict['animate']
     quadratic = run_dict['quadratic']
     n_dat = run_dict['n_dat']
     epochs = run_dict['epochs']
     ctg = run_dict['coeff'][0]['value']
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
+    switch_2d = True if run_dict['input_size'] == 2 else False
 
-    train_dataset = EventDataset(n_dat, train=True, quadratic=quadratic)
-    val_dataset = EventDataset(n_dat, train=False, quadratic=quadratic)
+    train_dataset = EventDataset(path, n_dat, switch_2d, train=True, quadratic=quadratic, trained=trained)
+    val_dataset = EventDataset(path, n_dat, switch_2d, train=False, quadratic=quadratic, trained=trained)
 
-    train_dataset.rescale(-1, 1)
-    val_dataset.rescale(-1, 1)
+    # train_dataset.rescale(-1, 1)
+    # val_dataset.rescale(-1, 1)
     train_dataset.standardize()
     val_dataset.standardize()  # standardize the validation set by the same mean and variance
 
@@ -669,18 +1079,18 @@ def main(path, **run_dict):
 
     # visualize(train_dataset.data_eft['10'][0], train_dataset.data_sm['10'][0])
     if trained:  # classifier is trained already
-        if make_animation:
-            animate_learning(path, network_size, train_dataset, quadratic, ctg, epochs)
+        if switch_2d:
+            plot_predictions_2d(path, network_size, train_dataset, quadratic, ctg, epochs)
         else:
-            plot_predictions(path, network_size, train_dataset, quadratic, ctg)
+            plot_predictions_1d(path, network_size, train_dataset, quadratic, ctg, epochs)
     else:
         train_classifier(path,
                          network_size,
                          train_dataset,
                          val_dataset,
                          epochs,
+                         switch_2d,
                          quadratic=quadratic,
-                         make_animation=make_animation,
                          )
 
 

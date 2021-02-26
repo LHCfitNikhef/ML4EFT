@@ -18,10 +18,12 @@ class MLP(nn.Module):
         self.fc1 = nn.Linear(num_inputs, num_hidden)
         self.fc2 = nn.Linear(num_hidden, num_hidden)
         self.fc3 = nn.Linear(num_hidden, num_outputs)
-        self.relu = nn.Tanh()
+        self.relu = nn.ReLU()
     
     def forward(self, x):
         x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
         x = self.relu(x)
         x = self.fc2(x)
         x = self.relu(x)
@@ -29,6 +31,7 @@ class MLP(nn.Module):
         # x = self.relu(x)
         # x = self.fc3(x)
         return x
+
 
 
 class Predictor(nn.Module):

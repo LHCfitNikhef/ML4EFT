@@ -103,8 +103,10 @@ def weight(sqrts, mu, x1, x2, cSMEFT, order=None, NP=None):
         # Uncomment line below to turn on quark contribution
         w_ii += 2 * sigma_part_qq_SM(sqrts) * np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
     if order == "NHO":
-        w_ii = sigma_part_gg_LO(sqrts, cSMEFT) * (p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))
-        #Uncomment line below to turn on quark contribution
+        w_ii = sigma_part_gg_LO(sqrts, cSMEFT) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
+        # #Uncomment line below to turn on quark contribution
+        # w_ii += 2*sigma_part_qq_LO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution
+        # #Uncomment line below to turn on quark contribution
         w_ii += 2*sigma_part_qq_LO(sqrts, cSMEFT)*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])#Factor of two accounts of pi - theta contribution
     if order == "HO":
         w_ii = sigma_part_gg_NLO(sqrts, cSMEFT)*(p.xfxQ(21, x1, mu)*p.xfxQ(21, x2, mu))
@@ -190,18 +192,20 @@ def n_alpha_n_beta_ana_1D(mtt):
 
 # print(1+10*n_alpha_ana(0, 2.5))
 
-v_weight = np.vectorize(weight, otypes=[np.float])
+v_weight = np.vectorize(weight, otypes=[np.float64])
 
-
+x_coord = []
+y_coord = []
 def dsigma_dmtt_dy(y, mtt, cSMEFT, order = None, NP = None):
     """
     Compute the doubly differential cross section in mtt and y at any order NP
     """
     if mtt == 2*mt: return 0 #if at threshold return zero
 
-    if np.abs(y) < np.log(np.sqrt(s)/mtt): #check whether x = {mtt, y} falls inside the physically allowed region
+    if np.abs(y) < 0.9 * np.log(np.sqrt(s)/mtt): #check whether x = {mtt, y} falls inside the physically allowed region
         x1 = mtt/np.sqrt(s)*np.exp(y)
         x2 = mtt/np.sqrt(s)*np.exp(-y)
+
         dsigma_dmtt_dy = 2*mtt/s*v_weight(mtt, 91.188, x1, x2, cSMEFT, order, NP)/(x1*x2)
         return pb_convert*dsigma_dmtt_dy
     else:
@@ -224,6 +228,7 @@ def likelihood_ratio(y, mtt, cSMEFT, order = None, NP = None):
 def f_analytic(mtt, y, cSMEFT, order = None, NP = None):
     r = likelihood_ratio(y, mtt, cSMEFT, order, NP)
     return 1/(1+r)
+
 
 def likelihood_ratio_1D(mtt, cSMEFT, order = None, NP = None):
     """
@@ -346,35 +351,9 @@ def plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, np_ord
 
 def plot_likelihood_ratio_1D(mtt_min, mtt_max, ctg, np_order=None):
     x = np.arange(mtt_min, mtt_max, 100*1e-3)
-    #print(likelihood_ratio_1D(2.0, 10, NP=1))
-    # sys.exit()
     y = [1/(1+likelihood_ratio_1D(x_i, ctg, NP=np_order)) for x_i in x]
-    # fig = plt.figure()
-    # plt.plot(x, y)
-    # plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
-    # plt.ylabel(r'$r(m_{tt}, c)$')
-    # plt.title('Likelihood ratio: Linear EFT marginalised, c = 10')
-    # plt.show()
-    # fig.savefig('likelihood_ratio_1D_v2.pdf')
     return x, y
 
 
 
-# plotData(15*1e-3, 2.5, 15, NP = 2)
-
-# plot_likelihood_ratio()
-#plot_likelihood_ratio_1D()
-
-#print(dsigma_dmtt(400, 1, NP = 1))
-
-# x = np.arange(0.75, 2.5, 10**-3)[1:]
-# n_alpha = np.array([n_alpha_ana(x_i, 0) for x_i in x])
-# fig = plt.figure()
-# plt.plot(x, 1+10*n_alpha)
-# plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
-# plt.ylabel(r'$r = 1+10*n_\alpha$')
-# plt.title('Analytic likelihood ratio at y=0 and ctG = 10')
-# plt.ylim(3.2, 3.6)
-# plt.show()
-# fig.savefig('n_alpha.pdf')
 
