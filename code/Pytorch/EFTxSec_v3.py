@@ -40,6 +40,9 @@ def sigma_part_gg_SM(sqrts):
     den = 12*hats**3
     return num/den
 
+
+
+
 def sigma_part_gg_LO(sqrts, cSMEFT):
     if sqrts == 2*mt:
         return 0
@@ -48,6 +51,8 @@ def sigma_part_gg_LO(sqrts, cSMEFT):
     den = 6*LambdaSMEFT**2*hats
     return num/den
 
+
+
 def sigma_part_gg_NLO(sqrts, cSMEFT):
     if sqrts == 2*mt:
         return 0
@@ -55,6 +60,8 @@ def sigma_part_gg_NLO(sqrts, cSMEFT):
     num = cSMEFT**2*v**2*asQCD*np.sqrt(1-4*mt**2/hats)*(mt**2*(16*np.sqrt(hats/(hats-4*mt**2))*np.arctanh(np.sqrt(1-4*mt**2/hats))-3)+6*hats)
     den = 24*LambdaSMEFT**4*hats
     return num/den
+
+print(sigma_part_gg_NLO(0.4, 1))
 
 def sigma_part_qq_SM(sqrts):
     if sqrts == 2*mt:

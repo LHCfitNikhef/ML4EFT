@@ -1,20 +1,20 @@
 {
-  "name": 37,
-  "epochs": 1000,
-  "input_size": 2,
+  "name": 49,
+  "epochs": 120,
+  "input_size": 1,
   "output_size": 1,
   "hidden_sizes": [30, 30, 30, 30, 30],
   "trained": 1,
-  "n_dat": 100000,
+  "n_dat": 10000,
   "quadratic": 1,
   "coeff": [
     {
       "op": "ctg",
-      "value": 5.0
+      "value": 0
     },
     {
-      "op": "ctgI",
-      "value": 0
+      "op": "cuu",
+      "value": 0.5
     }
   ]
 }

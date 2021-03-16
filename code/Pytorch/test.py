@@ -1,9 +1,6 @@
-import json
-import sys
-
-with open(sys.argv[1]) as json_data:
-    run_options = json.load(json_data)
-    # for key, values in run_options.items():
-    #     print(key, values)
+for i, j in [[1,2], [3,4]]:
+    print(i,j)
 
 
+dict = {-2.0: "works"}
+print(dict[-2.0])
