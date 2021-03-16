@@ -28,7 +28,7 @@ yt = 0.9922828427689138
 
 class crossSectionSMEFT:
     """
-    A class that contains all EFT cross sections.
+    A class that contains all EFT cross sections...
 
     """
 
