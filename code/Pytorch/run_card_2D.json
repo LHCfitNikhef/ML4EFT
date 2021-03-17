@@ -5,7 +5,7 @@
   "output_size": 1,
   "hidden_sizes": [30, 30, 30, 30, 30],
   "trained": 0,
-  "n_dat": 1000,
+  "n_dat": 10,
   "quadratic": 1,
   "coeff": [
     {
