@@ -337,7 +337,7 @@ def plot_training_report(train_loss, val_loss, path):
     f.savefig(path + 'plots/loss.pdf')
 
 
-def training_loop(n_epochs, optimizer, model, train_loader, val_loader, train_loader_sm, val_loader_sm, path):
+def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
@@ -347,13 +347,11 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, train_lo
         # We save the model parameters at the start of each epoch
         torch.save(model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
 
-        train_loss = torch.zeros(1)
-        val_loss = torch.zeros(1)
-
         for minibatch in zip(*train_loader):
             train_loss = torch.zeros(1)
+            n_eft_points = len(eft_points)
             for i, [event, weight, label] in enumerate(minibatch):
-                ctg, cuu = eft_points[i]
+                ctg, cuu = eft_points[i % n_eft_points]
                 output = model(event.float(), ctg, cuu)
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
@@ -365,126 +363,32 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, train_lo
             loss_train += train_loss.item()
 
 
-        #loss_train = loss_train + train_loss.item()
+        with torch.no_grad():
+            for minibatch in zip(*val_loader):
+                val_loss = torch.zeros(1)
+                n_eft_points = len(eft_points)
+                for i, [event, weight, label] in enumerate(minibatch):
+                    ctg, cuu = eft_points[i % n_eft_points]
+                    output = model(event.float(), ctg, cuu)
+                    loss = loss_fn(output, label, weight)
+                    val_loss += loss
+                assert val_loss.requires_grad is False
 
-        # for minibatch_sm in zip(*train_loader_sm):
-        #     for i, [event, weight, label] in enumerate(minibatch_sm):
-        #         ctg, cuu = eft_points[i]
-        #         output = model(event.float(), ctg, cuu)
-        #         loss = loss_fn(output, label, weight)
-        #         train_loss += loss
+            loss_val += val_loss.item()
 
-        # with torch.no_grad():
-        #     for minibatch in zip(*val_loader):
-        #         for i, [event, weight, label] in enumerate(minibatch):
-        #             ctg, cuu = eft_points[i]
-        #             output = model(event.float(), ctg, cuu)
-        #             loss = loss_fn(output, label, weight)
-        #             val_loss += loss
-        #         assert val_loss.requires_grad is False
-        #
-        #     for minibatch_sm in zip(*val_loader_sm):
-        #         for i, [event, weight, label] in enumerate(minibatch_sm):
-        #             ctg, cuu = eft_points[i]
-        #             output = model(event.float(), ctg, cuu)
-        #             loss = loss_fn(output, label, weight)
-        #             val_loss += loss
-        #         assert val_loss.requires_grad is False
-        #
-
-
-
-
-
-        # # data_train is the training set at one value of c
-        # for data_train in train_loader:
-        #     # compute the loss for all the events in training batch
-        #     # loop over all the events in the minibatch. The full batch corresponds to one value of the EFT parameter
-        #     for i, [event, weight, label] in enumerate(data_train):
-        #         batch_size = event.shape[0]
-        #         ctg, cuu = eft_points[i]
-        #         output = model(event.float(), ctg, cuu)
-        #         loss = loss_fn(output, label, weight)
-        #         train_loss += loss
-        #
-        # for data_val in val_loader:
-        #     with torch.no_grad():
-        #         for i, [event, weight, label] in enumerate(data_val):
-        #             batch_size = event.shape[0]
-        #             ctg, cuu = eft_points[i]
-        #             output = model(event.float(), ctg, cuu)
-        #             loss = loss_fn(output, label, weight)
-        #             val_loss += loss
-        #         assert val_loss.requires_grad is False
-
-        # optimizer.zero_grad()
-        # train_loss.backward()
-        # optimizer.step()
-        #
-        # loss_train += train_loss.item()
-        # loss_val += val_loss.item()
+        loss_list_train.append(loss_train)
+        loss_list_val.append(loss_val)
 
         print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train),
-              'Validation loss {}'.format(loss_train))
-
-        # train_loss
-        # # TODO make this more concise
-        # for (eft_data_train, eft_weights_train, eft_labels_train, sm_data_train, sm_weight_train, sm_label_train), (eft_data_val, eft_weights_val, eft_labels_val, sm_data_val, sm_weight_val, sm_label_val) in zip(train_loader,
-        #                                                                                              val_loader):
-        #     test = eft_data_train
-        #     train_loss, val_loss = torch.zeros(1), torch.zeros(1)
-        #
-        #     for i, train_data in enumerate(eft_data_train):
-        #         ctg, cuu = eft_points[i]
-        #         label_eft_i = eft_labels_train[i].unsqueeze(1)
-        #         weight_eft_i = eft_weights_train[i].unsqueeze(1)
-        #         output_eft = model(train_data.float(), ctg, cuu)
-        #         loss_i_eft = loss_fn(output_eft, label_eft_i, weight_eft_i)
-        #
-        #         label_sm_i = sm_label_train.unsqueeze(1)
-        #         weight_sm_i = sm_weight_train.unsqueeze(1)
-        #         output_sm = model(sm_data_train.float(), ctg, cuu)
-        #         loss_i_sm = loss_fn(output_sm, label_sm_i, weight_sm_i)
-        #
-        #         train_loss += loss_i_eft + loss_i_sm
-        #
-        #     with torch.no_grad():
-        #         for i, val_data in enumerate(eft_data_val):
-        #             ctg, cuu = eft_points[i]
-        #             label_eft_i = eft_labels_val[i].unsqueeze(1)
-        #             weight_eft_i = eft_weights_val[i].unsqueeze(1)
-        #             output_eft = model(val_data.float(), ctg, cuu)
-        #             loss_i_eft = loss_fn(output_eft, label_eft_i, weight_eft_i)
-        #
-        #             label_sm_i = sm_label_val.unsqueeze(1)
-        #             weight_sm_i = sm_weight_val.unsqueeze(1)
-        #             output_sm = model(sm_data_val.float(), ctg, cuu)
-        #             loss_i_sm = loss_fn(output_sm, label_sm_i, weight_sm_i)
-        #
-        #             val_loss += loss_i_eft + loss_i_sm
-        #         assert val_loss.requires_grad is False
-
-            # optimizer.zero_grad()
-
-            # train_loss.backward()
-            #
-            # optimizer.step()
-            #
-            # loss_train += train_loss.item()
-            # loss_val += val_loss.item()
+              'Validation loss {}'.format(loss_val))
 
 
-        # print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train / len(train_loader)),
-        #       'Validation loss {}'.format(loss_val / len(val_loader)))
-        #loss_list_train.append(loss_train / len(train_loader))
-        #loss_list_val.append(loss_val / len(val_loader))
+        np.savetxt(path + 'loss.out', loss_list_train)
 
-        #np.savetxt(path + 'loss.out', loss_list_train)
-
-    #plot_training_report(loss_list_train, loss_list_val, path)
+    plot_training_report(loss_list_train, loss_list_val, path)
 
 
-def train_classifier(path, architecture, data_train, data_val, data_train_sm, data_val_sm, epochs, quadratic=True):
+def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True):
     model = Predictor_quadratic(architecture) if quadratic else Predictor_linear(architecture)
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -492,9 +396,7 @@ def train_classifier(path, architecture, data_train, data_val, data_train_sm, da
     train_data_loader = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()/2), shuffle=True) for dataset_train in data_train]
     val_data_loader = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__()/2), shuffle=False) for dataset_val in data_val]
 
-    train_data_loader_sm = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()/2), shuffle=True) for dataset_train in data_train_sm]
-    val_data_loader_sm = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__() / 2), shuffle=False) for
-                       dataset_val in data_val_sm]
+
 
     training_loop(
         n_epochs=epochs,
@@ -502,8 +404,6 @@ def train_classifier(path, architecture, data_train, data_val, data_train_sm, da
         model=model,
         train_loader=train_data_loader,
         val_loader=val_data_loader,
-        train_loader_sm=train_data_loader_sm,
-        val_loader_sm=val_data_loader_sm,
         path=path
     )
 
@@ -933,20 +833,16 @@ def main(path, mc_run, **run_dict):
     c_values = path_dict.keys()
 
     data_all = [EventDataset(c, path_dict=path_dict, hypothesis=0, n_dat=n_dat) for c in c_values]
+    data_all += [EventDataset(c, path_dict=path_dict, hypothesis=1, n_dat=n_dat) for c in c_values]
     data_split = [data.random_split(dataset, [int(len(dataset)/2), int(len(dataset)/2)]) for dataset in data_all]
     data_train, data_val = [], []
     for dataset in data_split:
         data_train.append(dataset[0])
         data_val.append(dataset[1])
 
-    data_all_sm = [EventDataset(c, path_dict=path_dict, hypothesis=1, n_dat=n_dat) for c in c_values]
-    data_split_sm = [data.random_split(dataset, [int(len(dataset) / 2), int(len(dataset) / 2)]) for dataset in data_all]
-    data_train_sm, data_val_sm = [], []
-    for dataset in data_split:
-        data_train_sm.append(dataset[0])
-        data_val_sm.append(dataset[1])
 
-    train_classifier(path, network_size, data_train, data_val, data_train_sm, data_val_sm, epochs, quadratic=quadratic)
+
+    train_classifier(path, network_size, data_train, data_val, epochs, quadratic=quadratic)
 
     # train_dataset = EventDataset(path, mc_run, n_dat, switch_2d, train=True, quadratic=quadratic, trained=trained)
     # val_dataset = EventDataset(path, mc_run, n_dat, switch_2d, train=False, quadratic=quadratic, trained=trained)
