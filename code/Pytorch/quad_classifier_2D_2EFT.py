@@ -347,26 +347,49 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
         train_loss = torch.zeros(1)
         val_loss = torch.zeros(1)
 
-        # data_train is the training set at one value of c
-        for data_train in train_loader:
-            # compute the loss for all the events in training batch
-            # loop over all the events in the minibatch. The full batch corresponds to one value of the EFT parameter
-            for i, [event, weight, label] in enumerate(data_train):
-                batch_size = event.shape[0]
+
+
+        for minibatch in zip(*train_loader):
+            for i, [event, weight, label] in enumerate(minibatch):
                 ctg, cuu = eft_points[i]
                 output = model(event.float(), ctg, cuu)
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
 
-        for data_val in val_loader:
-            with torch.no_grad():
-                for i, [event, weight, label]  in enumerate(data_val):
-                    batch_size = event.shape[0]
+        with torch.no_grad():
+            for minibatch in zip(*val_loader):
+                for i, [event, weight, label] in enumerate(minibatch):
                     ctg, cuu = eft_points[i]
                     output = model(event.float(), ctg, cuu)
                     loss = loss_fn(output, label, weight)
                     val_loss += loss
                 assert val_loss.requires_grad is False
+
+
+
+
+
+
+        # # data_train is the training set at one value of c
+        # for data_train in train_loader:
+        #     # compute the loss for all the events in training batch
+        #     # loop over all the events in the minibatch. The full batch corresponds to one value of the EFT parameter
+        #     for i, [event, weight, label] in enumerate(data_train):
+        #         batch_size = event.shape[0]
+        #         ctg, cuu = eft_points[i]
+        #         output = model(event.float(), ctg, cuu)
+        #         loss = loss_fn(output, label, weight)
+        #         train_loss += loss
+        #
+        # for data_val in val_loader:
+        #     with torch.no_grad():
+        #         for i, [event, weight, label] in enumerate(data_val):
+        #             batch_size = event.shape[0]
+        #             ctg, cuu = eft_points[i]
+        #             output = model(event.float(), ctg, cuu)
+        #             loss = loss_fn(output, label, weight)
+        #             val_loss += loss
+        #         assert val_loss.requires_grad is False
 
         optimizer.zero_grad()
         train_loss.backward()
@@ -440,8 +463,8 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
-    train_data_loader = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()), shuffle=True) for dataset_train in data_train]
-    val_data_loader = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__()), shuffle=False) for dataset_val in data_val]
+    train_data_loader = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()/2), shuffle=True) for dataset_train in data_train]
+    val_data_loader = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__()/2), shuffle=False) for dataset_val in data_val]
 
     training_loop(
         n_epochs=epochs,
