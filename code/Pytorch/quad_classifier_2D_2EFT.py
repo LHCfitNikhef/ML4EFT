@@ -119,34 +119,32 @@ def loss_fn(outputs, labels, w_e):
 
 class EventDataset(data.Dataset):
 
-    def __init__(self, path, n_dat, switch_2d, train, quadratic, trained):
+    def __init__(self, c, path_dict, hypothesis, n_dat):
         """
         Inputs:
             c - value of the Wilson coefficient
+            hypothesis - 0 (False) if EFT and 1 (True) if SM
         """
         super().__init__()
-        self.train = train
-        self.switch_2d = switch_2d
-        self.trained = trained
-        self.path = path
-        self.resc = False
+
+        self.c = c
+        self.path_dict = path_dict
+        self.hypothesis = hypothesis
+        self.n_dat = n_dat
+
+        # set instance attribute to none, initialised later in sub-initalisation methods
+        self.events = None
+        self.weights = None
+        self.labels = None
+
         self.standardized = False
         self.mean = None
         self.std = None
         self.min_value = None
         self.max_value = None
-        self.n_dat = n_dat
-        self.n_val = None
-        self.n_train = None
-        self.quadratic = quadratic
-        self.data_eft_resc, self.data_sm_resc = {}, {}
-        self.data_eft_std, self.data_sm_std = {}, {}
-        self.data_eft, self.data_sm = {}, {}
-        # only load data when the model has not been trained yet
-        if not self.trained:
-            self.load_events()
-        # self.find_min_max()
-        self.find_mean_std()
+
+        self.load_events()
+        #self.find_mean_std()
 
     def invariant_mass(self, p1, p2):
         """
@@ -251,7 +249,7 @@ class EventDataset(data.Dataset):
         for e in pylhe.readLHE(path):
             mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
 
-            if self.switch_2d:
+            if False: #self.switch_2d:
                 y = self.rapidity(e.particles[-1], e.particles[-2])
                 event_data.append([mtt, y])
             else:
@@ -261,94 +259,23 @@ class EventDataset(data.Dataset):
             cnt += 1
             if cnt == self.n_dat:
                 break
-        event_data = torch.tensor(event_data)
-        weight = torch.tensor(weight)
-        return event_data, weight
+
+        self.events = torch.tensor(event_data)
+        self.weights = torch.tensor(weight)/self.n_dat
+        self.labels = torch.ones(self.n_dat) if self.hypothesis else torch.zeros(self.n_dat)
+
 
 
     def load_events(self):
         """
         Load the datasets (eft and sm) from the les Houches event files.
         """
-        print("Loading training data...\n") if self.train is True else print("Loading validation set...\n")
+        print("Loading data...\n")
 
-        data_loader = []
-        cuu = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
-        ctG = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
-        n_coeff = len(ctG)
+        path_to_sample = self.path_dict[self.c]
+        self.lhe_loader(path_to_sample)
 
 
-        # populate the ctG axis
-        for i in range(n_coeff):
-            path_to_data = 'lhe_events/ctG/sample_{}.lhe'.format(i)
-            data_loader.append({'ctG': ctG[i], 'cuu': 0, 'path': path_to_data})
-        # populate the cuu axis
-        for i in range(n_coeff):
-            path_to_data = 'lhe_events/cuu/sample_{}.lhe'.format(i)
-            data_loader.append({'ctG': 0, 'cuu': cuu[i], 'path': path_to_data})
-        # populate the positive diagonal
-        for i in range(n_coeff):
-            path_to_data = 'lhe_events/diagonal_p/sample_{}.lhe'.format(i)
-            data_loader.append({'ctG': ctG[i], 'cuu': cuu[i], 'path': path_to_data})
-        # populate the positive diagonal
-        for i in range(n_coeff):
-            path_to_data = 'lhe_events/diagonal_p/sample_{}.lhe'.format(i)
-            data_loader.append({'ctG': ctG[i], 'cuu': cuu[i], 'path': path_to_data})
-
-        # set the seed for reproducibility and to make sure the training and validation sets do not overlap
-        torch.manual_seed(0)
-
-        print("Loading eft data...\n")
-
-        for dataset in data_loader:
-            dataset_full, weights_full = self.lhe_loader(dataset['path'])
-            labels_full = torch.zeros(dataset_full.size()[0])
-
-            n_events = dataset_full.size()[0]
-            self.n_val = int(0.5 * n_events)
-            self.n_train = n_events - self.n_val
-
-            shuffled_indices = torch.randperm(n_events)
-
-            if self.train:
-                train_indices = shuffled_indices[:-self.n_val]
-                dataset_train = dataset_full[train_indices]
-                weights_train = weights_full[train_indices] / self.n_train
-                labels_train = labels_full[train_indices]
-                self.data_eft[dataset['ctG'], dataset['cuu']] = dataset_train, weights_train, labels_train
-            else:
-                val_indices = shuffled_indices[-self.n_val:]
-                dataset_val = dataset_full[val_indices]
-                weights_val = weights_full[val_indices] / self.n_val
-                labels_val = labels_full[val_indices]
-                self.data_eft[dataset['ctG'], dataset['cuu']] = dataset_val, weights_val, labels_val
-        print("EFT data loaded successfully!\n")
-
-        # load the sm data
-
-        dataset_full, weights_full = self.lhe_loader('lhe_events/sm/sm.lhe')
-        labels_full = torch.ones(dataset_full.size()[0])
-
-        n_events = dataset_full.size()[0]
-        self.n_val = int(0.5 * n_events)
-        self.n_train = n_events - self.n_val
-
-        shuffled_indices = torch.randperm(n_events)
-
-        if self.train:
-            train_indices = shuffled_indices[:-self.n_val]
-            dataset_train = dataset_full[train_indices]
-            weights_train = weights_full[train_indices] / self.n_train
-            labels_train = labels_full[train_indices]
-            self.data_sm = dataset_train, weights_train, labels_train
-        else:
-            val_indices = shuffled_indices[-self.n_val:]
-            dataset_val = dataset_full[val_indices]
-            weights_val = weights_full[val_indices] / self.n_val
-            labels_val = labels_full[val_indices]
-            self.data_sm = dataset_val, weights_val, labels_val
-
-        print("SM data loaded successfully!")
 
     def visualize(self):
         f1 = plt.figure()
@@ -378,7 +305,7 @@ class EventDataset(data.Dataset):
 
     def __len__(self):
         # Number of data points we have.
-        return self.n_train if self.train else self.n_val
+        return self.n_dat
 
     def __getitem__(self, idx):
         """
@@ -389,21 +316,9 @@ class EventDataset(data.Dataset):
             - weight tuple: weight per event
         """
 
-        # construct the data tuple that has to be returned when calling eventDataset[i]
+        data_sample, weight_sample, label_sample = self.events[idx], self.weights[idx], self.labels[idx]
 
-        eft_data = []
-        eft_weights = []
-        eft_labels = []
-        for ctG, cuu in eft_points:
-            eft_data.append(self.data_eft_std[ctG, cuu][0][idx])
-            eft_weights.append(self.data_eft_std[ctG, cuu][1][idx])
-            eft_labels.append(self.data_eft_std[ctG, cuu][2][idx])
-
-        sm_sample = self.data_sm_std[0][idx]
-        sm_weight = self.data_sm_std[1][idx]
-        sm_label = self.data_sm_std[2][idx]
-
-        return eft_data, eft_weights, eft_labels, sm_sample, sm_weight, sm_label
+        return data_sample, weight_sample, label_sample
 
 
 
@@ -429,7 +344,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
         # We save the model parameters at the start of each epoch
         torch.save(model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
 
-
+        # TODO make this more concise
         for (eft_data_train, eft_weights_train, eft_labels_train, sm_data_train, sm_weight_train, sm_label_train), (eft_data_val, eft_weights_val, eft_labels_val, sm_data_val, sm_weight_val, sm_label_val) in zip(train_loader,
                                                                                                      val_loader):
             test = eft_data_train
@@ -897,7 +812,7 @@ def animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, epoch
     anim.save(path + 'animation/training_animation.gif')
 
 
-def main(path, **run_dict):
+def main(path, mc_run, **run_dict):
     trained = run_dict['trained']
     quadratic = run_dict['quadratic']
     n_dat = run_dict['n_dat']
@@ -907,33 +822,42 @@ def main(path, **run_dict):
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
     switch_2d = True if run_dict['input_size'] == 2 else False
 
-    train_dataset = EventDataset(path, n_dat, switch_2d, train=True, quadratic=quadratic, trained=trained)
-    val_dataset = EventDataset(path, n_dat, switch_2d, train=False, quadratic=quadratic, trained=trained)
+    path_dict = {(1.0, 1.0): 'lhe_events/diagonal_p/sample_4.lhe'}
 
+    c_values = [(1.0, 1.0)] #eft_points
+    data_all = [EventDataset(c, path_dict=path_dict, hypothesis=0, n_dat=n_dat) for c in c_values]
+    data_split = [data.random_split(data_all[0], [int(len(dataset)/2), int(len(dataset)/2)]) for dataset in data_all]
+    data_split
+
+    # train_dataset = EventDataset(path, mc_run, n_dat, switch_2d, train=True, quadratic=quadratic, trained=trained)
+    # val_dataset = EventDataset(path, mc_run, n_dat, switch_2d, train=False, quadratic=quadratic, trained=trained)
+    #
     # train_dataset.standardize()
     # val_dataset.standardize()  # standardize the validation set by the same mean and variance
-
-    #train_dataset.visualize()
-
-    if trained:  # classifier is trained already
-        if switch_2d:
-            plot_predictions_2d(path, network_size, train_dataset, quadratic, ctg, epochs)
-        else:
-            plot_predictions_1d(path, network_size, train_dataset, quadratic, ctg, cuu, epochs)
-    else:
-        train_classifier(path,
-                         network_size,
-                         train_dataset,
-                         val_dataset,
-                         epochs,
-                         quadratic=quadratic,
-                         )
+    #
+    # #train_dataset.visualize()
+    #
+    # if trained:  # classifier is trained already
+    #     if switch_2d:
+    #         plot_predictions_2d(path, network_size, train_dataset, quadratic, ctg, epochs)
+    #     else:
+    #         plot_predictions_1d(path, network_size, train_dataset, quadratic, ctg, cuu, epochs)
+    # else:
+    #     train_classifier(path,
+    #                      network_size,
+    #                      train_dataset,
+    #                      val_dataset,
+    #                      epochs,
+    #                      quadratic=quadratic,
+    #                      )
 
 
 if __name__ == '__main__':
     # read the json run card
     with open(sys.argv[1]) as json_data:
         run_options = json.load(json_data)
+
+    mc_run = sys.argv[2]
 
     order = 'quadratic' if run_options['quadratic'] else 'linear'
     path = 'results/trained_nn/{}/run_{}/'.format(order, run_options['name'])
@@ -944,7 +868,7 @@ if __name__ == '__main__':
         os.makedirs(path + 'animation')
 
     # start the training
-    main(path, **run_options)
+    main(path, mc_run, **run_options)
 
     # copy run card to the appropriate folder
     with open(path + 'run_card.json', 'w') as outfile:
