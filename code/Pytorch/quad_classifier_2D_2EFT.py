@@ -358,6 +358,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
 
+        for data_val in val_loader:
             with torch.no_grad():
                 for i, [event, weight, label]  in enumerate(data_val):
                     batch_size = event.shape[0]
@@ -365,65 +366,73 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
                     output = model(event.float(), ctg, cuu)
                     loss = loss_fn(output, label, weight)
                     val_loss += loss
-
-                    val_loss += loss_i_eft + loss_i_sm
                 assert val_loss.requires_grad is False
 
-        train_loss
-        # TODO make this more concise
-        for (eft_data_train, eft_weights_train, eft_labels_train, sm_data_train, sm_weight_train, sm_label_train), (eft_data_val, eft_weights_val, eft_labels_val, sm_data_val, sm_weight_val, sm_label_val) in zip(train_loader,
-                                                                                                     val_loader):
-            test = eft_data_train
-            train_loss, val_loss = torch.zeros(1), torch.zeros(1)
+        optimizer.zero_grad()
+        train_loss.backward()
+        optimizer.step()
 
-            for i, train_data in enumerate(eft_data_train):
-                ctg, cuu = eft_points[i]
-                label_eft_i = eft_labels_train[i].unsqueeze(1)
-                weight_eft_i = eft_weights_train[i].unsqueeze(1)
-                output_eft = model(train_data.float(), ctg, cuu)
-                loss_i_eft = loss_fn(output_eft, label_eft_i, weight_eft_i)
+        loss_train += train_loss.item()
+        loss_val += val_loss.item()
 
-                label_sm_i = sm_label_train.unsqueeze(1)
-                weight_sm_i = sm_weight_train.unsqueeze(1)
-                output_sm = model(sm_data_train.float(), ctg, cuu)
-                loss_i_sm = loss_fn(output_sm, label_sm_i, weight_sm_i)
+        print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train),
+              'Validation loss {}'.format(loss_val))
 
-                train_loss += loss_i_eft + loss_i_sm
+        # train_loss
+        # # TODO make this more concise
+        # for (eft_data_train, eft_weights_train, eft_labels_train, sm_data_train, sm_weight_train, sm_label_train), (eft_data_val, eft_weights_val, eft_labels_val, sm_data_val, sm_weight_val, sm_label_val) in zip(train_loader,
+        #                                                                                              val_loader):
+        #     test = eft_data_train
+        #     train_loss, val_loss = torch.zeros(1), torch.zeros(1)
+        #
+        #     for i, train_data in enumerate(eft_data_train):
+        #         ctg, cuu = eft_points[i]
+        #         label_eft_i = eft_labels_train[i].unsqueeze(1)
+        #         weight_eft_i = eft_weights_train[i].unsqueeze(1)
+        #         output_eft = model(train_data.float(), ctg, cuu)
+        #         loss_i_eft = loss_fn(output_eft, label_eft_i, weight_eft_i)
+        #
+        #         label_sm_i = sm_label_train.unsqueeze(1)
+        #         weight_sm_i = sm_weight_train.unsqueeze(1)
+        #         output_sm = model(sm_data_train.float(), ctg, cuu)
+        #         loss_i_sm = loss_fn(output_sm, label_sm_i, weight_sm_i)
+        #
+        #         train_loss += loss_i_eft + loss_i_sm
+        #
+        #     with torch.no_grad():
+        #         for i, val_data in enumerate(eft_data_val):
+        #             ctg, cuu = eft_points[i]
+        #             label_eft_i = eft_labels_val[i].unsqueeze(1)
+        #             weight_eft_i = eft_weights_val[i].unsqueeze(1)
+        #             output_eft = model(val_data.float(), ctg, cuu)
+        #             loss_i_eft = loss_fn(output_eft, label_eft_i, weight_eft_i)
+        #
+        #             label_sm_i = sm_label_val.unsqueeze(1)
+        #             weight_sm_i = sm_weight_val.unsqueeze(1)
+        #             output_sm = model(sm_data_val.float(), ctg, cuu)
+        #             loss_i_sm = loss_fn(output_sm, label_sm_i, weight_sm_i)
+        #
+        #             val_loss += loss_i_eft + loss_i_sm
+        #         assert val_loss.requires_grad is False
 
-            with torch.no_grad():
-                for i, val_data in enumerate(eft_data_val):
-                    ctg, cuu = eft_points[i]
-                    label_eft_i = eft_labels_val[i].unsqueeze(1)
-                    weight_eft_i = eft_weights_val[i].unsqueeze(1)
-                    output_eft = model(val_data.float(), ctg, cuu)
-                    loss_i_eft = loss_fn(output_eft, label_eft_i, weight_eft_i)
+            # optimizer.zero_grad()
 
-                    label_sm_i = sm_label_val.unsqueeze(1)
-                    weight_sm_i = sm_weight_val.unsqueeze(1)
-                    output_sm = model(sm_data_val.float(), ctg, cuu)
-                    loss_i_sm = loss_fn(output_sm, label_sm_i, weight_sm_i)
+            # train_loss.backward()
+            #
+            # optimizer.step()
+            #
+            # loss_train += train_loss.item()
+            # loss_val += val_loss.item()
 
-                    val_loss += loss_i_eft + loss_i_sm
-                assert val_loss.requires_grad is False
 
-            optimizer.zero_grad()
+        # print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train / len(train_loader)),
+        #       'Validation loss {}'.format(loss_val / len(val_loader)))
+        #loss_list_train.append(loss_train / len(train_loader))
+        #loss_list_val.append(loss_val / len(val_loader))
 
-            train_loss.backward()
+        #np.savetxt(path + 'loss.out', loss_list_train)
 
-            optimizer.step()
-
-            loss_train += train_loss.item()
-            loss_val += val_loss.item()
-
-        print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train / len(train_loader)),
-              'Validation loss {}'.format(loss_val / len(val_loader)))
-
-        loss_list_train.append(loss_train / len(train_loader))
-        loss_list_val.append(loss_val / len(val_loader))
-
-        np.savetxt(path + 'loss.out', loss_list_train)
-
-    plot_training_report(loss_list_train, loss_list_val, path)
+    #plot_training_report(loss_list_train, loss_list_val, path)
 
 
 def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True):
