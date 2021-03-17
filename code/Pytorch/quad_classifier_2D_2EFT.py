@@ -162,6 +162,9 @@ class EventDataset(data.Dataset):
         y = 0.5 * np.log((q0 + q3) / (q0 - q3))
         return y
 
+    def rescale(self, mean, std):
+        self.events = (self.events - mean) / std
+
     def standardize(self):
         """
         Standardize the dataset so that neurons are more likely to have nonzero gradients
@@ -174,24 +177,27 @@ class EventDataset(data.Dataset):
 
         self.data_sm_std = (self.data_sm[0] - self.mean) / self.std, self.data_sm[1], self.data_sm[2]
 
-    def find_mean_std(self):
+    def get_mean_std(self):
         """
         Find the mean and standard deviation of the data and save to disk
         """
+        self.mean = torch.mean(self.events, dim=0)
+        self.std = torch.std(self.events, dim=0)
+        return self.mean, self.std
 
-        if not self.trained:  # if the nn still has to be trained
-            dataset = []
-            for ctG, cuu in eft_points:
-                dataset.append(self.data_eft[ctG, cuu][0])
-            dataset.append(self.data_sm[0])
-            dataset = torch.cat(dataset)
-            self.mean = torch.mean(dataset, dim=0)
-            self.std = torch.std(dataset, dim=0)
-
-            rescale_factor = torch.stack((self.mean, self.std))
-            torch.save(rescale_factor, path + 'rescale.pt')
-        else:  # nn has already been trained, load rescale factor
-            self.mean, self.std = torch.load(path + 'rescale.pt')
+        # if not self.trained:  # if the nn still has to be trained
+        #     dataset = []
+        #     for ctG, cuu in eft_points:
+        #         dataset.append(self.data_eft[ctG, cuu][0])
+        #     dataset.append(self.data_sm[0])
+        #     dataset = torch.cat(dataset)
+        #     self.mean = torch.mean(dataset, dim=0)
+        #     self.std = torch.std(dataset, dim=0)
+        #
+        #     rescale_factor = torch.stack((self.mean, self.std))
+        #     torch.save(rescale_factor, path + 'rescale.pt')
+        # else:  # nn has already been trained, load rescale factor
+        #     self.mean, self.std = torch.load(path + 'rescale.pt')
 
 
     def find_min_max(self):
@@ -221,23 +227,23 @@ class EventDataset(data.Dataset):
         self.min_value, _ = torch.min(min_values, dim=0)
         self.max_value, _ = torch.max(max_values, dim=0)
 
-    def rescale(self, low, up):
-        """
-        Rescale the input data to lie in the interval [low, up]
-        inputs:
-            - min_value.shape = (1, 2)
-            - max_value.shape = (1, 2)
-        """
-
-        self.resc = True
-
-        for k, v in self.data_eft.items():
-            data_resc = low + (up - low) / (self.max_value - self.min_value) * (v[0] - self.min_value)
-            self.data_eft_resc[k] = data_resc, v[1], v[2]
-
-        for k, v in self.data_sm.items():
-            data_resc = low + (up - low) / (self.max_value - self.min_value) * (v[0] - self.min_value)
-            self.data_sm_resc[k] = data_resc, v[1], v[2]
+    # def rescale(self, low, up):
+    #     """
+    #     Rescale the input data to lie in the interval [low, up]
+    #     inputs:
+    #         - min_value.shape = (1, 2)
+    #         - max_value.shape = (1, 2)
+    #     """
+    #
+    #     self.resc = True
+    #
+    #     for k, v in self.data_eft.items():
+    #         data_resc = low + (up - low) / (self.max_value - self.min_value) * (v[0] - self.min_value)
+    #         self.data_eft_resc[k] = data_resc, v[1], v[2]
+    #
+    #     for k, v in self.data_sm.items():
+    #         data_resc = low + (up - low) / (self.max_value - self.min_value) * (v[0] - self.min_value)
+    #         self.data_sm_resc[k] = data_resc, v[1], v[2]
 
     def lhe_loader(self, path):
         """
@@ -270,7 +276,6 @@ class EventDataset(data.Dataset):
         """
         Load the datasets (eft and sm) from the les Houches event files.
         """
-        print("Loading data...\n")
 
         if not self.hypothesis:
             path_to_sample = self.path_dict[self.c]
@@ -374,7 +379,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
                     val_loss += loss
                 assert val_loss.requires_grad is False
 
-            loss_val += val_loss.item()
+                loss_val += val_loss.item()
 
         loss_list_train.append(loss_train)
         loss_list_val.append(loss_val)
@@ -393,8 +398,9 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
-    train_data_loader = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()/2), shuffle=True) for dataset_train in data_train]
-    val_data_loader = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__()/2), shuffle=False) for dataset_val in data_val]
+    n_batches = 2
+    train_data_loader = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()/n_batches), shuffle=True) for dataset_train in data_train]
+    val_data_loader = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__()/n_batches), shuffle=False) for dataset_val in data_val]
 
 
 
@@ -419,16 +425,12 @@ def f_quadratic(x, n_alpha, n_beta, ctg):
     return np.array(f_nn)
 
 
-def plot_predictions_1d(network_path, network_size, train_dataset, quadratic, ctg, cuu, epochs):
-    animate_learning_1d(path, network_size, train_dataset, quadratic, ctg, cuu, epochs)
+def plot_predictions_1d(network_path, network_size, ctg, cuu, epochs):
+    animate_learning_1d(path, network_size, ctg, cuu, epochs)
 
-    if quadratic:
-        mtt, f_pred = make_predictions_1d(network_path + 'trained_nn.pt', network_size, train_dataset, quadratic, ctg, cuu)
-        #n_alpha_n_beta_nn = np.array(n_alpha_n_beta_nn)
-    # else:
-    #     mtt, f_pred, n_alpha_nn = make_predictions_1d(network_path + 'trained_nn.pt', network_size, train_dataset,
-    #                                                   quadratic, ctg)
-    # #n_alpha_nn = np.array(n_alpha_nn)
+
+    mtt, f_pred = make_predictions_1d(network_path + 'trained_nn.pt', network_size, ctg, cuu)
+
 
     fig = plt.figure()
     mtt_min, mtt_max = 1000, 4000
@@ -458,68 +460,6 @@ def plot_predictions_1d(network_path, network_size, train_dataset, quadratic, ct
 
     fig.savefig(network_path + 'plots/NNvsAna_f.pdf')
 
-    # Compare r_NN to r_ana
-    # fig = plt.figure()
-    # n_alpha_ana = np.array([ExS.n_alpha_ana_1D(mtt_i * 1e-3) for mtt_i in mtt])
-    # n_alpha_n_beta_ana = np.array([ExS.n_alpha_n_beta_ana_1D(mtt_i * 1e-3) for mtt_i in mtt])
-    # plt.plot(mtt, 1 + 2 * ctg * n_alpha_ana + ctg ** 2 * n_alpha_n_beta_ana, '--', c='red', label='Analytical result')
-    # plt.plot(mtt, 1 + 2 * ctg * n_alpha_nn + ctg ** 2 * n_alpha_n_beta_nn, '-', label='NN')
-    # plt.legend()
-    # plt.title('Likelihood ratio: NN versus analytical at c = {}'.format(ctg))
-    # plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
-    # plt.ylabel(r'$r\;(m_{tt}, c)$')
-    #
-    # fig.savefig(network_path + 'plots/likelihoodratio_reconstructed.pdf')
-    #
-    # fig = plt.figure()
-    # # Compare n_alpha to alpha
-    # n_alpha_ana = np.array([ExS.n_alpha_ana_1D(mtt_i * 1e-3) for mtt_i in mtt])
-    # plt.plot(mtt, n_alpha_ana, '--', c='red', label='Analytical result')
-    # plt.plot(mtt, n_alpha_nn, '-', label='NN')
-    # plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
-    # plt.ylabel(r'$\alpha(m_{tt})$')
-    # plt.legend()
-    # plt.title('reconstruction of alpha')
-    #
-    # fig.savefig(network_path + 'plots/alpha_reconstructed.pdf')
-    #
-    # fig = plt.figure()
-    # # Compare n_alpha**2 + n_beta**2 to alpha**2 + beta**2
-    # n_alpha_n_beta_ana = np.array([ExS.n_alpha_n_beta_ana_1D(mtt_i * 1e-3) for mtt_i in mtt])
-    # plt.plot(mtt, n_alpha_n_beta_ana, '--', c='red', label='Analytical result')
-    # plt.plot(mtt, n_alpha_n_beta_nn, '-', label='NN')
-    # plt.xlabel(r'$m_{tt}\;\mathrm{[GeV]}$')
-    # plt.ylabel(r'$\alpha(m_{tt})^2+\beta(m_{tt})^2$')
-    # plt.legend()
-    # plt.title('reconstruction of alpha and beta')
-    #
-    # fig.savefig(network_path + 'plots/alpha_beta_reconstructed.pdf')
-    #
-    # # show r(x,c) as a function of c at fixed mtt and compare analytical and NN
-    # fig = plt.figure()
-    # n_alpha_ana = ExS.n_alpha_ana_1D(2500 * 1e-3)
-    # # n_alpha_nn = n_alpha(1010, train_dataset)
-    #
-    # n_alpha_n_beta_ana = ExS.n_alpha_n_beta_ana_1D(2500 * 1e-3)
-    # # n_beta_nn = n_beta(1010, train_dataset)
-    #
-    # ctg_range = np.arange(-15, 15, 1)
-    # r_ana = 1 + 2 * ctg_range * n_alpha_ana + ctg_range ** 2 * n_alpha_n_beta_ana
-    # # print("ana: ", 1 + 2*5*n_alpha_ana + 5**2*n_alpha_n_beta_ana)
-    # r_nn = 1 + 2 * ctg_range * n_alpha_nn[15] + ctg_range ** 2 * n_alpha_n_beta_nn[15]
-    # # print("NN:", r_nn)
-    #
-    # plt.plot(ctg_range, r_ana, c='red', label='Ana')
-    # plt.plot(ctg_range, r_nn, label='NN')
-    # plt.xlabel(r'c')
-    # plt.ylabel(r'$r(m_{tt}=2.5, c)$')
-    # # plt.scatter(np.array([5, 1 + 2*5*n_alpha_nn + 5**2*n_alpha_n_beta_nn]), c='k')
-    # # plt.scatter(np.array([10, 1 + 2*10*n_alpha_nn + 10**2*n_alpha_n_beta_nn]), c='k')
-    # # plt.scatter(np.array([15, 1 + 2*15*n_alpha_nn + 15**2*n_alpha_n_beta_nn]), c='k')
-    # plt.legend()
-    #
-    # fig.savefig(network_path + 'plots/ratio_parabola.pdf')
-    #
 
 def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ctg, epochs):
     """
@@ -596,7 +536,7 @@ def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
     plt.show()
 
 
-def make_predictions_1d(network_path, network_size, train_dataset, quadratic, ctg, cuu):
+def make_predictions_1d(network_path, network_size, ctg, cuu, mean, std):
     """
     :param network_path: path to the saved NN to be loaded
     :param train_dataset: training data needed to find the mean and std
@@ -605,31 +545,18 @@ def make_predictions_1d(network_path, network_size, train_dataset, quadratic, ct
     """
 
     # Be careful to use the same network architecture as during training
-    if quadratic:
-        loaded_model = Predictor_quadratic(network_size)
-    else:
-        loaded_model = Predictor_linear(network_size)
+    loaded_model = Predictor_quadratic(network_size)
     loaded_model.load_state_dict(torch.load(network_path))
 
     # Set up coordinates and compute f
     mtt_min, mtt_max = 1000, 4000
     mtt = torch.arange(mtt_min, mtt_max, 100).unsqueeze(1)
-    # x = -1 + 2 / (train_dataset.max_value - train_dataset.min_value) * (mtt - train_dataset.min_value)
-    x = (mtt - train_dataset.mean) / train_dataset.std  # rescale the inputs
-    #n_alpha_trained = loaded_model.n_alpha
-    if quadratic:
-        f_pred = loaded_model.forward(x.float(), ctg, cuu)
-        f_pred = f_pred.view(-1).detach().numpy()
-        # n_beta_trained = loaded_model.n_beta
-        # f_pred = f_quadratic(x, n_alpha_trained, n_beta_trained, ctg, cuu)
-        # n_alpha = [n_alpha_trained(x_i.float()).item() for x_i in x]
-        # n_alpha_n_beta = [n_alpha_trained(x_i.float()).item() ** 2 + n_beta_trained(x_i.float()).item() ** 2 for x_i in
-        #                   x]
-        return mtt.numpy(), f_pred #, n_alpha, n_alpha_n_beta
-    # else:
-    #     f_pred = f_linear(x, n_alpha_trained, ctg)
-    #     n_alpha = [n_alpha_trained(x_i.float()).item() for x_i in x]
-    #     return mtt.numpy(), f_pred, n_alpha
+    x = (mtt - mean) / std  # rescale the inputs
+
+    f_pred = loaded_model.forward(x.float(), ctg, cuu)
+    f_pred = f_pred.view(-1).detach().numpy()
+
+    return mtt.numpy(), f_pred
 
 
 def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ctg, make_animation):
@@ -686,7 +613,7 @@ def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
         return xx, yy, f_pred, n_alpha, f_ana
 
 
-def animate_learning_1d(path, network_size, train_dataset, quadratic, ctg, cuu, epochs):
+def animate_learning_1d(path, network_size, ctg, cuu, epochs):
 
 
     mtt_min, mtt_max = 1000, 4000
@@ -834,37 +761,35 @@ def main(path, mc_run, **run_dict):
 
     data_all = [EventDataset(c, path_dict=path_dict, hypothesis=0, n_dat=n_dat) for c in c_values]
     data_all += [EventDataset(c, path_dict=path_dict, hypothesis=1, n_dat=n_dat) for c in c_values]
+    mean = np.mean(np.array([dataset.get_mean_std()[0].item() for dataset in data_all]))
+    std = np.mean(np.array([dataset.get_mean_std()[1].item() for dataset in data_all]))
+
+
+
+    for dataset in data_all: #TODO can this be shortened?
+        dataset.rescale(mean, std)
+
     data_split = [data.random_split(dataset, [int(len(dataset)/2), int(len(dataset)/2)]) for dataset in data_all]
     data_train, data_val = [], []
+
     for dataset in data_split:
         data_train.append(dataset[0])
         data_val.append(dataset[1])
 
 
 
-    train_classifier(path, network_size, data_train, data_val, epochs, quadratic=quadratic)
+    #train_classifier(path, network_size, data_train, data_val, epochs, quadratic=quadratic)
 
-    # train_dataset = EventDataset(path, mc_run, n_dat, switch_2d, train=True, quadratic=quadratic, trained=trained)
-    # val_dataset = EventDataset(path, mc_run, n_dat, switch_2d, train=False, quadratic=quadratic, trained=trained)
-    #
-    # train_dataset.standardize()
-    # val_dataset.standardize()  # standardize the validation set by the same mean and variance
-    #
-    # #train_dataset.visualize()
-    #
-    # if trained:  # classifier is trained already
-    #     if switch_2d:
-    #         plot_predictions_2d(path, network_size, train_dataset, quadratic, ctg, epochs)
-    #     else:
-    #         plot_predictions_1d(path, network_size, train_dataset, quadratic, ctg, cuu, epochs)
-    # else:
-    #     train_classifier(path,
-    #                      network_size,
-    #                      train_dataset,
-    #                      val_dataset,
-    #                      epochs,
-    #                      quadratic=quadratic,
-    #                      )
+    if trained:  # classifier is trained already
+        plot_predictions_1d(path, network_size, ctg, cuu, epochs, mean, std)
+    else:
+        train_classifier(path,
+                         network_size,
+                         data_train,
+                         data_val,
+                         epochs,
+                         quadratic=quadratic,
+                         )
 
 
 if __name__ == '__main__':
