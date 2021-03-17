@@ -822,12 +822,32 @@ def main(path, mc_run, **run_dict):
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
     switch_2d = True if run_dict['input_size'] == 2 else False
 
-    path_dict = {(1.0, 1.0): 'lhe_events/diagonal_p/sample_4.lhe'}
+    path_dict = {}
+    cuu = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
+    ctG = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
+    n_coeff = len(ctG)
 
-    c_values = [(1.0, 1.0)] #eft_points
+    # populate the ctG axis
+    for i in range(n_coeff):
+        path_to_data = 'lhe_events/ctG/sample_{}.lhe'.format(i)
+        path_dict[(ctG[i], 0)] = path_to_data
+    # populate the cuu axis
+    for i in range(n_coeff):
+        path_to_data = 'lhe_events/cuu/sample_{}.lhe'.format(i)
+        path_dict[(0, cuu[i])] = path_to_data
+    # populate the positive diagonal
+    for i in range(n_coeff):
+        path_to_data = 'lhe_events/diagonal_p/sample_{}.lhe'.format(i)
+        path_dict[(ctG[i], cuu[i])] = path_to_data
+
+    c_values = path_dict.keys()
     data_all = [EventDataset(c, path_dict=path_dict, hypothesis=0, n_dat=n_dat) for c in c_values]
-    data_split = [data.random_split(data_all[0], [int(len(dataset)/2), int(len(dataset)/2)]) for dataset in data_all]
-    data_split
+    data_split = [data.random_split(dataset, [int(len(dataset)/2), int(len(dataset)/2)]) for dataset in data_all]
+    data_split = np.array(data_split)
+    data_train, data_val = data_split[:, 0], data_split[:, 1]
+
+
+    train_classifier(path, network_size, data_train, data_val, epochs, quadratic=quadratic)
 
     # train_dataset = EventDataset(path, mc_run, n_dat, switch_2d, train=True, quadratic=quadratic, trained=trained)
     # val_dataset = EventDataset(path, mc_run, n_dat, switch_2d, train=False, quadratic=quadratic, trained=trained)
