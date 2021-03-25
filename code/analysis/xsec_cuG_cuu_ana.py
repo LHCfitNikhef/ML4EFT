@@ -32,7 +32,7 @@ class crossSectionSMEFT:
             return 0
 
         sqrt = np.sqrt(1 - 4 * mt ** 2 / hats)
-        kappa_11 = (v ** 2 * yt ** 2 * asQCD)/(24 * LambdaSMEFT ** 4 * s ** 3) * (6 * np.sqrt(hats ** 5 * (hats - 4 * mt ** 2)) + hats * mt ** 2 * (-3 * np.sqrt(hats * (hats - 4 * mt ** 2))) - 8 * hats * np.log(1 - np.sqrt(1 - 4 * mt ** 2 / hats)) + 8 * hats * np.log(np.sqrt(1 - 4 * mt ** 2 / hats) + 1))
+        kappa_11 = (v ** 2 * yt ** 2 * asQCD)/(24 * LambdaSMEFT ** 4 * hats ** 3) * (6 * np.sqrt(hats ** 5 * (hats - 4 * mt ** 2)) + hats * mt ** 2 * (-3 * np.sqrt(hats * (hats - 4 * mt ** 2))) - 8 * hats * np.log(1 - np.sqrt(1 - 4 * mt ** 2 / hats)) + 8 * hats * np.log(np.sqrt(1 - 4 * mt ** 2 / hats) + 1))
         kappa_1 = (np.sqrt(np.pi) * v * yt * mt * asQCD)/(6 * LambdaSMEFT ** 2 * hats ** 2 * np.sqrt(2)) * (9 * np.sqrt(hats * asQCD * (hats - 4 * mt ** 2)) + 8 * hats * np.sqrt(asQCD) * (np.log(1 - np.sqrt(1 - 4 * mt ** 2 / hats)) - np.log(np.sqrt(1 - 4 * mt ** 2 / hats) + 1)))
         sm = (-np.pi * asQCD ** 2)/(12 * hats ** 3) * (4 * mt ** 4 * (np.log(1 - sqrt) - np.log(sqrt + 1)) + mt ** 2 * (31 * np.sqrt(hats * (hats - 4 * mt ** 2)) + 16 * hats * np.log(1 - sqrt) -16 * hats * np.log(sqrt + 1)) + hats * (7 * np.sqrt(hats * (hats - 4 * mt ** 2)) + 4 * hats * np.log(1 - sqrt) - 4 * hats * np.log(sqrt + 1)))
         return sm  + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11
@@ -170,10 +170,11 @@ def plotData(binWidth, mtt_max, cuGRe, cuu):
     """
     
     #compute the analytical result
-    #x, y_11 = crossSection(binWidth, mtt_max, -cuGRe, cuu)
+    x, y_20 = crossSection(binWidth, mtt_max, 2, 0)
+    x, y_02 = crossSection(binWidth, mtt_max, 0, 2)
+    x, y_22 = crossSection(binWidth, mtt_max, 2, 2)
     x, y_01 = crossSection(binWidth, mtt_max, 0, 1)
     x, y_005 = crossSection(binWidth, mtt_max, 0, 0.5)
-    x, y_02 = crossSection(binWidth, mtt_max, 0, 2)
     #_, y_10 = crossSection(binWidth, mtt_max, -1, 0)
     #_, y_100 = crossSection(binWidth, mtt_max, 10, 0)
     _, y_sm = crossSection(binWidth, mtt_max, 0, 0)
@@ -196,6 +197,9 @@ def plotData(binWidth, mtt_max, cuGRe, cuu):
     ax1 = fig.add_axes([0.15, 0.12, 0.75, 0.78], xlim = (2 * mt, 2.500))
     #ax1.plot(x, y_11, '-', label=r'$c_{tG} = 1,\; c_{tt} = 1$')
     ax1.plot(x, y_01, '-', label=r'$c_{tG} = 0,\; c_{tt} = 1$')
+    #ax1.plot(x, y_20, '-', label=r'$c_{tG} = 2,\; c_{tt} = 0$')
+    #ax1.plot(x, y_22, '-', label=r'$c_{tG} = 2,\; c_{tt} = 2$')
+
     ax1.plot(x, y_005, '-', label=r'$c_{tG} = 0,\; c_{tt} = 0.5$')
     ax1.plot(x, y_02, '-', label=r'$c_{tG} = 0,\; c_{tt} = 2$')
     #ax1.plot(x, y_10, '-', label=r'$c_{tG} = 1,\; c_{tt} = 0$')

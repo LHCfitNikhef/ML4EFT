@@ -20,9 +20,9 @@ import os
 # matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
 from matplotlib import animation
-import xsec_cuu as ExS
+import xsec_cluster as ExS
 from torch import nn
-from progress.bar import Bar
+#from progress.bar import Bar
 import sys
 import pandas as pd
 import shutil
@@ -728,34 +728,20 @@ def main(path, mc_run, **run_dict):
     if not trained:
 
         path_dict_eft, path_dict_sm = {}, {}
-        cuu = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
-        ctG = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
-        n_coeff = len(ctG)
+        # cuu = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
+        # ctG = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
+        # n_coeff = len(ctG)
+        n_eft_points = len(eft_points)
+
+        random_sm = np.random.randint(1, 37)
 
         # populate the ctG axis
-        for i in range(n_coeff):
-            path_to_data_eft = 'lhe_events/ctG/sample_{}.lhe'.format(i)
-            path_to_data_sm = 'lhe_events/sm/ctG/sample_{}.lhe'.format(i)
-            # path_to_data_eft = 'lhe_events/mc_run_{}/ctG/sample_{}.lhe'.format(mc_run, i)
-            # path_to_data_sm = 'lhe_events/mc_run_{}/sm/ctG/sample_{}.lhe'.format(mc_run, i)
-            path_dict_eft[(ctG[i], 0)] = path_to_data_eft
-            path_dict_sm[(ctG[i], 0)] = path_to_data_sm
-        # populate the cuu axis
-        for i in range(n_coeff):
-            path_to_data_eft = 'lhe_events/cuu/sample_{}.lhe'.format(i)
-            path_to_data_sm = 'lhe_events/sm/cuu/sample_{}.lhe'.format(i)
-            # path_to_data_eft = 'lhe_events/mc_run_{}/cuu/sample_{}.lhe'.format(mc_run, i)
-            # path_to_data_sm = 'lhe_events/mc_run_{}/sm/cuu/sample_{}.lhe'.format(mc_run, i)
-            path_dict_eft[(0, cuu[i])] = path_to_data_eft
-            path_dict_sm[(0, cuu[i])] = path_to_data_sm
-        # populate the positive diagonal
-        for i in range(n_coeff):
-            path_to_data_eft = 'lhe_events/diagonal_p/sample_{}.lhe'.format(i)
-            path_to_data_sm = 'lhe_events/sm/diagonal_p/sample_{}.lhe'.format(i)
-            # path_to_data_eft = 'lhe_events/mc_run_{}/diagonal_p/sample_{}.lhe'.format(mc_run, i)
-            # path_to_data_sm = 'lhe_events/mc_run_{}/sm/diagonal_p/sample_{}.lhe'.format(mc_run, i)
-            path_dict_eft[(ctG[i], cuu[i])] = path_to_data_eft
-            path_dict_sm[(ctG[i], cuu[i])] = path_to_data_sm
+        for i in range(n_eft_points):
+            ctg, cuu = eft_points[i]
+            path_to_data_eft = 'data/theorie/jthoeve/mg5_copies/copy_{process}/bin/process_{process}/Events/run_{mc_run}/unweighted_events.lhe'.format(process=i, mc_run=mc_run)
+            path_to_data_sm = 'data/theorie/jthoeve/mg5_copies/copy_18/bin/process_18/Events/run_{random_sm}/unweighted_events.lhe'.format(random_sm=random_sm)
+            path_dict_eft[(ctg, cuu)] = path_to_data_eft
+            path_dict_sm[(ctg, cuu)] = path_to_data_sm
 
         c_values = path_dict_eft.keys()
 
@@ -799,7 +785,7 @@ if __name__ == '__main__':
     mc_run = sys.argv[2]
 
     order = 'quadratic' if run_options['quadratic'] else 'linear'
-    path = 'results/trained_nn/mc_run_{}/'.format(mc_run)
+    path = 'qc_results/trained_nn/mc_run_{}/'.format(mc_run)
 
     if not os.path.exists(path):
         os.makedirs(path)

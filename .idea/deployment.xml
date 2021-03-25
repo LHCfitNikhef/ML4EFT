@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="jthoeve@login.nikhef.nl:22 password" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="Nikhef cluster">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/ML4EFT" local="$PROJECT_DIR$/code/cluster" web="/" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath path="/ML4EFT/MG5_aMC_v3_0_0" />
+            <excludedPath path="/ML4EFT/mg5_copies" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="jthoeve@login.nikhef.nl:22 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/data/theorie/jthoeve/ML4EFT" local="$PROJECT_DIR$/code/cluster" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
