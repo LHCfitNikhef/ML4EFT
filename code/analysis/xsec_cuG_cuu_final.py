@@ -190,7 +190,7 @@ def plotData(binWidth, mtt_max, cuGRe, cuu):
     #load the madgraph result
     data_madgraph = []
     found_weight = False
-    for e in pylhe.readLHE('lhe_events/cluster_test.lhe'):
+    for e in pylhe.readLHE('lhe_events/unweighted_events.lhe'):
         data_madgraph.append(invariant_mass(e.particles[-1],e.particles[-2])*10**-3)
         if found_weight == False:
             weight = e.eventinfo.weight

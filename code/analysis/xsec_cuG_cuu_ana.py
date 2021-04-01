@@ -170,11 +170,16 @@ def plotData(binWidth, mtt_max, cuGRe, cuu):
     """
     
     #compute the analytical result
-    x, y_20 = crossSection(binWidth, mtt_max, 2, 0)
-    x, y_02 = crossSection(binWidth, mtt_max, 0, 2)
-    x, y_22 = crossSection(binWidth, mtt_max, 2, 2)
-    x, y_01 = crossSection(binWidth, mtt_max, 0, 1)
-    x, y_005 = crossSection(binWidth, mtt_max, 0, 0.5)
+    #x, y_20 = crossSection(binWidth, mtt_max, 2, 0)
+    #x, y_02 = crossSection(binWidth, mtt_max, 0, 2)
+    x, y_1 = crossSection(binWidth, mtt_max, -10, 0)
+    x, y_2 = crossSection(binWidth, mtt_max, -5, 0)
+    x, y_3 = crossSection(binWidth, mtt_max, -1, 0)
+    x, y_4 = crossSection(binWidth, mtt_max, 1, 0)
+    x, y_5 = crossSection(binWidth, mtt_max, 5, 0)
+    x, y_6 = crossSection(binWidth, mtt_max, 10, 0)
+    #x, y_01 = crossSection(binWidth, mtt_max, 0, 1)
+    #x, y_005 = crossSection(binWidth, mtt_max, 0, 0.5)
     #_, y_10 = crossSection(binWidth, mtt_max, -1, 0)
     #_, y_100 = crossSection(binWidth, mtt_max, 10, 0)
     _, y_sm = crossSection(binWidth, mtt_max, 0, 0)
@@ -196,14 +201,22 @@ def plotData(binWidth, mtt_max, cuGRe, cuu):
     
     ax1 = fig.add_axes([0.15, 0.12, 0.75, 0.78], xlim = (2 * mt, 2.500))
     #ax1.plot(x, y_11, '-', label=r'$c_{tG} = 1,\; c_{tt} = 1$')
-    ax1.plot(x, y_01, '-', label=r'$c_{tG} = 0,\; c_{tt} = 1$')
+    #ax1.plot(x, y_01, '-', label=r'$c_{tG} = 0,\; c_{tt} = 1$')
     #ax1.plot(x, y_20, '-', label=r'$c_{tG} = 2,\; c_{tt} = 0$')
     #ax1.plot(x, y_22, '-', label=r'$c_{tG} = 2,\; c_{tt} = 2$')
 
-    ax1.plot(x, y_005, '-', label=r'$c_{tG} = 0,\; c_{tt} = 0.5$')
-    ax1.plot(x, y_02, '-', label=r'$c_{tG} = 0,\; c_{tt} = 2$')
+    #ax1.plot(x, y_005, '-', label=r'$c_{tG} = 0,\; c_{tt} = 0.5$')
+    #ax1.plot(x, y_02, '-', label=r'$c_{tG} = 0,\; c_{tt} = 2$')
     #ax1.plot(x, y_10, '-', label=r'$c_{tG} = 1,\; c_{tt} = 0$')
     #ax1.plot(x, y_100, '-', label=r'$c_{tG} = 10,\; c_{tt} = 0$')
+
+    ax1.plot(x, y_1, '-', label=r'$c_{tG} = -10,\; c_{tt} = 0.0$')
+    ax1.plot(x, y_2, '-', label=r'$c_{tG} = -5,\; c_{tt} = 0.0$')
+    ax1.plot(x, y_3, '-', label=r'$c_{tG} = -1,\; c_{tt} = 0.0$')
+    ax1.plot(x, y_4, '-', label=r'$c_{tG} = 1,\; c_{tt} = 0.0$')
+    ax1.plot(x, y_5, '-', label=r'$c_{tG} = 5,\; c_{tt} = 0.0$')
+    ax1.plot(x, y_6, '-', label=r'$c_{tG} = 10,\; c_{tt} = 0.0$')
+
     ax1.plot(x, y_sm, '-', label='SM')
     # ax1.plot(x, y_sm, '-', c='orange', label='SM')
     
@@ -278,7 +291,7 @@ def plot_likelihood_ratio_1D(mtt_min, mtt_max, ctG):
 
 
 
-plotData(0.010, 2.500, 1, 1)
+plotData(0.010, 2.500, -2, 0)
 #plot_likelihood_ratio()
 #plot_likelihood_ratio_1D()
 

@@ -143,6 +143,7 @@ def likelihood_ratio_1D(mtt, cuGRe, cuu):
     return ratio
 
 
+
 def renScale(theta, sqrts):
     sP = sqrts ** 2
     p_T = np.sqrt((sP / 4) - mt ** 2) * np.sin(theta)
@@ -283,8 +284,10 @@ def plot_likelihood_ratio():
 
 
 def plot_likelihood_ratio_1D(mtt_min, mtt_max, cuGRe, cuu):
-    x = np.arange(mtt_min, mtt_max, 100 * 1e-3)
+    x = np.arange(mtt_min, mtt_max, 10 * 1e-3)
     y = [1 / (1 + likelihood_ratio_1D(x_i, cuGRe, cuu)) for x_i in x]
     return x, y
+
+likelihood_ratio_1D_v = np.vectorize(likelihood_ratio_1D, otypes=[np.float])
 
 

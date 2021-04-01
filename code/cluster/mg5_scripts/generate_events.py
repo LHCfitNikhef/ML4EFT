@@ -11,4 +11,4 @@ for i in range(0, number_of_runs):
 	#print(path_events)
 	#subprocess.call("echo $PWD", shell=True)
 	subprocess.call([path_events, '-f', '--cluster'])	
-print 'INFO: Events generated.'
+print('INFO: Events generated.')

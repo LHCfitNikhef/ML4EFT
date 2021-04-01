@@ -7,6 +7,7 @@ import copy
 import glob
 from time import sleep
 
+import sns as sns
 import torch
 import torch.utils.data as data
 import torch.optim as optim
@@ -28,6 +29,7 @@ from torch import nn
 import sys
 import pandas as pd
 import shutil
+import seaborn as sns
 
 matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
@@ -37,9 +39,11 @@ rc('text', usetex=True)
 # print("Using torch", torch.__version__)
 
 
-eft_points = [[-2.0, 0], [-1.0, 0], [-0.5, 0], [0.5, 0], [1.0, 0], [2.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],
-                      [0, 0.5], [0, 1.0], [0, 2.0], [-2.0, -2.0], [-1.0, -1.0], [-0.5, -0.5], [0.5, 0.5], [1.0, 1.0],
-                      [2.0, 2.0]]
+# eft_points = [[-2.0, 0], [-1.0, 0], [-0.5, 0], [0.5, 0], [1.0, 0], [2.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],
+#                       [0, 0.5], [0, 1.0], [0, 2.0], [-2.0, -2.0], [-1.0, -1.0], [-0.5, -0.5], [0.5, 0.5], [1.0, 1.0],
+#                       [2.0, 2.0]]
+
+eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0], [0.0, 0.0]]
 
 class MLP(nn.Module):
 
@@ -337,14 +341,15 @@ def plot_training_report(train_loss, val_loss, path):
 def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
+    loss_val_old = 0
+    overfit_counter = 0
+    patience = 10
 
     for epoch in range(1, n_epochs + 1):
         loss_train, loss_val = 0.0, 0.0
 
         # We save the model parameters at the start of each epoch
         torch.save(model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
-        if epoch == n_epochs:
-            torch.save(model.state_dict(), path + 'trained_nn.pt')
 
         for minibatch in zip(*train_loader):
             train_loss = torch.zeros(1)
@@ -360,7 +365,6 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
             optimizer.step()
 
             loss_train += train_loss.item()
-
 
         with torch.no_grad():
             for minibatch in zip(*val_loader):
@@ -381,8 +385,26 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
         print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train),
               'Validation loss {}'.format(loss_val))
 
-
         np.savetxt(path + 'loss.out', loss_list_train)
+
+        # in case we reach the maximum number of epochs, save the final state
+        if epoch == n_epochs:
+            torch.save(model.state_dict(), path + 'trained_nn.pt')
+            break
+
+        # check whether the network is overfitting by increasing the overfit_counter by one if the
+        # validation loss increases during the epoch. If the counter increases for 10 epochs straight,
+        # stop the training.
+
+        if loss_val > loss_val_old and epoch > 1:
+            overfit_counter += 1
+
+        if overfit_counter == patience:
+            stopping_point = epoch - patience
+            shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
+            break
+
+        loss_val_old = loss_val
 
     plot_training_report(loss_list_train, loss_list_val, path)
 
@@ -392,11 +414,9 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
-    n_batches = 2
+    n_batches = 1
     train_data_loader = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()/n_batches), shuffle=True) for dataset_train in data_train]
     val_data_loader = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__()/n_batches), shuffle=False) for dataset_val in data_val]
-
-
 
     training_loop(
         n_epochs=epochs,
@@ -418,6 +438,47 @@ def f_quadratic(x, n_alpha, n_beta, ctg):
             x]
     return np.array(f_nn)
 
+def get_pull(network_size, ctg, cuu):
+    mc_runs = 42
+    mtt = 1.5
+    f_pred = []
+    for i in range(1, mc_runs + 1):
+        pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_8/mc_run_{}'.format(i)
+        mean, std = np.loadtxt(pred_path + '/scaling.dat')
+        f_pred_i = get_predictions_1d(pred_path + '/trained_nn.pt', network_size, mtt, ctg, cuu, mean, std)
+        f_pred.append(f_pred_i)
+
+    f_pred = np.array(f_pred)
+    f_pred_median = np.median(f_pred, axis=0)
+    f_pred_std = np.std(f_pred, axis=0)
+
+    theory = 1 / (1 + ExS.likelihood_ratio_1D_v(mtt, ctg.numpy(), cuu.numpy()))
+    pull = (theory - f_pred_median)/f_pred_std
+    return pull
+
+
+def plot_pull_heatmap(network_size):
+    plt.figure()
+    plt.title("Heatmap of the pull")
+
+    ctg = np.arange(-2, 2, 0.1)
+    cuu = np.arange(-2, 2, 0.1)
+    # ctg = np.array([-2, -1, 1, 2])
+    # cuu = np.array([-2, -1, 1, 2])
+    ctg_grid, cuu_grid = np.meshgrid(ctg, cuu, indexing='xy')
+    pull = get_pull(network_size, torch.from_numpy(ctg_grid), torch.from_numpy(cuu_grid))
+
+
+    fig = plt.figure()
+    plt.imshow(pull, extent=[np.min(ctg), np.max(ctg), np.min(cuu), np.max(cuu)], origin='lower', cmap=plt.cm.Blues,
+               aspect=(np.max(ctg) - np.min(ctg)) / (cuu.max() - cuu.min()), interpolation='quadric')
+    plt.colorbar()
+    plt.xlabel(r'$\rm{ctg}$')
+    plt.ylabel(r'$\rm{cuu}$')
+    plt.title(r'$\rm{Pull\:heatmap}$')
+    fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/pull.pdf')
+
+
 
 def plot_predictions_1d(network_path, network_size, ctg, cuu, epochs):
     #animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std)
@@ -426,47 +487,91 @@ def plot_predictions_1d(network_path, network_size, ctg, cuu, epochs):
     mtt_min, mtt_max = 1000, 4000
     ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[])
 
-    mc_runs = 30
+    mc_runs = 42
     f_pred = []
+
     for i in range(1, mc_runs + 1):
-        pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/mc_run_{}'.format(i)
+        pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_7/mc_run_{}'.format(i)
         mean, std = np.loadtxt(pred_path + '/scaling.dat')
         mtt, f_pred_i = make_predictions_1d(pred_path + '/trained_nn.pt', network_size, ctg, cuu, mean, std)
         f_pred.append(f_pred_i)
     
     f_pred = np.array(f_pred)
-    f_pred_median = np.median(f_pred, axis=0)
+    f_pred_median_1 = np.median(f_pred, axis=0)
     f_pred_std = np.std(f_pred, axis=0)
     
     
     # Plot the NN prediction
-    nn_med_plot, = ax1.plot(mtt[:,0], f_pred_median,'--')
-    nn_band_plot = ax1.fill_between(mtt[:,0], f_pred_median - 2*f_pred_std, f_pred_median + 2*f_pred_std, alpha=0.3)
-    
+    nn_med_plot_1, = ax1.plot(mtt[:,0], f_pred_median_1,'--', linewidth=0.75)
+    ax1.plot(mtt[:,0], f_pred_median_1 + 2*f_pred_std, color='C0', linewidth=0.75)
+    ax1.plot(mtt[:, 0], f_pred_median_1 - 2 * f_pred_std, color='C0', linewidth=0.75)
+    nn_band_plot_1 = ax1.fill_between(mtt[:,0], f_pred_median_1 - 2*f_pred_std, f_pred_median_1 + 2*f_pred_std, alpha=0.3)
 
+    mc_runs = 42
+    f_pred = []
+
+    for i in range(1, mc_runs + 1):
+        pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_8/mc_run_{}'.format(i)
+        mean, std = np.loadtxt(pred_path + '/scaling.dat')
+        mtt, f_pred_i = make_predictions_1d(pred_path + '/trained_nn.pt', network_size, ctg, cuu, mean, std)
+        f_pred.append(f_pred_i)
+
+    f_pred = np.array(f_pred)
+    f_pred_median_2 = np.median(f_pred, axis=0)
+    f_pred_std = np.std(f_pred, axis=0)
+
+    # Plot the NN prediction
+    nn_med_plot_2, = ax1.plot(mtt[:, 0], f_pred_median_2, '--', linewidth=0.75)
+    ax1.plot(mtt[:, 0], f_pred_median_2 + 2 * f_pred_std, color='C1', linewidth=0.75)
+    ax1.plot(mtt[:, 0], f_pred_median_2 - 2 * f_pred_std, color='C1',linewidth=0.75)
+    nn_band_plot_2 = ax1.fill_between(mtt[:, 0], f_pred_median_2 - 2 * f_pred_std, f_pred_median_2 + 2 * f_pred_std, alpha=0.3)
+
+    # mc_runs = 42
+    # f_pred = []
+    #
+    # for i in range(1, mc_runs + 1):
+    #     pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_9/mc_run_{}'.format(i)
+    #     mean, std = np.loadtxt(pred_path + '/scaling.dat')
+    #     mtt, f_pred_i = make_predictions_1d(pred_path + '/trained_nn.pt', network_size, ctg, cuu, mean, std)
+    #     f_pred.append(f_pred_i)
+    #
+    # f_pred = np.array(f_pred)
+    # f_pred_median = np.median(f_pred, axis=0)
+    # f_pred_std = np.std(f_pred, axis=0)
+
+    # Plot the NN prediction
+    # nn_med_plot_3, = ax1.plot(mtt[:, 0], f_pred_median, '--')
+    # nn_band_plot_3 = ax1.fill_between(mtt[:, 0], f_pred_median - 2 * f_pred_std, f_pred_median + 2 * f_pred_std, alpha=0.3)
     # Compute the analytic likelihood ratio and plot
+
     x, y = ExS.plot_likelihood_ratio_1D(mtt_min * 10 ** -3, mtt_max * 10 ** -3, ctg, cuu)
     x = np.array(x)
     y = np.array(y)
-    ana_plot, = ax1.plot(x * 1e3, y, '--', c='red')
+    ana_plot, = ax1.plot(x * 1e3, y, color='red', linewidth=0.75)
 
 
     plt.ylabel(r'$f\;(m_{tt}, c)$')
     #plt.xlabel(r'$m_{tt}\;[GeV]$')
     plt.xlim((mtt_min, mtt_max))
     plt.ylim((0, 1))
-    plt.title(r'$\rm{NN\:versus\:analytical\:at\:}$' + r'$cuu\:=\:{}$'.format(cuu) + r'$\rm{\:and\:}$' + r'$ctg\:=\:{}$'.format(ctg))
-    plt.legend([ana_plot, (nn_band_plot, nn_med_plot)], [r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$'])
-    
+    plt.title(r'$\rm{NN\:versus\:analytical\:at\:cuu}$' + r'$\:={}$'.format(cuu) + r'$\rm{\:and\:ctg}$' + r'$\:={}$'.format(ctg))
+    #plt.legend([ana_plot, (nn_band_plot_1, nn_med_plot_1), (nn_band_plot_2, nn_med_plot_2), (nn_band_plot_3, nn_med_plot_3)], [r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{50K}$', r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{100K}$', r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{20K}$'])
+    plt.legend([ana_plot, (nn_band_plot_1, nn_med_plot_1), (nn_band_plot_2, nn_med_plot_2)],[r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{\:50K}$', r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{\:100K}$'])
+    #plt.legend([ana_plot, (nn_band_plot_1, nn_med_plot_1)], [r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{50K}$'])
     
     ax2 = fig.add_axes([0.15, 0.1, 0.75, 0.20])
-    ax2.plot(x * 1e3, y / f_pred_median)
+    #ax2.plot(x * 1e3, (y - f_pred_median) / f_pred_std )
+    ax2.plot(x * 1e3, y / f_pred_median_1, color='C0')
+    ax2.plot(x * 1e3, y / f_pred_median_2, color='C1')
+    ax2.hlines(1, mtt_min, mtt_max, linestyles='dashed', colors='black')
     plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
-    plt.ylabel(r'$\rm{theory/model}$')
+    #plt.ylabel(r'$\rm{theory/model}$')
+    plt.ylabel(r'$\rm{pull}$')
     plt.xlim((mtt_min, mtt_max))
-    plt.ylim(((y / f_pred).min(), (y / f_pred).max()))
+    #plt.ylim((0.9*(y / f_pred_median_1).min(), 1.1*(y / f_pred_median_1).max()))
+    plt.ylim((1.1 * np.min((y - f_pred_median_1) / f_pred_std), 1.1 * np.max((y - f_pred_median_1) / f_pred_std )))
 
-    fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/' + 'NNvsAna_f.pdf')
+    fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/' + 'NNvsAna_f_band_v4.pdf')
 
 
 def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ctg, epochs):
@@ -543,6 +648,14 @@ def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
     plt.legend()
     plt.show()
 
+def get_predictions_1d(network_path, network_size, mtt, ctg, cuu, mean, std):
+    loaded_model = Predictor_quadratic(network_size)
+    loaded_model.load_state_dict(torch.load(network_path))
+    x = (mtt - mean) / std  # rescale the inputs
+    x = torch.tensor([x])
+    f_pred = loaded_model.forward(x.float(), ctg, cuu)
+    f_pred = f_pred.detach().numpy()
+    return f_pred
 
 def make_predictions_1d(network_path, network_size, ctg, cuu, mean, std):
     """
@@ -558,7 +671,7 @@ def make_predictions_1d(network_path, network_size, ctg, cuu, mean, std):
 
     # Set up coordinates and compute f
     mtt_min, mtt_max = 1000, 4000
-    mtt = torch.arange(mtt_min, mtt_max, 100).unsqueeze(1)
+    mtt = torch.arange(mtt_min, mtt_max, 10).unsqueeze(1)
     x = (mtt - mean) / std  # rescale the inputs
 
     f_pred = loaded_model.forward(x.float(), ctg, cuu)
@@ -746,18 +859,16 @@ def main(path, mc_run, **run_dict):
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
     switch_2d = True if run_dict['input_size'] == 2 else False
 
+    plot_pull_heatmap(network_size)
+    sys.exit()
 
     if not trained:
 
         path_dict_eft, path_dict_sm = {}, {}
-        # cuu = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
-        # ctG = [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
-        # n_coeff = len(ctG)
         n_eft_points = len(eft_points)
 
-        random_sm = np.random.randint(1, 37)
+        random_sm = np.random.randint(1, 37) #TODO update the upper bound
 
-        # populate the ctG axis
         for i in range(n_eft_points):
             ctg, cuu = eft_points[i]
             if int(mc_run) < 10:
@@ -774,7 +885,7 @@ def main(path, mc_run, **run_dict):
         c_values = path_dict_eft.keys()
 
         data_all = [EventDataset(c, path_dict=path_dict_eft, hypothesis=0, n_dat=n_dat) for c in c_values]
-        data_all += [EventDataset(c, path_dict=path_dict_sm, hypothesis=1, n_dat=n_dat) for c in c_values] #TODO create sm path dict
+        data_all += [EventDataset(c, path_dict=path_dict_sm, hypothesis=1, n_dat=n_dat) for c in c_values]
 
         mean = np.mean(np.array([dataset.get_mean_std()[0].item() for dataset in data_all]))
         std = np.mean(np.array([dataset.get_mean_std()[1].item() for dataset in data_all]))
@@ -812,9 +923,10 @@ if __name__ == '__main__':
         run_options = json.load(json_data)
 
     mc_run = sys.argv[2]
+    run = run_options['name']
 
     order = 'quadratic' if run_options['quadratic'] else 'linear'
-    path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/mc_run_{}/'.format(mc_run)
+    path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_{}/mc_run_{}/'.format(run, mc_run)
 
     if not os.path.exists(path):
         os.makedirs(path)

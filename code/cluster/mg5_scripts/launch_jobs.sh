@@ -1,6 +1,10 @@
 #!/bin/bash
 
-events=43 # should be 50
+events=50 # should be 50
+
+copy_madgraph(){
+ cp -r ../MG5_aMC_v3_0_0/ ../mg5_copies/copy_$i
+}
 
 generate_processes(){
 	cp generate_processes.py ../mg5_copies/copy_$i/bin/
@@ -16,21 +20,28 @@ generate_events(){
 	cd ../../
 }
 
+for i in {0..18}
+do
+  copy_madgraph $i &
+done
 
-#for i in {18..18}
-#do
-#	generate_processes $i & # Put a function in the background
-#done
+wait
+echo "Copied MadGraph!"
 
-#wait 
-#echo "Generated processes!"
+for i in {0..18}
+do
+	generate_processes $i & # Put a function in the background
+done
 
-for i in {0..17}
+wait
+echo "Generated processes!"
+
+for i in {0..18}
 do
 	generate_events $i $events &  # Put a function in the background
 done
 
-wait 
+wait
 echo "Generated events!"
 
 
