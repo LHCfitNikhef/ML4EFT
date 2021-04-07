@@ -10,11 +10,11 @@
   "coeff": [
     {
       "op": "ctg",
-      "value": 5.0
+      "value": 0.1
     },
     {
       "op": "cuu",
-      "value": 0.0
+      "value": 0.1
     }
   ]
 }

@@ -438,9 +438,9 @@ def f_quadratic(x, n_alpha, n_beta, ctg):
             x]
     return np.array(f_nn)
 
-def get_pull(network_size, ctg, cuu):
+def get_pull(network_size, ctg, cuu, mtt):
     mc_runs = 42
-    mtt = 1.5
+
     f_pred = []
     for i in range(1, mc_runs + 1):
         pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_8/mc_run_{}'.format(i)
@@ -457,26 +457,28 @@ def get_pull(network_size, ctg, cuu):
     return pull
 
 
-def plot_pull_heatmap(network_size):
+
+
+def plot_pull_heatmap(network_size,mtt):
     plt.figure()
-    plt.title("Heatmap of the pull")
+
 
     ctg = np.arange(-2, 2, 0.1)
     cuu = np.arange(-2, 2, 0.1)
     # ctg = np.array([-2, -1, 1, 2])
     # cuu = np.array([-2, -1, 1, 2])
     ctg_grid, cuu_grid = np.meshgrid(ctg, cuu, indexing='xy')
-    pull = get_pull(network_size, torch.from_numpy(ctg_grid), torch.from_numpy(cuu_grid))
+    pull = get_pull(network_size, torch.from_numpy(ctg_grid), torch.from_numpy(cuu_grid), mtt)
 
 
     fig = plt.figure()
-    plt.imshow(pull, extent=[np.min(ctg), np.max(ctg), np.min(cuu), np.max(cuu)], origin='lower', cmap=plt.cm.Blues,
+    plt.imshow(pull, extent=[np.min(ctg), np.max(ctg), np.min(cuu), np.max(cuu)], origin='lower', cmap=plt.cm.summer,
                aspect=(np.max(ctg) - np.min(ctg)) / (cuu.max() - cuu.min()), interpolation='quadric')
     plt.colorbar()
     plt.xlabel(r'$\rm{ctg}$')
     plt.ylabel(r'$\rm{cuu}$')
-    plt.title(r'$\rm{Pull\:heatmap}$')
-    fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/pull.pdf')
+    plt.title(r'$\rm{Pull\:heatmap\:at\:m_{tt}=\:}$' + r'${}$'.format(mtt) + r'$\:\mathrm{TeV}$')
+    fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/pull_v3.pdf')
 
 
 
@@ -560,17 +562,17 @@ def plot_predictions_1d(network_path, network_size, ctg, cuu, epochs):
     #plt.legend([ana_plot, (nn_band_plot_1, nn_med_plot_1)], [r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{50K}$'])
     
     ax2 = fig.add_axes([0.15, 0.1, 0.75, 0.20])
-    #ax2.plot(x * 1e3, (y - f_pred_median) / f_pred_std )
-    ax2.plot(x * 1e3, y / f_pred_median_1, color='C0')
-    ax2.plot(x * 1e3, y / f_pred_median_2, color='C1')
-    ax2.hlines(1, mtt_min, mtt_max, linestyles='dashed', colors='black')
+    ax2.plot(x * 1e3, (y - f_pred_median_2) / f_pred_std )
+    #ax2.plot(x * 1e3, y / f_pred_median_1, color='C0')
+    #ax2.plot(x * 1e3, y / f_pred_median_2, color='C1')
+    #ax2.hlines(1, mtt_min, mtt_max, linestyles='dashed', colors='black')
     plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
     #plt.ylabel(r'$\rm{theory/model}$')
     plt.ylabel(r'$\rm{pull}$')
     plt.xlim((mtt_min, mtt_max))
     #plt.ylim((0.9*(y / f_pred_median_1).min(), 1.1*(y / f_pred_median_1).max()))
-    plt.ylim((1.1 * np.min((y - f_pred_median_1) / f_pred_std), 1.1 * np.max((y - f_pred_median_1) / f_pred_std )))
-
+    plt.ylim((1.2 * np.min((y - f_pred_median_1) / f_pred_std), 1.2 * np.max((y - f_pred_median_1) / f_pred_std)))
+    #fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/' + 'pull_v2.pdf')
     fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/' + 'NNvsAna_f_band_v4.pdf')
 
 
@@ -651,7 +653,7 @@ def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
 def get_predictions_1d(network_path, network_size, mtt, ctg, cuu, mean, std):
     loaded_model = Predictor_quadratic(network_size)
     loaded_model.load_state_dict(torch.load(network_path))
-    x = (mtt - mean) / std  # rescale the inputs
+    x = (mtt * 10**3 - mean) / std  # rescale the inputs
     x = torch.tensor([x])
     f_pred = loaded_model.forward(x.float(), ctg, cuu)
     f_pred = f_pred.detach().numpy()
@@ -859,8 +861,10 @@ def main(path, mc_run, **run_dict):
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
     switch_2d = True if run_dict['input_size'] == 2 else False
 
-    plot_pull_heatmap(network_size)
-    sys.exit()
+    # pull = get_pull(network_size, torch.tensor([0]), torch.tensor([1]))
+    # print(pull)
+    # plot_pull_heatmap(network_size, 1.5)
+    # sys.exit()
 
     if not trained:
 
