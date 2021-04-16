@@ -4,6 +4,14 @@ from matplotlib import pyplot as plt
 
 eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0], [0.0, 0.0]]
 
+def coefficient_matrix():
+    coeff_mat = []
+    for cugre, cuu in eft_points:
+        row = [1, cugre, cugre**2, cuu, cuu**2, cugre*cuu]
+        coeff_mat.append(row)
+    coeff_mat = np.array(coeff_mat)
+    return coeff_mat
+
 
 def construct_dataset():
     data = []
@@ -32,10 +40,14 @@ def load_datapoint(path):
     return xsec, xsec_error
 
 
-def main():
+def main(cugre, cuu):
     data, data_sigma = construct_dataset()
-    print(data, data_sigma)
+    coeff_mat = coefficient_matrix()
+    a, _, _, _ = np.linalg.lstsq(coeff_mat, data, rcond=None)
+    c = np.array([1, cugre, cugre**2, cuu, cuu**2, cugre*cuu])
+    xsec = np.dot(a, c)
+    print("The cross-section at (cugre, cuu) = ({}, {}) is: ".format(cugre, cuu), xsec)
 
 
 if __name__ == '__main__':
-    main()
+    main(0, 0)
