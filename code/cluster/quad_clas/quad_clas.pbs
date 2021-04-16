@@ -5,4 +5,6 @@ conda activate eels_kk
 
 #python /data/theorie/jthoeve/ML4EFT/quad_clas/quad_classifier_cluster.py /data/theorie/jthoeve/ML4EFT/quad_clas/run_card_cluster.json ${ARG}
 
-python /data/theorie/jthoeve/ML4EFT/quad_clas/analyse.py /data/theorie/jthoeve/ML4EFT/quad_clas/run_card_cluster.json
+#python /data/theorie/jthoeve/ML4EFT/quad_clas/analyse.py /data/theorie/jthoeve/ML4EFT/quad_clas/run_card_cluster.json
+
+python /data/theorie/jthoeve/ML4EFT/quad_clas/bounds.py

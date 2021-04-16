@@ -7,11 +7,13 @@ from quad_classifier_cluster import EventDataset
 import xsec_cluster as ExS
 import expected_events as exp_nevents
 
-def generate_sample(c):
+def generate_samples(c):
     cugre = c[0]
     cuu = c[1]
     subprocess.call(['chmod', '+x', '/data/theorie/jthoeve/ML4EFT/quad_clas/generate_samples.sh'])
     subprocess.call(["/data/theorie/jthoeve/ML4EFT/quad_clas/generate_samples.sh", '{}'.format(cugre), '{}'.format(cuu)])
+    data = get_events(c)
+    return data
 
 
 def get_events(c):
@@ -26,7 +28,7 @@ def get_events(c):
         path_dict = {(0,
                          0): '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01/unweighted_events.lhe'}
     else:
-        path_dict = {tuple(c): '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_0/bin/process_0/Events/run_01/unweighted_events.lhe'}
+        path_dict = {tuple(c): '/data/theorie/jthoeve/ML4EFT/mg5_copies/mg5_test/bin/process_0/Events/run_01/unweighted_events.lhe'}
 
     events = EventDataset(tuple(c), path_dict=path_dict, n_dat=n_dat)
     return events.event_data
@@ -62,8 +64,8 @@ class StatAnalysis:
         expected_sm = exp_nevents.expected_nevents(np.zeros(len(c)))
         # TODO: the expected number of events only translates the two gaussians by the same amount, so as far as determining CL bounds these terms can be dropped
 
-        data_eft = get_events(c)
-        data_sm = get_events(np.zeros(len(c)))
+        data_eft = generate_samples(c)
+        data_sm = generate_samples(np.zeros(len(c)))
 
         self.mean_tc_eft, self.sigma_tc_eft = get_tc(expected_eft, expected_sm, data_eft, c, hypothesis='eft')
         self.mean_tc_sm, self.sigma_tc_sm = get_tc(expected_eft, expected_sm, data_sm, c, hypothesis='sm')
@@ -74,6 +76,6 @@ class StatAnalysis:
 
 
 if __name__ == '__main__':
-    eft_params = np.array([-5, 5])
-    # bounds = StatAnalysis(eft_params)
-    generate_sample(eft_params)
+    eft_params = np.array([-1, 1])
+    bounds = StatAnalysis(eft_params)
+    #generate_samples(eft_params)
