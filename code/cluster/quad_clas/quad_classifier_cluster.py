@@ -112,7 +112,7 @@ def loss_fn(outputs, labels, w_e):
 
 class EventDataset(data.Dataset):
 
-    def __init__(self, c, path_dict, hypothesis, n_dat):
+    def __init__(self, c, path_dict, n_dat, hypothesis=0):
         """
         Inputs:
             c - value of the Wilson coefficient
@@ -120,6 +120,7 @@ class EventDataset(data.Dataset):
         """
         super().__init__()
 
+        self.event_data = []
         self.c = c
         self.path_dict = path_dict
         self.hypothesis = hypothesis
@@ -196,23 +197,22 @@ class EventDataset(data.Dataset):
         Les Houches Event file reader
         """
         weight = []
-        event_data = []
         cnt = 0
         for e in pylhe.readLHE(path):
             mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
 
             if False: #self.switch_2d:
                 y = self.rapidity(e.particles[-1], e.particles[-2])
-                event_data.append([mtt, y])
+                self.event_data.append([mtt, y])
             else:
-                event_data.append([mtt])
+                self.event_data.append([mtt])
             weight.append(e.eventinfo.weight)
 
             cnt += 1
             if cnt == self.n_dat:
                 break
         print("Data loaded")
-        self.events = torch.tensor(event_data)
+        self.events = torch.tensor(self.event_data)
         self.weights = (torch.tensor(weight)/self.n_dat).unsqueeze(-1)
         self.labels = torch.ones(self.n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(self.n_dat).unsqueeze(-1)
 
@@ -393,8 +393,8 @@ def main(path, mc_run, **run_dict):
 
     c_values = path_dict_eft.keys()
 
-    data_all = [EventDataset(c, path_dict=path_dict_eft, hypothesis=0, n_dat=n_dat) for c in c_values]
-    data_all += [EventDataset(c, path_dict=path_dict_sm, hypothesis=1, n_dat=n_dat) for c in c_values]
+    data_all = [EventDataset(c, path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
+    data_all += [EventDataset(c, path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
 
     mean = np.mean(np.array([dataset.get_mean_std()[0].item() for dataset in data_all]))
     std = np.mean(np.array([dataset.get_mean_std()[1].item() for dataset in data_all]))

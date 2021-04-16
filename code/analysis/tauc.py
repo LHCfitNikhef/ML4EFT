@@ -61,7 +61,6 @@ def find_pdf_tc(c, H, data):
 	N_H0 = N_mean(c)
 	N_H1 = N_mean(0)
 
-	
 
 	mtt = data[:,0]
 	y = data[:,1]

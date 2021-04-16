@@ -119,7 +119,7 @@ dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float])
 
 def dsigma_dmtt(mtt, cuGRe, cuu):
     y_min, y_max = -0.5 * np.log(s / mtt), 0.5 * np.log(s / mtt)
-    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, cuGRe, cuu), n=100)[0]
+    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, cuGRe, cuu), n=10)[0] #TODO: n=100 previously, does n= 10 also give good performances?
     return dsigma_dmtt
 
 
