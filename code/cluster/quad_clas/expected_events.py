@@ -40,14 +40,21 @@ def load_datapoint(path):
     return xsec, xsec_error
 
 
-def main(cugre, cuu):
+def expected_nevents(c):
+    cugre = c[0]
+    cuu = c[1]
     data, data_sigma = construct_dataset()
     coeff_mat = coefficient_matrix()
     a, _, _, _ = np.linalg.lstsq(coeff_mat, data, rcond=None)
     c = np.array([1, cugre, cugre**2, cuu, cuu**2, cugre*cuu])
     xsec = np.dot(a, c)
-    print("The cross-section at (cugre, cuu) = ({}, {}) is: ".format(cugre, cuu), xsec)
+    luminosity = 6*10**6 # pb^-1
+    return xsec*luminosity
+    #print("The cross-section at (cugre, cuu) = ({}, {}) is: ".format(cugre, cuu), xsec)
 
 
 if __name__ == '__main__':
-    main(0, 0)
+    cugre = -5
+    cuu = -1
+    nevents = expected_nevents(cugre, cuu)
+
