@@ -1,16 +1,13 @@
+# Author: Jaco ter Hoeve
+# This files contains the analytical cross sections in the eft as obtained through FeynCalc
+
+
 from __future__ import division
 import lhapdf
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import quad, dblquad
 from scipy import integrate
-import csv
-from scipy.optimize import minimize
-from scipy import optimize
-import matplotlib.patches as patches
-import matplotlib.colors
-import sys
 import pylhe
 
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)

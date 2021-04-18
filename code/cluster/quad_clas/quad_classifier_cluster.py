@@ -348,7 +348,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
 
 
 def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True):
-    model = Predictor_quadratic(architecture) if quadratic else Predictor_linear(architecture)
+    model = PredictorQuadratic(architecture) if quadratic else PredictorLinear(architecture)
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
@@ -423,7 +423,6 @@ def main(path, mc_run, **run_dict):
 
 if __name__ == '__main__':
     # read the json run card
-
     with open(sys.argv[1]) as json_data:
         run_options = json.load(json_data)
 

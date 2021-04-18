@@ -18,7 +18,7 @@ matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
-eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0]]
+eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5], [0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0], [10.0, 2.0]]
 
 
 def make_predictions_1d(network_path, network_size, ctg, cuu, mean, std):
@@ -47,11 +47,6 @@ def make_predictions_1d(network_path, network_size, ctg, cuu, mean, std):
 def plot_predictions_1d(network_size):
     # animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std)
 
-    # plt.legend([ana_plot, (nn_band_plot_1, nn_med_plot_1)], [r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{50K}$'])
-
-    out_pdf = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/' + 'test.pdf'
-    pdf = matplotlib.backends.backend_pdf.PdfPages(out_pdf)
-
     ################
     nrows = 6
     ncols = 3
@@ -60,6 +55,7 @@ def plot_predictions_1d(network_size):
     outer = gridspec.GridSpec(6, 3, wspace=0.2, hspace=0.3)
 
     for i in range(18):
+        # We use the gridspec package to display a grid of plots which in turn consist of 2 subplots
         inner = gridspec.GridSpecFromSubplotSpec(3, 1,
                                                  subplot_spec=outer[i], wspace=0.1, hspace=0.1)
         ctg, cuu = eft_points[i]
@@ -76,6 +72,7 @@ def plot_predictions_1d(network_size):
         f_pred_median_1 = np.median(f_pred, axis=0)
         f_pred_std_1 = np.std(f_pred, axis=0)
 
+        # repeat, but now for 100K data points (run 8)
         f_pred = []
         for ii in range(1, mc_runs + 1):
             pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_8/mc_run_{}'.format(ii)
@@ -88,12 +85,9 @@ def plot_predictions_1d(network_size):
         f_pred_std_2 = np.std(f_pred, axis=0)
 
         for j in range(2):
-            if j == 0:
+            if j == 0: # the main subplot (error band)
                 ax = fig.add_subplot(inner[0:-1, :])
                 ax.set_xticks([])
-
-
-
 
                 # Plot the NN prediction
                 nn_med_plot_1, = ax.plot(mtt[:, 0], f_pred_median_1, '--', linewidth=0.75)
@@ -103,7 +97,6 @@ def plot_predictions_1d(network_size):
                                                  f_pred_median_1 + 2 * f_pred_std_1,
                                                  alpha=0.3)
 
-
                 # Plot the NN prediction
                 nn_med_plot_2, = ax.plot(mtt[:, 0], f_pred_median_2, '--', linewidth=0.75)
                 ax.plot(mtt[:, 0], f_pred_median_2 + 2 * f_pred_std_2, color='C1', linewidth=0.75)
@@ -112,6 +105,7 @@ def plot_predictions_1d(network_size):
                                                  f_pred_median_2 + 2 * f_pred_std_2,
                                                  alpha=0.3)
 
+                # Plot the analytical result
                 x, y = ExS.plot_likelihood_ratio_1D(mtt_min * 10 ** -3, mtt_max * 10 ** -3, ctg, cuu)
                 x = np.array(x)
                 y = np.array(y)
@@ -130,9 +124,8 @@ def plot_predictions_1d(network_size):
                            [r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{\:50K}$',
                             r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{\:100K}$'])
 
-            if j == 1: #data versus theory
+            if j == 1: # the second subplot (data versus theory)
                 ax = fig.add_subplot(inner[-1, :])
-
                 ax.plot(x * 1e3, (y - f_pred_median_2) / f_pred_std_2)
                 #ax.plot(x * 1e3, y / f_pred_median_1, color='C0')
                 #ax.plot(x * 1e3, y / f_pred_median_2, color='C1')
@@ -144,22 +137,10 @@ def plot_predictions_1d(network_size):
                 #plt.ylim((0.9*(y / f_pred_median_1).min(), 1.1*(y / f_pred_median_1).max()))
                 plt.ylim((1.2 * np.min((y - f_pred_median_2) / f_pred_std_2),
                           1.2 * np.max((y - f_pred_median_2) / f_pred_std_2)))
-                # fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/' + 'pull_v2.pdf')
-
-
-
-
-
-
-
-
-
 
             fig.add_subplot(ax)
-    #     if i%6 == 0:
-    #         pdf.savefig(fig)
-    # pdf.close()
-    fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/' + 'test_pull.pdf')
+
+    fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/' + 'pull.pdf')
 
 
 def get_predictions_1d(network_path, network_size, mtt, ctg, cuu, mean, std):
@@ -489,14 +470,6 @@ if __name__ == '__main__':
     ctg = run_dict['coeff'][0]['value']
     cuu = run_dict['coeff'][1]['value']
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
-    #mc_run = sys.argv[2]
-    run = run_dict['name']
 
-    path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_{}/mc_run_{}/'.format(run, 2)
-    #pull = get_pull(network_size, torch.tensor([0]), torch.tensor([1]))
-    #print(pull)
     #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])
-
-
-
     plot_predictions_1d(network_size)

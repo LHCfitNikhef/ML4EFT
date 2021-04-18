@@ -1,3 +1,7 @@
+# Author: Jaco ter Hoeve
+# This file computes the expected number of events under either the SM (H_1) or the SMEFT (H_0)
+
+
 import pylhe
 import numpy as np
 from matplotlib import pyplot as plt
