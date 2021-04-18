@@ -1,5 +1,6 @@
 # Author: Jaco ter Hoeve
 # This file computes the expected number of events under either the SM (H_1) or the SMEFT (H_0)
+# by fitting a quadratic polynomial to the madgraph xsecs
 
 
 import pylhe
