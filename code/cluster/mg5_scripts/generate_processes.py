@@ -1,3 +1,8 @@
+# Author: Jaco ter Hoeve
+# This file should be copied to /bin inside each madgraph copy. It should be run prior to running generate_events.py.
+# Input:
+#	process_number: labels the process, e.g. cuu = 1 and cugre = 5
+
 import sys, subprocess
 
 # Get the number of runs from the command-line argument

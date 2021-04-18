@@ -1,6 +1,8 @@
 #!/bin/bash
 
-events=50 # should be 50
+# This script copies madgraph (to make parallel runs possible), generates processes and events.
+
+events=50
 
 copy_madgraph(){
  cp -r ../MG5_aMC_v3_0_0/ ../mg5_copies/copy_$i
@@ -43,12 +45,3 @@ done
 
 wait
 echo "Generated events!"
-
-
-# for i in {0..0}
-# do
-# 	cp generate_processes.py ./MG5_aMC_process_$i/bin/
-# 	cd ./MG5_aMC_process_$i/bin/
-# 	python generate_processes.py $i
-# 	cd ../../
-# done

@@ -1,3 +1,9 @@
+# Author: Jaco ter Hoeve
+# This file should be copied to /bin inside each madgraph copy in order to generate events.
+# Input:
+#	process_number: labels the process, e.g. cuu = 1 and cugre = 5
+#	number of runs: number of mc toy experiments to generate
+
 import sys, subprocess
 
 # Get the number of runs from the command-line argument
@@ -8,7 +14,5 @@ number_of_runs = int(sys.argv[2]) # should be 50
 
 for i in range(0, number_of_runs):
 	path_events = './process_{}/bin/generate_events'.format(process_number)
-	#print(path_events)
-	#subprocess.call("echo $PWD", shell=True)
 	subprocess.call([path_events, '-f', '--cluster'])	
 print('INFO: Events generated.')
