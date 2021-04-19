@@ -279,21 +279,30 @@ def plot_training_report(train_loss, val_loss, path):
 def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
+
+    # we want to be able to keep track of potential over-fitting, so introduce a counter that gets increased
+    # by one whenever the the validation loss increases during an epoch
     loss_val_old = 0
     overfit_counter = 0
     patience = 10
 
+    # outer loop that runs over the number of epochs
     for epoch in range(1, n_epochs + 1):
         loss_train, loss_val = 0.0, 0.0
 
         # We save the model parameters at the start of each epoch
         torch.save(model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
 
+        # the * denotes the unpacking operator. It passes all the list elements
+        # of train_loader as separate arguments to the zip function, e.g f(a[0], a[1]) = f(*a).
+        # Here we have zip(DataLoader_1, DataLoader_2, ..) which enables looping over our mini-batches.
         for minibatch in zip(*train_loader):
             train_loss = torch.zeros(1)
             n_eft_points = len(eft_points)
+            # loop over all the datasets within the minibatch and compute their contribution to the loss
+            # e.g. for 18 eft points + 18 sm points, this loop is run 3
             for i, [event, weight, label] in enumerate(minibatch):
-                ctg, cuu = eft_points[i % n_eft_points]
+                ctg, cuu = eft_points[i % n_eft_points] # reset the argument to 0 after n_eft_points
                 output = model(event.float(), ctg, cuu)
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
@@ -344,7 +353,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
 
         loss_val_old = loss_val
 
-    plot_training_report(loss_list_train, loss_list_val, path)
+    #plot_training_report(loss_list_train, loss_list_val, path)
 
 
 def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True):
@@ -352,7 +361,11 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
+    # set n_batches to the number of mini-batches you want to use
     n_batches = 1
+
+    # we use PyTorche's dataloader object to allow for mini-batches. After each epoch, the minibatches reshuffle.
+    # we create a dataloader object for each eft point + sm and put them all in one big list train_data_loader (val_data_loader)
     train_data_loader = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()/n_batches), shuffle=True) for dataset_train in data_train]
     val_data_loader = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__()/n_batches), shuffle=False) for dataset_val in data_val]
 
@@ -376,6 +389,7 @@ def main(path, mc_run, **run_dict):
     path_dict_eft, path_dict_sm = {}, {}
     n_eft_points = len(eft_points)
 
+    # draw a new sm dataset each time we train
     random_sm = np.random.randint(1, 37) #TODO update the upper bound
 
     for i in range(n_eft_points):
@@ -392,26 +406,33 @@ def main(path, mc_run, **run_dict):
         path_dict_sm[(ctg, cuu)] = path_to_data_sm
 
     c_values = path_dict_eft.keys()
-
+    # TODO bugfix: path_dict_eft falsely contains (0,0) as data point. c_values also contains the sm (0,0) -> 38 datasets
+    # we construct an eft and a sm data set for each value of c in c_values and make a list out of it
     data_all = [EventDataset(c, path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
     data_all += [EventDataset(c, path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
 
+    # we determine the mean and std of the feature(s) in our data set
     mean = np.mean(np.array([dataset.get_mean_std()[0].item() for dataset in data_all]))
     std = np.mean(np.array([dataset.get_mean_std()[1].item() for dataset in data_all]))
 
+    # we save the mean and std to avoid having to reload the data when making predictions
     np.savetxt(path + 'scaling.dat', np.array([mean, std]))
 
+    # rescale the training data to increase the learning speed
     for dataset in data_all:  # TODO can this be shortened?
         dataset.rescale(mean, std)
 
+    # split each data set in training (50%) and validation (50%).
     data_split = [data.random_split(dataset, [int(len(dataset) / 2), int(len(dataset) / 2)]) for dataset in
                   data_all]
     data_train, data_val = [], []
 
+    # collect all the training and validation sets
     for dataset in data_split:
         data_train.append(dataset[0])
         data_val.append(dataset[1])
 
+    # start the training
     train_classifier(path,
                      network_size,
                      data_train,
