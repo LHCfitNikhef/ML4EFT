@@ -300,9 +300,8 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
             train_loss = torch.zeros(1)
             n_eft_points = len(eft_points)
             # loop over all the datasets within the minibatch and compute their contribution to the loss
-            # e.g. for 18 eft points + 18 sm points, this loop is run 3
             for i, [event, weight, label] in enumerate(minibatch):
-                ctg, cuu = eft_points[i % n_eft_points] # reset the argument to 0 after n_eft_points
+                ctg, cuu = eft_points[i % n_eft_points]  # reset the argument to 0 after n_eft_points
                 output = model(event.float(), ctg, cuu)
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
