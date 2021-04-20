@@ -112,7 +112,7 @@ def loss_fn(outputs, labels, w_e):
 
 class EventDataset(data.Dataset):
 
-    def __init__(self, c, path_dict, n_dat, hypothesis=0):
+    def __init__(self, c, n_features, path_dict, n_dat, hypothesis=0):
         """
         Inputs:
             c - value of the Wilson coefficient
@@ -125,6 +125,7 @@ class EventDataset(data.Dataset):
         self.path_dict = path_dict
         self.hypothesis = hypothesis
         self.n_dat = n_dat
+        self.n_features = n_features
 
         self.events = None
         self.weights = None
@@ -200,11 +201,10 @@ class EventDataset(data.Dataset):
         cnt = 0
         for e in pylhe.readLHE(path):
             mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
-
-            if False: #self.switch_2d:
+            if self.n_features == 2:
                 y = self.rapidity(e.particles[-1], e.particles[-2])
                 self.event_data.append([mtt, y])
-            else:
+            if self.n_features == 1:
                 self.event_data.append([mtt])
             weight.append(e.eventinfo.weight)
 
@@ -352,7 +352,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
 
         loss_val_old = loss_val
 
-    #plot_training_report(loss_list_train, loss_list_val, path)
+    plot_training_report(loss_list_train, loss_list_val, path)
 
 
 def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True):
@@ -383,7 +383,6 @@ def main(path, mc_run, **run_dict):
     n_dat = run_dict['n_dat']
     epochs = run_dict['epochs']
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
-    switch_2d = True if run_dict['input_size'] == 2 else False
 
     path_dict_eft, path_dict_sm = {}, {}
     n_eft_points = len(eft_points)
@@ -405,14 +404,15 @@ def main(path, mc_run, **run_dict):
         path_dict_sm[(ctg, cuu)] = path_to_data_sm
 
     c_values = path_dict_eft.keys()
-    # TODO bugfix: path_dict_eft falsely contains (0,0) as data point. c_values also contains the sm (0,0) -> 38 datasets
     # we construct an eft and a sm data set for each value of c in c_values and make a list out of it
-    data_all = [EventDataset(c, path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
-    data_all += [EventDataset(c, path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
+    data_all = [EventDataset(c, network_size[0], path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
+    data_all += [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
 
     # we determine the mean and std of the feature(s) in our data set
-    mean = np.mean(np.array([dataset.get_mean_std()[0].item() for dataset in data_all]))
-    std = np.mean(np.array([dataset.get_mean_std()[1].item() for dataset in data_all]))
+    mean_list = np.array([dataset.get_mean_std()[0].numpy() for dataset in data_all])
+    mean = np.mean(mean_list, axis=0)
+    std_list = np.array([dataset.get_mean_std()[1].numpy() for dataset in data_all])
+    std = np.mean(std_list, axis=0)
 
     # we save the mean and std to avoid having to reload the data when making predictions
     np.savetxt(path + 'scaling.dat', np.array([mean, std]))

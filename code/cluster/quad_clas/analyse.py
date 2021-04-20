@@ -220,7 +220,7 @@ def plot_pull_heatmap(network_size,mtt):
     fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/pull_heatmap_v3.pdf')
 
 
-def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ctg, epochs):
+def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ctg, cuu, epochs):
     """
     Plot several plots that gauge the performance of the NN
     :param network_path: p
@@ -231,14 +231,14 @@ def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
     :return:
     """
 
-    animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, epochs)
+    #animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, cuu, epochs)
 
     if quadratic:
         xx, yy, x_span, y_span, f_pred, n_alpha_nn, n_alpha_n_beta_nn, f_ana = make_predictions_2d(
-            network_path + 'trained_nn.pt', network_size, train_dataset, quadratic, ctg, False)
+            network_path + 'trained_nn.pt', network_size, train_dataset, quadratic, ctg, cuu, False)
     else:
         xx, yy, f_pred, n_alpha_nn, f_ana = make_predictions_2d(network_path + 'trained_nn.pt', network_size,
-                                                                train_dataset, quadratic, ctg)
+                                                                train_dataset, quadratic, ctg, cuu)
 
     mtt_min, mtt_max = 1000, 4000
     s = (14 * 10 ** 3) ** 2
@@ -295,7 +295,7 @@ def plot_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
     plt.show()
 
 
-def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ctg, make_animation):
+def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ctg, cuu, make_animation):
     """
     :param network_path: path to the saved NN to be loaded
     :param train_dataset: training data needed to find the mean and std
@@ -338,7 +338,7 @@ def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
         n_alpha_n_beta = n_alpha ** 2 + n_beta ** 2
         return xx, yy, x_span, y_span, f_pred, n_alpha, n_alpha_n_beta
 
-    f_ana = ExS.plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, np_order=2)
+    f_ana = ExS.plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, cuu)
 
     if quadratic:
         n_beta = loaded_model.n_beta(grid.float())
@@ -398,7 +398,7 @@ def animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std):
     anim.save(path + 'animation/training_animation.gif')
 
 
-def animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, epochs):
+def animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, cuu, epochs):
     # stopping_point = int(glob.glob(path + "/trained_nn_*.pt", recursive=False)[0][-6:-3])
     # print(stopping_point)
     # sys.exit()
@@ -413,8 +413,7 @@ def animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, epoch
         x_spacing = 10
         y_spacing = 0.01
         # First set up the figure, the axis, and the plot element we want to animate
-        reference.f_ana = ExS.plot_f_ana(mtt_min, mtt_max, reference.y_min, reference.y_max, x_spacing, y_spacing, ctg,
-                                         np_order=2)
+        reference.f_ana = ExS.plot_f_ana(mtt_min, mtt_max, reference.y_min, reference.y_max, x_spacing, y_spacing, ctg, cuu, np_order=2)
         reference.f_ana = np.ma.masked_where(reference.f_ana == 1.0, reference.f_ana)
 
     reference()
@@ -473,3 +472,5 @@ if __name__ == '__main__':
 
     #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])
     plot_predictions_1d(network_size)
+    #plot_predictions_2d('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_11/mc_run_1/', network_size, )
+    # TODO: continue here tomorrow morning!

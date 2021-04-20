@@ -120,12 +120,12 @@ def dsigma_dmtt(mtt, cuGRe, cuu):
     return dsigma_dmtt
 
 
-def likelihood_ratio(y, mtt, cSMEFT, order=None, NP=None):
+def likelihood_ratio(y, mtt, cuGRe, cuu):
     """
     Compute the 2D analytic likelihood ratio r(x, c)
     """
-    dsigma_0 = dsigma_dmtt_dy(y, mtt, cSMEFT, order, NP)  # EFT
-    dsigma_1 = dsigma_dmtt_dy(y, mtt, 0, order=None, NP=0)  # SM
+    dsigma_0 = dsigma_dmtt_dy(y, mtt, cuGRe, cuu)  # EFT
+    dsigma_1 = dsigma_dmtt_dy(y, mtt, 0, 0)  # SM
     ratio = dsigma_0 / dsigma_1 if dsigma_1 != 0 else 0
     return ratio
 
@@ -246,6 +246,7 @@ def plotData(binWidth, mtt_max, cuGRe, cuu):
     fig.savefig('mg5_ana_ctG_1_ctt_1.pdf')
 
 
+
 def plot_likelihood_ratio():
     y_max = np.log(np.sqrt(s) / (2 * mt))
     y_min = -y_max
@@ -273,7 +274,7 @@ def plot_likelihood_ratio():
 
     plt.ylabel(r'Rapidity $Y = \log\sqrt{x_1/x_2}$')
     plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
-    plt.title('Likelihood ratio: Linear EFT')
+    plt.title('Likelihood ratio')
 
     # plt.title(r'$pdf(x|H_1(c=10^{%d}))$'%(-3+3))
     plt.show()
@@ -286,5 +287,19 @@ def plot_likelihood_ratio_1D(mtt_min, mtt_max, cuGRe, cuu):
     return x, y
 
 likelihood_ratio_1D_v = np.vectorize(likelihood_ratio_1D, otypes=[np.float])
+
+def f_analytic(mtt, y, cuGRe, cuu):
+    r = likelihood_ratio(y, mtt, cuGRe, cuu)
+    return 1/(1+r)
+
+def plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, cuu):
+
+    # Important to include otypes = [np.float], else all the output is int by default
+    vf_ana = np.vectorize(f_analytic, otypes=[np.float])
+    x = np.arange(mtt_min*10**-3, mtt_max*10**-3, x_spacing*10**-3)
+    y = np.arange(y_min, y_max, y_spacing)
+    xx, yy = np.meshgrid(x, y)
+    Z = vf_ana(xx, yy, ctg, cuu)
+    return Z
 
 

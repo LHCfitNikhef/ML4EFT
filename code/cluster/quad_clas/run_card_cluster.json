@@ -1,10 +1,10 @@
 {
-  "name": 10,
-  "epochs": 5,
-  "input_size": 1,
+  "name": 11,
+  "epochs": 50,
+  "input_size": 2,
   "output_size": 1,
   "hidden_sizes": [30, 30, 30, 30, 30],
-  "n_dat": 10,
+  "n_dat": 1000,
   "quadratic": 1,
   "coeff": [
     {
