@@ -459,6 +459,7 @@ def animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, cuu, 
     anim.save(path + 'animation/training_animation.gif')
 
 
+
 if __name__ == '__main__':
     with open(sys.argv[1]) as json_data:
         run_dict = json.load(json_data)
