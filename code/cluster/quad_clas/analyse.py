@@ -458,20 +458,50 @@ def animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, cuu, 
                                    frames=stopping_point, interval=200, blit=True)
     anim.save(path + 'animation/training_animation.gif')
 
+def plot_mg5_ana_mtt(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
+    """
+    Create a plot that shows the mg5 histogram in m_tt on top of the analytical (exact) result.
+    This allows for a visual cross-check of the analytical result.
+    :param binWidth: binwidth in TeV
+    :param mtt_max: maximum m_tt in TeV
+    :param cuGRe: eft parameter cuGRe
+    :param cuu: eft parameter cuu
+    :param path_to_file: path to lhe file
+    :param save_path: path where the plot should be stored
+    """
+    ExS.plotData(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path)
+
+def plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
+    """
+    Create a plot that shows the mg5 histogram in m_tt on top of the analytical (exact) result.
+    This allows for a visual cross-check of the analytical result.
+    :param binWidth: binwidth in TeV
+    :param mtt_max: maximum m_tt in TeV
+    :param cuGRe: eft parameter cuGRe
+    :param cuu: eft parameter cuu
+    :param path_to_file: path to lhe file
+    :param save_path: path where the plot should be stored
+    """
+    ExS.plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path)
 
 
 if __name__ == '__main__':
-    with open(sys.argv[1]) as json_data:
-        run_dict = json.load(json_data)
+    # with open(sys.argv[1]) as json_data:
+    #     run_dict = json.load(json_data)
+    #
+    # quadratic = run_dict['quadratic']
+    # n_dat = run_dict['n_dat']
+    # epochs = run_dict['epochs']
+    # ctg = run_dict['coeff'][0]['value']
+    # cuu = run_dict['coeff'][1]['value']
+    # network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
+    #
+    # #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])
+    # plot_predictions_1d(network_size)
+    # #plot_predictions_2d('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_11/mc_run_1/', network_size, )
+    # # TODO: continue here tomorrow morning!
 
-    quadratic = run_dict['quadratic']
-    n_dat = run_dict['n_dat']
-    epochs = run_dict['epochs']
-    ctg = run_dict['coeff'][0]['value']
-    cuu = run_dict['coeff'][1]['value']
-    network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
-
-    #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])
-    plot_predictions_1d(network_size)
-    #plot_predictions_2d('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_11/mc_run_1/', network_size, )
-    # TODO: continue here tomorrow morning!
+    lhe_path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/unweighted_events.lhe'
+    save_path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/eft.pdf'
+    #plot_mg5_ana_mtt(30*10**-3, 2.5, 1, 0, lhe_path, save_path)
+    plot_xsec_ana(10 * 10 ** -3, 2.5, 10, 0, lhe_path, save_path)

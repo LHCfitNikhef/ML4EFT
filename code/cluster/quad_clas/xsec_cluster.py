@@ -5,7 +5,9 @@
 from __future__ import division
 import lhapdf
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib import pyplot as plt
+from matplotlib import rc
 from scipy.integrate import quad, dblquad
 from scipy import integrate
 import pylhe
@@ -20,6 +22,9 @@ LambdaSMEFT = 1  # 10**3
 pb_convert = 3.894E2
 yt = 0.9922828427689138
 
+matplotlib.use('PDF')
+rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
+rc('text', usetex=True)
 
 # Partonic cross sections
 
@@ -187,13 +192,16 @@ def crossSection(binWidth, mtt_max, cuGRe, cuu):
     return x, y
 
 
-def plotData(binWidth, mtt_max, cuGRe, cuu):
+def plotData(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
     """
-    Plot the differential cross section in M(tt) and compare it with the MG5 result
-    inputs:
-        - binWidth = bin width of the MG5 events
-        - mtt_max = plot goes from [2*mt, mtt_max]
-        - cSMEFT = Value of ctG in TeV^-2
+    Create a plot that shows the mg5 histogram in m_tt on top of the analytical (exact) result.
+    This allows for a visual cross-check of the analytical result.
+    :param binWidth: binwidth in TeV
+    :param mtt_max: maximum m_tt in TeV
+    :param cuGRe: eft parameter cuGRe
+    :param cuu: eft parameter cuu
+    :param path_to_file: path to lhe file
+    :param save_path: path where the plot should be stored
     """
 
     # compute the analytical result
@@ -203,25 +211,24 @@ def plotData(binWidth, mtt_max, cuGRe, cuu):
     # load the madgraph result
     data_madgraph = []
     found_weight = False
-    for e in pylhe.readLHE('lhe_events/pptt_smeftsim_v2.lhe'):
+    for e in pylhe.readLHE(path_to_file):
         data_madgraph.append(invariant_mass(e.particles[-1], e.particles[-2]) * 10 ** -3)
         if found_weight == False:
             weight = e.eventinfo.weight
             found_weight = True
-    print("madgraph xsec = ", weight)
+
+    # make a histogram from the mg5 data
     hist_mg, bins_mg = np.histogram(data_madgraph, bins=np.arange(2 * mt, np.max(data_madgraph), binWidth),
                                     density=True)
     hist_mg *= weight
 
     # show analytical result and mg5 in one plot
-    fig = plt.figure()
-
-    ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(2 * mt, 2.500))
+    fig = plt.figure(figsize=(10, 6))
+    ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(2 * mt, mtt_max))
     ax1.plot(x, y, '-', c='red', label='Ana')
-    # ax1.plot(x, y_sm, '-', c='orange', label='SM')
-
+    ax1.plot(x, y_sm, '-', c='orange', label='SM')
     ax1.step(bins_mg[:-1], hist_mg, where='post', label='MG5')
-    plt.title('Analytic versus Madgraph at ' + r'$c_{tG}=1$' + ' and ' + r'$c_{tt}=1$')
+    plt.title('Analytic versus mg5 at ' + r'$ctg={}$'.format(cuGRe) + ' and ' + r'$cuu={}$'.format(cuu))
 
     plt.yscale('log')
     plt.ylabel(r'$d\sigma/dm_{tt}\;\mathrm{[pb\:TeV^{-1}]}$')
@@ -243,8 +250,45 @@ def plotData(binWidth, mtt_max, cuGRe, cuu):
     # plt.xlim((2*mt, mtt_max))
 
     plt.show()
-    fig.savefig('mg5_ana_ctG_1_ctt_1.pdf')
+    fig.savefig(save_path)
 
+
+def plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
+    """
+    Create a plot that shows the mg5 histogram in m_tt on top of the analytical (exact) result.
+    This allows for a visual cross-check of the analytical result.
+    :param binWidth: binwidth in TeV
+    :param mtt_max: maximum m_tt in TeV
+    :param cuGRe: eft parameter cuGRe
+    :param cuu: eft parameter cuu
+    :param path_to_file: path to lhe file
+    :param save_path: path where the plot should be stored
+    """
+
+    # compute the analytical result
+    x, y = crossSection(binWidth, mtt_max, cuGRe, cuu)
+    _, y_sm = crossSection(binWidth, mtt_max, 0, 0)
+
+
+    # show analytical result and mg5 in one plot
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.plot(x, y, '-', c='red', label='BSM')
+    ax.plot(x, y_sm, '-', c='orange', label='SM')
+    plt.title('Analytic xsec in the EFT at ctg = {} and cuu = {}'.format(cuGRe, cuu))
+    plt.yscale('log')
+    plt.ylabel(r'$d\sigma/dm_{tt}\;\mathrm{[pb\:TeV^{-1}]}$')
+    plt.legend()
+    plt.xlim((2 * mt, mtt_max))
+
+    # ax3 = fig.add_axes([0.15, 0.1, 0.75, 0.20], ylim = (0.8*(y/y_sm).min(), 1.1*(y/y_sm).max()))
+    # ax3.plot(x, y/y_sm, '-')
+
+    plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
+    # plt.ylabel('BSM/SM')
+    # plt.xlim((2*mt, mtt_max))
+
+    plt.show()
+    fig.savefig(save_path)
 
 
 def plot_likelihood_ratio():
