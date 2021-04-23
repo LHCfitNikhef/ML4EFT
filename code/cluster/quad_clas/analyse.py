@@ -152,6 +152,16 @@ def get_predictions_1d(network_path, network_size, mtt, ctg, cuu, mean, std):
     f_pred = f_pred.detach().numpy()
     return f_pred
 
+def get_likelihood_ratio_NN(network_path, network_size, mtt, ctg, cuu, mean, std):
+    loaded_model = PredictorQuadratic(network_size)
+    loaded_model.load_state_dict(torch.load(network_path))
+    x = (mtt * 10 ** 3 - mean) / std  # rescale the inputs
+    x = torch.tensor([x])
+    f_pred = loaded_model.forward(x.float(), ctg, cuu)
+    f_pred = f_pred.detach().numpy()
+    ratio = (1 - f_pred) / f_pred
+    return ratio
+
 
 def get_pull(network_size, ctg, cuu, mtt):
     mc_runs = 42
@@ -170,6 +180,8 @@ def get_pull(network_size, ctg, cuu, mtt):
     theory = 1 / (1 + ExS.likelihood_ratio_1D_v(mtt, ctg.numpy(), cuu.numpy()))
     pull = (theory - f_pred_median)/f_pred_std
     return pull
+
+
 
 
 def plot_pull_heatmap(network_size,mtt):
