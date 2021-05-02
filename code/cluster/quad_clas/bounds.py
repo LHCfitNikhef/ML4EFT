@@ -50,12 +50,15 @@ def get_events(c):
         path_dict = {(0,
                       0): '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01/unweighted_events.lhe'}
 
-    events = EventDataset(tuple(c), 1, path_dict=path_dict, n_dat=n_dat)
+    events = EventDataset(c=tuple(c), n_features=1, path_dict=path_dict, n_dat=n_dat, hypothesis=1)
     return events.event_data
 
 
 def get_tc(expected_eft, expected_sm, data, c, hypothesis):
     cug, cuu = c
+    print(type(c))
+    print(cug, cuu)
+    sys.exit()
     data = np.array(data)
     mtt = data[:, 0] * 10 ** -3
     dsigma_dmtt_eft = np.array([ExS.dsigma_dmtt(mtt_i, cug, cuu) for mtt_i in mtt])
@@ -94,6 +97,10 @@ def get_tc_nn(expected_eft, expected_sm, data, c, hypothesis):
 
 
 class StatAnalysis:
+    """
+    Construct the pdf of the test statistic tc by using either the NN reconstructed likelihood ratio
+    or the analytical likelihood ratio. In the former case, nn should be set to True.
+    """
 
     def __init__(self, c, nn):
         self.mean_tc_eft = None
@@ -107,6 +114,11 @@ class StatAnalysis:
             self.find_pdf(c)
 
     def find_pdf(self, c):
+        """
+        Given the eft parameter(s) c, this function computes the mean and standard deviation of pdf(tc) under both
+        the SM and the EFT.
+        :param c: nd_array that specifies the point in eft parameter space
+        """
         expected_eft = exp_nevents.expected_nevents(c)
         expected_sm = exp_nevents.expected_nevents(np.zeros(len(c)))
         # TODO: the expected number of events only translates the two gaussians by the same amount, so as far as determining CL bounds these terms can be dropped
@@ -140,6 +152,8 @@ class StatAnalysis:
         # print("EFT: ", "Mean = {}, Std = {}".format(self.mean_tc_eft, self.sigma_tc_eft))
         # print("SM: ", "Mean = {}, Std = {}".format(self.mean_tc_sm, self.sigma_tc_sm))
         print("z-score = {}".format(self.z_score))
+
+
 
 
 def gauss(x, mean, sigma):
