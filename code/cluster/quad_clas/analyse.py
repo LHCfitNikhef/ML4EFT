@@ -44,6 +44,7 @@ def make_predictions_1d(network_path, network_size, ctg, cuu, mean, std):
     return mtt.numpy(), f_pred
 
 
+
 def plot_predictions_1d(network_size):
     # animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std)
 
@@ -155,10 +156,12 @@ def get_predictions_1d(network_path, network_size, mtt, ctg, cuu, mean, std):
 def get_likelihood_ratio_NN(network_path, network_size, mtt, ctg, cuu, mean, std):
     loaded_model = PredictorQuadratic(network_size)
     loaded_model.load_state_dict(torch.load(network_path))
-    x = (mtt * 10 ** 3 - mean) / std  # rescale the inputs
-    x = torch.tensor([x])
+    mtt = torch.from_numpy(mtt*10**3).unsqueeze(1)
+    x = (mtt - mean) / std  # rescale the inputs
+    #x = torch.tensor(x)
     f_pred = loaded_model.forward(x.float(), ctg, cuu)
-    f_pred = f_pred.detach().numpy()
+    #f_pred = f_pred.detach().numpy()
+    f_pred = f_pred.view(-1).detach().numpy()
     ratio = (1 - f_pred) / f_pred
     return ratio
 

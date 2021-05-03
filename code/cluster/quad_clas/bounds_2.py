@@ -10,6 +10,7 @@ from quad_classifier_cluster import EventDataset
 import xsec_cluster as ExS
 import expected_events as exp_nevents
 import analyse
+import torch
 
 matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
@@ -102,25 +103,23 @@ def get_tc(expected_eft, expected_sm, data, c, hypothesis):
 
 def get_tc_nn(expected_eft, expected_sm, data, c, hypothesis):
     cug, cuu = c
-    data = np.array(data)
-    mtt = data[:, 0] * 10 ** -3
 
     network_size = [1, 30, 30, 30, 30, 30, 1]
     r_c = []
-    mc_runs = 40
-    for i in range(1, mc_runs + 1):
+    nn_rep = 40
+    for i in range(1, nn_rep + 1):
         pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_8/mc_run_{}'.format(i)
         mean, std = np.loadtxt(pred_path + '/scaling.dat')
-        r_c_i = [analyse.get_likelihood_ratio_NN(pred_path + '/trained_nn.pt', network_size, mtt_i, cug, cuu, mean, std)
-                 for mtt_i in mtt]
+        r_c_i = analyse.get_likelihood_ratio_NN(pred_path + '/trained_nn.pt', network_size, data,
+                                                cug, cuu, mean, std)
         r_c.append(r_c_i)
-    r_c = np.array(r_c)
+    r_c = np.array(r_c)  # r_c.shape = (nn_rep, n_events)
     tau_c = np.log(r_c)
-    mean_tauc = np.mean(tau_c, axis=1)
+    mean_tauc = np.mean(tau_c, axis=1)  # mean_tauc = (nn_rep, 1)
     mean_tc = expected_eft - expected_sm - expected_sm * mean_tauc if hypothesis == 'sm' else expected_eft - expected_sm - expected_eft * mean_tauc
     sigma_tc = np.sqrt(expected_eft * np.mean(tau_c ** 2, axis=1)) if hypothesis == 'eft' else np.sqrt(
         expected_sm * np.mean(tau_c ** 2, axis=1))
-    return mean_tc[:, 0], sigma_tc[:, 0]
+    return mean_tc, sigma_tc  # mean_tc[:, 0].shape = (nn_rep, )
 
 
 class StatAnalysis:
@@ -137,12 +136,9 @@ class StatAnalysis:
         self.z_score = None
         self.mean_tauc_eft = None
         self.mean_tauc_sm = None
-        if nn:
-            self.find_pdf_nn(c)
-        else:
-            self.find_pdf(c)
+        self.find_pdf(c, nn)
 
-    def find_pdf(self, c):
+    def find_pdf(self, c, nn):
         """
         Given the eft parameter(s) c, this function computes the mean and standard deviation of pdf(tc) under both
         the SM and the EFT. It uses the analytical likelihood ratio.
@@ -157,13 +153,15 @@ class StatAnalysis:
         #path = generate_samples(c)
 
         # path to eft data (cug = 0, cuu = 0.5)
-        path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_9/bin/process_9/Events/run_06/unweighted_events.lhe'
+        #path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_10/bin/process_10/Events/run_06/unweighted_events.lhe'
+        path_eft = '/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe'
         # path to sm data
-        path_sm = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01/unweighted_events.lhe'
+        #path_sm = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01/unweighted_events.lhe'
+        path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
 
         # load the lhe file and construct a data set
-        n = int(1e2) # total number of events
-        s = int(1e1) # size of subset
+        n = int(1e5) # total number of events
+        s = int(1e4) # size of subset
         data_eft = load_data(path_eft, n, s)
         data_sm = load_data(path_sm, n, s)
 
@@ -171,22 +169,35 @@ class StatAnalysis:
         data_sm = data_sm * 10 ** -3
 
         # compute the mean and std. dev. of the pdf(tc) under either the sm or the eft
-        self.mean_tc_eft, self.sigma_tc_eft, self.mean_tauc_eft = get_tc(expected_eft, expected_sm, data_eft, c, hypothesis='eft')
-        self.mean_tc_sm, self.sigma_tc_sm, self.mean_tauc_sm = get_tc(expected_eft, expected_sm, data_sm, c, hypothesis='sm')
+
+        if nn:  # mean_tc_eft.shape = (nn_rep, )
+            self.mean_tc_eft, self.sigma_tc_eft = get_tc_nn(expected_eft, expected_sm, data_eft, c,
+                                                            hypothesis='eft')
+            self.mean_tc_sm, self.sigma_tc_sm = get_tc_nn(expected_eft, expected_sm, data_sm, c,
+                                                          hypothesis='sm')
+        else:  # mean_tc_eft.shape = (1, )
+            self.mean_tc_eft, self.sigma_tc_eft, self.mean_tauc_eft = get_tc(expected_eft, expected_sm, data_eft, c,
+                                                                             hypothesis='eft')
+            self.mean_tc_sm, self.sigma_tc_sm, self.mean_tauc_sm = get_tc(expected_eft, expected_sm, data_sm, c,
+                                                                          hypothesis='sm')
 
         # given the mean and std. dev. the z-score can be computed
         self.z_score = (self.mean_tc_sm - self.mean_tc_eft) / self.sigma_tc_eft
 
-
-        with open("z_score.dat", "a") as f:
-            f.write(str(self.z_score) + "\n")
+        if nn:
+            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn/z_scores_087.dat", "a") as f:
+                f.write(str(np.mean(self.z_score)) + "\t" + str(np.std(self.z_score)) + "\n")
+        else:
+            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_087.dat", "a") as f:
+                f.write(str(self.z_score) + "\n")
 
         # print the output
         #print("EFT: ", "Mean = {}, Std = {}".format(self.mean_tc_eft, self.sigma_tc_eft))
         #print("SM: ", "Mean = {}, Std = {}".format(self.mean_tc_sm, self.sigma_tc_sm))
         print("z-score = {}".format(self.z_score))
-        print("mean tauc sm = {}".format(self.mean_tauc_sm))
-        print("mean tauc eft = {}".format(self.mean_tauc_eft))
+        print("sigma tc eft = {}".format(self.sigma_tc_eft))
+        print("mean tc sm = {}".format(self.mean_tc_sm))
+        print("mean tc eft = {}".format(self.mean_tc_eft))
 
 
     def find_pdf_nn(self, c):
@@ -220,7 +231,7 @@ def gauss(x, mean, sigma):
 
 if __name__ == '__main__':
     #exp_vs_unexp_check()
-    StatAnalysis(np.array([0, 0.5]), nn=False)
+    StatAnalysis(np.array([0, 0.5]), nn=True)
 
     # datasets = []
     # for param in eft_points:
