@@ -154,7 +154,7 @@ class StatAnalysis:
 
         # path to eft data (cug = 0, cuu = 0.5)
         #path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_10/bin/process_10/Events/run_06/unweighted_events.lhe'
-        path_eft = '/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe'
+        path_eft = '/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe'
         # path to sm data
         #path_sm = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01/unweighted_events.lhe'
         path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
@@ -185,19 +185,19 @@ class StatAnalysis:
         self.z_score = (self.mean_tc_sm - self.mean_tc_eft) / self.sigma_tc_eft
 
         if nn:
-            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn/z_scores_087.dat", "a") as f:
+            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn/z_scores_10.dat", "a") as f:
                 f.write(str(np.mean(self.z_score)) + "\t" + str(np.std(self.z_score)) + "\n")
         else:
-            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_087.dat", "a") as f:
+            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_10.dat", "a") as f:
                 f.write(str(self.z_score) + "\n")
 
         # print the output
         #print("EFT: ", "Mean = {}, Std = {}".format(self.mean_tc_eft, self.sigma_tc_eft))
         #print("SM: ", "Mean = {}, Std = {}".format(self.mean_tc_sm, self.sigma_tc_sm))
-        print("z-score = {}".format(self.z_score))
-        print("sigma tc eft = {}".format(self.sigma_tc_eft))
-        print("mean tc sm = {}".format(self.mean_tc_sm))
-        print("mean tc eft = {}".format(self.mean_tc_eft))
+        # print("z-score = {}".format(self.z_score))
+        # print("sigma tc eft = {}".format(self.sigma_tc_eft))
+        # print("mean tc sm = {}".format(self.mean_tc_sm))
+        # print("mean tc eft = {}".format(self.mean_tc_eft))
 
 
     def find_pdf_nn(self, c):
@@ -231,7 +231,7 @@ def gauss(x, mean, sigma):
 
 if __name__ == '__main__':
     #exp_vs_unexp_check()
-    StatAnalysis(np.array([0, 0.5]), nn=True)
+    StatAnalysis(np.array([0, 1.0]), nn=True)
 
     # datasets = []
     # for param in eft_points:
