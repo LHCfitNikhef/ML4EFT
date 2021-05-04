@@ -5,6 +5,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib import rc
 import sys
+from scipy.stats import norm
 
 from quad_classifier_cluster import EventDataset
 import xsec_cluster as ExS
@@ -128,7 +129,7 @@ class StatAnalysis:
     or the analytical likelihood ratio. In the former case, nn should be set to True.
     """
 
-    def __init__(self, c, nn):
+    def __init__(self, c, nn, bins=None):
         self.mean_tc_eft = None
         self.sigma_tc_eft = None
         self.mean_tc_sm = None
@@ -136,7 +137,67 @@ class StatAnalysis:
         self.z_score = None
         self.mean_tauc_eft = None
         self.mean_tauc_sm = None
-        self.find_pdf(c, nn)
+
+        self.mean_tc_binned_sm = None
+        self.mean_tc_binned_eft = None
+        self.std_tc_binned_sm = None
+        self.std_tc_binned_eft = None
+        self.z_score_binned = None
+        self.p_value_binned = None
+
+        if bins is None:
+            self.find_pdf(c, nn)
+        else:
+            self.find_bound_binned(c, bins)
+
+    def find_pdf_binned(self, c, bins, hypothesis):
+
+        expected_eft = exp_nevents.expected_nevents(c)
+        expected_sm = exp_nevents.expected_nevents(np.zeros(len(c)))
+
+        path_eft = '/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe'
+        path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
+
+        data_loaded = True
+        if not data_loaded:
+            exp_nevents.construct_dataset_binned(bins)
+
+        n_exp_eft = exp_nevents.expected_events_binned(c)
+        n_exp_sm = exp_nevents.expected_events_binned(np.zeros(len(c)))
+
+        n = 100000 # number of events to be loaded
+        event_data_tot = load_data(path_eft, n, s=n) if hypothesis == 'eft' else load_data(path_sm, n, s=n)
+
+        n_tc = 1000
+        tc_data = []
+        for i in range(n_tc):
+            if i%10==0:
+                print(i)
+            event_data = np.random.choice(event_data_tot, size=int(n/10), replace=False)
+            n_i, _ = np.histogram(event_data, bins=bins)
+            tc = expected_eft - expected_sm - np.sum(n_i*np.log(n_exp_eft/n_exp_sm))
+            tc_data.append(tc)
+        tc_data = np.array(tc_data)
+        #print(tc_data)
+
+        # find mean and variance of tc dist
+        mean_tc_binned = np.mean(tc_data)
+        std_tc_binned = np.std(tc_data)
+        print(mean_tc_binned, std_tc_binned)
+        return mean_tc_binned, std_tc_binned
+
+
+    def find_bound_binned(self, c, bins):
+
+        self.mean_tc_binned_sm, self.std_tc_binned_sm = self.find_pdf_binned(c, bins, hypothesis='sm')
+        self.mean_tc_binned_eft, self.std_tc_binned_eft = self.find_pdf_binned(c, bins, hypothesis='eft')
+
+        self.z_score_binned = (self.mean_tc_binned_sm - self.mean_tc_binned_eft) / self.std_tc_binned_eft
+        self.p_value_binned = 1-norm.cdf(self.z_score_binned)
+        print("p-value: ", self.p_value_binned )
+        with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3/p_value.dat", "a") as f:
+            f.write(str(self.p_value_binned) + "\t" + str(c[1]) + "\n")
+
 
     def find_pdf(self, c, nn):
         """
@@ -154,7 +215,7 @@ class StatAnalysis:
 
         # path to eft data (cug = 0, cuu = 0.5)
         #path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_10/bin/process_10/Events/run_06/unweighted_events.lhe'
-        path_eft = '/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe'
+        path_eft = '/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe'
         # path to sm data
         #path_sm = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01/unweighted_events.lhe'
         path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
@@ -186,9 +247,10 @@ class StatAnalysis:
 
         if nn:
             with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn/z_scores_10.dat", "a") as f:
+                #  write the mean and stand. dev. taken over the nn_rep to a file
                 f.write(str(np.mean(self.z_score)) + "\t" + str(np.std(self.z_score)) + "\n")
         else:
-            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_10.dat", "a") as f:
+            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_05_fq.dat", "a") as f:
                 f.write(str(self.z_score) + "\n")
 
         # print the output
@@ -231,7 +293,8 @@ def gauss(x, mean, sigma):
 
 if __name__ == '__main__':
     #exp_vs_unexp_check()
-    StatAnalysis(np.array([0, 1.0]), nn=True)
+    bins = np.array([300, 1000, 4000])
+    StatAnalysis(np.array([0, 1.0]), nn=False, bins=bins)
 
     # datasets = []
     # for param in eft_points:

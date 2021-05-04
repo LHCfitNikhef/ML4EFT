@@ -70,13 +70,16 @@ with open("z_scores/nn/z_scores_05.dat", "r") as f:
         z_nn_rep.append(float(line[0]))
         std_nn_rep.append(float(line[1]))
     z_nn_rep = np.array(z_nn_rep)
-    std_nn_rep = np.array(std_nn_rep)
-    z_score = np.mean(z_nn_rep)
-    sigma_z = 1/len(z_nn_rep)*np.sqrt(np.sum(std_nn_rep**2))
+    #std_nn_rep = np.array(std_nn_rep)
+    #z_score = np.mean(z_nn_rep)
+    #sigma_z = np.std(z_nn_rep)
+    #sigma_z = 1/len(z_nn_rep)*np.sqrt(np.sum(std_nn_rep**2))
 
-    p_value = 1 - norm.cdf(z_score)
-    p_value_sigma = normal(z_score)*sigma_z
-    p_values_mean_nn.append(p_value)
+    p_value = 1 - norm.cdf(z_nn_rep)
+    p_value_mean = np.mean(p_value)
+    p_value_sigma = np.std(p_value)
+    #p_value_sigma = normal(z_score)*sigma_z
+    p_values_mean_nn.append(p_value_mean)
     p_values_std_nn.append(p_value_sigma)
 
 with open("z_scores/nn/z_scores_075.dat", "r") as f:
@@ -87,13 +90,16 @@ with open("z_scores/nn/z_scores_075.dat", "r") as f:
         z_nn_rep.append(float(line[0]))
         std_nn_rep.append(float(line[1]))
     z_nn_rep = np.array(z_nn_rep)
-    std_nn_rep = np.array(std_nn_rep)
-    z_score = np.mean(z_nn_rep)
-    sigma_z = 1/len(z_nn_rep)*np.sqrt(np.sum(std_nn_rep**2))
+    # std_nn_rep = np.array(std_nn_rep)
+    # z_score = np.mean(z_nn_rep)
+    # sigma_z = np.std(z_nn_rep)
+    # sigma_z = 1/len(z_nn_rep)*np.sqrt(np.sum(std_nn_rep**2))
 
-    p_value = 1 - norm.cdf(z_score)
-    p_value_sigma = normal(z_score)*sigma_z
-    p_values_mean_nn.append(p_value)
+    p_value = 1 - norm.cdf(z_nn_rep)
+    p_value_mean = np.mean(p_value)
+    p_value_sigma = np.std(p_value)
+    # p_value_sigma = normal(z_score)*sigma_z
+    p_values_mean_nn.append(p_value_mean)
     p_values_std_nn.append(p_value_sigma)
 
 with open("z_scores/nn/z_scores_087.dat", "r") as f:
@@ -104,13 +110,16 @@ with open("z_scores/nn/z_scores_087.dat", "r") as f:
         z_nn_rep.append(float(line[0]))
         std_nn_rep.append(float(line[1]))
     z_nn_rep = np.array(z_nn_rep)
-    std_nn_rep = np.array(std_nn_rep)
-    z_score = np.mean(z_nn_rep)
-    sigma_z = 1/len(z_nn_rep)*np.sqrt(np.sum(std_nn_rep**2))
+    # std_nn_rep = np.array(std_nn_rep)
+    # z_score = np.mean(z_nn_rep)
+    # sigma_z = np.std(z_nn_rep)
+    # sigma_z = 1/len(z_nn_rep)*np.sqrt(np.sum(std_nn_rep**2))
 
-    p_value = 1 - norm.cdf(z_score)
-    p_value_sigma = normal(z_score)*sigma_z
-    p_values_mean_nn.append(p_value)
+    p_value = 1 - norm.cdf(z_nn_rep)
+    p_value_mean = np.mean(p_value)
+    p_value_sigma = np.std(p_value)
+    # p_value_sigma = normal(z_score)*sigma_z
+    p_values_mean_nn.append(p_value_mean)
     p_values_std_nn.append(p_value_sigma)
 
 with open("z_scores/nn/z_scores_10.dat", "r") as f:
@@ -121,17 +130,29 @@ with open("z_scores/nn/z_scores_10.dat", "r") as f:
         z_nn_rep.append(float(line[0]))
         std_nn_rep.append(float(line[1]))
     z_nn_rep = np.array(z_nn_rep)
-    std_nn_rep = np.array(std_nn_rep)
-    z_score = np.mean(z_nn_rep)
-    sigma_z = 1/len(z_nn_rep)*np.sqrt(np.sum(std_nn_rep**2))
+    # std_nn_rep = np.array(std_nn_rep)
+    # z_score = np.mean(z_nn_rep)
+    # sigma_z = np.std(z_nn_rep)
+    # sigma_z = 1/len(z_nn_rep)*np.sqrt(np.sum(std_nn_rep**2))
 
-    p_value = 1 - norm.cdf(z_score)
-    p_value_sigma = normal(z_score)*sigma_z
-    p_values_mean_nn.append(p_value)
+    p_value = 1 - norm.cdf(z_nn_rep)
+    p_value_mean = np.mean(p_value)
+    p_value_sigma = np.std(p_value)
+    # p_value_sigma = normal(z_score)*sigma_z
+    p_values_mean_nn.append(p_value_mean)
     p_values_std_nn.append(p_value_sigma)
 
 p_values_mean_nn = np.array(p_values_mean_nn)
 p_values_std_nn = np.array(p_values_std_nn)
+
+#### BINNED ####
+with open("z_scores/binned/bin_3/p_value.dat", "r") as f:
+    reader = csv.reader(f, delimiter='\t')
+    p_value_binned = []
+    for line in reader:
+        p_value_binned.append(float(line[0]))
+    p_value_binned = np.array(p_value_binned)
+
 
 
 plt.figure(figsize=(10, 6))
@@ -139,45 +160,64 @@ ax = plt.subplot(111)
 # ax.plot(cuu,z_scores_mean,color='darkblue',label='$t_{g}^{train}$', lw=3)
 
 
-ax.errorbar(cuu, p_values_mean, yerr=p_values_std, fmt='.',
+ax.errorbar(cuu, p_values_mean, yerr=p_values_std, fmt='.', capsize=3,
             color='C0', label=r'$\rm{p-value\;(truth)}$')
 
-ax.errorbar(cuu, p_values_mean_nn, yerr=p_values_std_nn, fmt='.',
+ax.errorbar(cuu, p_values_mean_nn, yerr=p_values_std_nn, fmt='.', capsize=3,
             color='C1', label=r'$\rm{p-value}\;(NN\;recon)$')
+
+ax.scatter(cuu, p_value_binned, c='C2', label=r'$\rm{p-value\;(binned)}$')
 
 
 # fit a quadratic polynomial
 def quad_pol(x, a, b, c):
     return a * x ** 2 + b * x + c
 
+def decay_exp(x, a, b, c):
+    return a * np.exp(-b * x) + c
+
 
 popt, _ = curve_fit(quad_pol, cuu, p_values_mean, sigma=p_values_std)
 popt_nn, _ = curve_fit(quad_pol, cuu, p_values_mean_nn, sigma=p_values_std_nn)
+popt_binned, _ = curve_fit(decay_exp, cuu, p_value_binned, maxfev=5000)
 
 x = np.linspace(np.min(cuu), np.max(cuu), 400)
-plt.hlines(0.05, np.min(cuu), np.max(cuu), color='green', linestyle='dashed')
-ax.plot(x, quad_pol(x, *popt), color='C0', linestyle='dashed', label=r'$\rm{Poly\;2\;fit}$')
-ax.plot(x, quad_pol(x, *popt_nn), color='C1', linestyle='dashed', label=r'$\rm{Poly\;2\;fit}$')
+plt.hlines(0.05, np.min(cuu), np.max(cuu), color='black', linestyle='dashed')
+ax.plot(x, quad_pol(x, *popt), color='C0', linestyle='dotted', label=r'$\rm{Poly\;2\;fit\;(truth)}$')
+ax.plot(x, quad_pol(x, *popt_nn), color='C1', linestyle='dotted', label=r'$\rm{Poly\;2\;fit\;(NN\;recon)}$')
+ax.plot(x, decay_exp(x, *popt_binned), color='C2', linestyle='dotted', label=r'$\rm{exp\;fit\;(binned)}$')
+
+
 
 #'fit: a=%5.3f, b=%5.3f, c=%5.3f' % tuple(popt)
 
 
 
 idx = np.argwhere(np.diff(np.sign(quad_pol(x, *popt) - 0.05))).flatten()
-plt.plot(x[idx], quad_pol(x[idx], *popt), 'ro')
-ax.axvline(x[idx], 0, 0.3, color='black', linestyle='dotted')
-ax.text(0.1,0.9,r'$c_{2\sigma} = %.2f$'%x[idx],fontsize=20,transform=ax.transAxes)
+idx_nn = np.argwhere(np.diff(np.sign(quad_pol(x, *popt_nn) - 0.05))).flatten()
+idx_binned = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_binned) - 0.05))).flatten()
+plt.plot(x[idx], quad_pol(x[idx], *popt), 'kx')
+plt.plot(x[idx_nn], quad_pol(x[idx_nn], *popt_nn), 'kx')
+plt.plot(x[idx_binned], decay_exp(x[idx_binned], *popt_binned), 'kx')
+
+ax.axvline(x[idx], 0, 0.3, color='black', linestyle='dashed')
+ax.axvline(x[idx_nn], 0, 0.3, color='black', linestyle='dashed')
+#ax.axvline(x[idx_binned], 0, 0.3, color='black', linestyle='dashed')
+ax.text(0.1,0.9,r'$c_{2\sigma,\;\rm{truth}} = %.3f$'%x[idx],fontsize=20,transform=ax.transAxes)
+ax.text(0.1,0.82,r'$c_{2\sigma,\;\rm{NN}} = %.3f$'%x[idx_nn],fontsize=20,transform=ax.transAxes)
+#ax.text(0.2,0.74,r'$c_{2\sigma,\;\rm{binned}} = %.3f$'%x[idx_binned],fontsize=20,transform=ax.transAxes)
 
 # Plot settings
 ax.set_ylabel(r'$\rm{p-value}$', fontsize=20)
 ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
-ax.legend(loc='best', fontsize=20, frameon=False)
+ax.set_xlim((0.48, 1.02))
+ax.legend(loc='best', fontsize=15, frameon=False)
 ax.tick_params(which='both', direction='in', labelsize=20)
 ax.tick_params(which='major', length=10)
 ax.tick_params(which='minor', length=5)
 ax.set_title(r'$\rm{Interpolation\;of\;p-value}$', fontsize=20)
 plt.tight_layout()
-plt.savefig('p_value_int.pdf')
+plt.savefig('p_value_int_bin3.pdf')
 
 
 
