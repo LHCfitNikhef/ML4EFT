@@ -157,7 +157,7 @@ def expected_nevents(c):
     a, _, _, _ = np.linalg.lstsq(coeff_mat, data, rcond=None)
     c = np.array([1, cugre, cugre**2, cuu, cuu**2, cugre*cuu])
     xsec = np.dot(a, c)
-    luminosity = 6*10**6 # pb^-1
+    luminosity = 6 # pb^-1
     return xsec*luminosity
     #print("The cross-section at (cugre, cuu) = ({}, {}) is: ".format(cugre, cuu), xsec)
 
