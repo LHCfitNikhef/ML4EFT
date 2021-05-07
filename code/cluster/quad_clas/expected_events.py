@@ -78,7 +78,7 @@ def construct_dataset_binned(bins):
     for i, eft_point in enumerate(eft_points):
         path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(i, i)
 
-        n_tot = 100000
+        n_tot = 10000
         data = bnds.load_data(path, n=n_tot, s=n_tot)
         n_i, _ = np.histogram(data, bins=bins)
 
@@ -101,12 +101,11 @@ def expected_events_binned(c):
     path_file = "/data/theorie/jthoeve/ML4EFT/quad_clas/xsec_bin.npy"
     with open(path_file, 'rb') as f:
         dataset = np.load(f)
-
     coeff_mat = coefficient_matrix()
     a, _, _, _ = np.linalg.lstsq(coeff_mat, dataset, rcond=None)
     c = np.array([1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu])
     xsec = np.einsum('ij,i', a, c)
-    luminosity = 6 * 10 ** 6  # pb^-1
+    luminosity = 6   # pb^-1
     return xsec*luminosity
 
 
@@ -159,13 +158,13 @@ def expected_nevents(c):
     c = np.array([1, cugre, cugre**2, cuu, cuu**2, cugre*cuu])
     xsec = np.dot(a, c)
     luminosity = 6*10**6 # pb^-1
-    return xsec#*luminosity
+    return xsec*luminosity
     #print("The cross-section at (cugre, cuu) = ({}, {}) is: ".format(cugre, cuu), xsec)
 
 
 if __name__ == '__main__':
     cugre = 0
-    cuu = 1
+    cuu = 0
     nevents = expected_nevents(np.array([cugre, cuu]))
 
     bins = np.array([300, 400, 500, 4000])

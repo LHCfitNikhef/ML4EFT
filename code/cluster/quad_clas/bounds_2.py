@@ -129,7 +129,7 @@ class StatAnalysis:
     or the analytical likelihood ratio. In the former case, nn should be set to True.
     """
 
-    def __init__(self, c, nn, bins=None):
+    def __init__(self, c, nn, path, bins=None):
         self.mean_tc_eft = None
         self.sigma_tc_eft = None
         self.mean_tc_sm = None
@@ -146,24 +146,27 @@ class StatAnalysis:
         self.p_value_binned = None
 
         if bins is None:
-            self.find_pdf(c, nn)
+            self.find_pdf(c, nn, path)
         else:
-            self.find_bound_binned(c, bins)
+            self.find_bound_binned(c, path, bins)
 
-    def find_pdf_binned(self, c, bins, hypothesis):
+    def find_pdf_binned(self, c, path_eft, bins, hypothesis):
 
-        expected_eft = exp_nevents.expected_nevents(c)
-        expected_sm = exp_nevents.expected_nevents(np.zeros(len(c)))
-
-        path_eft = '/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe'
         path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
 
-        data_loaded = True
-        if not data_loaded:
-            exp_nevents.construct_dataset_binned(bins)
+        # expected number of events that fall into each bin at the specified eft coefficient c
+        n_exp_eft = exp_nevents.expected_events_binned(c).astype(int)
+        n_exp_sm = exp_nevents.expected_events_binned(np.zeros(len(c))).astype(int)
 
-        n_exp_eft = exp_nevents.expected_events_binned(c)
-        n_exp_sm = exp_nevents.expected_events_binned(np.zeros(len(c)))
+        # total number of expected events is found by taking the sum over the binned expected countings
+        expected_eft = np.sum(n_exp_eft)
+        expected_sm = np.sum(n_exp_sm)
+
+        print(n_exp_eft, expected_eft, n_exp_sm, expected_sm)
+
+        # print(np.sum(n_exp_eft), np.sum(n_exp_sm))
+        # print(expected_eft, expected_sm)
+        # sys.exit()
 
         n = 100000 # number of events to be loaded
         event_data_tot = load_data(path_eft, n, s=n) if hypothesis == 'eft' else load_data(path_sm, n, s=n)
@@ -171,10 +174,23 @@ class StatAnalysis:
         n_tc = 1000
         tc_data = []
         for i in range(n_tc):
-            if i%10==0:
+            if i % 10 == 0:
                 print(i)
-            event_data = np.random.choice(event_data_tot, size=int(n/10), replace=False)
+
+            # total number of expected events
+            n_exp_tot = expected_eft if hypothesis == 'eft' else expected_sm
+
+            # the size of the dataset is drawn from a Poisson dist with mean n_exp_tot
+            size_dataset = np.random.poisson(n_exp_tot, 1)
+
+            # draw size_dataset events at random
+            event_data = np.random.choice(event_data_tot, size=size_dataset, replace=False)
+
+            # find how many events fall into each bin
             n_i, _ = np.histogram(event_data, bins=bins)
+
+            # print(n_i, np.sum(n_i), event_data.shape, n_exp_eft)
+            # sys.exit()
             tc = expected_eft - expected_sm - np.sum(n_i*np.log(n_exp_eft/n_exp_sm))
             tc_data.append(tc)
         tc_data = np.array(tc_data)
@@ -187,19 +203,19 @@ class StatAnalysis:
         return mean_tc_binned, std_tc_binned
 
 
-    def find_bound_binned(self, c, bins):
+    def find_bound_binned(self, c, path, bins):
 
-        self.mean_tc_binned_sm, self.std_tc_binned_sm = self.find_pdf_binned(c, bins, hypothesis='sm')
-        self.mean_tc_binned_eft, self.std_tc_binned_eft = self.find_pdf_binned(c, bins, hypothesis='eft')
+        self.mean_tc_binned_sm, self.std_tc_binned_sm = self.find_pdf_binned(c, path, bins, hypothesis='sm')
+        self.mean_tc_binned_eft, self.std_tc_binned_eft = self.find_pdf_binned(c, path, bins, hypothesis='eft')
 
         self.z_score_binned = (self.mean_tc_binned_sm - self.mean_tc_binned_eft) / self.std_tc_binned_eft
         self.p_value_binned = 1-norm.cdf(self.z_score_binned)
         print("p-value: ", self.p_value_binned )
-        with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3/p_value.dat", "a") as f:
+        with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3/p_value_debug.dat", "a") as f:
             f.write(str(self.p_value_binned) + "\t" + str(c[1]) + "\n")
 
 
-    def find_pdf(self, c, nn):
+    def find_pdf(self, c, nn, path_eft):
         """
         Given the eft parameter(s) c, this function computes the mean and standard deviation of pdf(tc) under both
         the SM and the EFT. It uses the analytical likelihood ratio.
@@ -214,8 +230,8 @@ class StatAnalysis:
         #path = generate_samples(c)
 
         # path to eft data (cug = 0, cuu = 0.5)
-        #path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_10/bin/process_10/Events/run_06/unweighted_events.lhe'
-        path_eft = '/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe'
+        #path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_7/bin/process_7/Events/run_06/unweighted_events.lhe'
+        #path_eft = '/data/theorie/jthoeve/ML4EFT/quad_clas/eft_m10.lhe'
         # path to sm data
         #path_sm = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01/unweighted_events.lhe'
         path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
@@ -250,8 +266,8 @@ class StatAnalysis:
                 #  write the mean and stand. dev. taken over the nn_rep to a file
                 f.write(str(np.mean(self.z_score)) + "\t" + str(np.std(self.z_score)) + "\n")
         else:
-            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_05_fq.dat", "a") as f:
-                f.write(str(self.z_score) + "\n")
+            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores.dat", "a") as f:
+                f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.z_score) + "\n")
 
         # print the output
         #print("EFT: ", "Mean = {}, Std = {}".format(self.mean_tc_eft, self.sigma_tc_eft))
@@ -281,79 +297,20 @@ class StatAnalysis:
         print("z-score = {}".format(self.z_score))
 
 
-def exp_vs_unexp_check():
-    eft_param = np.array([0, 0.5])
-    dataset = StatAnalysis(eft_param, nn=False)
-    unexpanded = dataset.z_score
-
-
 def gauss(x, mean, sigma):
     return (1 / np.sqrt(2 * np.pi * sigma ** 2)) * np.exp(-(x - mean) ** 2 / (2 * sigma ** 2))
 
 
 if __name__ == '__main__':
-    #exp_vs_unexp_check()
-    bins = np.array([300, 1000, 4000])
-    StatAnalysis(np.array([0, 1.0]), nn=False, bins=bins)
 
-    # datasets = []
-    # for param in eft_points:
-    #     eft_params = np.array([param[0], param[1]])
-    #     datasets.append(StatAnalysis(eft_params, nn=False))
-    #
-    # datasets_nn = []
-    # for param in eft_points:
-    #     eft_params = np.array([param[0], param[1]])
-    #     datasets_nn.append(StatAnalysis(eft_params, nn=True))
-    #
-    # z_score = [dataset.z_score for dataset in datasets]
-    # mean_sm = [dataset.mean_tc_sm for dataset in datasets]
-    # mean_eft = [dataset.mean_tc_eft for dataset in datasets]
-    # std_sm = [dataset.sigma_tc_sm for dataset in datasets]
-    # std_eft = [dataset.sigma_tc_eft for dataset in datasets]
-    #
-    # z_score_nn = [dataset.z_score for dataset in datasets_nn]
-    # mean_sm_nn = np.array([dataset.mean_tc_sm for dataset in datasets_nn])
-    # mean_eft_nn = np.array([dataset.mean_tc_eft for dataset in datasets_nn])
-    # std_sm_nn = np.array([dataset.sigma_tc_sm for dataset in datasets_nn])
-    # std_eft_nn = np.array([dataset.sigma_tc_eft for dataset in datasets_nn])
-    #
-    # fig = plt.figure(figsize=(1 * 10, 1 * 8))
-    # for i in range(1, len(z_score) + 1):
-    #     plt.subplot(1, 1, i)
-    #     x = np.linspace(mean_eft[i - 1] - 3 * std_eft[i - 1], mean_sm[i - 1] + 3 * std_sm[i - 1], 100)
-    #     tc_eft = gauss(x, mean_eft[i - 1], std_eft[i - 1])
-    #     tc_sm = gauss(x, mean_sm[i - 1], std_sm[i - 1])
-    #
-    #     # x_nn = np.linspace(mean_eft_nn[i - 1] - 3 * std_eft_nn[i - 1], mean_sm_nn[i - 1] + 3 * std_sm_nn[i - 1], 100)
-    #     # tc_eft_nn = gauss(x, mean_eft_nn[i-1], std_eft[i-1])
-    #
-    #     tc_sm_nn = np.array([gauss(x, mean_sm_nn[i - 1, j], std_sm_nn[i - 1, j]) for j in range(mean_sm_nn.shape[1])])
-    #     tc_sm_nn_median = np.median(tc_sm_nn, axis=0)
-    #     tc_sm_nn_std = np.std(tc_sm_nn, axis=0)
-    #
-    #     tc_eft_nn = np.array(
-    #         [gauss(x, mean_eft_nn[i - 1, j], std_eft_nn[i - 1, j]) for j in range(mean_eft_nn.shape[1])])
-    #     tc_eft_nn_median = np.median(tc_eft_nn, axis=0)
-    #     tc_eft_nn_std = np.std(tc_eft_nn, axis=0)
-    #
-    #     # print(np.std(tc_eft_nn, axis=1).shape, x_nn.shape)
-    #
-    #     plt.fill_between(x, tc_sm_nn_median + tc_sm_nn_std, tc_sm_nn_median - tc_sm_nn_std, color='red', alpha=.5)
-    #     plt.fill_between(x, tc_eft_nn_median + tc_eft_nn_std, tc_eft_nn_median - tc_eft_nn_std, color='green', alpha=.5)
-    #
-    #     #print(x.shape, tc_sm_nn_median.shape, tc_sm_nn_std.shape)
-    #
-    #     plt.plot(x, tc_sm, label='sm')
-    #     plt.plot(x, tc_eft, label='eft')
-    #     plt.fill_between(x, tc_eft, 0, where=x >= mean_sm[i - 1], color='b', alpha=.5)
-    #     plt.title(r'\rm{z = }' + r'{0:.2f} '.format(z_score[i-1]) + r'\rm ctg = {} '.format(eft_points[i-1][0]) + r'\rm cuu = {} '.format(eft_points[i-1][1]))
-    #     plt.legend()
-    #     plt.xlabel(r'$t_c$')
-    #
-    # plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/test8.pdf')
-    #
-    # # plt.plot(cugre, z_score)
-    # # plt.show()
-    # # print(z_score)
-    # # generate_samples(eft_params)
+    #bins = np.arange(300, 4100, 100)
+
+    bins = np.array([300, 400, 500, 600, 700, 800, 900, 1000, 4000])
+    data_loaded = True
+    if not data_loaded:
+        exp_nevents.construct_dataset_binned(bins)
+
+    StatAnalysis(np.array([0, 1.0]), nn=False,
+                 path='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe',
+                 bins=bins)
+
