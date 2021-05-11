@@ -61,10 +61,11 @@ with open("z_scores/nn/z_scores.dat", "r") as f:
 
     for c in cuu:
         z_scores_c = z_scores[z_scores[:, 0] == c]
-        z_mean = np.mean(z_scores_c)
-        z_unc = np.std(z_scores_c)
-        p_value_nn.append(1 - norm.cdf(z_mean))
-        p_value_nn_unc.append(normal(z_mean) * z_unc)
+        p_values_c = 1 - norm.cdf(z_scores_c)
+        p_value_c = np.mean(p_values_c)
+        p_value_c_unc = np.std(p_values_c) / np.sqrt(len(p_values_c))
+        p_value_nn.append(p_value_c)
+        p_value_nn_unc.append(p_value_c_unc)
 
 
 ######## BINNED ########
@@ -106,10 +107,11 @@ with open("z_scores/binned/bin_2/z_scores.dat", "r") as f:
 
     for c in cuu:
         z_scores_c = z_scores[z_scores[:, 0] == c]
-        z_mean = np.mean(z_scores_c)
-        z_unc = np.std(z_scores_c) / np.sqrt(len(z_scores_c))
-        p_value_bin_2.append(1 - norm.cdf(z_mean))
-        p_value_bin_2_unc.append(normal(z_mean) * z_unc)
+        p_values_c = 1 - norm.cdf(z_scores_c)
+        p_value_c = np.mean(p_values_c)
+        p_value_c_unc = np.std(p_values_c) / np.sqrt(len(p_values_c))
+        p_value_bin_2.append(p_value_c)
+        p_value_bin_2_unc.append(p_value_c_unc)
 
 with open("z_scores/binned/bin_3/z_scores.dat", "r") as f:
 
@@ -124,10 +126,12 @@ with open("z_scores/binned/bin_3/z_scores.dat", "r") as f:
 
     for c in cuu:
         z_scores_c = z_scores[z_scores[:, 0] == c]
-        z_mean = np.mean(z_scores_c)
-        z_unc = np.std(z_scores_c) / np.sqrt(len(z_scores_c))
-        p_value_bin_3.append(1 - norm.cdf(z_mean))
-        p_value_bin_3_unc.append(normal(z_mean) * z_unc)
+
+        p_values_c = 1 - norm.cdf(z_scores_c)
+        p_value_c = np.mean(p_values_c)
+        p_value_c_unc = np.std(p_values_c) / np.sqrt(len(p_values_c))
+        p_value_bin_3.append(p_value_c)
+        p_value_bin_3_unc.append(p_value_c_unc)
 
     # sigma_p = normal(np.median(z_scores))*np.std(z_scores)
     # print("Binned: ", 1-norm.cdf(np.median(z_scores)), sigma_p)
@@ -192,7 +196,7 @@ def quad_pol(x, a, b, c):
     return a * x ** 2 + b * x + c
 
 def decay_exp(x, a, b, c):
-    return a * np.exp(-b * x) + c
+    return a * np.exp(-b * x)
 
 popt_truth, _ = curve_fit(decay_exp, cuu[1:-1], p_value_truth[1:-1], sigma=p_value_truth_unc[1:-1])
 popt_nn, _ = curve_fit(decay_exp, cuu[1:-1], p_value_nn[1:-1], sigma=p_value_nn_unc[1:-1])
@@ -216,9 +220,11 @@ idx_nn = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_nn) - 0.05))).flatten()
 
 idx_bin_1 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_1) - 0.05))).flatten()
 idx_bin_2 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_2) - 0.05))).flatten()
+idx_bin_3 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_3) - 0.05))).flatten()
 
 plt.plot(x[idx_bin_1], decay_exp(x[idx_bin_1], *popt_bin_1), 'kx')
 plt.plot(x[idx_bin_2], decay_exp(x[idx_bin_2], *popt_bin_2), 'kx')
+plt.plot(x[idx_bin_3], decay_exp(x[idx_bin_3], *popt_bin_3), 'kx')
 plt.plot(x[idx_nn], decay_exp(x[idx_nn], *popt_nn), 'kx')
 plt.plot(x[idx_truth], decay_exp(x[idx_truth], *popt_truth), 'kx')
 
@@ -228,13 +234,14 @@ plt.plot(x[idx_truth], decay_exp(x[idx_truth], *popt_truth), 'kx')
 #ax.axvline(x[idx_binned], 0, 0.3, color='black', linestyle='dashed')
 # ax.text(0.15,0.9,r'$c_{2\sigma,\;\rm{bin\;1}} = %.3f$'%x[idx_bin_1],fontsize=20,transform=ax.transAxes)
 # ax.text(0.15,0.82,r'$c_{2\sigma,\;\rm{bin\;2}} = %.3f$'%x[idx_bin_2],fontsize=20,transform=ax.transAxes)
+# ax.text(0.15,0.74,r'$c_{2\sigma,\;\rm{bin\;3}} = %.3f$'%x[idx_bin_3],fontsize=20,transform=ax.transAxes)
 # ax.text(0.40,0.9,r'$c_{2\sigma,\;\rm{true}} = %.3f$'%x[idx_truth],fontsize=20,transform=ax.transAxes)
 # ax.text(0.40,0.82,r'$c_{2\sigma,\;\rm{NN}} = %.3f$'%x[idx_nn],fontsize=20,transform=ax.transAxes)
 
 # Plot settings
 ax.set_ylabel(r'$\rm{p-value}$', fontsize=20)
 ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
-ax.set_xlim((0.48, 1.1))
+ax.set_xlim((0.38, 1.1))
 ax.set_ylim((0, 0.40))
 ax.legend(loc='best', fontsize=15, frameon=False)
 ax.tick_params(which='both', direction='in', labelsize=20)
@@ -242,8 +249,8 @@ ax.tick_params(which='major', length=10)
 ax.tick_params(which='minor', length=5)
 ax.set_title(r'$\rm{Interpolation\;of\;p-value}$', fontsize=20)
 plt.tight_layout()
-plt.show()
-#plt.savefig('p_value_int_comp.pdf')
+#plt.show()
+plt.savefig('p_value_int_comp_v2_zoom.pdf')
 
 
 

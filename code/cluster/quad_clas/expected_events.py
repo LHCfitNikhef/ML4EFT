@@ -6,11 +6,12 @@
 import pylhe
 import numpy as np
 from matplotlib import pyplot as plt
-import sys
+import os
 
 import bounds_2 as bnds
 
 eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0], [0.0, 0.0]]
+luminosity = 6
 
 def coefficient_matrix():
     coeff_mat = []
@@ -59,7 +60,7 @@ def load_datapoint(path):
     xsec_error = np.sqrt(np.sum(error_proc**2))
     return xsec, xsec_error
 
-def construct_dataset_binned(bins):
+def xsec_binned(bins, path_xsec):
     """
 
     Parameters
@@ -76,6 +77,7 @@ def construct_dataset_binned(bins):
     dataset = []
 
     for i, eft_point in enumerate(eft_points):
+        #  path to lhe file
         path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(i, i)
 
         n_tot = 10000
@@ -89,24 +91,58 @@ def construct_dataset_binned(bins):
     dataset = np.array(dataset)  # dataset.shape = (len(eft_points), len(bins))
 
     #  write the dataset to a separate file
-    path_file = "/data/theorie/jthoeve/ML4EFT/quad_clas/xsec_bin.npy"
-    with open(path_file, 'wb') as f:
+    # path_file = "/data/theorie/jthoeve/ML4EFT/quad_clas/xsec_bin.npy"
+    os.makedirs(path_xsec)
+    with open(os.path.join(path_xsec, "xsec_bin.npy"), 'wb') as f:
         np.save(f, dataset)
 
 
-def expected_events_binned(c):
-    cugre = c[0]
-    cuu = c[1]
+def expected_events_binned(c, bins, path):
+    """
 
-    path_file = "/data/theorie/jthoeve/ML4EFT/quad_clas/xsec_bin.npy"
-    with open(path_file, 'rb') as f:
+    Parameters
+    ----------
+    c: ndarray
+        array that specifies the point in eft parameter space
+    bins: 1darray
+        bins = [x_0, x_1, ..., x_nbins]
+    path: str
+        the location where to write output
+
+    Returns
+    -------
+    The number of expected countings in each bin at the specified point in EFT parameter space
+    """
+
+    # path = /data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3
+
+    # path to file that stores the inclusive xsec per bin
+    path_xsec_binned = os.path.join(path, "xsec_bin.npy")
+    #
+    # # create the directory and file if they do not exist
+    # if not os.path.isfile(path_xsec_binned):
+    #     xsec_binned(bins, path)
+    # else:
+    #     # open the xsec per bin file and load into dataset
+    #     with open(path_xsec_binned, 'rb') as f:
+    #         dataset = np.load(f)
+
+    with open(path_xsec_binned, 'rb') as f:
         dataset = np.load(f)
+
+
+    # build the matrix of coefficients
     coeff_mat = coefficient_matrix()
+
+    # solve the linear equation xsec = coeff_matrix * a for a
     a, _, _, _ = np.linalg.lstsq(coeff_mat, dataset, rcond=None)
-    c = np.array([1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu])
-    xsec = np.einsum('ij,i', a, c)
-    luminosity = 6   # pb^-1
-    return xsec*luminosity
+
+    # find the x_sec per bin at the specified point in eft parameter space
+    cugre, cuu = c[0], c[1]
+    eft_point = np.array([1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu])
+    x_sec = np.einsum('ij,i', a, eft_point)
+
+    return x_sec*luminosity
 
 
 # def construct_dataset_binned(nbins):

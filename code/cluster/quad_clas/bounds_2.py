@@ -4,7 +4,7 @@ import subprocess
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib import rc
-import sys
+import sys, os
 from scipy.stats import norm
 
 from quad_classifier_cluster import EventDataset
@@ -123,7 +123,7 @@ class StatAnalysis:
     or the analytical likelihood ratio. In the former case, nn should be set to True.
     """
 
-    def __init__(self, c, nn, path, result_path, bins=None):
+    def __init__(self, c, nn, path_eft_lhe, path_output, bins=None):
         self.mean_tc_eft = None
         self.sigma_tc_eft = None
         self.mean_tc_sm = None
@@ -140,27 +140,21 @@ class StatAnalysis:
         self.p_value_binned = None
 
         if bins is None:
-            self.find_pdf(c, nn, path, result_path)
+            self.find_pdf(c, nn, path_eft_lhe, path_output)
         else:
-            self.find_bound_binned(c, path, result_path, bins)
+            self.find_bound_binned(c, path_eft_lhe, path_output, bins)
 
-    def find_pdf_binned(self, c, path_eft, bins, hypothesis):
+    def find_pdf_binned(self, c, path_eft, path_output, bins, hypothesis):
 
         path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
 
         # expected number of events that fall into each bin at the specified eft coefficient c
-        n_exp_eft = exp_nevents.expected_events_binned(c).astype(int)
-        n_exp_sm = exp_nevents.expected_events_binned(np.zeros(len(c))).astype(int)
+        n_exp_eft = exp_nevents.expected_events_binned(c, bins, path_output).astype(int)
+        n_exp_sm = exp_nevents.expected_events_binned(np.zeros(len(c)), bins, path_output).astype(int)
 
         # total number of expected events is found by taking the sum over the binned expected countings
         expected_eft = np.sum(n_exp_eft)
         expected_sm = np.sum(n_exp_sm)
-
-
-
-        # print(np.sum(n_exp_eft), np.sum(n_exp_sm))
-        # print(expected_eft, expected_sm)
-        # sys.exit()
 
         n = 100000 # number of events to be loaded
         event_data_tot = load_data(path_eft, n, s=n) if hypothesis == 'eft' else load_data(path_sm, n, s=n)
@@ -180,7 +174,6 @@ class StatAnalysis:
             # find how many events fall into each bin
             n_i, _ = np.histogram(event_data, bins=bins)
 
-
             tc = expected_eft - expected_sm - np.sum(n_i*np.log(n_exp_eft/n_exp_sm))
             tc_data.append(tc)
         tc_data = np.array(tc_data)
@@ -190,15 +183,15 @@ class StatAnalysis:
         std_tc_binned = np.std(tc_data)
         return mean_tc_binned, std_tc_binned
 
-    def find_bound_binned(self, c, path, result_path, bins):
+    def find_bound_binned(self, c, path_eft_lhe, path_output, bins):
 
-        self.mean_tc_binned_sm, self.std_tc_binned_sm = self.find_pdf_binned(c, path, bins, hypothesis='sm')
-        self.mean_tc_binned_eft, self.std_tc_binned_eft = self.find_pdf_binned(c, path, bins, hypothesis='eft')
+        self.mean_tc_binned_sm, self.std_tc_binned_sm = self.find_pdf_binned(c, path_eft_lhe, path_output, bins, hypothesis='sm')
+        self.mean_tc_binned_eft, self.std_tc_binned_eft = self.find_pdf_binned(c, path_eft_lhe, path_output, bins, hypothesis='eft')
         self.z_score_binned = (self.mean_tc_binned_sm - self.mean_tc_binned_eft) / self.std_tc_binned_eft
-        #self.p_value_binned = 1-norm.cdf(self.z_score_binned)
-        #print("p-value: ", self.p_value_binned )
-        with open(result_path, "a") as f:
-            f.write(str(self.z_score_binned) + "\t" + str(c[1]) + "\n")
+        print(self.z_score_binned, self.mean_tc_binned_sm, self.mean_tc_binned_eft, self.std_tc_binned_eft)
+
+        with open(os.path.join(path_output, "z_scores.dat"), "a") as f:
+            f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.z_score_binned) + "\n")
 
     def find_pdf(self, c, nn, path_eft, result_path):
         """
@@ -249,12 +242,24 @@ class StatAnalysis:
         self.z_score = (self.mean_tc_sm - self.mean_tc_eft) / self.sigma_tc_eft
 
         if nn:
-            with open("/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn/z_scores_10.dat", "a") as f:
+            # with open(os.path.join(result_path, "z_scores.dat"), "a") as f:
+            #     #  write the mean and stand. dev. taken over the nn_rep to a file
+            #     f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(np.mean(self.z_score)) + "\t" + str(np.std(self.z_score)) + "\n")
+            with open(os.path.join(result_path, "tc_eft.dat"), "a") as f:
                 #  write the mean and stand. dev. taken over the nn_rep to a file
-                f.write(str(np.mean(self.z_score)) + "\t" + str(np.std(self.z_score)) + "\n")
+                f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.mean_tc_eft) + "\t" + str(self.sigma_tc_eft) + "\n")
+            with open(os.path.join(result_path, "tc_sm.dat"), "a") as f:
+                #  write the mean and stand. dev. taken over the nn_rep to a file
+                f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.mean_tc_sm) + "\t" + str(self.sigma_tc_sm) + "\n")
         else:
-            with open(result_path, "a") as f:
-                f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.z_score) + "\n")
+            # with open(os.path.join(result_path, "z_scores.dat"), "a") as f:
+            #     f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.z_score) + "\n")
+            with open(os.path.join(result_path, "tc_eft.dat"), "a") as f:
+                #  write the mean and stand. dev. taken over the nn_rep to a file
+                f.write(str(expected_eft) + "\t" + str(expected_sm) + "\t" + str(self.mean_tc_eft) + "\t" + str(self.mean_tauc_eft) + "\t" + str(self.sigma_tc_eft) + "\n")
+            with open(os.path.join(result_path, "tc_sm.dat"), "a") as f:
+                #  write the mean and stand. dev. taken over the nn_rep to a file
+                f.write(str(expected_eft) + "\t" + str(expected_sm) + "\t" + str(self.mean_tc_sm) + "\t" + str(self.mean_tauc_sm) + "\t" + str(self.sigma_tc_sm) + "\n")
 
 
 def gauss(x, mean, sigma):
@@ -263,53 +268,128 @@ def gauss(x, mean, sigma):
 
 if __name__ == '__main__':
 
+    truth = True
+    NN = False
+    binned = False
+    data_loaded = True
+
+
     #bins = np.arange(300, 4100, 100)
 
+    # choice of binning
     bin_1 = np.array([300, 400, 500, 600, 700, 800, 900, 1000, 4000])
     bin_2 = np.array([300, 400, 500, 600, 4000])
+    bin_3 = np.array([300, 4000])
+    # bin_5 = np.array([300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 4000])
+    # bin_6 = np.append(np.arange(300, 1810, 10), 4000)
 
-    data_loaded = True
+    bins = bin_3
+
+
+    # the below is only needed for a binned analysis
+    # fit the cross section per bin as a function of c
     if not data_loaded:
-        exp_nevents.construct_dataset_binned(bin_2)
+        exp_nevents.xsec_binned(bins, '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3')
+
+    ####### TRUTH #########
+    if truth is True:
+        # StatAnalysis(np.array([0, 0.25]), nn=False,
+        #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_025.lhe',
+        #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth',
+        #              bins=None)
+        StatAnalysis(np.array([0, 0.50]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth',
+                     bins=None)
+        # StatAnalysis(np.array([0, 0.75]), nn=False,
+        #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_075.lhe',
+        #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth',
+        #              bins=None)
+        # StatAnalysis(np.array([0, 0.87]), nn=False,
+        #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_087.lhe',
+        #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth',
+        #              bins=None)
+        # StatAnalysis(np.array([0, 1.0]), nn=False,
+        #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe',
+        #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth',
+        #              bins=None)
+        # StatAnalysis(np.array([0, 2.0]), nn=False,
+        #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_20.lhe',
+        #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth',
+        #              bins=None)
+
+    ####### NN #########
+    if NN is True:
+        StatAnalysis(np.array([0, 0.25]), nn=True,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_025.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn',
+                     bins=None)
+        StatAnalysis(np.array([0, 0.50]), nn=True,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn',
+                     bins=None)
+        StatAnalysis(np.array([0, 0.75]), nn=True,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_075.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn',
+                     bins=None)
+        StatAnalysis(np.array([0, 0.87]), nn=True,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_087.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn',
+                     bins=None)
+        StatAnalysis(np.array([0, 1.0]), nn=True,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn',
+                     bins=None)
+        StatAnalysis(np.array([0, 2.0]), nn=True,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_20.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn',
+                     bins=None)
+
+    ####### BINNED #########
+    if binned is True:
+        StatAnalysis(np.array([0, 0.25]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_025.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3',
+                     bins=bins)
+        StatAnalysis(np.array([0, 0.50]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3',
+                     bins=bins)
+        StatAnalysis(np.array([0, 0.75]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_075.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3',
+                     bins=bins)
+        StatAnalysis(np.array([0, 0.87]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_087.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3',
+                     bins=bins)
+        StatAnalysis(np.array([0, 1.0]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3',
+                     bins=bins)
+        StatAnalysis(np.array([0, 2.0]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_20.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3',
+                     bins=bins)
 
 
-    # StatAnalysis(np.array([0, 0.5]), nn=False,
-    #              path='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe',
-    #              result_path ='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_v2.dat',
-    #              bins=None)
+    # StatAnalysis(np.array([0, 0.50]), nn=False,
+    #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe',
+    #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_6',
+    #              bins=bin_6)
     #
     # StatAnalysis(np.array([0, 0.75]), nn=False,
-    #              path='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_075.lhe',
-    #              result_path='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_v2.dat',
-    #              bins=None)
+    #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_075.lhe',
+    #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_6',
+    #              bins=bin_6)
     #
     # StatAnalysis(np.array([0, 0.87]), nn=False,
-    #              path='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_087.lhe',
-    #              result_path='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_v2.dat',
-    #              bins=None)
+    #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_087.lhe',
+    #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_6',
+    #              bins=bin_6)
     #
     # StatAnalysis(np.array([0, 1.0]), nn=False,
-    #              path='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe',
-    #              result_path='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/z_scores_v2.dat',
-    #              bins=None)
-
-    StatAnalysis(np.array([0, 0.50]), nn=False,
-                 path='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_05.lhe',
-                 result_path='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/z_scores_bin_2.dat',
-                 bins=bin_2)
-
-    StatAnalysis(np.array([0, 0.75]), nn=False,
-                 path='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_075.lhe',
-                 result_path='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/z_scores_bin_2.dat',
-                 bins=bin_2)
-
-    StatAnalysis(np.array([0, 0.87]), nn=False,
-                 path='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_087.lhe',
-                 result_path='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/z_scores_bin_2.dat',
-                 bins=bin_2)
-
-    StatAnalysis(np.array([0, 1.0]), nn=False,
-                 path='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe',
-                 result_path='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/z_scores_bin_2.dat',
-                 bins=bin_2)
+    #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/eft_10.lhe',
+    #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_6',
+    #              bins=bin_6)
 
