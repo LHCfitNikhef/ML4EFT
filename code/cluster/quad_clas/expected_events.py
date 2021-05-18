@@ -6,11 +6,12 @@
 import pylhe
 import numpy as np
 from matplotlib import pyplot as plt
-import os
+import os,sys
 
 import bounds_2 as bnds
 
-eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0], [0.0, 0.0]]
+#eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0], [0.0, 0.0]]
+eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -10.0], [0, -5.0], [0, -1.0], [0, 1.0], [0, 5.0], [0, 10.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0], [0.0, 0.0]]
 luminosity = 6
 
 def coefficient_matrix():
@@ -79,8 +80,9 @@ def xsec_binned(bins, path_xsec):
     for i, eft_point in enumerate(eft_points):
         #  path to lhe file
         path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(i, i)
-
-        n_tot = 10000
+        if i > 5 and i < 12:
+            path = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/cuu/eft_{}.lhe'.format(i-5)
+        n_tot = 100000
         data = bnds.load_data(path, n=n_tot, s=n_tot)
         n_i, _ = np.histogram(data, bins=bins)
 
@@ -145,6 +147,7 @@ def expected_events_binned(c, bins, path):
     return x_sec*luminosity
 
 
+
 # def construct_dataset_binned(nbins):
 #     data = []
 #
@@ -199,16 +202,48 @@ def expected_nevents(c):
 
 
 if __name__ == '__main__':
-    cugre = 0
-    cuu = 0
-    nevents = expected_nevents(np.array([cugre, cuu]))
 
-    bins = np.array([300, 400, 500, 4000])
-    data_loaded = True
-    if not data_loaded:
-        construct_dataset_binned(bins)
-    xsec = expected_events_binned(np.array([cugre, cuu]))
-    print("sum over bins ", np.sum(xsec))
-    print("total xsec ", np.sum(nevents))
+
+
+    # expected_events_binned(c, bins, path_output)
+    bins = np.array([300, 400, 500, 600, 4000])
+    path_output = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3'
+    #xsec_binned(bins, path_output)
+    path_xsec_binned = os.path.join(path_output, "xsec_bin.npy")
+    with open(path_xsec_binned, 'rb') as f:
+        dataset = np.load(f)
+
+    n_data_last_bin = luminosity*dataset[6:12][:, 3]
+
+
+
+    n_i_bin_0 = []
+    cuu = np.linspace(-11, 11, 100)
+    for c in cuu:
+        n_i_bin_0.append(expected_events_binned(np.array([0, c]), bins, path_output)[3])
+    n_i_bin_0 = np.array(n_i_bin_0)
+
+    plt.figure(figsize=(10, 6))
+    ax = plt.subplot(111)
+
+
+
+    ax.scatter(np.array([-10, -5, -1, 1, 5, 10]), n_data_last_bin, color='C0')
+    ax.set_title(r'$\rm{Expected\;countings\;bin\;4}$', fontsize=20)
+
+
+    ax.plot(cuu, n_i_bin_0, color='C1')
+    # ax.set_ylabel(r'$\rm{\chi^2}$', fontsize=20)
+    ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
+    # ax.set_xlim((0.38, 1.42))
+    # ax.set_xlim((0, 5))
+    # ax.set_ylim((0, 0))
+
+    plt.tight_layout()
+
+    # plt.show()
+    plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/n_i_pred.pdf')
+
+    #print(n_i_bin_0)
 
 

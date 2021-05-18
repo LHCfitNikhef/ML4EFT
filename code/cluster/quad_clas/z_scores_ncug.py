@@ -15,8 +15,9 @@ rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
 # cuu = [0.25, 0.5, 0.75, 0.87, 1.0, 1.2, 1.4, 1.6, 2.0]
-# cuu = [0.25, 0.40, 0.45, 0.50, 0.55, 0.75, 0.87, 1.0, 1.2]
-cuu = [-0.40, -0.45, -0.50, -0.55, -0.60, -0.65, -0.70, -0.75, -0.80, -0.85, -0.90, -0.95, -1.00, -1.05, -1.10, -1.10, -1.15, -1.20, -1.25, -1.30, -1.35, -1.40]
+#cuu = [0.40, 0.45, 0.50, 0.55, 0.75, 0.87, 1.0, 1.2]
+cuu = [-0.075,-0.10, -0.125]
+#cuu = [-0.40, -0.45, -0.50, -0.55, -0.60, -0.65, -0.70, -0.75, -0.80, -0.85, -0.90, -0.95, -1.00, -1.05, -1.10, -1.10, -1.15, -1.20, -1.25, -1.30, -1.35, -1.40]
 
 #cuu = [0.6]
 
@@ -24,7 +25,7 @@ def normal(z):
     return 1/(np.sqrt(2*np.pi))*np.exp(-z**2/2)
 
 ##### TRUTH ########
-with open("z_scores/truth/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/truth/z_scores_ncug.dat", "r") as f:
 
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
@@ -32,7 +33,7 @@ with open("z_scores/truth/z_scores_mcuu.dat", "r") as f:
     p_value_truth_unc = []
 
     for line in reader:
-        z_scores.append([float(line[1]), float(line[2])])
+        z_scores.append([float(line[0]), float(line[2])])
     z_scores = np.array(z_scores)
 
     for c in cuu:
@@ -52,14 +53,14 @@ with open("z_scores/truth/z_scores_mcuu.dat", "r") as f:
 # sys.exit()
 
 ##### NN ########
-with open("z_scores/nn/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/nn/z_scores_ncug.dat", "r") as f:
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
     p_value_nn = []
     p_value_nn_unc = []
 
     for line in reader:
-        z_scores.append([float(line[1]), float(line[2])])
+        z_scores.append([float(line[0]), float(line[2])])
     z_scores = np.array(z_scores)
 
     for c in cuu:
@@ -76,7 +77,7 @@ with open("z_scores/nn/z_scores_mcuu.dat", "r") as f:
 
 
 ######## BINNED ########
-with open("z_scores/binned/bin_1/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/binned/bin_1/z_scores_ncug.dat", "r") as f:
 
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
@@ -84,7 +85,7 @@ with open("z_scores/binned/bin_1/z_scores_mcuu.dat", "r") as f:
     p_value_bin_1_unc = []
 
     for line in reader:
-        z_scores.append([float(line[1]), float(line[2])])
+        z_scores.append([float(line[0]), float(line[2])])
     z_scores = np.array(z_scores)
 
     for c in cuu:
@@ -104,7 +105,7 @@ with open("z_scores/binned/bin_1/z_scores_mcuu.dat", "r") as f:
 
 
 
-with open("z_scores/binned/bin_2/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/binned/bin_2/z_scores_ncug.dat", "r") as f:
 
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
@@ -112,7 +113,7 @@ with open("z_scores/binned/bin_2/z_scores_mcuu.dat", "r") as f:
     p_value_bin_2_unc = []
 
     for line in reader:
-        z_scores.append([float(line[1]), float(line[2])])
+        z_scores.append([float(line[0]), float(line[2])])
     z_scores = np.array(z_scores)
 
 
@@ -124,10 +125,10 @@ with open("z_scores/binned/bin_2/z_scores_mcuu.dat", "r") as f:
         p_value_bin_2.append(p_value_c)
         p_value_bin_2_unc.append(p_value_c_unc)
 
-print(p_value_bin_2[:5], p_value_bin_2_unc[:5])
-sys.exit()
+# print(p_value_bin_2, p_value_bin_2_unc)
+# sys.exit()
 
-with open("z_scores/binned/bin_3/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/binned/bin_3/z_scores_ncug.dat", "r") as f:
 
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
@@ -135,7 +136,7 @@ with open("z_scores/binned/bin_3/z_scores_mcuu.dat", "r") as f:
     p_value_bin_3_unc = []
 
     for line in reader:
-        z_scores.append([float(line[1]), float(line[2])])
+        z_scores.append([float(line[0]), float(line[2])])
     z_scores = np.array(z_scores)
 
     for c in cuu:
@@ -195,14 +196,14 @@ ax.errorbar(cuu, p_value_truth, yerr=p_value_truth_unc, fmt='.', capsize=3,
 ax.errorbar(cuu, p_value_nn, yerr=p_value_nn_unc, fmt='.', capsize=3,
             color='C1', label=r'$\rm{p-value\;(NN)}$')
 
-# ax.errorbar(cuu, p_value_bin_1, yerr=p_value_bin_1_unc, fmt='.', capsize=3,
-#              color='C2', label=r'$\rm{p-value\;(bin\;1)}$')
-#
-# ax.errorbar(cuu, p_value_bin_2, yerr=p_value_bin_2_unc, fmt='.', capsize=3,
-#             color='C3', label=r'$\rm{p-value\;(bin\;2)}$')
-#
-# ax.errorbar(cuu, p_value_bin_3, yerr=p_value_bin_3_unc, fmt='.', capsize=3,
-#             color='C4', label=r'$\rm{p-value\;(bin\;3)}$')
+ax.errorbar(cuu, p_value_bin_1, yerr=p_value_bin_1_unc, fmt='.', capsize=3,
+             color='C2', label=r'$\rm{p-value\;(bin\;1)}$')
+
+ax.errorbar(cuu, p_value_bin_2, yerr=p_value_bin_2_unc, fmt='.', capsize=3,
+            color='C3', label=r'$\rm{p-value\;(bin\;2)}$')
+
+ax.errorbar(cuu, p_value_bin_3, yerr=p_value_bin_3_unc, fmt='.', capsize=3,
+            color='C4', label=r'$\rm{p-value\;(bin\;3)}$')
 
 
 # fit a quadratic polynomial
@@ -212,29 +213,29 @@ def quad_pol(x, a, b, c):
 def decay_exp(x, a, b, c):
     return a * np.exp(-b * x)
 
-popt_truth, _ = curve_fit(decay_exp, cuu[:6], p_value_truth[:6], sigma=p_value_truth_unc[:6])
-popt_nn, _ = curve_fit(decay_exp, cuu[:6], p_value_nn[:6], sigma=p_value_nn_unc[:6])
-popt_bin_1, _ = curve_fit(quad_pol, cuu, p_value_bin_1, sigma=p_value_bin_1_unc)
-popt_bin_2, _ = curve_fit(quad_pol, cuu, p_value_bin_2, sigma=p_value_bin_2_unc)
-popt_bin_3, _ = curve_fit(quad_pol, cuu, p_value_bin_3, sigma=p_value_bin_3_unc)
+popt_truth, _ = curve_fit(decay_exp, cuu, p_value_truth, sigma=p_value_truth_unc)
+popt_nn, _ = curve_fit(decay_exp, cuu, p_value_nn, sigma=p_value_nn_unc)
+popt_bin_1, _ = curve_fit(decay_exp, cuu, p_value_bin_1, sigma=p_value_bin_1_unc)
+popt_bin_2, _ = curve_fit(decay_exp, cuu, p_value_bin_2, sigma=p_value_bin_2_unc)
+popt_bin_3, _ = curve_fit(decay_exp, cuu, p_value_bin_3, sigma=p_value_bin_3_unc)
 
 
-x = np.linspace(np.min(cuu), np.max(cuu), 400)
-plt.hlines(0.05, -0.625, -0.375, color='black', linestyle='dashed')
+x = np.linspace(-0.15, 0.05, 400)
+plt.hlines(0.05, -0.15, 0.05, color='black', linestyle='dashed')
 
 ax.plot(x, decay_exp(x, *popt_truth), color='C0', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(true)}$')
 ax.plot(x, decay_exp(x, *popt_nn), color='C1', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(NN)}$')
-# ax.plot(x, quad_pol(x, *popt_bin_1), color='C2', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(bin\;1)}$')
-# ax.plot(x, quad_pol(x, *popt_bin_2), color='C3', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(bin\;2)}$')
-# ax.plot(x, quad_pol(x, *popt_bin_3), color='C4', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(bin\;3)}$')
+ax.plot(x, decay_exp(x, *popt_bin_1), color='C2', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(bin\;1)}$')
+ax.plot(x, decay_exp(x, *popt_bin_2), color='C3', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(bin\;2)}$')
+ax.plot(x, decay_exp(x, *popt_bin_3), color='C4', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(bin\;3)}$')
 
 
 idx_truth = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_truth) - 0.05))).flatten()
 idx_nn = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_nn) - 0.05))).flatten()
 #
-# idx_bin_1 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_1) - 0.05))).flatten()
-# idx_bin_2 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_2) - 0.05))).flatten()
-# idx_bin_3 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_3) - 0.05))).flatten()
+idx_bin_1 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_1) - 0.05))).flatten()
+idx_bin_2 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_2) - 0.05))).flatten()
+idx_bin_3 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_3) - 0.05))).flatten()
 #
 # plt.plot(x[idx_bin_1], decay_exp(x[idx_bin_1], *popt_bin_1), 'kx')
 # plt.plot(x[idx_bin_2], decay_exp(x[idx_bin_2], *popt_bin_2), 'kx')
@@ -246,18 +247,18 @@ plt.plot(x[idx_truth], decay_exp(x[idx_truth], *popt_truth), 'kx')
 # ax.axvline(x[idx_bin_1], 0, 0.3, color='black', linestyle='dashed')
 #ax.axvline(x[idx_nn], 0, 0.3, color='black', linestyle='dashed')
 #ax.axvline(x[idx_binned], 0, 0.3, color='black', linestyle='dashed')
-# ax.text(0.15,0.9,r'$c_{2\sigma,\;\rm{bin\;1}} = %.3f$'%x[idx_bin_1],fontsize=20,transform=ax.transAxes)
-# ax.text(0.15,0.82,r'$c_{2\sigma,\;\rm{bin\;2}} = %.3f$'%x[idx_bin_2],fontsize=20,transform=ax.transAxes)
-# ax.text(0.15,0.74,r'$c_{2\sigma,\;\rm{bin\;3}} = %.3f$'%x[idx_bin_3],fontsize=20,transform=ax.transAxes)
+ax.text(0.15,0.9,r'$c_{2\sigma,\;\rm{bin\;1}} = %.3f$'%x[idx_bin_1],fontsize=20,transform=ax.transAxes)
+ax.text(0.15,0.82,r'$c_{2\sigma,\;\rm{bin\;2}} = %.3f$'%x[idx_bin_2],fontsize=20,transform=ax.transAxes)
+ax.text(0.15,0.74,r'$c_{2\sigma,\;\rm{bin\;3}} = %.3f$'%x[idx_bin_3],fontsize=20,transform=ax.transAxes)
 ax.text(0.40,0.9,r'$c_{2\sigma,\;\rm{true}} = %.3f$'%x[idx_truth],fontsize=20,transform=ax.transAxes)
 ax.text(0.40,0.82,r'$c_{2\sigma,\;\rm{NN}} = %.3f$'%x[idx_nn],fontsize=20,transform=ax.transAxes)
 
 # Plot settings
 ax.set_ylabel(r'$\rm{p-value}$', fontsize=20)
-ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
+ax.set_xlabel(r'$\rm{cug}$', fontsize=20)
 #ax.set_xlim((0.38, 1.42))
-ax.set_xlim((-0.625, -0.375))
-ax.set_ylim((0, 0.2))
+ax.set_xlim((-0.15, -0.05))
+ax.set_ylim((0, 0.45))
 ax.legend(loc='best', fontsize=15, frameon=False)
 ax.tick_params(which='both', direction='in', labelsize=20)
 ax.tick_params(which='major', length=10)
@@ -265,7 +266,7 @@ ax.tick_params(which='minor', length=5)
 ax.set_title(r'$\rm{Interpolation\;of\;p-value}$', fontsize=20)
 plt.tight_layout()
 #plt.show()
-plt.savefig('p_value_scan_mcuu_nn_truth.pdf')
+plt.savefig('p_value_scan_ncug_nn_truth.pdf')
 
 
 

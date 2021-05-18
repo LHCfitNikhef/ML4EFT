@@ -15,8 +15,8 @@ rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
 # cuu = [0.25, 0.5, 0.75, 0.87, 1.0, 1.2, 1.4, 1.6, 2.0]
-# cuu = [0.25, 0.40, 0.45, 0.50, 0.55, 0.75, 0.87, 1.0, 1.2]
-cuu = [-0.40, -0.45, -0.50, -0.55, -0.60, -0.65, -0.70, -0.75, -0.80, -0.85, -0.90, -0.95, -1.00, -1.05, -1.10, -1.10, -1.15, -1.20, -1.25, -1.30, -1.35, -1.40]
+cuu = [0.40, 0.45, 0.50, 0.55, 0.75, 0.87, 1.0, 1.2]
+#cuu = [-0.40, -0.45, -0.50, -0.55, -0.60, -0.65, -0.70, -0.75, -0.80, -0.85, -0.90, -0.95, -1.00, -1.05, -1.10, -1.10, -1.15, -1.20, -1.25, -1.30, -1.35, -1.40]
 
 #cuu = [0.6]
 
@@ -24,7 +24,7 @@ def normal(z):
     return 1/(np.sqrt(2*np.pi))*np.exp(-z**2/2)
 
 ##### TRUTH ########
-with open("z_scores/truth/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/truth/z_scores_final.dat", "r") as f:
 
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
@@ -52,7 +52,7 @@ with open("z_scores/truth/z_scores_mcuu.dat", "r") as f:
 # sys.exit()
 
 ##### NN ########
-with open("z_scores/nn/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/nn/z_scores_final.dat", "r") as f:
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
     p_value_nn = []
@@ -76,7 +76,7 @@ with open("z_scores/nn/z_scores_mcuu.dat", "r") as f:
 
 
 ######## BINNED ########
-with open("z_scores/binned/bin_1/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/binned/bin_1/z_scores_final.dat", "r") as f:
 
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
@@ -104,7 +104,7 @@ with open("z_scores/binned/bin_1/z_scores_mcuu.dat", "r") as f:
 
 
 
-with open("z_scores/binned/bin_2/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/binned/bin_2/z_scores_final.dat", "r") as f:
 
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
@@ -124,10 +124,10 @@ with open("z_scores/binned/bin_2/z_scores_mcuu.dat", "r") as f:
         p_value_bin_2.append(p_value_c)
         p_value_bin_2_unc.append(p_value_c_unc)
 
-print(p_value_bin_2[:5], p_value_bin_2_unc[:5])
-sys.exit()
+# print(p_value_bin_2, p_value_bin_2_unc)
+# sys.exit()
 
-with open("z_scores/binned/bin_3/z_scores_mcuu.dat", "r") as f:
+with open("z_scores/binned/bin_3/z_scores_final.dat", "r") as f:
 
     reader = csv.reader(f, delimiter='\t')
     z_scores = []
@@ -219,8 +219,8 @@ popt_bin_2, _ = curve_fit(quad_pol, cuu, p_value_bin_2, sigma=p_value_bin_2_unc)
 popt_bin_3, _ = curve_fit(quad_pol, cuu, p_value_bin_3, sigma=p_value_bin_3_unc)
 
 
-x = np.linspace(np.min(cuu), np.max(cuu), 400)
-plt.hlines(0.05, -0.625, -0.375, color='black', linestyle='dashed')
+x = np.linspace(0.38, np.max(cuu), 400)
+plt.hlines(0.05, 0.38, 0.60, color='black', linestyle='dashed')
 
 ax.plot(x, decay_exp(x, *popt_truth), color='C0', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(true)}$')
 ax.plot(x, decay_exp(x, *popt_nn), color='C1', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(NN)}$')
@@ -256,16 +256,16 @@ ax.text(0.40,0.82,r'$c_{2\sigma,\;\rm{NN}} = %.3f$'%x[idx_nn],fontsize=20,transf
 ax.set_ylabel(r'$\rm{p-value}$', fontsize=20)
 ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
 #ax.set_xlim((0.38, 1.42))
-ax.set_xlim((-0.625, -0.375))
-ax.set_ylim((0, 0.2))
+ax.set_xlim((0.38, 0.60))
+ax.set_ylim((0, 0.15))
 ax.legend(loc='best', fontsize=15, frameon=False)
 ax.tick_params(which='both', direction='in', labelsize=20)
 ax.tick_params(which='major', length=10)
 ax.tick_params(which='minor', length=5)
 ax.set_title(r'$\rm{Interpolation\;of\;p-value}$', fontsize=20)
 plt.tight_layout()
-#plt.show()
-plt.savefig('p_value_scan_mcuu_nn_truth.pdf')
+plt.show()
+#plt.savefig('p_value_scan_pcuu_nn_truth.pdf')
 
 
 
