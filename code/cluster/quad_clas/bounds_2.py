@@ -216,7 +216,7 @@ class StatAnalysis:
         plt.tight_layout()
 
         # plt.show()
-        plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/chi2_cug.pdf')
+        plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/chi2_cuu_v2.pdf')
 
         #print("n_i averaged: ", hypothesis, np.mean(debug, axis=0))
         #sys.exit()
@@ -563,9 +563,9 @@ if __name__ == '__main__':
         #              path_output=path_output_bin_2,
         #              bins=bin_2)
         #
-        StatAnalysis(np.array([0.3, 0]), nn=False,
-                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/pcug/eft_4.lhe',
-                     path_output=path_output_bin_2,
+        StatAnalysis(np.array([0, -0.55]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_4.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3',
                      bins=bin_2)
 
         # StatAnalysis(np.array([0, -0.50]), nn=False,
