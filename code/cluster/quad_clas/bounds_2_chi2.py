@@ -153,8 +153,6 @@ class StatAnalysis:
         n_exp_eft = exp_nevents.expected_events_binned(c, bins, path_output).astype(int)
         n_exp_sm = exp_nevents.expected_events_binned(np.zeros(len(c)), bins, path_output).astype(int)
 
-        # TODO: Can I use the the full dataset to find nu_i - this is what n_i converges to after all
-
         # total number of expected events is found by taking the sum over the binned expected countings
         expected_eft = np.sum(n_exp_eft)
         expected_sm = np.sum(n_exp_sm)
@@ -163,68 +161,91 @@ class StatAnalysis:
         #sys.exit()
 
         n = 100000 # number of events to be loaded
-        event_data_tot = load_data(path_eft, n, s=n) if hypothesis == 'eft' else load_data(path_sm, n, s=n)
+        #event_data_tot = load_data(path_eft, n, s=n) if hypothesis == 'eft' else load_data(path_sm, n, s=n)
+        event_data_eft_tot = load_data(path_eft, n, s=n)
+        event_data_sm_tot = load_data(path_sm, n, s=n)
 
-        n_i_tot, _ = np.histogram(event_data_tot, bins=bins)
-
-        n_tc = 1000
+        n_tc = 10000
         tc_data = []
         debug = []
+        chi2_dist = []
         for i in range(n_tc):
             # total number of expected events
-            n_exp_tot = expected_eft if hypothesis == 'eft' else expected_sm
+            #n_exp_tot = expected_eft if hypothesis == 'eft' else expected_sm
 
             # the size of the dataset is drawn from a Poisson dist with mean n_exp_tot
-            size_dataset = np.random.poisson(n_exp_tot, 1)
+            #size_dataset = np.random.poisson(n_exp_tot, 1)
+            size_dataset_eft = np.random.poisson(expected_eft, 1)
+            size_dataset_sm = np.random.poisson(expected_sm, 1)
+
             # draw size_dataset events at random
-            event_data = np.random.choice(event_data_tot, size=size_dataset, replace=False)
+            #event_data = np.random.choice(event_data_tot, size=size_dataset, replace=False)
+
+            event_data_eft = np.random.choice(event_data_eft_tot, size=size_dataset_eft, replace=False)
+            event_data_sm = np.random.choice(event_data_sm_tot, size=size_dataset_sm, replace=False)
+
 
             # find how many events fall into each bin
-            n_i, _ = np.histogram(event_data, bins=bins)
-            debug.append(n_i/size_dataset)
+            #n_i, _ = np.histogram(event_data, bins=bins)
 
-            tc = expected_eft - expected_sm - np.sum(n_i*np.log(n_exp_eft/n_exp_sm))
-            tc_data.append(tc)
+            n_i_eft, _ = np.histogram(event_data_eft, bins=bins)
+            n_i_sm, _ = np.histogram(event_data_sm, bins=bins)
 
-        tc_data = np.array(tc_data)
+
+
+            chi_2 = np.sum((n_i_eft-n_exp_eft)**2/n_exp_eft)
+            chi2_dist.append(chi_2)
+
+            #debug.append(n_i)
+
+            #tc = expected_eft - expected_sm - np.sum(n_i*np.log(n_exp_eft/n_exp_sm))
+            #tc_data.append(tc)
+        #tc_data = np.array(tc_data)
+
+        plt.figure(figsize=(10, 6))
+        ax = plt.subplot(111)
+        ax.hist(chi2_dist, bins=np.arange(np.min(chi2_dist), np.max(chi2_dist), 0.25), density=True, label=r'$\rm{\chi^2\;(actual\;fit)}$')
+        x = np.linspace(0, np.max(chi2_dist), 400)
+        ax.plot(x, chi2.pdf(x, n_i_eft.size), label=r'$\rm{\chi^2\;(good\;fit)}$')
+        #ax.set_ylabel(r'$\rm{\chi^2}$', fontsize=20)
+        ax.set_xlabel(r'$\rm{\chi^2}$', fontsize=20)
+        # ax.set_xlim((0.38, 1.42))
+        #ax.set_xlim((0, 5))
+        #ax.set_ylim((0, 0))
+        plt.legend()
+        plt.tight_layout()
+
+        # plt.show()
+        plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/chi2_cuu_v2.pdf')
 
         #print("n_i averaged: ", hypothesis, np.mean(debug, axis=0))
         #sys.exit()
         #print("cuu = ", c[1], n_exp_eft)
         #print(hypothesis, np.sum(np.mean(debug, axis=0)))
 
-        # find mean and variance of tc dist
-        mean_tc_binned = np.mean(tc_data)
 
-        if hypothesis=='eft':
-            mean_tc_binned_unc = np.sqrt(
-                1 / n_tc * np.sum(np.log(n_exp_eft / n_exp_sm) * n_exp_eft))
-        else:
-            mean_tc_binned_unc = np.sqrt(
-                1 / n_tc * np.sum(np.log(n_exp_eft / n_exp_sm) * n_exp_sm))
-        std_tc_binned = np.std(tc_data)
+
+        # find mean and variance of tc dist
+        #mean_tc_binned = np.mean(tc_data)
+        #std_tc_binned = np.std(tc_data)
         #print(expected_eft, expected_sm)
-        #print(n_exp_sm/np.sum(n_exp_sm), n_exp_eft/np.sum(n_exp_eft))
-        return mean_tc_binned, std_tc_binned, mean_tc_binned_unc#np.mean(debug, axis=0), np.log(n_exp_eft/n_exp_sm), n_i_tot/n
+        #return mean_tc_binned, std_tc_binned, np.mean(debug, axis=0), np.log(n_exp_eft/n_exp_sm)
 
     def find_bound_binned(self, c, path_eft_lhe, path_output, bins):
 
-        self.mean_tc_binned_sm, self.std_tc_binned_sm, mean_tc_binned_unc_sm = self.find_pdf_binned(c, path_eft_lhe, path_output, bins, hypothesis='sm')
-        self.mean_tc_binned_eft, self.std_tc_binned_eft, mean_tc_binned_unc_eft = self.find_pdf_binned(c, path_eft_lhe, path_output, bins, hypothesis='eft')
+        #self.mean_tc_binned_sm, self.std_tc_binned_sm, n_i_mean_sm, log_exp = self.find_pdf_binned(c, path_eft_lhe, path_output, bins, hypothesis='sm')
+        self.find_pdf_binned(c, path_eft_lhe, path_output, bins, hypothesis='sm')
+        sys.exit()
+        #self.mean_tc_binned_eft, self.std_tc_binned_eft, n_i_mean_eft, _ = self.find_pdf_binned(c, path_eft_lhe, path_output, bins, hypothesis='eft')
         #sys.exit()
-        # print(c[1], log_exp)
-        # print(c[1], n_i_mean_eft-n_i_mean_sm)
-        # print(c[1], np.sum((n_i_mean_eft-n_i_mean_sm)*log_exp))
-        #print(c[1], n_i_mean_sm, n_i_tot_sm, n_i_mean_eft, n_i_tot_eft)
-        self.z_score_binned = (self.mean_tc_binned_sm - self.mean_tc_binned_eft) / self.std_tc_binned_eft
+        print(c[1], log_exp)
+        print(c[1], n_i_mean_eft-n_i_mean_sm)
+        print(c[1], np.sum((n_i_mean_eft-n_i_mean_sm)*log_exp))
+        #self.z_score_binned = (self.mean_tc_binned_sm - self.mean_tc_binned_eft) / self.std_tc_binned_eft
+        #print(self.z_score_binned, self.mean_tc_binned_sm, self.mean_tc_binned_eft, self.std_tc_binned_eft)
 
-        z_score_binned_unc = np.sqrt((mean_tc_binned_unc_sm/self.std_tc_binned_eft)**2 + (mean_tc_binned_unc_eft/self.std_tc_binned_eft)**2)
-        # # #print(self.z_score_binned, self.mean_tc_binned_sm, self.mean_tc_binned_eft, self.std_tc_binned_eft)
-        # #
-        with open(os.path.join(path_output, "z_scores_mcuu_v5.dat"), "a") as f:
-            #f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.z_score_binned) + "\t" + str(z_score_binned_unc) + "\n")
-            f.write(
-                str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.z_score_binned) + "\n")
+        # with open(os.path.join(path_output, "z_scores_pdiag.dat"), "a") as f:
+        #     f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.z_score_binned) + "\n")
 
     def find_pdf(self, c, nn, path_eft, result_path):
         """
@@ -302,23 +323,22 @@ def gauss(x, mean, sigma):
 if __name__ == '__main__':
 
     truth = False
-    NN = True
-    binned = False
+    NN = False
+    binned = True
     data_loaded = True
 
 
     #bins = np.arange(300, 4100, 100)
 
-    eft_points_mcuu = [[0, -0.40], [0, -0.45], [0, -0.50], [0, -0.55], [0, -0.60], [0, -0.65], [0, -0.70],
-                  [0, -0.75], [0, -0.80]]
-        # , [-0.85, 0], [-0.90, 0], [-0.95, 0], [-1.00, 0], [-1.05, 0],
-        #           [-1.10, 0], [-1.15, 0], [-1.20, 0], [-1.25, 0], [-1.30, 0], [-1.35, 0], [-1.40, 0]]
+    eft_points_mcuu = [[-0.40, 0], [-0.45, 0], [-0.50, 0], [-0.55, 0], [-0.60, 0], [-0.65, 0], [-0.70, 0],
+                  [-0.75, 0], [-0.80, 0], [-0.85, 0], [-0.90, 0], [-0.95, 0], [-1.00, 0], [-1.05, 0],
+                  [-1.10, 0], [-1.15, 0], [-1.20, 0], [-1.25, 0], [-1.30, 0], [-1.35, 0], [-1.40, 0]]
 
     eft_points_pcug = [[0.01, 0], [0.05, 0], [0.1, 0], [0.3, 0]]
 
     eft_points_ncug = [[-0.075, 0], [-0.10, 0], [-0.125, 0]]
 
-    eft_point_pdiag = [[0.02, 0.1], [0.04, 0.2], [0.06, 0.3]]
+    eft_point_pdiag = [[0.02, 0.1], [0.04, 0.2], [0.06, 0.3], [0.08, 0.4]]
 
     # choice of binning
     bin_1 = np.array([300, 400, 500, 600, 700, 800, 900, 1000, 4000])
@@ -447,7 +467,7 @@ if __name__ == '__main__':
     if binned is True:
 
         path_output_bin_1 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_1'
-        path_output_bin_2 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3'
+        path_output_bin_2 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2'
         path_output_bin_3 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3'
 
         # for i, c in enumerate(eft_point_pdiag):
@@ -456,11 +476,11 @@ if __name__ == '__main__':
         #                  path_output=path_output_bin_1,
         #                  bins=bin_1)
         #
-        for i, c in enumerate(eft_points_mcuu):
-            StatAnalysis(c, nn=False,
-                         path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu_v2/eft_{}.lhe'.format(i+1),
-                         path_output=path_output_bin_2,
-                         bins=bin_2)
+        # for i, c in enumerate(eft_point_pdiag):
+        #     StatAnalysis(c, nn=False,
+        #                  path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/pdiag/eft_{}.lhe'.format(i+1),
+        #                  path_output=path_output_bin_2,
+        #                  bins=bin_2)
         #
         # for i, c in enumerate(eft_point_pdiag):
         #     StatAnalysis(c, nn=False,
@@ -543,15 +563,10 @@ if __name__ == '__main__':
         #              path_output=path_output_bin_2,
         #              bins=bin_2)
         #
-        # StatAnalysis(np.array([0, -0.55]), nn=False,
-        #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_4.lhe',
-        #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3',
-        #              bins=bin_2)
-
-        # StatAnalysis(np.array([0, -0.60]), nn=False,
-        #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_5.lhe',
-        #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3',
-        #              bins=bin_2)
+        StatAnalysis(np.array([0, -0.55]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_4.lhe',
+                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3',
+                     bins=bin_2)
 
         # StatAnalysis(np.array([0, -0.50]), nn=False,
         #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_3.lhe',

@@ -54,23 +54,23 @@ with open("z_scores/truth/z_scores_pdiag.dat", "r") as f:
 # sys.exit()
 
 ##### NN ########
-# with open("z_scores/nn/z_scores_ncug.dat", "r") as f:
-#     reader = csv.reader(f, delimiter='\t')
-#     z_scores = []
-#     p_value_nn = []
-#     p_value_nn_unc = []
-#
-#     for line in reader:
-#         z_scores.append([float(line[0]), float(line[2])])
-#     z_scores = np.array(z_scores)
-#
-#     for c in cuu:
-#         z_scores_c = z_scores[z_scores[:, 0] == c][:, 1]
-#         p_values_c = 1 - norm.cdf(z_scores_c)
-#         p_value_c = np.mean(p_values_c)
-#         p_value_c_unc = np.std(p_values_c) / np.sqrt(len(p_values_c))
-#         p_value_nn.append(p_value_c)
-#         p_value_nn_unc.append(p_value_c_unc)
+with open("z_scores/nn/z_scores_pdiag.dat", "r") as f:
+    reader = csv.reader(f, delimiter='\t')
+    z_scores = []
+    p_value_nn = []
+    p_value_nn_unc = []
+
+    for line in reader:
+        z_scores.append([float(line[1]), float(line[2])])
+    z_scores = np.array(z_scores)
+
+    for c in cuu:
+        z_scores_c = z_scores[z_scores[:, 0] == c][:, 1]
+        p_values_c = 1 - norm.cdf(z_scores_c)
+        p_value_c = np.mean(p_values_c)
+        p_value_c_unc = np.std(p_values_c) / np.sqrt(len(p_values_c))
+        p_value_nn.append(p_value_c)
+        p_value_nn_unc.append(p_value_c_unc)
 #
 # # print("p-values nn: ", p_value_nn)
 # # print("p-values unc nn: ", p_value_nn_unc)
@@ -194,8 +194,8 @@ ax = plt.subplot(111)
 ax.errorbar(cuu, p_value_truth, yerr=p_value_truth_unc, fmt='.', capsize=3,
             color='C0', label=r'$\rm{p-value\;(true)}$')
 
-# ax.errorbar(cuu, p_value_nn, yerr=p_value_nn_unc, fmt='.', capsize=3,
-#             color='C1', label=r'$\rm{p-value\;(NN)}$')
+ax.errorbar(cuu, p_value_nn, yerr=p_value_nn_unc, fmt='.', capsize=3,
+             color='C1', label=r'$\rm{p-value\;(NN)}$')
 #
 # ax.errorbar(cuu, p_value_bin_1, yerr=p_value_bin_1_unc, fmt='.', capsize=3,
 #              color='C2', label=r'$\rm{p-value\;(bin\;1)}$')
@@ -217,7 +217,7 @@ def decay_exp(x, a, b, c):
 c_dist = np.sqrt(np.array(cuu)**2 + (0.2*np.array(cuu))**2)
 
 popt_truth, _ = curve_fit(decay_exp, c_dist, p_value_truth, sigma=p_value_truth_unc)
-# popt_nn, _ = curve_fit(decay_exp, cuu, p_value_nn, sigma=p_value_nn_unc)
+popt_nn, _ = curve_fit(decay_exp, c_dist, p_value_nn, sigma=p_value_nn_unc)
 # popt_bin_1, _ = curve_fit(decay_exp, cuu, p_value_bin_1, sigma=p_value_bin_1_unc)
 # popt_bin_2, _ = curve_fit(decay_exp, cuu, p_value_bin_2, sigma=p_value_bin_2_unc)
 # popt_bin_3, _ = curve_fit(decay_exp, cuu, p_value_bin_3, sigma=p_value_bin_3_unc)
@@ -227,14 +227,14 @@ x = np.linspace(0, 2*np.max(c_dist), 400)
 plt.hlines(0.05, 0.05, 2*np.max(c_dist), color='black', linestyle='dashed')
 
 ax.plot(x, decay_exp(x, *popt_truth), color='C0', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(true)}$')
-# ax.plot(x, decay_exp(x, *popt_nn), color='C1', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(NN)}$')
+ax.plot(x, decay_exp(x, *popt_nn), color='C1', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(NN)}$')
 # ax.plot(x, decay_exp(x, *popt_bin_1), color='C2', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(bin\;1)}$')
 # ax.plot(x, decay_exp(x, *popt_bin_2), color='C3', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(bin\;2)}$')
 # ax.plot(x, decay_exp(x, *popt_bin_3), color='C4', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(bin\;3)}$')
 
 
 idx_truth = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_truth) - 0.05))).flatten()
-# idx_nn = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_nn) - 0.05))).flatten()
+idx_nn = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_nn) - 0.05))).flatten()
 # #
 # idx_bin_1 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_1) - 0.05))).flatten()
 # idx_bin_2 = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_bin_2) - 0.05))).flatten()
@@ -243,7 +243,7 @@ idx_truth = np.argwhere(np.diff(np.sign(decay_exp(x, *popt_truth) - 0.05))).flat
 #plt.plot(x[idx_bin_1], decay_exp(x[idx_bin_1], *popt_bin_1), 'kx')
 # plt.plot(x[idx_bin_2], decay_exp(x[idx_bin_2], *popt_bin_2), 'kx')
 # plt.plot(x[idx_bin_3], decay_exp(x[idx_bin_3], *popt_bin_3), 'kx')
-#plt.plot(x[idx_nn], decay_exp(x[idx_nn], *popt_nn), 'kx')
+plt.plot(x[idx_nn], decay_exp(x[idx_nn], *popt_nn), 'kx')
 plt.plot(x[idx_truth], decay_exp(x[idx_truth], *popt_truth), 'kx')
 
 # ax.axvline(x[idx_bin_1], 0, 0.3, color='black', linestyle='dashed')
@@ -254,7 +254,7 @@ plt.plot(x[idx_truth], decay_exp(x[idx_truth], *popt_truth), 'kx')
 # ax.text(0.15,0.82,r'$c_{2\sigma,\;\rm{bin\;2}} = %.3f$'%x[idx_bin_2],fontsize=20,transform=ax.transAxes)
 # ax.text(0.15,0.74,r'$c_{2\sigma,\;\rm{bin\;3}} = %.3f$'%x[idx_bin_3],fontsize=20,transform=ax.transAxes)
 ax.text(0.40,0.9,r'$c_{2\sigma,\;\rm{true}} = %.3f$'%x[idx_truth],fontsize=20,transform=ax.transAxes)
-#ax.text(0.40,0.82,r'$c_{2\sigma,\;\rm{NN}} = %.3f$'%x[idx_nn],fontsize=20,transform=ax.transAxes)
+ax.text(0.40,0.82,r'$c_{2\sigma,\;\rm{NN}} = %.3f$'%x[idx_nn],fontsize=20,transform=ax.transAxes)
 
 # Plot settings
 ax.set_ylabel(r'$\rm{p-value}$', fontsize=20)
@@ -269,7 +269,7 @@ ax.tick_params(which='minor', length=5)
 ax.set_title(r'$\rm{Interpolation\;of\;p-value}$', fontsize=20)
 plt.tight_layout()
 #plt.show()
-plt.savefig('p_value_diag_truth.pdf')
+plt.savefig('p_value_diag_truth_nn.pdf')
 
 
 
