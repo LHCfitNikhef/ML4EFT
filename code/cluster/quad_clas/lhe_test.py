@@ -1,3 +1,6 @@
+# This script makes a plot of the distribution of the expected countings per bin with cuu = -0.50 to illustrate the point that
+# the binned analysis is subject to fluctuations (error)
+
 import bounds_2 as bnds
 import expected_events as exp_nevents
 import numpy as np
@@ -24,22 +27,23 @@ import matplotlib.pyplot as plt
 n = 10000 # number of events to be loaded
 luminosity = 6
 nu_i_list = []
-for i in range(1, 51):
+for j in range(5):
+    for i in range(1, 51):
 
-    if i < 10:
-        path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_8/bin/process_8/Events/run_0{}/unweighted_events.lhe'.format(i)
-    else:
-        path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_8/bin/process_8/Events/run_{}/unweighted_events.lhe'.format(i)
+        if i < 10:
+            path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_8/bin/process_8/Events/run_0{}/unweighted_events.lhe'.format(i)
+        else:
+            path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_8/bin/process_8/Events/run_{}/unweighted_events.lhe'.format(i)
 
-    event_data = bnds.load_data(path_eft, n, s=n)
-    xsec, _ = exp_nevents.load_datapoint(path_eft)
-    nu = luminosity * xsec
+        event_data = bnds.load_data(path_eft, n, s=n)
+        xsec, _ = exp_nevents.load_datapoint(path_eft)
+        nu = luminosity * xsec
 
-    bins = np.array([300, 400, 500, 600, 4000])
-    n_i, _ = np.histogram(event_data, bins=bins)
+        bins = np.array([300, 400, 500, 600, 4000])
+        n_i, _ = np.histogram(event_data, bins=bins)
 
-    nu_i = (n_i / n) * nu
-    nu_i_list.append(nu_i)
+        nu_i = (n_i / n) * nu
+        nu_i_list.append(nu_i)
 
 nu_i_list = np.array(nu_i_list)
 
@@ -74,7 +78,7 @@ for i in range(0, nrows*ncols):
     ax.text(0.05, 0.9, r'$\bar{\nu_i} = %.2f$' % nu_i_mean, fontsize=20, transform=ax.transAxes)
     ax.text(0.05, 0.82, r'$\nu_i = %.2f$' % nu_i_fit[i], fontsize=20, transform=ax.transAxes)
     ax.text(0.05, 0.74, r'$\hat{\sigma}_{\nu_i} = %.2f$' % nu_i_unc, fontsize=20, transform=ax.transAxes)
-    ax.text(0.05, 0.66, r'$\rm{r_i} = %.2f$' % res_i, fontsize=20, transform=ax.transAxes)
+    ax.text(0.05, 0.66, r'$r_i = %.2f$' % res_i, fontsize=20, transform=ax.transAxes)
     ax.set_xlabel(r'$\rm{\nu_i}$')
     ax.set_title(r'$\rm{bin\;}$' + r'${}$'.format(i+1))
     plt.legend()

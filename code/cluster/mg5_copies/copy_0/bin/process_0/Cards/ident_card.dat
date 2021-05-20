@@ -1,0 +1,239 @@
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c      written by the UFO converter
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+ckmblock 2 mdl_CKMlambda
+
+ckmblock 3 mdl_CKMA
+
+ckmblock 4 mdl_CKMrho
+
+ckmblock 5 mdl_CKMeta
+
+smeft 1 mdl_cG
+
+smeft 2 mdl_cW
+
+smeft 3 mdl_cH
+
+smeft 4 mdl_cHbox
+
+smeft 5 mdl_cHDD
+
+smeft 6 mdl_cHG
+
+smeft 7 mdl_cHW
+
+smeft 8 mdl_cHB
+
+smeft 9 mdl_cHWB
+
+smeft 10 mdl_ceHRe
+
+smeft 11 mdl_cuHRe
+
+smeft 12 mdl_cdHRe
+
+smeft 13 mdl_ceWRe
+
+smeft 14 mdl_ceBRe
+
+smeft 15 mdl_cuGRe
+
+smeft 16 mdl_cuWRe
+
+smeft 17 mdl_cuBRe
+
+smeft 18 mdl_cdGRe
+
+smeft 19 mdl_cdWRe
+
+smeft 20 mdl_cdBRe
+
+smeft 21 mdl_cHl1
+
+smeft 22 mdl_cHl3
+
+smeft 23 mdl_cHe
+
+smeft 24 mdl_cHq1
+
+smeft 25 mdl_cHq3
+
+smeft 26 mdl_cHu
+
+smeft 27 mdl_cHd
+
+smeft 28 mdl_cHudRe
+
+smeft 29 mdl_cll
+
+smeft 30 mdl_cll1
+
+smeft 31 mdl_cqq1
+
+smeft 32 mdl_cqq11
+
+smeft 33 mdl_cqq3
+
+smeft 34 mdl_cqq31
+
+smeft 35 mdl_clq1
+
+smeft 36 mdl_clq3
+
+smeft 37 mdl_cee
+
+smeft 38 mdl_cuu
+
+smeft 39 mdl_cuu1
+
+smeft 40 mdl_cdd
+
+smeft 41 mdl_cdd1
+
+smeft 42 mdl_ceu
+
+smeft 43 mdl_ced
+
+smeft 44 mdl_cud1
+
+smeft 45 mdl_cud8
+
+smeft 46 mdl_cle
+
+smeft 47 mdl_clu
+
+smeft 48 mdl_cld
+
+smeft 49 mdl_cqe
+
+smeft 50 mdl_cqu1
+
+smeft 51 mdl_cqu8
+
+smeft 52 mdl_cqd1
+
+smeft 53 mdl_cqd8
+
+smeft 54 mdl_cledqRe
+
+smeft 55 mdl_cquqd1Re
+
+smeft 56 mdl_cquqd11Re
+
+smeft 57 mdl_cquqd8Re
+
+smeft 58 mdl_cquqd81Re
+
+smeft 59 mdl_clequ1Re
+
+smeft 60 mdl_clequ3Re
+
+smeftcpv 1 mdl_cGtil
+
+smeftcpv 2 mdl_cWtil
+
+smeftcpv 3 mdl_cHGtil
+
+smeftcpv 4 mdl_cHWtil
+
+smeftcpv 5 mdl_cHBtil
+
+smeftcpv 6 mdl_cHWBtil
+
+smeftcpv 7 mdl_ceWIm
+
+smeftcpv 8 mdl_ceBIm
+
+smeftcpv 9 mdl_cuGIm
+
+smeftcpv 10 mdl_cuWIm
+
+smeftcpv 11 mdl_cuBIm
+
+smeftcpv 12 mdl_cdGIm
+
+smeftcpv 13 mdl_cdWIm
+
+smeftcpv 14 mdl_cdBIm
+
+smeftcpv 15 mdl_cHudIm
+
+smeftcpv 16 mdl_ceHIm
+
+smeftcpv 17 mdl_cuHIm
+
+smeftcpv 18 mdl_cdHIm
+
+smeftcpv 19 mdl_cledqIm
+
+smeftcpv 20 mdl_cquqd1Im
+
+smeftcpv 21 mdl_cquqd8Im
+
+smeftcpv 22 mdl_cquqd11Im
+
+smeftcpv 23 mdl_cquqd81Im
+
+smeftcpv 24 mdl_clequ1Im
+
+smeftcpv 25 mdl_clequ3Im
+
+smeftcutoff 1 mdl_LambdaSMEFT
+
+sminputs 1 mdl_MW
+
+sminputs 2 mdl_Gf
+
+sminputs 3 aS
+
+switches 1 mdl_linearPropCorrections
+
+yukawa 1 mdl_ymdo
+
+yukawa 2 mdl_ymup
+
+yukawa 3 mdl_yms
+
+yukawa 4 mdl_ymc
+
+yukawa 5 mdl_ymb
+
+yukawa 6 mdl_ymt
+
+yukawa 11 mdl_yme
+
+yukawa 13 mdl_ymm
+
+yukawa 15 mdl_ymtau
+
+mass 23 mdl_MZ
+
+mass 11 mdl_Me
+
+mass 13 mdl_MMU
+
+mass 15 mdl_MTA
+
+mass 2 mdl_MU
+
+mass 4 mdl_MC
+
+mass 6 mdl_MT
+
+mass 1 mdl_MD
+
+mass 3 mdl_MS
+
+mass 5 mdl_MB
+
+mass 25 mdl_MH
+
+decay 23 mdl_WZ
+
+decay 24 mdl_WW
+
+decay 6 mdl_WT
+
+decay 25 mdl_WH

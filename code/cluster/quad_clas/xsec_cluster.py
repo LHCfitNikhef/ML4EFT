@@ -272,9 +272,9 @@ def plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
 
     # show analytical result and mg5 in one plot
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.plot(x, y, '-', c='red', label='BSM')
-    ax.plot(x, y_sm, '-', c='orange', label='SM')
-    plt.title('Analytic xsec in the EFT at ctg = {} and cuu = {}'.format(cuGRe, cuu))
+    ax.plot(x, y, '-', c='red', label=r'$\rm{BSM}$')
+    ax.plot(x, y_sm, '-', c='orange', label=r'$\rm{SM}$')
+    plt.title(r'$\rm{Analytic\;xsec\;in\;the\;EFT\;at\;cug=0.1\;and\;cuu=0}$')
     plt.yscale('log')
     plt.ylabel(r'$d\sigma/dm_{tt}\;\mathrm{[pb\:TeV^{-1}]}$')
     plt.legend()
@@ -287,7 +287,7 @@ def plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
     # plt.ylabel('BSM/SM')
     # plt.xlim((2*mt, mtt_max))
 
-    plt.show()
+    #plt.show()
     fig.savefig(save_path)
 
 

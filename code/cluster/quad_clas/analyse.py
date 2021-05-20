@@ -14,7 +14,7 @@ from quad_classifier_cluster import PredictorQuadratic
 from quad_classifier_cluster import PredictorLinear
 import xsec_cluster as ExS
 
-matplotlib.use('PDF')
+#matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
@@ -519,4 +519,4 @@ if __name__ == '__main__':
     lhe_path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/unweighted_events.lhe'
     save_path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/eft.pdf'
     #plot_mg5_ana_mtt(30*10**-3, 2.5, 1, 0, lhe_path, save_path)
-    plot_xsec_ana(10 * 10 ** -3, 2.5, 10, 0, lhe_path, save_path)
+    plot_xsec_ana(10 * 10 ** -3, 2.5, 0.1, 0, lhe_path, 'mg5_ana.pdf')
