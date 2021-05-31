@@ -12,6 +12,7 @@ from scipy.stats import chi2
 import xsec_cluster as ExS
 import expected_events as exp_nevents
 import analyse
+import scipy
 import torch
 
 matplotlib.use('PDF')
@@ -161,59 +162,74 @@ class StatAnalysis:
             self.tc_data = None
             self.z_score_binned_mc = None
 
-            self.cuu_list, self.p_values_asi, self.z_scores_asi, self.c_exc = self.binned_analysis()
-            print(self.c_exc)
-            sys.exit()
+            self.cuu_list, self.cug_list, self.p_values_asi, self.z_scores_asi = self.binned_analysis()
             self.plot_binned_analysis()
-            self.plot_tc_binned(c)
+            #self.plot_tc_binned(c)
 
     def binned_fit(self): # TODO: write this method
         pass
 
     def plot_binned_analysis(self):
 
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(8, 6))
         ax = plt.subplot(111)
-        ax.plot(self.cuu_list, self.p_values_asi, label=r'$\rm{p-value}$', color='C0')
-        ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
-        ax.set_title(r'$\rm{p-value\;(asymptotic)}$', fontsize=20)
-        ax.legend(loc='best', fontsize=15, frameon=False)
-        plt.tight_layout()
-        plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/p_value_asym.pdf')
+        aspect = (self.cuu_list.max()-self.cuu_list.min())/(self.cug_list.max()-self.cug_list.min())
+        X, Y = np.meshgrid(self.cuu_list, self.cug_list)
+        ax.contour(X, Y, self.z_scores_asi, levels=np.array([1.64]))
 
-        plt.figure(figsize=(10, 6))
-        ax = plt.subplot(111)
-        ax.plot(self.cuu_list, self.z_scores_asi, label=r'$\rm{z-scores}$', color='C0')
+        im = ax.imshow(self.z_scores_asi, interpolation='hanning', origin='lower', vmin=0, vmax=2, cmap='BuGn', extent=[self.cuu_list.min(), self.cuu_list.max(), self.cug_list.min(), self.cug_list.max()], aspect=aspect)
+
+
+        # ax.plot(self.cuu_list, self.p_values_asi, label=r'$\rm{p-value}$', color='C0')
         ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
-        ax.set_title(r'$\rm{z-scores\;(asymptotic)}$', fontsize=20)
-        ax.legend(loc='best', fontsize=15, frameon=False)
-        plt.tight_layout()
-        plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores_asym.pdf')
+        ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
+        #ax.set_xlim((self.cuu_list.min(), self.cuu_list.max()))
+        #ax.set_ylim((self.cug_list.min(), self.cug_list.max()))
+        plt.colorbar(im)
+        ax.set_title(r'$\rm{z-score\;(asymptotic)}$', fontsize=20)
+        # ax.legend(loc='best', fontsize=15, frameon=False)
+        # plt.tight_layout()
+        # plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/p_value_asym.pdf')
+        #
+        # plt.figure(figsize=(10, 6))
+        # ax = plt.subplot(111)
+        # ax.plot(self.cuu_list, self.z_scores_asi, label=r'$\rm{z-scores}$', color='C0')
+        # ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
+        # ax.set_title(r'$\rm{z-scores\;(asymptotic)}$', fontsize=20)
+        # ax.legend(loc='best', fontsize=15, frameon=False)
+        # plt.tight_layout()
+        plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores_heatmap_bin_3.pdf')
 
     def binned_analysis(self, exact=False):
         p_values_asi = []
         z_scores_asi = []
-        cuu_list = np.linspace(0.1, 2, 100)
+        cuu_list = np.linspace(-5, 5, 200)
+        cug_list = np.linspace(-0.15, 1, 200)
 
-        for cuu in cuu_list:
-            c = np.array([0, cuu])
-            self.nu_i = self.expected_entries(c)
+        for cug in cug_list:
+            for cuu in cuu_list:
+                c = np.array([cug, cuu])
+                self.nu_i = self.expected_entries(c)
 
-            if exact:
-                self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc()
+                if exact:
+                    self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc()
 
-            self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
-            z_score_asi, p_value_asi = self.p_value_asimov()
+                self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
+                z_score_asi, p_value_asi = self.p_value_asimov()
 
-            p_values_asi.append(p_value_asi)
-            z_scores_asi.append(z_score_asi)
+                p_values_asi.append(p_value_asi)
+                z_scores_asi.append(z_score_asi)
 
         p_values_asi = np.array(p_values_asi)
         z_scores_asi = np.array(z_scores_asi)
 
-        idx = np.argwhere(np.diff(np.sign(p_values_asi - 0.05))).flatten()
-        c_exc = cuu_list[idx]
-        return cuu_list, p_values_asi, z_scores_asi, c_exc
+        p_values_asi = np.reshape(p_values_asi, (len(cug_list), len(cuu_list)))
+        z_scores_asi = np.reshape(z_scores_asi, (len(cug_list), len(cuu_list)))
+
+        # idx = np.argwhere(np.diff(np.sign(p_values_asi - 0.05))).flatten()
+        # c_exc = ()
+
+        return cuu_list, cug_list, p_values_asi, z_scores_asi#, c_exc
 
 
     def expected_entries(self, c):
@@ -481,8 +497,8 @@ if __name__ == '__main__':
 
     # the below is only needed for a binned analysis
     # fit the cross section per bin as a function of c
-    # if not data_loaded:
-    #     exp_nevents.xsec_binned(bins, '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3')
+    if not data_loaded:
+        exp_nevents.xsec_binned(bin_3, '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3_v2')
 
     ####### TRUTH #########
     if truth is True:
@@ -600,9 +616,9 @@ if __name__ == '__main__':
     ####### BINNED #########
     if binned is True:
 
-        path_output_bin_1 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_1'
+        path_output_bin_1 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_1_v2'
         path_output_bin_2 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3'
-        path_output_bin_3 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3'
+        path_output_bin_3 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3_v2'
 
         #StatAnalysis(np.array([0, -0.75]), nn=False, path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_8.lhe', path_output=path_output_bin_1, bins=bin_1)
 
@@ -700,15 +716,15 @@ if __name__ == '__main__':
         #              path_output=path_output_bin_2,
         #              bins=bin_2)
         #
-        # StatAnalysis(np.array([0, -0.55]), nn=False,
-        #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_4.lhe',
+        StatAnalysis(np.array([0, -0.55]), nn=False,
+                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_4.lhe',
+                     path_output=path_output_bin_3,
+                     bins=bin_3)
+
+        # StatAnalysis(np.array([0, -0.75]), nn=False,
+        #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_8.lhe',
         #              path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3',
         #              bins=bin_2)
-
-        StatAnalysis(np.array([0, -0.75]), nn=False,
-                     path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_8.lhe',
-                     path_output='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3',
-                     bins=bin_2)
 
         # StatAnalysis(np.array([0, -0.50]), nn=False,
         #              path_eft_lhe='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_3.lhe',
