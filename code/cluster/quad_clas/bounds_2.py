@@ -126,7 +126,7 @@ class StatAnalysis:
     or the analytical likelihood ratio. In the former case, nn should be set to True.
     """
 
-    def __init__(self, c, nn, path_eft_lhe, path_output, bins=None, fit=False):
+    def __init__(self, path_output, c=None, path_eft_lhe = None, nn=False, bins=None, truth=False, fit=False, limits=None):
         self.mean_tc_eft = None
         self.sigma_tc_eft = None
         self.mean_tc_sm = None
@@ -162,52 +162,52 @@ class StatAnalysis:
             self.tc_data = None
             self.z_score_binned_mc = None
 
-            self.cuu_list, self.cug_list, self.p_values_asi, self.z_scores_asi = self.binned_analysis()
-            self.plot_binned_analysis()
+            self.cuu_plane, self.cug_plane, self.p_values_asi, self.z_scores_asi = self.binned_analysis(limits=limits)
+            #self.plot_binned_analysis()
             #self.plot_tc_binned(c)
 
     def binned_fit(self): # TODO: write this method
         pass
 
-    def plot_binned_analysis(self):
+    def plot_binned_analysis(self, path_save):
+        """ Method to produce a heatmap of the asymptotic z-scores in the 2D eft plane
 
+        """
         plt.figure(figsize=(8, 6))
         ax = plt.subplot(111)
-        aspect = (self.cuu_list.max()-self.cuu_list.min())/(self.cug_list.max()-self.cug_list.min())
-        X, Y = np.meshgrid(self.cuu_list, self.cug_list)
-        ax.contour(X, Y, self.z_scores_asi, levels=np.array([1.64]))
+        aspect = (self.cuu_plane.max()-self.cuu_plane.min())/(self.cug_plane.max()-self.cug_plane.min())
+        ax.contour(self.cuu_plane, self.cug_plane, self.z_scores_asi, levels=np.array([1.64]))
 
-        im = ax.imshow(self.z_scores_asi, interpolation='hanning', origin='lower', vmin=0, vmax=2, cmap='BuGn', extent=[self.cuu_list.min(), self.cuu_list.max(), self.cug_list.min(), self.cug_list.max()], aspect=aspect)
+        # from imshow doc: The first two dimensions (M, N) define the rows and columns of the image. Without transposing cuu
+        # would create the rows, whereas we want cuu on the horizontal axis.
+        im = ax.imshow(self.z_scores_asi.T, interpolation='hanning', origin='lower', vmin=0, vmax=2, cmap='BuGn', extent=[self.cuu_plane.min(), self.cuu_plane.max(), self.cug_plane.min(), self.cug_plane.max()], aspect=aspect)
 
-
-        # ax.plot(self.cuu_list, self.p_values_asi, label=r'$\rm{p-value}$', color='C0')
         ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
         ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
-        #ax.set_xlim((self.cuu_list.min(), self.cuu_list.max()))
-        #ax.set_ylim((self.cug_list.min(), self.cug_list.max()))
         plt.colorbar(im)
         ax.set_title(r'$\rm{z-score\;(asymptotic)}$', fontsize=20)
-        # ax.legend(loc='best', fontsize=15, frameon=False)
-        # plt.tight_layout()
-        # plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/p_value_asym.pdf')
-        #
-        # plt.figure(figsize=(10, 6))
-        # ax = plt.subplot(111)
-        # ax.plot(self.cuu_list, self.z_scores_asi, label=r'$\rm{z-scores}$', color='C0')
-        # ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
-        # ax.set_title(r'$\rm{z-scores\;(asymptotic)}$', fontsize=20)
-        # ax.legend(loc='best', fontsize=15, frameon=False)
-        # plt.tight_layout()
-        plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores_heatmap_bin_3.pdf')
+        plt.savefig(path_save)
 
-    def binned_analysis(self, exact=False):
+    def binned_analysis(self, limits=None, exact=False):
+        """ Method to compute the z-score and p-value in the 2D eft plane specified by cug and cuu
+
+        Returns
+        -------
+
+        """
         p_values_asi = []
         z_scores_asi = []
-        cuu_list = np.linspace(-5, 5, 200)
-        cug_list = np.linspace(-0.15, 1, 200)
+        if limits is None:
+            cuu_list = np.linspace(-5, 5, 20)
+            cug_list = np.linspace(-0.15, 1, 10)
+        else:
+            cuu_min, cuu_max = limits[0, :]
+            cug_min, cug_max = limits[1, :]
+            cuu_list = np.linspace(cuu_min, cuu_max, 200)
+            cug_list = np.linspace(cug_min, cug_max, 200)
 
-        for cug in cug_list:
-            for cuu in cuu_list:
+        for cuu in cuu_list:
+            for cug in cug_list:
                 c = np.array([cug, cuu])
                 self.nu_i = self.expected_entries(c)
 
@@ -223,13 +223,14 @@ class StatAnalysis:
         p_values_asi = np.array(p_values_asi)
         z_scores_asi = np.array(z_scores_asi)
 
-        p_values_asi = np.reshape(p_values_asi, (len(cug_list), len(cuu_list)))
-        z_scores_asi = np.reshape(z_scores_asi, (len(cug_list), len(cuu_list)))
+        p_values_asi = np.reshape(p_values_asi, (len(cuu_list), len(cug_list)))
+        z_scores_asi = np.reshape(z_scores_asi, (len(cuu_list), len(cug_list)))
+        cuu_plane, cug_plane = np.meshgrid(cuu_list, cug_list, indexing='ij')
 
         # idx = np.argwhere(np.diff(np.sign(p_values_asi - 0.05))).flatten()
         # c_exc = ()
 
-        return cuu_list, cug_list, p_values_asi, z_scores_asi#, c_exc
+        return cuu_plane, cug_plane, p_values_asi, z_scores_asi
 
 
     def expected_entries(self, c):
@@ -473,8 +474,47 @@ if __name__ == '__main__':
 
     truth = False
     NN = False
-    binned = True
+    binned = False
     data_loaded = True
+
+
+    binning_1 = np.array([300, 400, 500, 600, 700, 800, 900, 1000, 4000])
+    binning_2 = np.array([300, 400, 500, 600, 4000])
+    binning_3 = np.array([300, 4000])
+
+    path_output_bin_1 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_1_v2'
+    path_output_bin_2 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3'
+    path_output_bin_3 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3_v2'
+
+    bin_1 = StatAnalysis(path_output=path_output_bin_1, bins=binning_1, limits=np.array([[-6, 6], [-1, 7.5]]))
+    bin_2 = StatAnalysis(path_output=path_output_bin_2, bins=binning_2, limits=np.array([[-6, 6], [-1, 7.5]]))
+    bin_3 = StatAnalysis(path_output=path_output_bin_3, bins=binning_3, limits=np.array([[-6, 6], [-1, 7.5]]))
+    #bin_1.plot_binned_analysis(path_save='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores_heatmap_bin_3.pdf')
+
+    from scipy.ndimage.filters import gaussian_filter
+
+    sigma = 0.8  # this depends on how noisy your data is, play with it!
+    data_bin1 = gaussian_filter(bin_1.z_scores_asi, sigma)
+    data_bin2 = gaussian_filter(bin_2.z_scores_asi, sigma)
+    #data_bin3 = gaussian_filter(bin_3.z_scores_asi, sigma)
+
+
+    fig, ax = plt.subplots(figsize=(10,6))
+    cntr1 = ax.contour(bin_1.cuu_plane, bin_1.cug_plane, data_bin1, levels=np.array([1.64]), colors='C0')
+    cntr2 = ax.contour(bin_2.cuu_plane, bin_2.cug_plane, data_bin2, levels=np.array([1.64]), colors='C1')
+    cntr3 = ax.contour(bin_3.cuu_plane, bin_3.cug_plane, bin_3.z_scores_asi, levels=np.array([1.64]), colors='C2')
+    h1, _ = cntr1.legend_elements()
+    h2, _ = cntr2.legend_elements()
+    h3, _ = cntr3.legend_elements()
+    ax.legend([h1[0], h2[0], h3[0]], [r'$\rm{Bin\;1}$', r'$\rm{Bin\;2}$', r'$\rm{Bin\;3}$'])
+    ax.legend([h3[0]], [r'$\rm{Bin\;3}$'])
+    ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
+    ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
+    ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
+
+    plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/exclusion_limit_bin_all_v2.pdf')
+
+
 
 
     #bins = np.arange(300, 4100, 100)
@@ -491,9 +531,8 @@ if __name__ == '__main__':
     eft_point_pdiag = [[0.02, 0.1], [0.04, 0.2], [0.06, 0.3]]
 
     # choice of binning
-    bin_1 = np.array([300, 400, 500, 600, 700, 800, 900, 1000, 4000])
-    bin_2 = np.array([300, 400, 500, 600, 4000])
-    bin_3 = np.array([300, 4000])
+
+
 
     # the below is only needed for a binned analysis
     # fit the cross section per bin as a function of c
