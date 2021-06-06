@@ -19,65 +19,25 @@ matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
-luminosity = 6
 
-def generate_samples(c):
-    cugre = c[0]
-    cuu = c[1]
-    subprocess.call(['chmod', '+x', '/data/theorie/jthoeve/ML4EFT/quad_clas/generate_samples.sh'])
-    subprocess.call(["/data/theorie/jthoeve/ML4EFT/quad_clas/generate_samples.sh", '{}'.format(cugre), '{}'.format(cuu)])
-    path = "/data/theorie/jthoeve/ML4EFT/mg5_copies/mg5_test/bin/process_0/Events/run_01/unweighted_events.lhe"
-    return path
-
-
-def get_events(c, path=None):
-
-    if np.all((c == 0)):
-        path_dict = {(0, 0): '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01/unweighted_events.lhe'}
-    else:
-        path_dict = {(c[0], c[1]): path}
-
-    events = EventDataset(tuple(c), n_features=1, path_dict=path_dict, n_dat=10000)
-    return events.event_data
-
-
-def invariant_mass(p1, p2): #TODO use invariant method in quad_classifier_cluster module
-    """
-    Computes the invariant mass of an event
-    """
-    return np.sqrt(
-        sum((1 if mu == 'e' else -1) * (getattr(p1, mu) + getattr(p2, mu)) ** 2 for mu in ['e', 'px', 'py', 'pz']))
-
-
-def load_data(path, n, s):
-    """ Load a subset of size s from n events from the lhe file.
-
-    Parameters
-    ----------
-    path: str
-        Path to lhe file
-    n: int
-        total size of the dataset
-    s:
-        size of the subset
-    Returns
-    -------
-    event_data: ndarray
-        The loaded subset of events
-    """
-
-    skip = np.random.choice(n, n - s, replace=False)
-    event_seq = pylhe.readLHE(path)
-
-    event_data = []
-
-    for i in range(n):
-        e = next(event_seq)
-        if i not in skip:
-            mtt = invariant_mass(e.particles[-1], e.particles[-2])
-            event_data.append(mtt)
-    event_data = np.array(event_data)
-    return event_data
+# def generate_samples(c):
+#     cugre = c[0]
+#     cuu = c[1]
+#     subprocess.call(['chmod', '+x', '/data/theorie/jthoeve/ML4EFT/quad_clas/generate_samples.sh'])
+#     subprocess.call(["/data/theorie/jthoeve/ML4EFT/quad_clas/generate_samples.sh", '{}'.format(cugre), '{}'.format(cuu)])
+#     path = "/data/theorie/jthoeve/ML4EFT/mg5_copies/mg5_test/bin/process_0/Events/run_01/unweighted_events.lhe"
+#     return path
+#
+#
+# def get_events(c, path=None):
+#
+#     if np.all((c == 0)):
+#         path_dict = {(0, 0): '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01/unweighted_events.lhe'}
+#     else:
+#         path_dict = {(c[0], c[1]): path}
+#
+#     events = EventDataset(tuple(c), n_features=1, path_dict=path_dict, n_dat=10000)
+#     return events.event_data
 
 
 def get_tc(expected_eft, expected_sm, data, c, hypothesis):
@@ -126,6 +86,11 @@ class StatAnalysis:
     or the analytical likelihood ratio. In the former case, nn should be set to True.
     """
 
+    eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -10.0], [0, -5.0], [0, -1.0],
+                  [0, 1.0], [0, 5.0], [0, 10.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],
+                  [10.0, 2.0], [0.0, 0.0]]
+    luminosity = 6
+
     def __init__(self, path_output, c=None, path_eft_lhe = None, nn=False, bins=None, truth=False, fit=False, limits=None):
         self.mean_tc_eft = None
         self.sigma_tc_eft = None
@@ -148,8 +113,9 @@ class StatAnalysis:
             self.bins = bins
             self.path_output = path_output
 
-            if fit is False:
-                self.binned_fit()
+            # for each new binning the cross section in each bin has to be fitted first
+            if fit is True:
+                self.xsec_binned()
 
             self.nu_i = None
 
@@ -166,8 +132,135 @@ class StatAnalysis:
             #self.plot_binned_analysis()
             #self.plot_tc_binned(c)
 
-    def binned_fit(self): # TODO: write this method
-        pass
+    def load_data(self, path, n, s):
+        """ Load a subset of size s from n events from the lhe file.
+
+        Parameters
+        ----------
+        path: str
+            Path to lhe file
+        n: int
+            total size of the dataset
+        s:
+            size of the subset
+        Returns
+        -------
+        event_data: ndarray
+            The loaded subset of events
+        """
+
+        skip = np.random.choice(n, n - s, replace=False)
+        event_seq = pylhe.readLHE(path)
+
+        event_data = []
+
+        for i in range(n):
+            e = next(event_seq)
+            if i not in skip:
+                mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
+                event_data.append(mtt)
+        event_data = np.array(event_data)
+        return event_data
+
+    def invariant_mass(self, p1, p2):  # TODO use invariant method in quad_classifier_cluster module
+        """
+        Computes the invariant mass of an event
+        """
+        return np.sqrt(
+            sum((1 if mu == 'e' else -1) * (getattr(p1, mu) + getattr(p2, mu)) ** 2 for mu in ['e', 'px', 'py', 'pz']))
+
+    def load_datapoint(self, path):
+        """
+        Load the xsec and uncertainty from an lhe file.
+
+        Parameters
+        ----------
+        path: str
+            path to lhe event file
+
+        Returns
+        -------
+        The total xsec and uncertainty
+        """
+        proc_info = pylhe.readLHEInit(path)['procInfo']
+        xsec_proc = []
+        error_proc = []
+        for proc in proc_info:
+            xsec_proc.append(proc['xSection'])
+            error_proc.append(proc['error'])
+        xsec_proc = np.array(xsec_proc)
+        error_proc = np.array(error_proc)
+        xsec = np.sum(xsec_proc)
+        xsec_error = np.sqrt(np.sum(error_proc ** 2))
+        return xsec, xsec_error
+
+    def xsec_binned(self):
+        """ Creates a numpy ndarray with the cross section in each bin for all the the eft points
+        in the list self.eft_points and save it to disk.
+        """
+
+        # define an empty list dataset that is going to be filled with the cross section in each bin
+        dataset = []
+
+        for i, eft_point in enumerate(self.eft_points):
+
+            #  path to lhe file
+            path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(i, i)
+            if 5 < i < 12:
+                path = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/cuu/eft_{}.lhe'.format(i - 5)
+
+            n_tot = 100000
+            data = self.load_data(path, n=n_tot, s=n_tot)
+            n_bin, _ = np.histogram(data, bins=self.bins)
+
+            # total inclusive cross-section
+            xsec, _ = self.load_datapoint(path)
+
+            # the cross section in bin i is computed by multiplying the ratio of the number of events
+            # in each bin over the total number of events with the total cross section
+            sigma_bin = n_bin / n_tot * xsec
+
+            # append the cross section per bin to the list dataset.
+            dataset.append(sigma_bin)
+
+        dataset = np.array(dataset)  # dataset.shape = (len(eft_points), len(bins))
+
+        os.makedirs(self.path_output)
+        with open(os.path.join(self.path_output, "xsec_bin.npy"), 'wb') as f:
+            np.save(f, dataset)
+
+    def expected_events_binned(self, c):
+        """
+        Returns
+        -------
+        The number of expected countings in each bin at the specified point in EFT parameter space
+        """
+
+        path_xsec_binned = os.path.join(self.path_output, "xsec_bin.npy")
+        with open(path_xsec_binned, 'rb') as f:
+            dataset = np.load(f)
+
+        # build the matrix of coefficients
+        coeff_mat = self.coefficient_matrix()
+
+        # solve the linear equation xsec = coeff_matrix * a for a
+
+        # TODO: rewrite the blow so that the fit does not have to be done each time the function is called
+        a, _, _, _ = np.linalg.lstsq(coeff_mat, dataset, rcond=None)
+
+        # find the x_sec per bin at the specified point in eft parameter space
+        cugre, cuu = c[0], c[1]
+        eft_point = np.array([1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu])
+        x_sec = np.einsum('ij,i', a, eft_point)
+        return x_sec * self.luminosity
+
+    def coefficient_matrix(self):
+        coeff_mat = []
+        for cugre, cuu in self.eft_points:
+            row = [1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu]
+            coeff_mat.append(row)
+        coeff_mat = np.array(coeff_mat)
+        return coeff_mat
 
     def plot_binned_analysis(self, path_save):
         """ Method to produce a heatmap of the asymptotic z-scores in the 2D eft plane
@@ -232,10 +325,9 @@ class StatAnalysis:
 
         return cuu_plane, cug_plane, p_values_asi, z_scores_asi
 
-
     def expected_entries(self, c):
-        nu_i_eft = exp_nevents.expected_events_binned(c, self.bins, self.path_output).astype(int)
-        nu_i_sm = exp_nevents.expected_events_binned(np.zeros(len(c)), self.bins, self.path_output).astype(int)
+        nu_i_eft = self.expected_events_binned(c).astype(int)
+        nu_i_sm = self.expected_events_binned(np.zeros(len(c))).astype(int)
         nu_i = {'sm': nu_i_sm, 'eft': nu_i_eft}
         return nu_i
 
@@ -416,9 +508,9 @@ class StatAnalysis:
         #write_log("loading eft data")
         n = int(1e5) # total number of events
         s = int(1e4) # size of subset
-        data_eft = load_data(path_eft, n, s)
+        data_eft = self.load_data(path_eft, n, s)
         #write_log("eft data loaded")
-        data_sm = load_data(path_sm, n, s)
+        data_sm = self.load_data(path_sm, n, s)
         #write_log("sm data loaded")
 
         data_eft = data_eft * 10 ** -3
@@ -465,7 +557,6 @@ class StatAnalysis:
             #     f.write(str(expected_eft) + "\t" + str(expected_sm) + "\t" + str(self.mean_tc_sm) + "\t" + str(self.mean_tauc_sm) + "\t" + str(self.sigma_tc_sm) + "\n")
 
 
-
 def gauss(x, mean, sigma):
     return (1 / np.sqrt(2 * np.pi * sigma ** 2)) * np.exp(-(x - mean) ** 2 / (2 * sigma ** 2))
 
@@ -477,42 +568,52 @@ if __name__ == '__main__':
     binned = False
     data_loaded = True
 
+    # TODO: write a nice loop over the StatAnalysis instances here
 
+    binning_0 = np.array([300, 400, 500, 600, 700, 800, 900, 1000, 1100, 4000])
     binning_1 = np.array([300, 400, 500, 600, 700, 800, 900, 1000, 4000])
     binning_2 = np.array([300, 400, 500, 600, 4000])
     binning_3 = np.array([300, 4000])
 
+    path_output_bin_0 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_0'
     path_output_bin_1 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_1_v2'
     path_output_bin_2 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_2_v3'
     path_output_bin_3 = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/binned/bin_3_v2'
 
-    bin_1 = StatAnalysis(path_output=path_output_bin_1, bins=binning_1, limits=np.array([[-6, 6], [-1, 7.5]]))
-    bin_2 = StatAnalysis(path_output=path_output_bin_2, bins=binning_2, limits=np.array([[-6, 6], [-1, 7.5]]))
-    bin_3 = StatAnalysis(path_output=path_output_bin_3, bins=binning_3, limits=np.array([[-6, 6], [-1, 7.5]]))
+    limits = np.array([[-1.2, 1.2], [-0.15, 0.2]])
+    bin_0 = StatAnalysis(path_output=path_output_bin_0, bins=binning_0, limits=limits)
+    bin_1 = StatAnalysis(path_output=path_output_bin_1, bins=binning_1, limits=limits)
+    bin_2 = StatAnalysis(path_output=path_output_bin_2, bins=binning_2, limits=limits)
+    bin_3 = StatAnalysis(path_output=path_output_bin_3, bins=binning_3, limits=limits)
     #bin_1.plot_binned_analysis(path_save='/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores_heatmap_bin_3.pdf')
 
     from scipy.ndimage.filters import gaussian_filter
 
     sigma = 0.8  # this depends on how noisy your data is, play with it!
+
+    data_bin0 = gaussian_filter(bin_0.z_scores_asi, sigma)
     data_bin1 = gaussian_filter(bin_1.z_scores_asi, sigma)
     data_bin2 = gaussian_filter(bin_2.z_scores_asi, sigma)
-    #data_bin3 = gaussian_filter(bin_3.z_scores_asi, sigma)
+    data_bin3 = gaussian_filter(bin_3.z_scores_asi, sigma)
 
 
     fig, ax = plt.subplots(figsize=(10,6))
+    cntr0 = ax.contour(bin_1.cuu_plane, bin_0.cug_plane, data_bin0, levels=np.array([1.64]), colors='C3')
     cntr1 = ax.contour(bin_1.cuu_plane, bin_1.cug_plane, data_bin1, levels=np.array([1.64]), colors='C0')
     cntr2 = ax.contour(bin_2.cuu_plane, bin_2.cug_plane, data_bin2, levels=np.array([1.64]), colors='C1')
     cntr3 = ax.contour(bin_3.cuu_plane, bin_3.cug_plane, bin_3.z_scores_asi, levels=np.array([1.64]), colors='C2')
+
+    h0, _ = cntr0.legend_elements()
     h1, _ = cntr1.legend_elements()
     h2, _ = cntr2.legend_elements()
     h3, _ = cntr3.legend_elements()
-    ax.legend([h1[0], h2[0], h3[0]], [r'$\rm{Bin\;1}$', r'$\rm{Bin\;2}$', r'$\rm{Bin\;3}$'])
-    ax.legend([h3[0]], [r'$\rm{Bin\;3}$'])
+    ax.legend([h0[0], h1[0], h2[0], h3[0]], [r'$\rm{Bin\;0}$', r'$\rm{Bin\;1}$', r'$\rm{Bin\;2}$', r'$\rm{Bin\;3}$'])
+    #ax.legend([h3[0]], [r'$\rm{Bin\;3}$'])
     ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
     ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
     ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
 
-    plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/exclusion_limit_bin_all_v2.pdf')
+    plt.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/exclusion_limit_bin_all_v3.pdf')
 
 
 
