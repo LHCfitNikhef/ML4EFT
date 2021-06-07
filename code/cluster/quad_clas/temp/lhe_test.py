@@ -1,7 +1,7 @@
 # This script makes a plot of the distribution of the expected countings per bin with cuu = -0.50 to illustrate the point that
 # the binned analysis is subject to fluctuations (error)
 
-import bounds_2 as bnds
+import bounds as bnds
 import expected_events as exp_nevents
 import numpy as np
 import matplotlib.pyplot as plt
