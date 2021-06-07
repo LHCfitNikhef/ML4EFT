@@ -19,30 +19,6 @@ rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
 
-
-
-
-def get_tc_nn(expected_eft, expected_sm, data, c, hypothesis):
-    cug, cuu = c
-
-    network_size = [1, 30, 30, 30, 30, 30, 1]
-    r_c = []
-    nn_rep = 40
-    for i in range(1, nn_rep + 1):
-        pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_8/mc_run_{}'.format(i)
-        mean, std = np.loadtxt(pred_path + '/scaling.dat')
-        r_c_i = analyse.get_likelihood_ratio_NN(pred_path + '/trained_nn.pt', network_size, data,
-                                                cug, cuu, mean, std)
-        r_c.append(r_c_i)
-    r_c = np.array(r_c)  # r_c.shape = (nn_rep, n_events)
-    tau_c = np.log(r_c)
-    mean_tauc = np.mean(tau_c, axis=1)  # mean_tauc = (nn_rep, 1)
-    mean_tc = expected_eft - expected_sm - expected_sm * mean_tauc if hypothesis == 'sm' else expected_eft - expected_sm - expected_eft * mean_tauc
-    sigma_tc = np.sqrt(expected_eft * np.mean(tau_c ** 2, axis=1)) if hypothesis == 'eft' else np.sqrt(
-        expected_sm * np.mean(tau_c ** 2, axis=1))
-    return mean_tc, sigma_tc  # mean_tc[:, 0].shape = (nn_rep, )
-
-
 def write_log(log):
     with open("/data/theorie/jthoeve/ML4EFT/quad_clas/bounds_log.txt", "a") as f:
         f.write(log + "\n")
@@ -54,13 +30,14 @@ class StatAnalysis:
     or the analytical likelihood ratio. In the former case, nn should be set to True.
     """
 
+    # points in EFT parameter space used to find the dependence of the cross section on the Wilson coefficients
     eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -10.0], [0, -5.0], [0, -1.0],
                   [0, 1.0], [0, 5.0], [0, 10.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],
                   [10.0, 2.0], [0.0, 0.0]]
 
     luminosity = 6  # Units: pb^-1
 
-    def __init__(self, path_output, path_eft_lhe = None, nn=False, bins=None, truth=False, fit=False, limits=None):
+    def __init__(self, path_output, dict_int=None, nn=False, bins=None, truth=False, fit=False, limits=None):
         self.mean_tc_eft = None
         self.sigma_tc_eft = None
         self.mean_tc_sm = None
@@ -79,8 +56,16 @@ class StatAnalysis:
         self.path_output = path_output
 
         if bins is None:
+            # load the total cross section for each of the eft points in eft_points, including uncertainty
+            # This is needed to find how the expected number of events varies with the Wilson coefficient
+            self.nn = nn
+            self.truth = truth
+            self.dict_int = dict_int
+            self.data_eft = None
+            self.data_sm = None
+            self.nu = None
             self.xsec, self.xsec_sigma = self.xsec_unbinned()
-            self.find_pdf(path_eft_lhe)
+            self.find_pdf()
         else:
             self.bins = bins
 
@@ -349,38 +334,10 @@ class StatAnalysis:
 
         return mean, std, tc_data, z_score_binned
 
-    @staticmethod
-    def t_c_asimov(hypothesis, nu_i_eft, nu_i_sm):
-        """ Compute the binned test statistic with the Asimov dataset under either the SM or the EFT.
-
-        Parameters
-        ----------
-        hypothesis: the hypothesis under which t_c is to be computed
-        nu_i_eft: expected number of entries in bin i under the EFT
-        nu_i_sm: expected number of entries in bin i under the SM
-
-        Returns
-        -------
-        The binned test statistic under either the EFT or the SM depending on the hypothesis evaluated using the
-        Asimov dataset.
-        """
-        nu_c = np.sum(nu_i_eft)
-        nu_0 = np.sum(nu_i_sm)
-        if hypothesis == 'eft':
-            t_ac = nu_c - nu_0 - np.sum(nu_i_eft * np.log(nu_i_eft / nu_i_sm))
-            return t_ac
-        else:
-            t_ac = nu_c - nu_0 - np.sum(nu_i_sm * np.log(nu_i_eft / nu_i_sm))
-            return t_ac
-
     def p_value_asimov(self):
         z_score = (self.mean_tc_asi['sm'] - self.mean_tc_asi['eft']) / self.std_tc_asi['eft']
         p_value = 1 - norm.cdf(z_score)
         return z_score, p_value
-
-    @staticmethod
-    def gauss(x, mean, sigma):
-        return (1 / np.sqrt(2 * np.pi * sigma ** 2)) * np.exp(-(x - mean) ** 2 / (2 * sigma ** 2))
 
     def plot_tc_binned(self, c, n_tc=10000, ax=None):
 
@@ -415,6 +372,34 @@ class StatAnalysis:
         return ax
         #plt.savefig(path_save)
 
+    @staticmethod
+    def gauss(x, mean, sigma):
+        return (1 / np.sqrt(2 * np.pi * sigma ** 2)) * np.exp(-(x - mean) ** 2 / (2 * sigma ** 2))
+
+    @staticmethod
+    def t_c_asimov(hypothesis, nu_i_eft, nu_i_sm):
+        """ Compute the binned test statistic with the Asimov dataset under either the SM or the EFT.
+
+        Parameters
+        ----------
+        hypothesis: the hypothesis under which t_c is to be computed
+        nu_i_eft: expected number of entries in bin i under the EFT
+        nu_i_sm: expected number of entries in bin i under the SM
+
+        Returns
+        -------
+        The binned test statistic under either the EFT or the SM depending on the hypothesis evaluated using the
+        Asimov dataset.
+        """
+        nu_c = np.sum(nu_i_eft)
+        nu_0 = np.sum(nu_i_sm)
+        if hypothesis == 'eft':
+            t_ac = nu_c - nu_0 - np.sum(nu_i_eft * np.log(nu_i_eft / nu_i_sm))
+            return t_ac
+        else:
+            t_ac = nu_c - nu_0 - np.sum(nu_i_sm * np.log(nu_i_eft / nu_i_sm))
+            return t_ac
+
     # truth and nn methods
 
     def xsec_unbinned(self):
@@ -442,84 +427,119 @@ class StatAnalysis:
 
         a, _, _, _ = np.linalg.lstsq(coeff_mat, self.xsec, rcond=None)
         c = np.array([1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu])
-        xsec = np.dot(a, c)
-        return xsec * self.luminosity
+        xsec_eft = np.dot(a, c)
 
-    def get_tc_truth(self, expected_eft, expected_sm, events, c, hypothesis):
-        cug, cuu = c
+        cugre, cuu = 0, 0
+        c = np.array([1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu])
+        xsec_sm = np.dot(a, c)
 
-        dsigma_dmtt_eft = np.array([ExS.dsigma_dmtt(mtt, cug, cuu) for mtt in events])
-        dsigma_dmtt_sm = np.array([ExS.dsigma_dmtt(mtt, 0, 0) for mtt in events])
+        nu = {'sm': xsec_sm*self.luminosity, 'eft': xsec_eft*self.luminosity}
+        return nu
 
+    def get_tc_truth(self, hypothesis):
+        cug, cuu = dict_int.keys()
+
+        dsigma_dmtt_eft = []
+        for i, (cug, cuu) in enumerate(dict_int.keys()):
+            dsigma_dmtt_eft.append([ExS.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_eft[i]])
+
+        dsigma_dmtt_eft = np.array(dsigma_dmtt_eft)
+        dsigma_dmtt_sm = np.array([ExS.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_sm])
+
+        # likelihood ratio
         r_c = dsigma_dmtt_eft / dsigma_dmtt_sm
+
+        # log-likelihood ratio
         tau_c = np.log(r_c)
-        mean_tauc = np.mean(tau_c)
+        mean_tauc = np.mean(tau_c, axis=1).flatten()
+
+        # expected number of events
+        expected_eft = np.array([nu['eft'] for nu in self.nu])
+        expected_sm = np.array([nu['sm'] for nu in self.nu])
+
         mean_tc = expected_eft - expected_sm - expected_sm * mean_tauc if hypothesis == 'sm' else expected_eft - expected_sm - expected_eft * mean_tauc
         sigma_tc = np.sqrt(expected_eft * np.mean(tau_c ** 2)) if hypothesis == 'eft' else np.sqrt(
             expected_sm * np.mean(tau_c ** 2))
-        return mean_tc, sigma_tc, mean_tauc
 
-    def find_pdf(self, c, path_eft):
+        return mean_tc, sigma_tc
+
+    def get_tc_nn(self, network_size, nn_rep, hypothesis):
+
+        r_c = []
+        for i, (cug, cuu) in enumerate(dict_int.keys()):
+            ratio_list = []
+            for rep in range(1, nn_rep + 1):
+                pred_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_8/mc_run_{}'.format(rep)
+                mean, std = np.loadtxt(pred_path + '/scaling.dat')
+                data = self.data_sm if hypothesis is 'sm' else self.data_eft[i]
+                ratio = analyse.get_likelihood_ratio_NN(pred_path + '/trained_nn.pt', network_size, data,
+                                                        cug, cuu, mean, std)
+                ratio_list.append(ratio)
+            r_c.append(ratio_list)
+        r_c = np.array(r_c)  # r_c.shape = (n_eft_points, nn_rep, n_events)
+        tau_c = np.log(r_c)
+        mean_tauc = np.mean(tau_c, axis=2)  # mean_tauc = (n_eft_points, nn_rep)
+
+        # expected number of events
+        expected_eft = np.array([nu['eft'] for nu in self.nu])  # expected_eft.shape = (n_eft_points, )
+        expected_sm = np.array([nu['sm'] for nu in self.nu])
+
+        # to make broadcasting possible we add a new axis
+        expected_eft = np.expand_dims(expected_eft, axis=1)  # expected_eft.shape = (n_eft_points, 1)
+        expected_sm = np.expand_dims(expected_sm, axis=1)
+
+        mean_tc = expected_eft - expected_sm - expected_sm * mean_tauc if hypothesis == 'sm' else expected_eft - expected_sm - expected_eft * mean_tauc
+        sigma_tc = np.sqrt(expected_eft * np.mean(tau_c ** 2, axis=2)) if hypothesis == 'eft' else np.sqrt(
+            expected_sm * np.mean(tau_c ** 2, axis=2))
+        return mean_tc, sigma_tc  # mean_tc.shape = (n_eft_points, nn_rep)
+
+    def find_pdf(self):
         """
         Given the eft parameter(s) c, this function computes the mean and standard deviation of pdf(tc) under both
         the SM and the EFT. It uses the analytical likelihood ratio.
         :param c: nd_array that specifies the point in eft parameter space
         """
 
-        # compute the expected number of events given the eft param c
-        # TODO: rewrite this using the method in this class
-        expected_eft = exp_nevents.expected_nevents(c)
-        expected_sm = exp_nevents.expected_nevents(np.zeros(len(c)))
+        # Compute the expected number of events
+        self.nu = [self.expected_nevents(np.array(c)) for c in self.dict_int.keys()]
 
         # generate samples with mg5 if not yet available and store them at path.
         # path = lhe.generate_samples(c, self.output_path)
 
         path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
 
-        # load the lhe file and construct a data set
-        n = int(1e5) # parent dataset
-        s = int(1e4) # size of subset
-        data_eft = lhe.load_events(path_eft, n, s)
-        data_sm = lhe.load_events(path_sm, n, s)
-
-        data_eft = data_eft * 10 ** -3
-        data_sm = data_sm * 10 ** -3
+        # load the lhe file and construct the dataset of mtt
+        n = int(1e2) # parent dataset
+        s = int(1e1) # size of subset
+        self.data_eft = [lhe.load_events(path_eft, n, s) * 10 ** -3 for path_eft in self.dict_int.values()]
+        self.data_sm = lhe.load_events(path_sm, n, s) * 10 ** -3
 
         # compute the mean and std. dev. of the pdf(tc) under either the sm or the eft
-
-        if nn:  # mean_tc_eft.shape = (nn_rep, )
-            self.mean_tc_eft, self.sigma_tc_eft = get_tc_nn(expected_eft, expected_sm, data_eft, c,
-                                                            hypothesis='eft')
-            self.mean_tc_sm, self.sigma_tc_sm = get_tc_nn(expected_eft, expected_sm, data_sm, c,
-                                                          hypothesis='sm')
-        else:  # mean_tc_eft.shape = (1, )
-            self.mean_tc_eft, self.sigma_tc_eft, self.mean_tauc_eft = self.get_tc_truth(expected_eft, expected_sm, data_eft, c,
-                                                                             hypothesis='eft')
-            self.mean_tc_sm, self.sigma_tc_sm, self.mean_tauc_sm = self.get_tc_truth(expected_eft, expected_sm, data_sm, c,
-                                                                          hypothesis='sm')
+        if self.nn:  # mean_tc_eft.shape = (n_eft_points, nn_rep)
+            network_size = [1, 30, 30, 30, 30, 30, 1]
+            nn_rep = 40
+            self.mean_tc_eft, self.sigma_tc_eft = self.get_tc_nn(network_size, nn_rep, hypothesis='eft')
+            self.mean_tc_sm, self.sigma_tc_sm = self.get_tc_nn(network_size, nn_rep, hypothesis='sm')
+        else:  # mean_tc_eft.shape = (n_eft_points, )
+            self.mean_tc_eft, self.sigma_tc_eft = self.get_tc_truth(hypothesis='eft')
+            self.mean_tc_sm, self.sigma_tc_sm = self.get_tc_truth(hypothesis='sm')
 
         # given the mean and std. dev. the z-score can be computed
+        # for nn: self.z_score.shape = (n_eft_points, nn_rep)
+        # for truth: self.z_score.shape = (n_eft_points, )
         self.z_score = (self.mean_tc_sm - self.mean_tc_eft) / self.sigma_tc_eft
 
-        if nn:
-            with open(os.path.join(result_path, "z_scores_pdiag.dat"), "a") as f:
-                #  write the mean and stand. dev. taken over the nn_rep to a file
-                f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(np.mean(self.z_score)) + "\t" + str(np.std(self.z_score)) + "\n")
-            # with open(os.path.join(result_path, "tc_eft.dat"), "a") as f:
-            #     #  write the mean and stand. dev. taken over the nn_rep to a file
-            #     f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.mean_tc_eft) + "\t" + str(self.sigma_tc_eft) + "\n")
-            # with open(os.path.join(result_path, "tc_sm.dat"), "a") as f:
-            #     #  write the mean and stand. dev. taken over the nn_rep to a file
-            #     f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.mean_tc_sm) + "\t" + str(self.sigma_tc_sm) + "\n")
+        if self.nn:
+            #  write the mean and stand. dev. taken over the nn_rep to a file
+            with open(os.path.join(self.path_output, "z_scores_test.dat"), "a") as f:
+                for i, (cug, cuu) in enumerate(dict_int.keys()):
+                    line = "{}\t{}\t{}\t{}\n".format(cug, cuu, np.mean(self.z_score, axis=1)[i], np.std(self.z_score, axis=1)[i])
+                    f.write(line)
         else:
-            with open(os.path.join(result_path, "z_scores_pdiag.dat"), "a") as f:
-                f.write(str(c[0]) + "\t" + str(c[1]) + "\t" + str(self.z_score) + "\n")
-            # with open(os.path.join(result_path, "tc_eft.dat"), "a") as f:
-            #     #  write the mean and stand. dev. taken over the nn_rep to a file
-            #     f.write(str(expected_eft) + "\t" + str(expected_sm) + "\t" + str(self.mean_tc_eft) + "\t" + str(self.mean_tauc_eft) + "\t" + str(self.sigma_tc_eft) + "\n")
-            # with open(os.path.join(result_path, "tc_sm.dat"), "a") as f:
-            #     #  write the mean and stand. dev. taken over the nn_rep to a file
-            #     f.write(str(expected_eft) + "\t" + str(expected_sm) + "\t" + str(self.mean_tc_sm) + "\t" + str(self.mean_tauc_sm) + "\t" + str(self.sigma_tc_sm) + "\n")
+            with open(os.path.join(self.path_output, "z_scores_test.dat"), "a") as f:
+                for i, (cug, cuu) in enumerate(dict_int.keys()):
+                    line = "{}\t{}\t{}\n".format(cug, cuu, self.z_score[i])
+                    f.write(line)
 
 
 def plot_tc_accuracy(binned_analysis):
@@ -554,9 +574,12 @@ if __name__ == '__main__':
 
     # TODO: write a nice loop over the StatAnalysis instances here
 
-    binned = StatAnalysis(path_output="")
-    nevents = binned.expected_nevents(np.array([0, 0]))
-    print(nevents)
+    # input
+    dict_int = {(0, -0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_1.lhe',
+                (0, -0.45): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_2.lhe'}
+    path_output = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn'
+    binned = StatAnalysis(path_output=path_output, dict_int=dict_int, nn=True)
+
     sys.exit()
 
 
