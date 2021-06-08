@@ -73,12 +73,20 @@ if __name__ == '__main__':
     mc_run = sys.argv[1]
 
     # example input
-    dict_int = {(0, -0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_1.lhe',
-                (0, -0.45): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_2.lhe',
-                (0, -0.50): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_3.lhe'}
+    # dict_int = {(0, -0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_1.lhe',
+    #             (0, -0.45): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_2.lhe',
+    #             (0, -0.50): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_3.lhe',
+    #             (0, -0.55): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_4.lhe',
+    #             (0, -0.60): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/mcuu/eft_5.lhe'}
 
-    path_output_nn = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn'
-    path_output_truth = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth'
+    dict_int = {(0.01, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/pcug/eft_1.lhe',
+                (0.05, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/pcug/eft_2.lhe',
+                (0.1, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/pcug/eft_3.lhe',
+                (0.3, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/pcug/eft_4.lhe'}
+
+
+    path_output_nn = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/nn/cug'
+    path_output_truth = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/truth/cug'
 
     # run bounds nn
     bounds.StatAnalysis(path_output=path_output_nn, dict_int=dict_int, nn=True, mc_run=mc_run)
@@ -87,6 +95,6 @@ if __name__ == '__main__':
     bounds.StatAnalysis(path_output=path_output_truth, dict_int=dict_int, nn=False, mc_run=mc_run)
 
     # run bounds binned
-    run_bounds_binned()
+    #run_bounds_binned()
 
 
