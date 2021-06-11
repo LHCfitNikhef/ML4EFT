@@ -1,13 +1,17 @@
 import numpy as np
 import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from matplotlib import rc
 import os
 from scipy.stats import norm
 import math
-import xsec_cluster as ExS
-import analyse
-import lhelib.lhe as lhe
+
+#import own modules
+from . import xsec_cluster as axs
+from . import analyse
+from .lhelib import lhe
+
 
 matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
@@ -30,11 +34,22 @@ class StatAnalysis:
                   [0, 1.0], [0, 5.0], [0, 10.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],
                   [10.0, 2.0], [0.0, 0.0]]
 
-    luminosity = 6  # Units: pb^-1
 
-    def __init__(self, path_output, dict_int=None, nn=False, bins=None, truth=False, fit=False, limits=None, mc_run=None):
+    def __init__(self, paths, dict_int=None, nn=False, bins=None, truth=False, fit=True, mc_run=None, luminosity=600):
 
-        self.path_output = path_output
+
+        self.path_root = paths['root']
+        self.path_output = paths['output']
+        self.path_plots = paths['plots']
+
+        # make output directories
+        for i, path in enumerate(paths.values()):
+            if i == 0:
+                continue
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+        self.luminosity = luminosity
 
         if bins is None:
             # load the total cross section for each of the eft points in eft_points, including uncertainty
@@ -52,6 +67,7 @@ class StatAnalysis:
             self.mc_run = mc_run
             self.truth = truth
             self.dict_int = dict_int
+
             self.xsec, self.xsec_sigma = self.xsec_unbinned()
             self.find_pdf()
         else:
@@ -72,7 +88,11 @@ class StatAnalysis:
             self.tc_data = None
             self.z_score_binned_mc = None
 
-            self.cuu_plane, self.cug_plane, self.p_values_asi, self.z_scores_asi = self.binned_analysis(limits=limits)
+            self.cuu_plane = None
+            self.cug_plane = None
+            self.p_values_asi = None
+            self.z_scores_asi = None
+            #self.binned_analysis(limits=limits)
             #self.plot_binned_analysis()
             #self.plot_tc_binned(c)
 
@@ -109,7 +129,6 @@ class StatAnalysis:
 
         dataset = np.array(dataset)  # dataset.shape = (len(eft_points), len(bins))
 
-        os.makedirs(self.path_output)
         with open(os.path.join(self.path_output, "xsec_bin.npy"), 'wb') as f:
             np.save(f, dataset)
 
@@ -168,6 +187,13 @@ class StatAnalysis:
     def binned_analysis(self, limits=None, exact=False):
         """ Method to compute the z-score and p-value in the 2D eft plane specified by cug and cuu
 
+        Parameters
+        ----------
+        limits: array_like, shape (n, 2)
+            The range of the eft parameters to scan
+        exact: bool, default=False
+            Option to compute the bounds exactly using mc sampling. It is set to False by default.
+
         Returns
         -------
         cuu_plane: (M, N) ndarray
@@ -207,14 +233,14 @@ class StatAnalysis:
         p_values_asi = np.array(p_values_asi)
         z_scores_asi = np.array(z_scores_asi)
 
-        p_values_asi = np.reshape(p_values_asi, (len(cuu_list), len(cug_list)))
-        z_scores_asi = np.reshape(z_scores_asi, (len(cuu_list), len(cug_list)))
-        cuu_plane, cug_plane = np.meshgrid(cuu_list, cug_list, indexing='ij')
+        self.p_values_asi = np.reshape(p_values_asi, (len(cuu_list), len(cug_list)))
+        self.z_scores_asi = np.reshape(z_scores_asi, (len(cuu_list), len(cug_list)))
+        self.cuu_plane, self.cug_plane = np.meshgrid(cuu_list, cug_list, indexing='ij')
 
         # idx = np.argwhere(np.diff(np.sign(p_values_asi - 0.05))).flatten()
         # c_exc = ()
 
-        return cuu_plane, cug_plane, p_values_asi, z_scores_asi
+        #return cuu_plane, cug_plane, p_values_asi, z_scores_asi
 
     def expected_entries(self, c):
         nu_i_eft = self.expected_events_binned(c).astype(int)
@@ -240,6 +266,7 @@ class StatAnalysis:
         # total number of expected events is found by taking the sum over the binned expected countings
         expected_eft = np.sum(self.nu_i['eft'])
         expected_sm = np.sum(self.nu_i['sm'])
+
 
         # comment out below to run the cross-check using MC data with nu_i equal to parent nu_i
 
@@ -329,6 +356,7 @@ class StatAnalysis:
     def plot_tc_binned(self, c, n_tc=10000, ax=None):
 
         self.nu_i = self.expected_entries(c)
+
         self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc(n_tc=n_tc)
         self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
 
@@ -356,8 +384,10 @@ class StatAnalysis:
         ax.text(0.05, 0.19, r'$\rm{z-score} = %.2f$' % z_score, fontsize=20, transform=ax.transAxes)
         ax.text(0.05, 0.12, r'$\rm{cuu} = %.2f $' % c[1], fontsize=20, transform=ax.transAxes)
         ax.text(0.05, 0.05, r'$\rm{cug} = %.2f $' % c[0], fontsize=20, transform=ax.transAxes)
+
+        #add unbinned distribution
+
         return ax
-        #plt.savefig(path_save)
 
     @staticmethod
     def gauss(x, mean, sigma):
@@ -403,7 +433,19 @@ class StatAnalysis:
             data_sigma.append(sigma_y)
         data = np.array(data)
         data_sigma = np.array(data_sigma)
+
+        # if not os.path.exists(self.path_output):
+        #     os.makedirs(self.path_output)
+        # with open(os.path.join(self.path_output, "xsec_unbinned.npy"), 'wb') as f:
+        #     np.save(f, data)
+
         return data, data_sigma
+
+    def load_xsec_unbinned(self):
+        path_xsec_binned = os.path.join(self.path_output, "xsec_unbinned.npy")
+        with open(path_xsec_binned, 'rb') as f:
+            xsec = np.load(f)
+        return xsec
 
     def expected_nevents(self, c):
         cugre = c[0]
@@ -426,11 +468,21 @@ class StatAnalysis:
     def get_tc_truth(self, hypothesis):
 
         dsigma_dmtt_eft = []
+        dsigma_dmtt_sm = []
         for i, (cug, cuu) in enumerate(self.dict_int.keys()):
-            dsigma_dmtt_eft.append([ExS.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_eft[i]])
+            if hypothesis == 'eft':
+                dsigma_dmtt_eft.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_eft[i]])
+                dsigma_dmtt_sm.append([axs.dsigma_dmtt(mtt, 0, 0) for mtt in self.data_eft[i]])
+            else:  # hypothesis = sm
+                dsigma_dmtt_eft.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_sm])
+
+        if hypothesis == 'eft':
+            dsigma_dmtt_sm = np.array(dsigma_dmtt_sm)
+        else:   # hypothesis = sm
+            dsigma_dmtt_sm = np.array([axs.dsigma_dmtt(mtt, 0, 0) for mtt in self.data_sm])
+            dsigma_dmtt_sm = np.expand_dims(dsigma_dmtt_sm, axis=0)
 
         dsigma_dmtt_eft = np.array(dsigma_dmtt_eft)
-        dsigma_dmtt_sm = np.array([ExS.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_sm])
 
         # likelihood ratio
         r_c = dsigma_dmtt_eft / dsigma_dmtt_sm
@@ -532,16 +584,34 @@ class StatAnalysis:
                     f.write(line)
 
 
-def plot_tc_accuracy(binned_analysis, path_save):
-    ncols = 2
-    nrows = math.ceil(len(binned_analysis)/ncols)
+def plot_tc_accuracy(binned_analyses, c=np.array([0, 0.5]), n=10000):
+    """ This function shows a comparison between the asymptotic distribution and the exact sampling based approach.
+    When multiple StatAnalysis instances are passed as an array to binned_analysis, the comparison is made for each of them.
+
+    Parameters
+    ----------
+    binned_analysis: array_like
+        Array that contains StatAnalysis instances
+    c: array_like, optional
+        EFT point at which to construct the distribution of the test statistic tc
+    n: int, optional, default=10000
+        Number of samples that make up the histogram
+
+    Returns
+    -------
+    object
+        figure object
+    """
+    nplots = len(binned_analyses)
+    ncols = 2 if nplots > 1 else 1
+    nrows = math.ceil(len(binned_analyses)/ncols)
     fig = plt.figure(figsize=(ncols * 10, nrows * 6))
-    for i, bin in enumerate(binned_analysis):
+    for i, bin in enumerate(binned_analyses):
         ax = fig.add_subplot(nrows, ncols, i + 1)
-        plot = bin.plot_tc_binned(np.array([0, 0.5]), n_tc=100000, ax=ax)
-        plot.set_title(r'$\rm{Bin}\;%d$'%i)
+        plot = bin.plot_tc_binned(c, n_tc=n, ax=ax)
+        plot.set_title(r'$\rm{Binning}\;%d$'%i)
     fig.tight_layout()
-    fig.savefig(path_save)
+    return fig
 
 
 def plot_nu_i(binned, path_save):

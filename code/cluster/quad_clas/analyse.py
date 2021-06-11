@@ -10,9 +10,9 @@ import matplotlib.gridspec as gridspec
 from matplotlib import animation
 
 # import own pacakges
-from quad_classifier_cluster import PredictorQuadratic
-from quad_classifier_cluster import PredictorLinear
-import xsec_cluster as ExS
+from .quad_classifier_cluster import PredictorQuadratic
+from .quad_classifier_cluster import PredictorLinear
+from . import xsec_cluster as axs
 
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
@@ -107,7 +107,7 @@ def plot_predictions_1d(network_size):
                                                  alpha=0.3)
 
                 # Plot the analytical result
-                x, y = ExS.plot_likelihood_ratio_1D(mtt_min * 10 ** -3, mtt_max * 10 ** -3, ctg, cuu)
+                x, y = axs.plot_likelihood_ratio_1D(mtt_min * 10 ** -3, mtt_max * 10 ** -3, ctg, cuu)
                 x = np.array(x)
                 y = np.array(y)
                 ana_plot, = ax.plot(x * 1e3, y, color='red', linewidth=0.75)
@@ -180,7 +180,7 @@ def get_pull(network_size, ctg, cuu, mtt):
     f_pred_median = np.median(f_pred, axis=0)
     f_pred_std = np.std(f_pred, axis=0)
 
-    theory = 1 / (1 + ExS.likelihood_ratio_1D_v(mtt, ctg.numpy(), cuu.numpy()))
+    theory = 1 / (1 + axs.likelihood_ratio_1D_v(mtt, ctg.numpy(), cuu.numpy()))
     pull = (theory - f_pred_median)/f_pred_std
     return pull
 
@@ -353,7 +353,7 @@ def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
         n_alpha_n_beta = n_alpha ** 2 + n_beta ** 2
         return xx, yy, x_span, y_span, f_pred, n_alpha, n_alpha_n_beta
 
-    f_ana = ExS.plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, cuu)
+    f_ana = axs.plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, cuu)
 
     if quadratic:
         n_beta = loaded_model.n_beta(grid.float())
@@ -373,7 +373,7 @@ def animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std):
     ax = plt.axes(xlim=(mtt_min, mtt_max), ylim=(0, 1))
 
     # Compute the analytic likelihood ratio and plot
-    x, y = ExS.plot_likelihood_ratio_1D(mtt_min * 10 ** -3, mtt_max * 10 ** -3, ctg, cuu)
+    x, y = axs.plot_likelihood_ratio_1D(mtt_min * 10 ** -3, mtt_max * 10 ** -3, ctg, cuu)
     x = np.array(x)
     y = np.array(y)
     ax.plot(x * 1e3, y, '--', c='red', label='Analytical result')
@@ -428,7 +428,7 @@ def animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, cuu, 
         x_spacing = 10
         y_spacing = 0.01
         # First set up the figure, the axis, and the plot element we want to animate
-        reference.f_ana = ExS.plot_f_ana(mtt_min, mtt_max, reference.y_min, reference.y_max, x_spacing, y_spacing, ctg, cuu, np_order=2)
+        reference.f_ana = axs.plot_f_ana(mtt_min, mtt_max, reference.y_min, reference.y_max, x_spacing, y_spacing, ctg, cuu, np_order=2)
         reference.f_ana = np.ma.masked_where(reference.f_ana == 1.0, reference.f_ana)
 
     reference()
@@ -484,7 +484,7 @@ def plot_mg5_ana_mtt(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
     :param path_to_file: path to lhe file
     :param save_path: path where the plot should be stored
     """
-    ExS.plotData(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path)
+    axs.plotData(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path)
 
 def plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
     """
@@ -497,7 +497,7 @@ def plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
     :param path_to_file: path to lhe file
     :param save_path: path where the plot should be stored
     """
-    ExS.plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path)
+    axs.plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path)
 
 
 if __name__ == '__main__':
