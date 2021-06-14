@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>quad_classifier module &mdash; ML4EFT  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ML4EFT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="context.html">Title</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ML4EFT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>quad_classifier module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/quad_classifier.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-quad_classifier">
+<span id="quad-classifier-module"></span><h1>quad_classifier module<a class="headerlink" href="#module-quad_classifier" title="Permalink to this headline">¶</a></h1>
+<p>Training of the Quadratic Classifier</p>
+<dl class="py class">
+<dt id="quad_classifier.EventDataset">
+<em class="property">class </em><code class="sig-prename descclassname">quad_classifier.</code><code class="sig-name descname">EventDataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">c</span></em>, <em class="sig-param"><span class="n">path_dict</span></em>, <em class="sig-param"><span class="n">n_dat</span></em>, <em class="sig-param"><span class="n">hypothesis</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.EventDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.Dataset</span></code></p>
+<dl class="py method">
+<dt id="quad_classifier.EventDataset.find_min_max">
+<code class="sig-name descname">find_min_max</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.EventDataset.find_min_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the minimum and maximum of the data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_classifier.EventDataset.get_mean_std">
+<code class="sig-name descname">get_mean_std</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.EventDataset.get_mean_std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the mean and standard deviation of the data and save to disk</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_classifier.EventDataset.invariant_mass">
+<code class="sig-name descname">invariant_mass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p1</span></em>, <em class="sig-param"><span class="n">p2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.EventDataset.invariant_mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the invariant mass of an event</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_classifier.EventDataset.lhe_loader">
+<code class="sig-name descname">lhe_loader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.EventDataset.lhe_loader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Les Houches Event file reader</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_classifier.EventDataset.load_events">
+<code class="sig-name descname">load_events</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.EventDataset.load_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the datasets (eft and sm) from the les Houches event files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_classifier.EventDataset.rapidity">
+<code class="sig-name descname">rapidity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p1</span></em>, <em class="sig-param"><span class="n">p2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.EventDataset.rapidity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the rapidity of an event</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_classifier.EventDataset.rescale">
+<code class="sig-name descname">rescale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mean</span></em>, <em class="sig-param"><span class="n">std</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.EventDataset.rescale" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="quad_classifier.EventDataset.visualize">
+<code class="sig-name descname">visualize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.EventDataset.visualize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="quad_classifier.MLP">
+<em class="property">class </em><code class="sig-prename descclassname">quad_classifier.</code><code class="sig-name descname">MLP</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">architecture</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.MLP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Set up the NN architecture</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>act_fn - Object of the activation function that should be used as non-linearity in the network.
+input_size - Size of the input images in pixels
+num_classes - Number of classes we want to predict
+hidden_sizes - A list of integers specifying the hidden layer sizes in the NN</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="quad_classifier.MLP.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.MLP.forward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="quad_classifier.MLP.training">
+<code class="sig-name descname">training</code><em class="property">: bool</em><a class="headerlink" href="#quad_classifier.MLP.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="quad_classifier.PredictorLinear">
+<em class="property">class </em><code class="sig-prename descclassname">quad_classifier.</code><code class="sig-name descname">PredictorLinear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">architecture</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.PredictorLinear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Returns the function f(x,c) from the paper (Wulzer et al.) in the linear case</p>
+<dl class="py method">
+<dt id="quad_classifier.PredictorLinear.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.PredictorLinear.forward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="quad_classifier.PredictorLinear.training">
+<code class="sig-name descname">training</code><em class="property">: bool</em><a class="headerlink" href="#quad_classifier.PredictorLinear.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="quad_classifier.PredictorQuadratic">
+<em class="property">class </em><code class="sig-prename descclassname">quad_classifier.</code><code class="sig-name descname">PredictorQuadratic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">architecture</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.PredictorQuadratic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Returns the function f(x,c) from the paper (Wulzer et al.) in the quadratic case</p>
+<dl class="py method">
+<dt id="quad_classifier.PredictorQuadratic.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">ctg</span></em>, <em class="sig-param"><span class="n">cuu</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.PredictorQuadratic.forward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="quad_classifier.PredictorQuadratic.training">
+<code class="sig-name descname">training</code><em class="property">: bool</em><a class="headerlink" href="#quad_classifier.PredictorQuadratic.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="quad_classifier.loss_fn">
+<code class="sig-prename descclassname">quad_classifier.</code><code class="sig-name descname">loss_fn</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">outputs</span></em>, <em class="sig-param"><span class="n">labels</span></em>, <em class="sig-param"><span class="n">w_e</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.loss_fn" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>outputs</strong> – outputs.shape = (batch_size, 1), output in (0, 1)</p></li>
+<li><p><strong>labels</strong> – labels.shape = (batch_size, 1), labels in {0, 1}</p></li>
+<li><p><strong>w_e</strong> – w_e.shape = (batch_size, 1), w_e in [0, infty)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>contribution to loss from a sample x ~ pdf(x|H_0,1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="quad_classifier.main">
+<code class="sig-prename descclassname">quad_classifier.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">mc_run</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">run_dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="quad_classifier.plot_training_report">
+<code class="sig-prename descclassname">quad_classifier.</code><code class="sig-name descname">plot_training_report</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">train_loss</span></em>, <em class="sig-param"><span class="n">val_loss</span></em>, <em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.plot_training_report" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="quad_classifier.train_classifier">
+<code class="sig-prename descclassname">quad_classifier.</code><code class="sig-name descname">train_classifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">architecture</span></em>, <em class="sig-param"><span class="n">data_train</span></em>, <em class="sig-param"><span class="n">data_val</span></em>, <em class="sig-param"><span class="n">epochs</span></em>, <em class="sig-param"><span class="n">quadratic</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.train_classifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="quad_classifier.training_loop">
+<code class="sig-prename descclassname">quad_classifier.</code><code class="sig-name descname">training_loop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_epochs</span></em>, <em class="sig-param"><span class="n">optimizer</span></em>, <em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">train_loader</span></em>, <em class="sig-param"><span class="n">val_loader</span></em>, <em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_classifier.training_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Jaco ter Hoeve
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
