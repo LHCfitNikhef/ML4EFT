@@ -34,9 +34,7 @@ class StatAnalysis:
                   [1.0, 0], [5.0, 0], [10.0, 0], [-2.0, -10.0], [-1.0, -5.0], [-0.5, -1.0], [0.5, 1.0], [1.0, 5.0],
                   [2.0, 10.0], [0.0, 0.0]]
 
-
     def __init__(self, paths, dict_int=None, nn=False, bins=None, truth=False, fit=True, mc_run=None, luminosity=600):
-
 
         self.path_root = paths['root']
         self.path_output = paths['output']

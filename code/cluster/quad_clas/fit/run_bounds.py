@@ -1,5 +1,6 @@
 import os, sys
-import quad_clas.bounds as bounds
+from ..core import bounds as bounds
+
 
 root_path = '/data/theorie/jthoeve/ML4EFT/'
 output_path = os.path.join(root_path, 'output')

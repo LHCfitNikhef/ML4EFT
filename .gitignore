@@ -282,7 +282,9 @@ TSWLatexianTemp*
 #Directories
 /code/cluster/quad_clas/lhapdf_install_folder/
 /code/cluster/quad_clas/qc_results/trained_nn/
+/code/cluster/quad_clas/temp/
 /.idea
 
 #Cluster output files
 *.pbs.*
+
