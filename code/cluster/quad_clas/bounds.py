@@ -30,9 +30,9 @@ class StatAnalysis:
     """
 
     # points in EFT parameter space used to find the dependence of the cross section on the Wilson coefficients
-    eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -10.0], [0, -5.0], [0, -1.0],
-                  [0, 1.0], [0, 5.0], [0, 10.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],
-                  [10.0, 2.0], [0.0, 0.0]]
+    eft_points = [[0, -10.0], [0, -5.0], [0, -1.0], [0, 1.0], [0, 5.0], [0, 10.0], [-10.0, 0], [-5.0, 0], [-1.0, 0],
+                  [1.0, 0], [5.0, 0], [10.0, 0], [-2.0, -10.0], [-1.0, -5.0], [-0.5, -1.0], [0.5, 1.0], [1.0, 5.0],
+                  [2.0, 10.0], [0.0, 0.0]]
 
 
     def __init__(self, paths, dict_int=None, nn=False, bins=None, truth=False, fit=True, mc_run=None, luminosity=600):
@@ -68,7 +68,10 @@ class StatAnalysis:
             self.truth = truth
             self.dict_int = dict_int
 
-            self.xsec, self.xsec_sigma = self.xsec_unbinned()
+            if fit is True:
+                self.xsec, self.xsec_sigma = self.xsec_unbinned()
+            else:
+                self.xsec = self.load_xsec_unbinned()
             self.find_pdf()
         else:
             self.bins = bins
@@ -92,9 +95,7 @@ class StatAnalysis:
             self.cug_plane = None
             self.p_values_asi = None
             self.z_scores_asi = None
-            #self.binned_analysis(limits=limits)
-            #self.plot_binned_analysis()
-            #self.plot_tc_binned(c)
+
 
     # binned methods
 
@@ -106,7 +107,7 @@ class StatAnalysis:
         # define an empty list dataset that is going to be filled with the cross section in each bin
         dataset = []
 
-        for i, eft_point in enumerate(self.eft_points):
+        for i in range(len(self.eft_points)):
 
             #  path to lhe file
             path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(i, i)
@@ -152,15 +153,15 @@ class StatAnalysis:
         a, _, _, _ = np.linalg.lstsq(coeff_mat, dataset, rcond=None)
 
         # find the x_sec per bin at the specified point in eft parameter space
-        cugre, cuu = c[0], c[1]
-        eft_point = np.array([1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu])
+        cuu, cug = c[0], c[1]
+        eft_point = np.array([1, cug, cug ** 2, cuu, cuu ** 2, cug * cuu])
         x_sec = np.einsum('ij,i', a, eft_point)
         return x_sec * self.luminosity
 
     def coefficient_matrix(self):
         coeff_mat = []
-        for cugre, cuu in self.eft_points:
-            row = [1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu]
+        for cuu, cug in self.eft_points:
+            row = [1, cug, cug ** 2, cuu, cuu ** 2, cug * cuu]
             coeff_mat.append(row)
         coeff_mat = np.array(coeff_mat)
         return coeff_mat
@@ -184,7 +185,7 @@ class StatAnalysis:
         ax.set_title(r'$\rm{z-score\;(asymptotic)}$', fontsize=20)
         plt.savefig(path_save)
 
-    def binned_analysis(self, limits=None, exact=False):
+    def binned_analysis(self, extent=None, exact=False):
         """ Method to compute the z-score and p-value in the 2D eft plane specified by cug and cuu
 
         Parameters
@@ -207,12 +208,12 @@ class StatAnalysis:
         """
         p_values_asi = []
         z_scores_asi = []
-        if limits is None:
+        if extent is None:
             cuu_list = np.linspace(-5, 5, 20)
             cug_list = np.linspace(-0.15, 1, 10)
         else:
-            cuu_min, cuu_max = limits[0, :]
-            cug_min, cug_max = limits[1, :]
+            cuu_min, cuu_max = extent[0, :]
+            cug_min, cug_max = extent[1, :]
             cuu_list = np.linspace(cuu_min, cuu_max, 200)
             cug_list = np.linspace(cug_min, cug_max, 200)
 
@@ -238,9 +239,6 @@ class StatAnalysis:
         self.cuu_plane, self.cug_plane = np.meshgrid(cuu_list, cug_list, indexing='ij')
 
         # idx = np.argwhere(np.diff(np.sign(p_values_asi - 0.05))).flatten()
-        # c_exc = ()
-
-        #return cuu_plane, cug_plane, p_values_asi, z_scores_asi
 
     def expected_entries(self, c):
         nu_i_eft = self.expected_events_binned(c).astype(int)
@@ -436,8 +434,8 @@ class StatAnalysis:
 
         # if not os.path.exists(self.path_output):
         #     os.makedirs(self.path_output)
-        # with open(os.path.join(self.path_output, "xsec_unbinned.npy"), 'wb') as f:
-        #     np.save(f, data)
+        with open(os.path.join(self.path_output, "xsec_unbinned.npy"), 'wb') as f:
+            np.save(f, data)
 
         return data, data_sigma
 
@@ -448,6 +446,7 @@ class StatAnalysis:
         return xsec
 
     def expected_nevents(self, c):
+        #TODO: change the order
         cugre = c[0]
         cuu = c[1]
 
@@ -604,7 +603,7 @@ def plot_tc_accuracy(binned_analyses, c=np.array([0, 0.5]), n=10000):
     """
     nplots = len(binned_analyses)
     ncols = 2 if nplots > 1 else 1
-    nrows = math.ceil(len(binned_analyses)/ncols)
+    nrows = math.ceil(nplots/ncols)
     fig = plt.figure(figsize=(ncols * 10, nrows * 6))
     for i, bin in enumerate(binned_analyses):
         ax = fig.add_subplot(nrows, ncols, i + 1)
