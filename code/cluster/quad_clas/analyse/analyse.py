@@ -101,6 +101,19 @@ class Analyse:
         return binned_analyses
 
     def read_z_scores(self, path):
+        """
+        Reads the z-scores
+
+        Parameters
+        ----------
+        path: str
+            location of the z-scores
+
+        Returns
+        -------
+        list
+            list of the z-scores
+        """
         z_scores = []
         for i in range(1, self.mc_runs + 1):
             loc = os.path.join(path, "mc_run_{}/z_scores.dat".format(i))
@@ -153,23 +166,25 @@ class Analyse:
 
         labels = []
         contours = []
+        colors = ['C2', 'C3', 'C4']
         if self.binned_analyses is not None:
             sigma = 0.8
             for i, binnings in enumerate(self.binned_analyses):
                 data_smoothed = gaussian_filter(binnings.z_scores_asi, sigma)
-                contour = ax.contour(cuu_plane, cug_plane, data_smoothed, levels=np.array([1.64]))
+                contour = ax.contour(binnings.cuu_plane, binnings.cug_plane, data_smoothed, levels=np.array([1.64]), colors=colors[i % len(colors)])
                 h0, _ = contour.legend_elements()
                 contours.append(h0[0])
                 labels.append(r'$\rm{Binning\;%d}$' % i)
 
         self.z_scores_truth, self.z_scores_nn = self.load_z_scores()
+
         ellipse_param_truth, ellipse_param_nn = self.fit_ellipse()
 
         if self.truth:
             cntr_truth = ax.contour(cuu_plane, cug_plane,
                                     self.ellipse(cuu_plane, cug_plane, *ellipse_param_truth),
                                     levels=[1.64],
-                                    colors='C1')
+                                    colors='C0')
             h0, _ = cntr_truth.legend_elements()
             contours.append(h0[0])
             labels.append(r'$\rm{Truth}$')
@@ -183,12 +198,9 @@ class Analyse:
             contours.append(h0[0])
             labels.append(r'$\rm{NN}$')
 
-        # a = np.array([7.20387174, 129.1453496, -6.57299899])
-        # b = np.array([9.12224061, 47.0915748, 0.0468278945])
 
         # plot settings
         ax.legend(contours, labels, fontsize=15, frameon=False, loc='best')
-        ax.set_ylim(-0.2, 0.2)
         ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
         ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
@@ -221,13 +233,13 @@ class Analyse:
             a_truth = None
 
         if self.nn:
-            cuu = self.z_scores_truth.cuu.values
-            cug = self.z_scores_truth.cug.values
+            cuu = self.z_scores_nn.cuu.values
+            cug = self.z_scores_nn.cug.values
 
-            eft_points = np.array([cug, cuu]).T
+            eft_points = np.array([cuu, cug]).T
 
-            z_score_nn = self.z_scores_truth['z-score'].values
-            z_score_unc_nn = self.z_scores_truth['uncertainty'].values
+            z_score_nn = self.z_scores_nn['z-score'].values
+            z_score_unc_nn = self.z_scores_nn['uncertainty'].values
 
             coeff_mat = self.coefficient_matrix(eft_points)
             a_nn, _, _, _ = np.linalg.lstsq(coeff_mat, z_score_nn, rcond=None)

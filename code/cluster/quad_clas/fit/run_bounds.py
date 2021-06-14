@@ -2,61 +2,52 @@ import os, sys
 from ..core import bounds as bounds
 
 
-root_path = '/data/theorie/jthoeve/ML4EFT/'
-output_path = os.path.join(root_path, 'output')
-plots_path = os.path.join(output_path, 'plots')
-paths = {'root': root_path, 'output': output_path, 'plots': plots_path}
+class ScanBounds:
+    """
+    This python class object scans through EFT parameter space and computes the z-score.
+    """
 
-# interpolation dictionary for nn and truth analysis
-dict_int = {(0, -0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_1.lhe',
-                (0, -0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_2.lhe',
-                (0, -0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_3.lhe',
-                (0, -0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_4.lhe',
-                (0, 0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_5.lhe',
-                (0, 0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_6.lhe',
-                (0, 0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_7.lhe',
-                (0, 0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_8.lhe',
-                (-0.15, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_9.lhe',
-                (-0.12, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_10.lhe',
-                (-0.09, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_11.lhe',
-                (-0.06, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_12.lhe',
-                (0.06, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_13.lhe',
-                (0.09, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_14.lhe',
-                (0.12, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_15.lhe',
-                (0.15, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_16.lhe',
-                (-0.07, -0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_17.lhe',
-                (-0.06, -0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_18.lhe',
-                (-0.05, -0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_19.lhe',
-                (-0.04, -0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_20.lhe',
-                (0.04, 0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_21.lhe',
-                (0.05, 0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_22.lhe',
-                (0.06, 0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_23.lhe',
-                (0.07, 0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_24.lhe'
-                }
+    def __init__(self, root_path, dict_int, mc_run, luminosity, truth=True, nn=True, fit=True):
+        """
 
+        Parameters
+        ----------
+        root_path: str
+            location to root directory
+        dict_int: dict
+            dictionary with eft points as keys and location of the corresponding lhe-file as values
+        mc_run: int
+            labels the run. Each run gives an independent replica.
+        luminosity: float
+            luminosity of the experiment in pb^-1
+        truth: bool
+            Includes the truth scanning
+        nn: bool
+            Includes the nn scanning
+        fit: bool
+            Should be set to true for every new scan. After one run, it can be set to False.
+        """
 
-def run_truth_analysis(mc_run, fit, luminosity):
-    paths['output'] = os.path.join(output_path, 'truth')
-    truth = bounds.StatAnalysis(paths, dict_int=dict_int, nn=False, mc_run=mc_run, fit=fit, luminosity=luminosity)
-    return truth
+        self.root_path = root_path
+        self.output_path = os.path.join(self.root_path, 'output')
+        self.plots_path = os.path.join(self.output_path, 'plots')
+        self.paths = {'root': self.root_path, 'output': self.output_path, 'plots': self.plots_path}
+        self.dict_int = dict_int
+        self.luminosity = luminosity
+        self.fit = fit
 
+        self.mc_run = mc_run
+        self.truth = truth
+        self.nn = nn
 
-def run_nn_analysis(mc_run, fit, luminosity):
-    paths['output'] = os.path.join(output_path, 'nn')
-    nn = bounds.StatAnalysis(paths, dict_int=dict_int, nn=True, mc_run=mc_run, fit=fit, luminosity=luminosity)
-    return nn
+        # start the scanning
+        self.run_scan()
 
+    def run_scan(self):
 
-if __name__ == '__main__':
-
-    mc_run = sys.argv[1]
-
-    #################
-    # truth analysis
-    #################
-    truth_analysis = run_truth_analysis(mc_run, fit=True, luminosity=6)
-
-    #################
-    # nn analysis
-    #################
-    #nn_analysis = run_nn_analysis(mc_run, fit=True, luminosity=6)
+        if self.truth:
+            self.paths['output'] = os.path.join(self.output_path, 'truth')
+            bounds.StatAnalysis(self.paths, dict_int=self.dict_int, nn=self.nn, mc_run=self.mc_run, fit=self.fit, luminosity=self.luminosity)
+        if self.nn:
+            self.paths['output'] = os.path.join(self.output_path, 'nn')
+            bounds.StatAnalysis(self.paths, dict_int=self.dict_int, nn=True, mc_run=self.mc_run, fit=self.fit, luminosity=self.luminosity)

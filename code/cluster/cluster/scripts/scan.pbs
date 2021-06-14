@@ -1,4 +1,4 @@
 source /data/theorie/jthoeve/miniconda3/etc/profile.d/conda.sh
 conda activate eels_kk
 
-python /data/theorie/jthoeve/ML4EFT/quad_clas/fit/run_bounds.py ${ARG}
+python /data/theorie/jthoeve/ML4EFT/main.py ${ARG}

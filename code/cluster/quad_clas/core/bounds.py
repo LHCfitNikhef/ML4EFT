@@ -106,7 +106,7 @@ class StatAnalysis:
         dataset = []
 
         for i in range(len(self.eft_points)):
-
+            #TODO: make this more general
             #  path to lhe file
             path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(i, i)
             if 5 < i < 12:
@@ -147,7 +147,7 @@ class StatAnalysis:
 
         # solve the linear equation xsec = coeff_matrix * a for a
 
-        # TODO: rewrite the blow so that the fit does not have to be done each time the function is called
+        # TODO: rewrite the below so that the fit does not have to be done each time the function is called
         a, _, _, _ = np.linalg.lstsq(coeff_mat, dataset, rcond=None)
 
         # find the x_sec per bin at the specified point in eft parameter space
@@ -215,9 +215,9 @@ class StatAnalysis:
             cuu_list = np.linspace(cuu_min, cuu_max, 200)
             cug_list = np.linspace(cug_min, cug_max, 200)
 
-        for cuu in cuu_list:
-            for cug in cug_list:
-                c = np.array([cug, cuu])
+        for cug in cug_list:
+            for cuu in cuu_list:
+                c = np.array([cuu, cug])
                 self.nu_i = self.expected_entries(c)
 
                 if exact:
@@ -232,9 +232,10 @@ class StatAnalysis:
         p_values_asi = np.array(p_values_asi)
         z_scores_asi = np.array(z_scores_asi)
 
-        self.p_values_asi = np.reshape(p_values_asi, (len(cuu_list), len(cug_list)))
-        self.z_scores_asi = np.reshape(z_scores_asi, (len(cuu_list), len(cug_list)))
-        self.cuu_plane, self.cug_plane = np.meshgrid(cuu_list, cug_list, indexing='ij')
+        self.p_values_asi = np.reshape(p_values_asi, (len(cug_list), len(cuu_list)))
+        self.z_scores_asi = np.reshape(z_scores_asi, (len(cug_list), len(cuu_list)))
+        self.cuu_plane, self.cug_plane = np.meshgrid(cuu_list, cug_list)
+
 
         # idx = np.argwhere(np.diff(np.sign(p_values_asi - 0.05))).flatten()
 
