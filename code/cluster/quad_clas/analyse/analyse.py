@@ -145,7 +145,7 @@ class Analyse:
             z_scores_grouped_nn = None
 
         if self.truth:
-            path = os.path.join(self.output_path, 'truth')
+            path = os.path.join(self.output_path, 'truth_v2')
             z_scores = self.read_z_scores(path)
             z_scores = pd.DataFrame(z_scores, columns=['cug', 'cuu', 'z-score'])
             z_scores_grouped = z_scores.groupby(['cug', 'cuu']).agg({'z-score': ['mean', self.stdom]})

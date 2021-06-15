@@ -14,33 +14,38 @@ if __name__ == "__main__":
         mc_run = sys.argv[1]
 
         # interpolation dictionary for nn and truth analysis
-        dict_int = {(0, -0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_1.lhe',
-                        (0, -0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_2.lhe',
-                        (0, -0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_3.lhe',
-                        (0, -0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_4.lhe',
-                        (0, 0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_5.lhe',
-                        (0, 0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_6.lhe',
-                        (0, 0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_7.lhe',
-                        (0, 0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_8.lhe',
-                        (-0.15, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_9.lhe',
-                        (-0.12, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_10.lhe',
-                        (-0.09, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_11.lhe',
-                        (-0.06, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_12.lhe',
-                        (0.06, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_13.lhe',
-                        (0.09, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_14.lhe',
-                        (0.12, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_15.lhe',
-                        (0.15, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_16.lhe',
-                        (-0.07, -0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_17.lhe',
-                        (-0.06, -0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_18.lhe',
-                        (-0.05, -0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_19.lhe',
-                        (-0.04, -0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_20.lhe',
-                        (0.04, 0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_21.lhe',
-                        (0.05, 0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_22.lhe',
-                        (0.06, 0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_23.lhe',
-                        (0.07, 0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_24.lhe'
-                        }
+        # dict_int = {(0, -0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_1.lhe',
+        #                 (0, -0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_2.lhe',
+        #                 (0, -0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_3.lhe',
+        #                 (0, -0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_4.lhe',
+        #                 (0, 0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_5.lhe',
+        #                 (0, 0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_6.lhe',
+        #                 (0, 0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_7.lhe',
+        #                 (0, 0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_8.lhe',
+        #                 (-0.15, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_9.lhe',
+        #                 (-0.12, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_10.lhe',
+        #                 (-0.09, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_11.lhe',
+        #                 (-0.06, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_12.lhe',
+        #                 (0.06, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_13.lhe',
+        #                 (0.09, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_14.lhe',
+        #                 (0.12, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_15.lhe',
+        #                 (0.15, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_16.lhe',
+        #                 (-0.07, -0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_17.lhe',
+        #                 (-0.06, -0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_18.lhe',
+        #                 (-0.05, -0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_19.lhe',
+        #                 (-0.04, -0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_20.lhe',
+        #                 (0.04, 0.4): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_21.lhe',
+        #                 (0.05, 0.5): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_22.lhe',
+        #                 (0.06, 0.6): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_23.lhe',
+        #                 (0.07, 0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_24.lhe'
+        #                 }
+        dict_int = {(0.06, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_13.lhe',
+                    (0.09, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_14.lhe',
+                    (0.12, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_15.lhe',
+                    (0.15, 0): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_16.lhe'
+                    }
 
-        run.ScanBounds(root_path, dict_int, mc_run, luminosity=6, truth=True, nn=True, fit=False)
+        run.ScanBounds(root_path, dict_int, mc_run, luminosity=6, truth=True, nn=False, fit=False)
 
     if analyse:
         #define the binnings

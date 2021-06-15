@@ -468,19 +468,12 @@ class StatAnalysis:
         dsigma_dmtt_eft = []
         dsigma_dmtt_sm = []
         for i, (cug, cuu) in enumerate(self.dict_int.keys()):
-            if hypothesis == 'eft':
-                dsigma_dmtt_eft.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_eft[i]])
-                dsigma_dmtt_sm.append([axs.dsigma_dmtt(mtt, 0, 0) for mtt in self.data_eft[i]])
-            else:  # hypothesis = sm
-                dsigma_dmtt_eft.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_sm])
-
-        if hypothesis == 'eft':
-            dsigma_dmtt_sm = np.array(dsigma_dmtt_sm)
-        else:   # hypothesis = sm
-            dsigma_dmtt_sm = np.array([axs.dsigma_dmtt(mtt, 0, 0) for mtt in self.data_sm])
-            dsigma_dmtt_sm = np.expand_dims(dsigma_dmtt_sm, axis=0)
+            data = self.data_sm if hypothesis is 'sm' else self.data_eft[i]
+            dsigma_dmtt_eft.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in data])
+            dsigma_dmtt_sm.append([axs.dsigma_dmtt(mtt, 0, 0) for mtt in data])
 
         dsigma_dmtt_eft = np.array(dsigma_dmtt_eft)
+        dsigma_dmtt_sm = np.array(dsigma_dmtt_sm)
 
         # likelihood ratio
         r_c = dsigma_dmtt_eft / dsigma_dmtt_sm
@@ -494,8 +487,7 @@ class StatAnalysis:
         expected_sm = np.array([nu['sm'] for nu in self.nu])
 
         mean_tc = expected_eft - expected_sm - expected_sm * mean_tauc if hypothesis == 'sm' else expected_eft - expected_sm - expected_eft * mean_tauc
-        sigma_tc = np.sqrt(expected_eft * np.mean(tau_c ** 2)) if hypothesis == 'eft' else np.sqrt(
-            expected_sm * np.mean(tau_c ** 2))
+        sigma_tc = np.sqrt(expected_eft * np.mean(tau_c ** 2)) if hypothesis == 'eft' else np.sqrt(expected_sm * np.mean(tau_c ** 2))
 
         return mean_tc, sigma_tc
 
