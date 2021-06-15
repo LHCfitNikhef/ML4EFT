@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import csv
 from scipy.ndimage.filters import gaussian_filter
+from scipy.optimize import curve_fit
 from ..core import bounds as bounds
 
 
@@ -178,6 +179,10 @@ class Analyse:
 
         self.z_scores_truth, self.z_scores_nn = self.load_z_scores()
 
+        # 1D analysis
+        self.analyse1d()
+
+        # 2D analysis
         ellipse_param_truth, ellipse_param_nn = self.fit_ellipse()
 
         if self.truth:
@@ -206,6 +211,29 @@ class Analyse:
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
 
         fig.savefig(os.path.join(self.plots_path, 'ellipses.pdf'))
+
+    def analyse1d(self):
+        z_scores_truth = self.z_scores_truth
+        z_scores_nn = self.z_scores_nn
+
+        z_scores_nn_pcuu = z_scores_nn[(z_scores_nn['cug'] == 0) & (z_scores_nn['cuu'] > 0)]
+        z_scores_nn_ncuu = z_scores_nn[(z_scores_nn['cug'] == 0) & (z_scores_nn['cuu'] < 0)]
+        z_scores_nn_pcug = z_scores_nn[(z_scores_nn['cuu'] == 0) & (z_scores_nn['cug'] > 0)]
+        z_scores_nn_ncug = z_scores_nn[(z_scores_nn['cuu'] == 0) & (z_scores_nn['cug'] < 0)]
+        z_scores_nn_pdiag = z_scores_nn[(z_scores_nn['cuu'] > 0) & (z_scores_nn['cug'] > 0)]
+        z_scores_nn_ndiag = z_scores_nn[(z_scores_nn['cuu'] < 0) & (z_scores_nn['cug'] < 0)]
+
+        z_scores_truth_pcuu = z_scores_truth[(z_scores_truth['cug'] == 0) & (z_scores_truth['cuu'] > 0)]
+        z_scores_truth_ncuu = z_scores_truth[(z_scores_truth['cug'] == 0) & (z_scores_truth['cuu'] < 0)]
+        z_scores_truth_pcug = z_scores_truth[(z_scores_truth['cuu'] == 0) & (z_scores_truth['cug'] > 0)]
+        z_scores_truth_ncug = z_scores_truth[(z_scores_truth['cuu'] == 0) & (z_scores_truth['cug'] < 0)]
+        z_scores_truth_pdiag = z_scores_truth[(z_scores_truth['cuu'] > 0) & (z_scores_truth['cug'] > 0)]
+        z_scores_truth_ndiag = z_scores_truth[(z_scores_truth['cuu'] < 0) & (z_scores_truth['cug'] < 0)]
+
+        fig = self.interpolation(z_scores_truth_pcug, z_scores_nn_pcug)
+        fig.savefig(os.path.join(self.plots_path, 'analysis1d.pdf'))
+
+
 
     def fit_ellipse(self):
         """
@@ -247,6 +275,81 @@ class Analyse:
             a_nn = None
 
         return a_truth, a_nn
+
+    def interpolation(self, z_scores_truth, z_scores_nn):
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        z_scores_nn = z_scores_nn.reset_index(drop=True)
+        z_scores_truth = z_scores_truth.reset_index(drop=True)
+        c = z_scores_nn.cuu.values if z_scores_nn.cuu.values[0] != 0 else z_scores_nn.cug.values
+
+        z_score_nn = z_scores_nn['z-score'].values
+        z_score_nn_unc = z_scores_nn['uncertainty'].values
+
+        z_score_truth = z_scores_truth['z-score'].values
+        z_score_truth_unc = z_scores_truth['uncertainty'].values
+
+        ax.errorbar(c, z_score_nn, yerr=z_score_nn_unc, fmt='.', capsize=3,
+                    color='C1', label=r'$\rm{z-score\;(NN)}$')
+
+        ax.errorbar(c, z_score_truth, yerr=z_score_truth_unc, fmt='.', capsize=3,
+                    color='C0', label=r'$\rm{z-score\;(truth)}$')
+
+        popt_nn, _ = curve_fit(self.quad_pol, c, z_score_nn, sigma=z_score_nn_unc)
+        popt_truth, _ = curve_fit(self.quad_pol, c, z_score_truth, sigma=z_score_truth_unc)
+
+        epsilon = 0.1 * (np.max(c) - np.min(c))
+        xmin = np.min(c) - epsilon
+        xmax = np.max(c) + epsilon
+        x = np.linspace(xmin, xmax, 400)
+
+        plt.hlines(1.64, xmin, xmax, color='black', linestyle='dashed')
+        # ax.plot(x, quad_pol(x, *popt_truth), color='C0', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(true)}$')
+        ax.plot(x, self.quad_pol(x, *popt_truth), color='C0', linestyle='dotted')  # , label=r'$\rm{Exp\;fit\;(NN)}$')
+        ax.plot(x, self.quad_pol(x, *popt_nn), color='C1', linestyle='dotted')  # , label=r'$\rm{Exp\;fit\;(NN)}$')
+
+        idx_truth = np.argwhere(np.diff(np.sign(self.quad_pol(x, *popt_truth) - 1.64))).flatten()
+        idx_nn = np.argwhere(np.diff(np.sign(self.quad_pol(x, *popt_nn) - 1.64))).flatten()
+
+        plt.plot(x[idx_truth], self.quad_pol(x[idx_truth], *popt_truth), 'kx')
+        plt.plot(x[idx_nn], self.quad_pol(x[idx_nn], *popt_nn), 'kx')
+
+        ##### add binned curve
+        # z_scores_binned = []
+        # for c in x:
+        #     self.binned_analyses[0].nu_i = self.binned_analyses[0].expected_entries(np.array([0, c]))
+        #     self.binned_analyses[0].mean_tc_asi, self.binned_analyses[0].std_tc_asi = self.binned_analyses[0].find_pdf_binned_asimov()
+        #     z_score_asi, _ = self.binned_analyses[0].p_value_asimov()
+        #     z_scores_binned.append(z_score_asi)
+        # z_scores_binned = np.array(z_scores_binned)
+        #
+        # plt.plot(x, z_scores_binned, label=r'$\rm{z-score\;(binned)}$', color='C2')
+
+        # Plot settings
+        ax.set_ylabel(r'$\rm{z-score}$', fontsize=20)
+        ax.set_xlabel(r'$\rm{c}$', fontsize=20)
+        ax.set_xlim((xmin, xmax))
+
+        epsilon = 0.1 * (np.max(z_score_truth) - np.min(z_score_truth))
+        ymin = np.min([z_score_truth.min() - epsilon, z_score_nn.min() - epsilon])
+        ymax = np.max([z_score_truth.max() + epsilon, z_score_nn.max() + epsilon])
+
+        ax.set_ylim((ymin, ymax))
+        ax.legend(loc='best', fontsize=15, frameon=False)
+        ax.tick_params(which='both', direction='in', labelsize=20)
+        ax.tick_params(which='major', length=10)
+        ax.tick_params(which='minor', length=5)
+        ax.set_title(r'$\rm{Interpolation\;of\;z-score}$', fontsize=20)
+
+
+
+        fig.tight_layout()
+        return fig
+
+    @staticmethod
+    def quad_pol(x, a, b, c):
+        return a * x ** 2 + b * x + c
 
     @staticmethod
     def ellipse(x, y, a, b, c):

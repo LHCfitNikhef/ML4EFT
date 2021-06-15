@@ -44,10 +44,10 @@ class ScanBounds:
         self.run_scan()
 
     def run_scan(self):
-
+        #TODO: only load the data once for the truth and the nn
         if self.truth:
             self.paths['output'] = os.path.join(self.output_path, 'truth')
-            bounds.StatAnalysis(self.paths, dict_int=self.dict_int, nn=self.nn, mc_run=self.mc_run, fit=self.fit, luminosity=self.luminosity)
+            bounds.StatAnalysis(self.paths, dict_int=self.dict_int, nn=False, mc_run=self.mc_run, fit=self.fit, luminosity=self.luminosity)
         if self.nn:
             self.paths['output'] = os.path.join(self.output_path, 'nn')
             bounds.StatAnalysis(self.paths, dict_int=self.dict_int, nn=True, mc_run=self.mc_run, fit=self.fit, luminosity=self.luminosity)
