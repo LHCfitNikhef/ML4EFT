@@ -51,4 +51,4 @@ if __name__ == "__main__":
         binnings_list = [binning_0, binning_1, binning_2]
 
         extent = np.array([[-1.2, 1.2], [-0.3, 0.3]])
-        analysis = ana.Analyse(root_path, binnings=binnings_list, nn=False, truth=False, fit=True, extent=extent)
+        analysis = ana.Analyse(root_path, binnings=binnings_list, nn=True, truth=True, fit=False, extent=extent)
