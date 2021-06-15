@@ -1,0 +1,709 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>quad_clas.core.analyse &mdash; ML4EFT 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> ML4EFT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ML4EFT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>quad_clas.core.analyse</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for quad_clas.core.analyse</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">rc</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">matplotlib.gridspec</span> <span class="k">as</span> <span class="nn">gridspec</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">animation</span>
+
+<span class="c1"># import own pacakges</span>
+<span class="kn">from</span> <span class="nn">.quad_classifier_cluster</span> <span class="kn">import</span> <span class="n">PredictorQuadratic</span>
+<span class="kn">from</span> <span class="nn">.quad_classifier_cluster</span> <span class="kn">import</span> <span class="n">PredictorLinear</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">xsec_cluster</span> <span class="k">as</span> <span class="n">axs</span>
+
+<span class="c1">#matplotlib.use(&#39;PDF&#39;)</span>
+<span class="n">rc</span><span class="p">(</span><span class="s1">&#39;font&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;family&#39;</span><span class="p">:</span><span class="s1">&#39;sans-serif&#39;</span><span class="p">,</span><span class="s1">&#39;sans-serif&#39;</span><span class="p">:[</span><span class="s1">&#39;Helvetica&#39;</span><span class="p">],</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">22</span><span class="p">})</span>
+<span class="n">rc</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="n">usetex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">eft_points</span> <span class="o">=</span> <span class="p">[[</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="make_predictions_1d"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.make_predictions_1d">[docs]</a><span class="k">def</span> <span class="nf">make_predictions_1d</span><span class="p">(</span><span class="n">network_path</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param network_path: path to the saved NN to be loaded</span>
+<span class="sd">    :param train_dataset: training data needed to find the mean and std</span>
+<span class="sd">    :param ctg: value of the Wilson coefficient ctg</span>
+<span class="sd">    :return: comparison between NN prediction and analytically known result for the likelihood ratio</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Be careful to use the same network architecture as during training</span>
+    <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">PredictorQuadratic</span><span class="p">(</span><span class="n">network_size</span><span class="p">)</span>
+    <span class="n">loaded_model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">network_path</span><span class="p">))</span>
+
+    <span class="c1"># Set up coordinates and compute f</span>
+    <span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">4000</span>
+    <span class="n">mtt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">mtt</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span>  <span class="c1"># rescale the inputs</span>
+
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)</span>
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="n">f_pred</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">mtt</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">f_pred</span></div>
+
+
+
+<div class="viewcode-block" id="plot_predictions_1d"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.plot_predictions_1d">[docs]</a><span class="k">def</span> <span class="nf">plot_predictions_1d</span><span class="p">(</span><span class="n">network_size</span><span class="p">):</span>
+    <span class="c1"># animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std)</span>
+
+    <span class="c1">################</span>
+    <span class="n">nrows</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">ncols</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">4000</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">ncols</span><span class="o">*</span><span class="mi">10</span><span class="p">,</span> <span class="n">nrows</span><span class="o">*</span><span class="mi">6</span><span class="p">))</span>
+    <span class="n">outer</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">18</span><span class="p">):</span>
+        <span class="c1"># We use the gridspec package to display a grid of plots which in turn consist of 2 subplots</span>
+        <span class="n">inner</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpecFromSubplotSpec</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+                                                 <span class="n">subplot_spec</span><span class="o">=</span><span class="n">outer</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span> <span class="o">=</span> <span class="n">eft_points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">mc_runs</span> <span class="o">=</span> <span class="mi">42</span>
+        <span class="n">f_pred</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mc_runs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">pred_path</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_7/mc_run_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span>
+            <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">pred_path</span> <span class="o">+</span> <span class="s1">&#39;/scaling.dat&#39;</span><span class="p">)</span>
+            <span class="n">mtt</span><span class="p">,</span> <span class="n">f_pred_i</span> <span class="o">=</span> <span class="n">make_predictions_1d</span><span class="p">(</span><span class="n">pred_path</span> <span class="o">+</span> <span class="s1">&#39;/trained_nn.pt&#39;</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+            <span class="n">f_pred</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f_pred_i</span><span class="p">)</span>
+
+        <span class="n">f_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f_pred</span><span class="p">)</span>
+        <span class="n">f_pred_median_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">f_pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">f_pred_std_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">f_pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># repeat, but now for 100K data points (run 8)</span>
+        <span class="n">f_pred</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mc_runs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">pred_path</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_8/mc_run_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span>
+            <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">pred_path</span> <span class="o">+</span> <span class="s1">&#39;/scaling.dat&#39;</span><span class="p">)</span>
+            <span class="n">mtt</span><span class="p">,</span> <span class="n">f_pred_i</span> <span class="o">=</span> <span class="n">make_predictions_1d</span><span class="p">(</span><span class="n">pred_path</span> <span class="o">+</span> <span class="s1">&#39;/trained_nn.pt&#39;</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+            <span class="n">f_pred</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f_pred_i</span><span class="p">)</span>
+
+        <span class="n">f_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f_pred</span><span class="p">)</span>
+        <span class="n">f_pred_median_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">f_pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">f_pred_std_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">f_pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># the main subplot (error band)</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">inner</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+
+                <span class="c1"># Plot the NN prediction</span>
+                <span class="n">nn_med_plot_1</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">mtt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">f_pred_median_1</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">mtt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">f_pred_median_1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">f_pred_std_1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">mtt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">f_pred_median_1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">f_pred_std_1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+                <span class="n">nn_band_plot_1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">mtt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">f_pred_median_1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">f_pred_std_1</span><span class="p">,</span>
+                                                 <span class="n">f_pred_median_1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">f_pred_std_1</span><span class="p">,</span>
+                                                 <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+                <span class="c1"># Plot the NN prediction</span>
+                <span class="n">nn_med_plot_2</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">mtt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">f_pred_median_2</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">mtt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">f_pred_median_2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">f_pred_std_2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C1&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">mtt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">f_pred_median_2</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">f_pred_std_2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C1&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+                <span class="n">nn_band_plot_2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">mtt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">f_pred_median_2</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">f_pred_std_2</span><span class="p">,</span>
+                                                 <span class="n">f_pred_median_2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">f_pred_std_2</span><span class="p">,</span>
+                                                 <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+                <span class="c1"># Plot the analytical result</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">axs</span><span class="o">.</span><span class="n">plot_likelihood_ratio_1D</span><span class="p">(</span><span class="n">mtt_min</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">mtt_max</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">ana_plot</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+
+                <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$f\;(m_</span><span class="si">{tt}</span><span class="s1">, c)$&#39;</span><span class="p">)</span>
+                <span class="c1"># plt.xlabel(r&#39;$m_{tt}\;[GeV]$&#39;)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">))</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span>
+                    <span class="sa">r</span><span class="s1">&#39;$\rm{NN\:versus\:analytical\:at\:cuu}$&#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\:=</span><span class="si">{}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">cuu</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\rm{\:and\:ctg}$&#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\:=</span><span class="si">{}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">ctg</span><span class="p">))</span>
+                <span class="c1"># plt.legend([ana_plot, (nn_band_plot_1, nn_med_plot_1), (nn_band_plot_2, nn_med_plot_2), (nn_band_plot_3, nn_med_plot_3)], [r&quot;$\rm{Theory}$&quot;, r&#39;$\rm{NN\:(Median\:}$&#39; + r&#39;$+\:2\sigma)$&#39; + r&#39;$\rm{50K}$&#39;, r&#39;$\rm{NN\:(Median\:}$&#39; + r&#39;$+\:2\sigma)$&#39; + r&#39;$\rm{100K}$&#39;, r&#39;$\rm{NN\:(Median\:}$&#39; + r&#39;$+\:2\sigma)$&#39; + r&#39;$\rm{20K}$&#39;])</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">ana_plot</span><span class="p">,</span> <span class="p">(</span><span class="n">nn_band_plot_1</span><span class="p">,</span> <span class="n">nn_med_plot_1</span><span class="p">),</span> <span class="p">(</span><span class="n">nn_band_plot_2</span><span class="p">,</span> <span class="n">nn_med_plot_2</span><span class="p">)],</span>
+                           <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;$\rm</span><span class="si">{Theory}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$\rm{NN\:(Median\:}$&#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$+\:2\sigma)$&#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\rm{\:50K}$&#39;</span><span class="p">,</span>
+                            <span class="sa">r</span><span class="s1">&#39;$\rm{NN\:(Median\:}$&#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$+\:2\sigma)$&#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\rm{\:100K}$&#39;</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># the second subplot (data versus theory)</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">inner</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">f_pred_median_2</span><span class="p">)</span> <span class="o">/</span> <span class="n">f_pred_std_2</span><span class="p">)</span>
+                <span class="c1">#ax.plot(x * 1e3, y / f_pred_median_1, color=&#39;C0&#39;)</span>
+                <span class="c1">#ax.plot(x * 1e3, y / f_pred_median_2, color=&#39;C1&#39;)</span>
+                <span class="c1">#ax.hlines(1, mtt_min, mtt_max, linestyles=&#39;dashed&#39;, colors=&#39;black&#39;)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$m_</span><span class="si">{tt}</span><span class="s1">\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">)</span>
+                <span class="c1">#plt.ylabel(r&#39;$\rm{theory/model}$&#39;)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\rm</span><span class="si">{pull}</span><span class="s1">$&#39;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">))</span>
+                <span class="c1">#plt.ylim((0.9*(y / f_pred_median_1).min(), 1.1*(y / f_pred_median_1).max()))</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">((</span><span class="mf">1.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="n">f_pred_median_2</span><span class="p">)</span> <span class="o">/</span> <span class="n">f_pred_std_2</span><span class="p">),</span>
+                          <span class="mf">1.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="n">f_pred_median_2</span><span class="p">)</span> <span class="o">/</span> <span class="n">f_pred_std_2</span><span class="p">)))</span>
+
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/&#39;</span> <span class="o">+</span> <span class="s1">&#39;pull.pdf&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_predictions_1d"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.get_predictions_1d">[docs]</a><span class="k">def</span> <span class="nf">get_predictions_1d</span><span class="p">(</span><span class="n">network_path</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">mtt</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+    <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">PredictorQuadratic</span><span class="p">(</span><span class="n">network_size</span><span class="p">)</span>
+    <span class="n">loaded_model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">network_path</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">mtt</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span>  <span class="c1"># rescale the inputs</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">x</span><span class="p">])</span>
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)</span>
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="n">f_pred</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">f_pred</span></div>
+
+<div class="viewcode-block" id="get_likelihood_ratio_NN"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.get_likelihood_ratio_NN">[docs]</a><span class="k">def</span> <span class="nf">get_likelihood_ratio_NN</span><span class="p">(</span><span class="n">network_path</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">mtt</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+    <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">PredictorQuadratic</span><span class="p">(</span><span class="n">network_size</span><span class="p">)</span>
+    <span class="n">loaded_model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">network_path</span><span class="p">))</span>
+    <span class="n">mtt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">mtt</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">mtt</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span>  <span class="c1"># rescale the inputs</span>
+    <span class="c1">#x = torch.tensor(x)</span>
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)</span>
+    <span class="c1">#f_pred = f_pred.detach().numpy()</span>
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="n">f_pred</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="n">ratio</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f_pred</span><span class="p">)</span> <span class="o">/</span> <span class="n">f_pred</span>
+    <span class="k">return</span> <span class="n">ratio</span></div>
+
+
+<div class="viewcode-block" id="get_pull"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.get_pull">[docs]</a><span class="k">def</span> <span class="nf">get_pull</span><span class="p">(</span><span class="n">network_size</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">mtt</span><span class="p">):</span>
+    <span class="n">mc_runs</span> <span class="o">=</span> <span class="mi">42</span>
+
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mc_runs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">pred_path</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_8/mc_run_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">pred_path</span> <span class="o">+</span> <span class="s1">&#39;/scaling.dat&#39;</span><span class="p">)</span>
+        <span class="n">f_pred_i</span> <span class="o">=</span> <span class="n">get_predictions_1d</span><span class="p">(</span><span class="n">pred_path</span> <span class="o">+</span> <span class="s1">&#39;/trained_nn.pt&#39;</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">mtt</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+        <span class="n">f_pred</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f_pred_i</span><span class="p">)</span>
+
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f_pred</span><span class="p">)</span>
+    <span class="n">f_pred_median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">f_pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">f_pred_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">f_pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">theory</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">axs</span><span class="o">.</span><span class="n">likelihood_ratio_1D_v</span><span class="p">(</span><span class="n">mtt</span><span class="p">,</span> <span class="n">ctg</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">cuu</span><span class="o">.</span><span class="n">numpy</span><span class="p">()))</span>
+    <span class="n">pull</span> <span class="o">=</span> <span class="p">(</span><span class="n">theory</span> <span class="o">-</span> <span class="n">f_pred_median</span><span class="p">)</span><span class="o">/</span><span class="n">f_pred_std</span>
+    <span class="k">return</span> <span class="n">pull</span></div>
+
+
+
+
+<div class="viewcode-block" id="plot_pull_heatmap"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.plot_pull_heatmap">[docs]</a><span class="k">def</span> <span class="nf">plot_pull_heatmap</span><span class="p">(</span><span class="n">network_size</span><span class="p">,</span><span class="n">mtt</span><span class="p">):</span>
+    <span class="c1">#plt.figure()</span>
+
+
+    <span class="n">ctg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">cuu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="c1"># ctg = np.array([-2, -1, 1, 2])</span>
+    <span class="c1"># cuu = np.array([-2, -1, 1, 2])</span>
+    <span class="n">ctg_grid</span><span class="p">,</span> <span class="n">cuu_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">)</span>
+    <span class="c1"># pull = get_pull(network_size, torch.from_numpy(ctg_grid), torch.from_numpy(cuu_grid), mtt)</span>
+
+
+    <span class="c1">#fig = plt.figure()</span>
+    <span class="c1">#plt.imshow(pull, extent=[np.min(ctg), np.max(ctg), np.min(cuu), np.max(cuu)], origin=&#39;lower&#39;, cmap=plt.cm.summer,</span>
+    <span class="c1">#           aspect=(np.max(ctg) - np.min(ctg)) / (cuu.max() - cuu.min()), interpolation=&#39;quadric&#39;)</span>
+    <span class="c1">#plt.colorbar()</span>
+    <span class="c1">#plt.xlabel(r&#39;$\rm{ctg}$&#39;)</span>
+    <span class="c1">#plt.ylabel(r&#39;$\rm{cuu}$&#39;)</span>
+    <span class="c1">#plt.title(r&#39;$\rm{Pull\:heatmap\:at\:m_{tt}=\:}$&#39; + r&#39;${}$&#39;.format(mtt) + r&#39;$\:\mathrm{TeV}$&#39;)</span>
+    <span class="c1"># fig.savefig(&#39;/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/pull_heatmap.pdf&#39;)</span>
+
+
+    <span class="c1">#################</span>
+
+    <span class="n">nrows</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">ncols</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="n">nrows</span> <span class="o">*</span> <span class="mi">10</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nrows</span><span class="o">*</span><span class="n">ncols</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">pull</span> <span class="o">=</span> <span class="n">get_pull</span><span class="p">(</span><span class="n">network_size</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">ctg_grid</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">cuu_grid</span><span class="p">),</span> <span class="n">mtt</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">pull</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ctg</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">ctg</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cuu</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">cuu</span><span class="p">)],</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;RdBu&#39;</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">ctg</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ctg</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">cuu</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">cuu</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;quadric&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">cbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">extend</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.60</span><span class="p">)</span>
+        <span class="n">cbar</span><span class="o">.</span><span class="n">minorticks_on</span><span class="p">()</span>
+
+
+        <span class="c1">#ax.colorbar()&#39;</span>
+        <span class="c1">#fig.colorbar(im, ax=ax)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\rm</span><span class="si">{ctg}</span><span class="s1">$&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\rm</span><span class="si">{cuu}</span><span class="s1">$&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\rm{Pull\:at\:m_</span><span class="si">{tt}</span><span class="s1">=\:}$&#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mtt</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\:\mathrm</span><span class="si">{TeV}</span><span class="s1">$&#39;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/pull_heatmap_v3.pdf&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="plot_predictions_2d"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.plot_predictions_2d">[docs]</a><span class="k">def</span> <span class="nf">plot_predictions_2d</span><span class="p">(</span><span class="n">network_path</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">epochs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot several plots that gauge the performance of the NN</span>
+<span class="sd">    :param network_path: p</span>
+<span class="sd">    :param network_size: network architecture</span>
+<span class="sd">    :param train_dataset:</span>
+<span class="sd">    :param quadratic: Include Quadratic EFT (Boolean)</span>
+<span class="sd">    :param ctg: Wilson coefficient (Float)</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#animate_learning_2d(path, network_size, train_dataset, quadratic, ctg, cuu, epochs)</span>
+
+    <span class="k">if</span> <span class="n">quadratic</span><span class="p">:</span>
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">x_span</span><span class="p">,</span> <span class="n">y_span</span><span class="p">,</span> <span class="n">f_pred</span><span class="p">,</span> <span class="n">n_alpha_nn</span><span class="p">,</span> <span class="n">n_alpha_n_beta_nn</span><span class="p">,</span> <span class="n">f_ana</span> <span class="o">=</span> <span class="n">make_predictions_2d</span><span class="p">(</span>
+            <span class="n">network_path</span> <span class="o">+</span> <span class="s1">&#39;trained_nn.pt&#39;</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">f_pred</span><span class="p">,</span> <span class="n">n_alpha_nn</span><span class="p">,</span> <span class="n">f_ana</span> <span class="o">=</span> <span class="n">make_predictions_2d</span><span class="p">(</span><span class="n">network_path</span> <span class="o">+</span> <span class="s1">&#39;trained_nn.pt&#39;</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span>
+                                                                <span class="n">train_dataset</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)</span>
+
+    <span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">4000</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="mi">14</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">mtt_min</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">mtt_min</span><span class="p">)</span>
+
+    <span class="c1"># plot the nn prediction</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">f_pred</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">],</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">,</span>
+               <span class="n">aspect</span><span class="o">=</span><span class="p">(</span><span class="n">mtt_max</span> <span class="o">-</span> <span class="n">mtt_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;quadric&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$m_</span><span class="si">{tt}</span><span class="s1">\;\mathrm{[GeV]}$&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$f\;(x, c)$&#39;</span> <span class="o">+</span> <span class="s1">&#39; at ctG = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ctg</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">network_path</span> <span class="o">+</span> <span class="s1">&#39;plots/f_nn.pdf&#39;</span><span class="p">)</span>
+
+    <span class="c1"># plot the analytical result</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="c1"># mask values outside the physical region</span>
+    <span class="c1"># f_ana = np.where(f_ana == 1.0, -1.0, f_ana)</span>
+    <span class="n">f_ana</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">f_ana</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">f_ana</span><span class="p">)</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;Blues&quot;</span><span class="p">))</span>  <span class="c1"># Can be any colormap that you want after the cm</span>
+    <span class="n">cmap</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">f_ana</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">],</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+               <span class="n">aspect</span><span class="o">=</span><span class="p">(</span><span class="n">mtt_max</span> <span class="o">-</span> <span class="n">mtt_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;quadric&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$m_</span><span class="si">{tt}</span><span class="s1">\;\mathrm{[GeV]}$&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$f\;(x, c)$&#39;</span> <span class="o">+</span> <span class="s1">&#39; at ctG = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ctg</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">network_path</span> <span class="o">+</span> <span class="s1">&#39;plots/f_ana.pdf&#39;</span><span class="p">)</span>
+
+    <span class="c1"># plot the ratio analytical/nn_prediction</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">cmap2</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;seismic&quot;</span><span class="p">))</span>
+    <span class="n">cmap2</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;#c8c9cc&#39;</span><span class="p">)</span>
+    <span class="n">f_comp</span> <span class="o">=</span> <span class="n">f_ana</span> <span class="o">/</span> <span class="n">f_pred</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">f_comp</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">],</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap2</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span>
+               <span class="n">aspect</span><span class="o">=</span><span class="p">(</span><span class="n">mtt_max</span> <span class="o">-</span> <span class="n">mtt_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;quadric&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$m_</span><span class="si">{tt}</span><span class="s1">\;\mathrm{[GeV]}$&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;ratio at ctG = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ctg</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">network_path</span> <span class="o">+</span> <span class="s1">&#39;plots/f_comp.pdf&#39;</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">mtt_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x_span</span> <span class="o">==</span> <span class="mi">1100</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">yy</span><span class="p">[:,</span> <span class="n">mtt_index</span><span class="p">],</span> <span class="n">f_pred</span><span class="p">[:,</span> <span class="n">mtt_index</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;NN prediction&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">yy</span><span class="p">[:,</span> <span class="n">mtt_index</span><span class="p">],</span> <span class="n">f_ana</span><span class="p">[:,</span> <span class="n">mtt_index</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;analytical&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="make_predictions_2d"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.make_predictions_2d">[docs]</a><span class="k">def</span> <span class="nf">make_predictions_2d</span><span class="p">(</span><span class="n">network_path</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">make_animation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param network_path: path to the saved NN to be loaded</span>
+<span class="sd">    :param train_dataset: training data needed to find the mean and std</span>
+<span class="sd">    :param ctg: value of the Wilson coefficient ctg</span>
+<span class="sd">    :return: comparison between NN prediction and analytically known result for the likelihood ratio</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Be careful to use the same network architecture as during training</span>
+    <span class="k">if</span> <span class="n">quadratic</span><span class="p">:</span>
+        <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">PredictorQuadratic</span><span class="p">(</span><span class="n">network_size</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">PredictorLinear</span><span class="p">(</span><span class="n">network_size</span><span class="p">)</span>
+
+    <span class="c1"># load all the parameters into the trained network</span>
+    <span class="n">loaded_model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">network_path</span><span class="p">))</span>
+
+    <span class="c1"># Set up coordinates and compute f</span>
+    <span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span> <span class="o">=</span> <span class="mf">1000.0</span><span class="p">,</span> <span class="mf">4000.0</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="mi">14</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">mtt_min</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">mtt_min</span><span class="p">)</span>
+    <span class="n">x_spacing</span><span class="p">,</span> <span class="n">y_spacing</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mf">0.01</span>
+    <span class="n">x_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">x_spacing</span><span class="p">)</span>
+    <span class="n">y_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">y_spacing</span><span class="p">)</span>
+    <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x_span</span><span class="p">,</span> <span class="n">y_span</span><span class="p">)</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span>
+    <span class="c1"># rescale the grid</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="p">(</span><span class="n">grid</span> <span class="o">-</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">std</span>
+    <span class="c1"># grid = -1 + 2 / (train_dataset.max_value - train_dataset.min_value) * (grid - train_dataset.min_value)</span>
+
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">ctg</span><span class="p">)</span>  <span class="c1"># TODO: why .float() needed?</span>
+    <span class="n">f_pred</span> <span class="o">=</span> <span class="n">f_pred</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">xx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+    <span class="n">n_alpha</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">n_alpha</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>
+    <span class="n">n_alpha</span> <span class="o">=</span> <span class="n">n_alpha</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">xx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+    <span class="c1"># if make_animation is true, don&#39;t compute the analytic prediction</span>
+    <span class="k">if</span> <span class="n">make_animation</span> <span class="ow">and</span> <span class="n">quadratic</span><span class="p">:</span>
+        <span class="n">n_beta</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">n_beta</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>
+        <span class="n">n_beta</span> <span class="o">=</span> <span class="n">n_beta</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">xx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">n_alpha_n_beta</span> <span class="o">=</span> <span class="n">n_alpha</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n_beta</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">x_span</span><span class="p">,</span> <span class="n">y_span</span><span class="p">,</span> <span class="n">f_pred</span><span class="p">,</span> <span class="n">n_alpha</span><span class="p">,</span> <span class="n">n_alpha_n_beta</span>
+
+    <span class="n">f_ana</span> <span class="o">=</span> <span class="n">axs</span><span class="o">.</span><span class="n">plot_f_ana</span><span class="p">(</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">x_spacing</span><span class="p">,</span> <span class="n">y_spacing</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">quadratic</span><span class="p">:</span>
+        <span class="n">n_beta</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">n_beta</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>
+        <span class="n">n_beta</span> <span class="o">=</span> <span class="n">n_beta</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">xx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">n_alpha_n_beta</span> <span class="o">=</span> <span class="n">n_alpha</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n_beta</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">x_span</span><span class="p">,</span> <span class="n">y_span</span><span class="p">,</span> <span class="n">f_pred</span><span class="p">,</span> <span class="n">n_alpha</span><span class="p">,</span> <span class="n">n_alpha_n_beta</span><span class="p">,</span> <span class="n">f_ana</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">f_pred</span><span class="p">,</span> <span class="n">n_alpha</span><span class="p">,</span> <span class="n">f_ana</span></div>
+
+
+<div class="viewcode-block" id="animate_learning_1d"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.animate_learning_1d">[docs]</a><span class="k">def</span> <span class="nf">animate_learning_1d</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+
+
+    <span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">4000</span>
+    <span class="c1"># First set up the figure, the axis, and the plot element we want to animate</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">),</span> <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Compute the analytic likelihood ratio and plot</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">axs</span><span class="o">.</span><span class="n">plot_likelihood_ratio_1D</span><span class="p">(</span><span class="n">mtt_min</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">mtt_max</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Analytical result&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$f\;(m_</span><span class="si">{tt}</span><span class="s1">, c)$&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$m_</span><span class="si">{tt}</span><span class="s1">\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;NN versus analytical at ctg = </span><span class="si">{ctg}</span><span class="s1"> and cuu = </span><span class="si">{cuu}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ctg</span><span class="o">=</span><span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="o">=</span><span class="n">cuu</span><span class="p">))</span>
+
+    <span class="n">line</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;NN prediction&#39;</span><span class="p">)</span>
+    <span class="n">epoch_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+    <span class="n">loss_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.90</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;loss.out&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+    <span class="c1"># initialization function: plot the background of each frame</span>
+    <span class="k">def</span> <span class="nf">init</span><span class="p">():</span>
+        <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">([],</span> <span class="p">[])</span>
+        <span class="n">epoch_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">loss_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">epoch_text</span><span class="p">,</span> <span class="n">loss_text</span>
+
+    <span class="c1"># animation function.  This is called sequentially</span>
+    <span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">f_pred</span> <span class="o">=</span> <span class="n">make_predictions_1d</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;trained_nn_</span><span class="si">{}</span><span class="s1">.pt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+        <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f_pred</span><span class="p">)</span>
+        <span class="n">epoch_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;epoch = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="n">loss_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;loss = </span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loss</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">epoch_text</span><span class="p">,</span> <span class="n">loss_text</span>
+
+    <span class="c1"># call the animator.  blit=True means only re-draw the parts that have changed.</span>
+    <span class="n">anim</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">init_func</span><span class="o">=</span><span class="n">init</span><span class="p">,</span>
+                                   <span class="n">frames</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">blit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">anim</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;animation/training_animation.gif&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="animate_learning_2d"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.animate_learning_2d">[docs]</a><span class="k">def</span> <span class="nf">animate_learning_2d</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">epochs</span><span class="p">):</span>
+    <span class="c1"># stopping_point = int(glob.glob(path + &quot;/trained_nn_*.pt&quot;, recursive=False)[0][-6:-3])</span>
+    <span class="c1"># print(stopping_point)</span>
+    <span class="c1"># sys.exit()</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;stopping.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">stopping_point</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">reference</span><span class="p">():</span>
+        <span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span> <span class="o">=</span> <span class="mf">1000.0</span><span class="p">,</span> <span class="mf">4000.0</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="mi">14</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">reference</span><span class="o">.</span><span class="n">y_min</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">y_max</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">mtt_min</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">mtt_min</span><span class="p">)</span>
+        <span class="n">x_spacing</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">y_spacing</span> <span class="o">=</span> <span class="mf">0.01</span>
+        <span class="c1"># First set up the figure, the axis, and the plot element we want to animate</span>
+        <span class="n">reference</span><span class="o">.</span><span class="n">f_ana</span> <span class="o">=</span> <span class="n">axs</span><span class="o">.</span><span class="n">plot_f_ana</span><span class="p">(</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">y_min</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">y_max</span><span class="p">,</span> <span class="n">x_spacing</span><span class="p">,</span> <span class="n">y_spacing</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">np_order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">reference</span><span class="o">.</span><span class="n">f_ana</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">f_ana</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">f_ana</span><span class="p">)</span>
+
+    <span class="n">reference</span><span class="p">()</span>
+
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;seismic&quot;</span><span class="p">))</span>
+    <span class="n">cmap</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;#c8c9cc&#39;</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">f_ana</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="mf">1000.0</span><span class="p">,</span> <span class="mf">4000.0</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">y_min</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">y_max</span><span class="p">],</span>
+                     <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="p">(</span><span class="mf">4000.0</span> <span class="o">-</span> <span class="mf">1000.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">reference</span><span class="o">.</span><span class="n">y_min</span><span class="p">),</span>
+                     <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;quadric&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$m_</span><span class="si">{tt}</span><span class="s1">\;\mathrm{[GeV]}$&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Rapidity y&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;NN performance at ctG = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ctg</span><span class="p">))</span>
+    <span class="n">epoch_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.70</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+    <span class="n">loss_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.70</span><span class="p">,</span> <span class="mf">0.90</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;loss.out&#39;</span><span class="p">)</span>
+
+    <span class="c1"># initialization function: plot the background of each frame</span>
+    <span class="k">def</span> <span class="nf">init</span><span class="p">():</span>
+        <span class="n">img</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">f_ana</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">epoch_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">loss_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span><span class="p">,</span> <span class="n">epoch_text</span><span class="p">,</span> <span class="n">loss_text</span>
+
+    <span class="c1"># animation function.  This is called sequentially</span>
+
+    <span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">f_pred</span><span class="p">,</span> <span class="n">n_alpha_nn</span><span class="p">,</span> <span class="n">n_alpha_n_beta_nn</span> <span class="o">=</span> <span class="n">make_predictions_2d</span><span class="p">(</span>
+            <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;trained_nn_</span><span class="si">{}</span><span class="s1">.pt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">network_size</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">make_animation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">img</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">f_ana</span> <span class="o">/</span> <span class="n">f_pred</span><span class="p">)</span>
+        <span class="n">epoch_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;epoch = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="n">loss_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;loss = </span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loss</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">img</span><span class="p">,</span> <span class="n">epoch_text</span><span class="p">,</span> <span class="n">loss_text</span>
+
+    <span class="c1"># call the animator.  blit=True means only re-draw the parts that have changed.</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating the animation&quot;</span><span class="p">)</span>
+    <span class="n">anim</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">init_func</span><span class="o">=</span><span class="n">init</span><span class="p">,</span>
+                                   <span class="n">frames</span><span class="o">=</span><span class="n">stopping_point</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">blit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">anim</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;animation/training_animation.gif&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="plot_mg5_ana_mtt"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.plot_mg5_ana_mtt">[docs]</a><span class="k">def</span> <span class="nf">plot_mg5_ana_mtt</span><span class="p">(</span><span class="n">binWidth</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">cuGRe</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">path_to_file</span><span class="p">,</span> <span class="n">save_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a plot that shows the mg5 histogram in m_tt on top of the analytical (exact) result.</span>
+<span class="sd">    This allows for a visual cross-check of the analytical result.</span>
+<span class="sd">    :param binWidth: binwidth in TeV</span>
+<span class="sd">    :param mtt_max: maximum m_tt in TeV</span>
+<span class="sd">    :param cuGRe: eft parameter cuGRe</span>
+<span class="sd">    :param cuu: eft parameter cuu</span>
+<span class="sd">    :param path_to_file: path to lhe file</span>
+<span class="sd">    :param save_path: path where the plot should be stored</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">axs</span><span class="o">.</span><span class="n">plotData</span><span class="p">(</span><span class="n">binWidth</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">cuGRe</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">path_to_file</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="plot_xsec_ana"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.analyse.plot_xsec_ana">[docs]</a><span class="k">def</span> <span class="nf">plot_xsec_ana</span><span class="p">(</span><span class="n">binWidth</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">cuGRe</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">path_to_file</span><span class="p">,</span> <span class="n">save_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a plot that shows the mg5 histogram in m_tt on top of the analytical (exact) result.</span>
+<span class="sd">    This allows for a visual cross-check of the analytical result.</span>
+<span class="sd">    :param binWidth: binwidth in TeV</span>
+<span class="sd">    :param mtt_max: maximum m_tt in TeV</span>
+<span class="sd">    :param cuGRe: eft parameter cuGRe</span>
+<span class="sd">    :param cuu: eft parameter cuu</span>
+<span class="sd">    :param path_to_file: path to lhe file</span>
+<span class="sd">    :param save_path: path where the plot should be stored</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">axs</span><span class="o">.</span><span class="n">plot_xsec_ana</span><span class="p">(</span><span class="n">binWidth</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">cuGRe</span><span class="p">,</span> <span class="n">cuu</span><span class="p">,</span> <span class="n">path_to_file</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># with open(sys.argv[1]) as json_data:</span>
+    <span class="c1">#     run_dict = json.load(json_data)</span>
+    <span class="c1">#</span>
+    <span class="c1"># quadratic = run_dict[&#39;quadratic&#39;]</span>
+    <span class="c1"># n_dat = run_dict[&#39;n_dat&#39;]</span>
+    <span class="c1"># epochs = run_dict[&#39;epochs&#39;]</span>
+    <span class="c1"># ctg = run_dict[&#39;coeff&#39;][0][&#39;value&#39;]</span>
+    <span class="c1"># cuu = run_dict[&#39;coeff&#39;][1][&#39;value&#39;]</span>
+    <span class="c1"># network_size = [run_dict[&#39;input_size&#39;]] + run_dict[&#39;hidden_sizes&#39;] + [run_dict[&#39;output_size&#39;]]</span>
+    <span class="c1">#</span>
+    <span class="c1"># #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])</span>
+    <span class="c1"># plot_predictions_1d(network_size)</span>
+    <span class="c1"># #plot_predictions_2d(&#39;/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_11/mc_run_1/&#39;, network_size, )</span>
+    <span class="c1"># # TODO: continue here tomorrow morning!</span>
+
+    <span class="n">lhe_path</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/unweighted_events.lhe&#39;</span>
+    <span class="n">save_path</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/eft.pdf&#39;</span>
+    <span class="c1">#plot_mg5_ana_mtt(30*10**-3, 2.5, 1, 0, lhe_path, save_path)</span>
+    <span class="n">plot_xsec_ana</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lhe_path</span><span class="p">,</span> <span class="s1">&#39;mg5_ana.pdf&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Jaco ter Hoeve
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

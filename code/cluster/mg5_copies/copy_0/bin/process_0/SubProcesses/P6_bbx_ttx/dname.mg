@@ -1,1 +1,0 @@
-DIRNAME=P6_bbx_ttx

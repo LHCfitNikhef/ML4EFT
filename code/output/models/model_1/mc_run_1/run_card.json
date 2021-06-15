@@ -1,0 +1,1 @@
+{"name": 8, "epochs": 500, "input_size": 1, "output_size": 1, "hidden_sizes": [30, 30, 30, 30, 30], "trained": 1, "n_dat": 100000, "quadratic": 1, "coeff": [{"op": "ctg", "value": 2.0}, {"op": "cuu", "value": 2.0}]}

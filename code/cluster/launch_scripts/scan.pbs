@@ -1,0 +1,4 @@
+source /data/theorie/jthoeve/miniconda3/etc/profile.d/conda.sh
+conda activate eels_kk
+
+python /data/theorie/jthoeve/ML4EFT_v2/main.py ${ARG}

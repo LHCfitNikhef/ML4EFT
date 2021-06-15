@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="jthoeve@login.nikhef.nl:22 password" remoteFilesAllowedToDisappearOnAutoupload="false" showNewOnTargetInSync="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="Nikhef cluster" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
       <paths name="Nikhef cluster">
         <serverdata>
           <mappings>
-            <mapping deploy="/ML4EFT" local="$PROJECT_DIR$/code/cluster" web="/" />
+            <mapping deploy="/ML4EFT_v2" local="$PROJECT_DIR$/code/" web="/" />
           </mappings>
           <excludedPaths>
-            <excludedPath path="/ML4EFT/MG5_aMC_v3_0_0" />
-            <excludedPath path="/ML4EFT/mg5_copies" />
+            <excludedPath local="true" path="$PROJECT_DIR$/code/notebooks" />
+            <excludedPath local="true" path="$PROJECT_DIR$/code/old" />
+            <excludedPath local="true" path="$PROJECT_DIR$/code/quad_clas/lhapdf_install_folder" />
+            <excludedPath local="true" path="$PROJECT_DIR$/code/sphinx" />
+            <excludedPath local="true" path="$PROJECT_DIR$/code/MG5_aMC_v2.7.3" />
+            <excludedPath local="true" path="$PROJECT_DIR$/code/UFO_model" />
+            <excludedPath local="true" path="$PROJECT_DIR$/code/madgraph_cards" />
           </excludedPaths>
-        </serverdata>
-      </paths>
-      <paths name="jthoeve@login.nikhef.nl:22 password">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/data/theorie/jthoeve/ML4EFT" local="$PROJECT_DIR$/code/cluster" />
-          </mappings>
         </serverdata>
       </paths>
     </serverData>

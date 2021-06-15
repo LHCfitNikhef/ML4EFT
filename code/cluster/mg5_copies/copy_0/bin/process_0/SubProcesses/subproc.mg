@@ -1,6 +1,0 @@
-P3_ddx_ttx
-P5_ssx_ttx
-P6_bbx_ttx
-P1_gg_ttx
-P2_uux_ttx
-P4_ccx_ttx
