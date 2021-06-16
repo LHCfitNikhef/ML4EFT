@@ -280,7 +280,7 @@ TSWLatexianTemp*
 *.lhe
 
 #Directories
-/code/output/models
+/code/output/models/
 /code/quad_clas/lhapdf_install_folder/
 /code/quad_clas/qc_results/trained_nn/
 /code/quad_clas/temp/

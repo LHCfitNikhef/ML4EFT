@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/code/old/analysis/lhe_events" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/Pytorch/results/trained_nn/linear" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/Pytorch/cuu" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/Pytorch/lhe_cut" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/Pytorch/lhe_events" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/Pytorch/lhe_old" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/Pytorch/linear" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/Pytorch/linear_1000" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/Pytorch/linear_1000_500K" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/Pytorch/quadratic" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/plots" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/qc_results" />
+      <excludeFolder url="file://$MODULE_DIR$/code/old/temp" />
+      <excludeFolder url="file://$MODULE_DIR$/code/quad_clas/lhapdf_install_folder" />
+      <excludeFolder url="file://$MODULE_DIR$/code/MG5_aMC_v2.7.3" />
+    </content>
     <orderEntry type="jdk" jdkName="Remote Python 3.7.9 (sftp://jthoeve@login.nikhef.nl:22/data/theorie/jthoeve/miniconda3/envs/eels_kk/bin/python) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
