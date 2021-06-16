@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'ML4EFT'
-copyright = '2021, Jaco ter Hoeve'
-author = 'Jaco ter Hoeve'
+copyright = '2021, Jaco ter Hoeve, Maeve Madigan'
+author = 'Jaco ter Hoeve, Maeve Madigan'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1.0'
@@ -31,18 +31,10 @@ release = '0.1.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.autosectionlabel",
-    "sphinx.ext.coverage",
-    "sphinx.ext.doctest",
-    "sphinx.ext.extlinks",
-    "sphinx.ext.ifconfig",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.mathjax",
-    "sphinx.ext.napoleon",
-    "sphinx.ext.todo",
-    "sphinx.ext.viewcode",
-    "sphinx.ext.autosummary"
+	'sphinx.ext.autodoc',
+	'sphinx.ext.autosummary',
+	'sphinx.ext.mathjax'
+	
 ]
 
 # Add any paths that contain templates here, relative to this directory.

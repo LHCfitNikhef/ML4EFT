@@ -1,8 +1,6 @@
 quad\_clas.fit package
 ======================
 
-Submodules
-----------
 
 quad\_clas.fit.run\_bounds module
 ---------------------------------
@@ -12,10 +10,3 @@ quad\_clas.fit.run\_bounds module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: quad_clas.fit
-   :members:
-   :undoc-members:
-   :show-inheritance:

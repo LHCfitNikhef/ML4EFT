@@ -80,8 +80,9 @@
               
             
             
-              <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">documentation</a><ul class="current">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="quad_clas.html">quad_clas package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="quad_clas.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="quad_clas.analyse.html">quad_clas.analyse package</a></li>
@@ -138,7 +139,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="modules.html">documentation</a> &raquo;</li>
+          <li><a href="modules.html">Documentation</a> &raquo;</li>
         
           <li><a href="quad_clas.html">quad_clas package</a> &raquo;</li>
         
@@ -165,58 +166,43 @@
             
   <div class="section" id="quad-clas-core-lhelib-package">
 <h1>quad_clas.core.lhelib package<a class="headerlink" href="#quad-clas-core-lhelib-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
-</div>
 <div class="section" id="module-quad_clas.core.lhelib.lhe">
 <span id="quad-clas-core-lhelib-lhe-module"></span><h2>quad_clas.core.lhelib.lhe module<a class="headerlink" href="#module-quad_clas.core.lhelib.lhe" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="quad_clas.core.lhelib.lhe.invariant_mass">
-<code class="sig-prename descclassname">quad_clas.core.lhelib.lhe.</code><code class="sig-name descname">invariant_mass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p1</span></em>, <em class="sig-param"><span class="n">p2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/core/lhelib/lhe.html#invariant_mass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.core.lhelib.lhe.invariant_mass" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">quad_clas.core.lhelib.lhe.</code><code class="sig-name descname">invariant_mass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p1</span></em>, <em class="sig-param"><span class="n">p2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_clas.core.lhelib.lhe.invariant_mass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the invariant mass of an event</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="quad_clas.core.lhelib.lhe.load_events">
-<code class="sig-prename descclassname">quad_clas.core.lhelib.lhe.</code><code class="sig-name descname">load_events</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">s</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/core/lhelib/lhe.html#load_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.core.lhelib.lhe.load_events" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">quad_clas.core.lhelib.lhe.</code><code class="sig-name descname">load_events</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">s</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_clas.core.lhelib.lhe.load_events" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a subset of size s from n events from the lhe file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> (<em>str</em>) – Path to lhe file</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – total size of the dataset</p></li>
-<li><p><strong>s</strong> – size of the subset</p></li>
-</ul>
+<dl class="simple">
+<dt>path: str</dt><dd><p>Path to lhe file</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>event_data</strong> – The loaded subset of events</p>
+<dt>n: int</dt><dd><p>total size of the dataset</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
+<dt>s:</dt><dd><p>size of the subset</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>event_data: ndarray</dt><dd><p>The loaded subset of events</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="quad_clas.core.lhelib.lhe.total_xs">
-<code class="sig-prename descclassname">quad_clas.core.lhelib.lhe.</code><code class="sig-name descname">total_xs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/core/lhelib/lhe.html#total_xs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.core.lhelib.lhe.total_xs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">quad_clas.core.lhelib.lhe.</code><code class="sig-name descname">total_xs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#quad_clas.core.lhelib.lhe.total_xs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load the xsec and uncertainty from an lhe file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – path to lhe event file</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>The total inclusive cross-section plus uncertainty</p>
+<dl class="simple">
+<dt>path: str</dt><dd><p>path to lhe event file</p>
 </dd>
 </dl>
+<p>The total inclusive cross-section plus uncertainty</p>
 </dd></dl>
 
-</div>
-<div class="section" id="module-quad_clas.core.lhelib">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-quad_clas.core.lhelib" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -240,7 +226,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2021, Jaco ter Hoeve
+        &copy; Copyright 2021, Jaco ter Hoeve, Maeve Madigan
 
     </p>
   </div>
