@@ -506,11 +506,20 @@ class StatAnalysis:
     # truth and nn methods
 
     def xsec_unbinned(self):
+        """
+        Computes the total cross section for each of the eft points in eft_points.
+
+        Returns
+        -------
+        tuple
+            two lists, the first containing the cross sections, and the second the associated uncertainties.
+        """
         data = []
         data_sigma = []
 
         for i, eft_point in enumerate(self.eft_points):
-            #  path to lhe file
+            # TODO: make the path reference more general!
+            # path to lhe file
             path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(i, i)
             if 5 < i < 12:
                 path = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/cuu/eft_{}.lhe'.format(i - 5)
@@ -520,20 +529,40 @@ class StatAnalysis:
         data = np.array(data)
         data_sigma = np.array(data_sigma)
 
-        # if not os.path.exists(self.path_output):
-        #     os.makedirs(self.path_output)
         with open(os.path.join(self.path_output, "xsec_unbinned.npy"), 'wb') as f:
             np.save(f, data)
 
         return data, data_sigma
 
     def load_xsec_unbinned(self):
+        """
+        Loads the total cross section for each of the eft points in the unbinned analysis.
+
+        Returns
+        -------
+        array_like
+            array with the total cross section for each the eft points.
+        """
         path_xsec_binned = os.path.join(self.path_output, "xsec_unbinned.npy")
         with open(path_xsec_binned, 'rb') as f:
             xsec = np.load(f)
         return xsec
 
     def expected_nevents(self, c):
+        """
+        Computes the expected number of events in the unbinned analysis for the specified value of the Wilson
+        coefficient c.
+
+        Parameters
+        ----------
+        c: array_like
+            point in eft space
+
+        Returns
+        -------
+        dict
+            expected number of events in the sm and the eft (at point c).
+        """
         #TODO: change the order
         cugre = c[0]
         cuu = c[1]
@@ -553,66 +582,75 @@ class StatAnalysis:
         return nu
 
     def get_tc_truth(self, hypothesis):
+        """
+        Computes the mean and standard deviation of the extended log likelihood ratio test statistic tc using the
+        analytic likelihood ratio.
 
-        # dsigma_dmtt_eft = []
-        # dsigma_dmtt_sm = []
-        # for i, (cug, cuu) in enumerate(self.dict_int.keys()):
-        #     data = self.data_sm if hypothesis is 'sm' else self.data_eft[i]
-        #     dsigma_dmtt_eft.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in data])
-        #     dsigma_dmtt_sm.append([axs.dsigma_dmtt(mtt, 0, 0) for mtt in data])
-        #
-        # dsigma_dmtt_eft = np.array(dsigma_dmtt_eft)
-        # dsigma_dmtt_sm = np.array(dsigma_dmtt_sm)
-        #
-        # # likelihood ratio
-        # r_c = dsigma_dmtt_eft / dsigma_dmtt_sm
-        #
-        # # log-likelihood ratio
-        # tau_c = np.log(r_c)
-        # mean_tauc = np.mean(tau_c, axis=1).flatten()
+        Parameters
+        ----------
+        hypothesis: str
+            sm or eft
 
-        #############
-
-        dsigma_dmtt_eft_2 = []
-        dsigma_dmtt_sm_2 = []
+        Returns
+        -------
+        tuple
+            mean of tc, standard deviation of tc
+            both have shape = (n eft points, )
+        """
+        dsigma_dmtt_eft = []
+        dsigma_dmtt_sm = []
         for i, (cug, cuu) in enumerate(self.dict_int.keys()):
             if hypothesis == 'eft':
-                dsigma_dmtt_eft_2.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_eft[i]])
-                dsigma_dmtt_sm_2.append([axs.dsigma_dmtt(mtt, 0, 0) for mtt in self.data_eft[i]])
+                dsigma_dmtt_eft.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_eft[i]])
+                dsigma_dmtt_sm.append([axs.dsigma_dmtt(mtt, 0, 0) for mtt in self.data_eft[i]])
             else:  # hypothesis = sm
-                dsigma_dmtt_eft_2.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_sm])
+                dsigma_dmtt_eft.append([axs.dsigma_dmtt(mtt, cug, cuu) for mtt in self.data_sm])
 
         if hypothesis == 'eft':
-            dsigma_dmtt_sm_2 = np.array(dsigma_dmtt_sm_2)
+            dsigma_dmtt_sm = np.array(dsigma_dmtt_sm)
         else:  # hypothesis = sm
-            dsigma_dmtt_sm_2 = np.array([axs.dsigma_dmtt(mtt, 0, 0) for mtt in self.data_sm])
-            dsigma_dmtt_sm_2 = np.expand_dims(dsigma_dmtt_sm_2, axis=0)
+            dsigma_dmtt_sm = np.array([axs.dsigma_dmtt(mtt, 0, 0) for mtt in self.data_sm])
+            dsigma_dmtt_sm = np.expand_dims(dsigma_dmtt_sm, axis=0)
 
-        dsigma_dmtt_eft_2 = np.array(dsigma_dmtt_eft_2)
+        dsigma_dmtt_eft = np.array(dsigma_dmtt_eft)
 
         # likelihood ratio
-        r_c_2 = dsigma_dmtt_eft_2 / dsigma_dmtt_sm_2
+        r_c = dsigma_dmtt_eft / dsigma_dmtt_sm
 
         # log-likelihood ratio
-        tau_c_2 = np.log(r_c_2)  # tau_c.shape = (n_eft_points, n_events)
-        mean_tauc_2 = np.mean(tau_c_2, axis=1).flatten()
-        mean_tauc_sq = np.mean(tau_c_2 ** 2, axis=1).flatten()
-
-        ##############
+        tau_c = np.log(r_c)  # tau_c.shape = (n_eft_points, n_events)
+        mean_tauc_2 = np.mean(tau_c, axis=1).flatten()
+        mean_tauc_sq = np.mean(tau_c ** 2, axis=1).flatten()
 
         # expected number of events
         expected_eft = np.array([nu['eft'] for nu in self.nu])
         expected_sm = np.array([nu['sm'] for nu in self.nu])
 
         mean_tc = expected_eft - expected_sm - expected_sm * mean_tauc_2 if hypothesis == 'sm' else expected_eft - expected_sm - expected_eft * mean_tauc_2
-
-
         sigma_tc = np.sqrt(expected_eft * mean_tauc_sq) if hypothesis == 'eft' else np.sqrt(expected_sm * mean_tauc_sq)
 
         return mean_tc, sigma_tc
 
     def get_tc_nn(self, network_size, nn_rep, hypothesis):
+        """
+        Computes the mean and standard deviation of the extended log likelihood ratio test statistic tc using the
+        nn (reconstructed) likelihood ratio.
 
+        Parameters
+        ----------
+        network_size: list
+            architecture of the network that was used for training
+        nn_rep: int
+            number of neural network replicas that were trained
+        hypothesis: str
+            sm or eft
+
+        Returns
+        -------
+        tuple
+            mean of tc, standard deviation of tc
+            both have shape = (n eft points, nn_rep)
+        """
         r_c = []
         for i, (cug, cuu) in enumerate(self.dict_int.keys()):
             ratio_list = []
@@ -643,18 +681,21 @@ class StatAnalysis:
 
     def find_pdf(self):
         """
-        Given the eft parameter(s) c, this function computes the mean and standard deviation of pdf(tc) under both
-        the SM and the EFT. It uses the analytical likelihood ratio.
-        :param c: nd_array that specifies the point in eft parameter space
+        Computes the mean and standard deviation of the extended likelihood ratio distribution in both the sm and the eft.
+        It then gives the corresponding z-score for each of the eft points in the interpolation dictionary. The results are
+        written to the output directory specified in the paths dictionary.
+
+        Depending on whether nn is set to true or not, results are either computed analytically or using the neural network.
         """
 
         # Compute the expected number of events
         self.nu = [self.expected_nevents(np.array(c)) for c in self.dict_int.keys()]
 
+        # TODO: useful feature to include?
         # generate samples with mg5 if not yet available and store them at path.
         # path = lhe.generate_samples(c, self.output_path)
 
-        #TODO: path_sm is hard coded - change this.
+        # TODO: path_sm is hard coded - change this.
         path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
 
         # load the lhe file and construct the dataset of mtt
@@ -663,7 +704,6 @@ class StatAnalysis:
 
         self.data_eft = [lhe.load_events(path_eft, n, s) * 10 ** -3 for path_eft in self.dict_int.values()]
         self.data_sm = lhe.load_events(path_sm, n, s) * 10 ** -3
-
 
         # compute the mean and std. dev. of the pdf(tc) under either the sm or the eft
         if self.nn:  # mean_tc_eft.shape = (n_eft_points, nn_rep)
@@ -698,7 +738,8 @@ class StatAnalysis:
 
 
 def plot_tc_accuracy(binned_analyses, c=np.array([0, 0.5]), n=10000):
-    """ This function shows a comparison between the asymptotic distribution and the exact sampling based approach.
+    """
+    This function shows a comparison between the asymptotic distribution and the exact sampling based approach.
     When multiple StatAnalysis instances are passed as an array to binned_analysis, the comparison is made for each of them.
 
     Parameters
@@ -727,6 +768,8 @@ def plot_tc_accuracy(binned_analyses, c=np.array([0, 0.5]), n=10000):
     return fig
 
 
+# TODO: finish function below.
+# function to plot the expected number of events as a function of c
 def plot_nu_i(binned, path_save):
     fig = plt.figure(figsize=(10,6))
     nu_i_eft = []

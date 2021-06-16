@@ -6,9 +6,9 @@ Subpackages
 
 .. toctree::
    :maxdepth: 4
+   :hidden:
 
    quad_clas.analyse
    quad_clas.core
    quad_clas.fit
-
 

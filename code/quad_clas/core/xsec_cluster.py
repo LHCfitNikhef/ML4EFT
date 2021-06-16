@@ -1,7 +1,6 @@
 # Author: Jaco ter Hoeve
 # This files contains the analytical cross sections in the eft as obtained through FeynCalc
 
-
 from __future__ import division
 import lhapdf
 import numpy as np
@@ -179,13 +178,23 @@ def rapidity(p1, p2):
 
 def crossSection(binWidth, mtt_max, cuGRe, cuu):
     """
-    Compute the analytical differential cross section in M(tt)
-    inputs:
-        - binWidth = bin width of the MG5 events
-        - mtt_max = plot goes from [2*mt, mtt_max]
-        - cSMEFT = Value of ctG in TeV^-2
-    outputs:
-        - (x,y) with x = m_tt and y = dsigma/dmtt
+    Computes the analytical differential cross section in M(tt)
+
+    Parameters
+    ----------
+    binWidth: float
+        binwidth of the MG5 events
+    mtt_max: float
+        plot goes from [2*mt, mtt_max]
+    cuGRe: float
+        wilson coefficient cug
+    cuu: float
+        wilson coefficient cuu
+
+    Returns
+    -------
+    tuple
+        two array_like objects, mtt and dsigma/dmtt
     """
     x = np.arange(2 * mt + binWidth / 2, mtt_max, binWidth)
     y = np.array([diffCross(mtt, cuGRe, cuu) for mtt in x])

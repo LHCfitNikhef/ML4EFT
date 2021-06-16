@@ -9,8 +9,6 @@ Subpackages
 
    quad_clas.core.lhelib
 
-Submodules
-----------
 
 quad\_clas.core.analyse module
 ------------------------------
@@ -44,10 +42,3 @@ quad\_clas.core.xsec\_cluster module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: quad_clas.core
-   :members:
-   :undoc-members:
-   :show-inheritance:
