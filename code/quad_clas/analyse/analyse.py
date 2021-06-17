@@ -161,8 +161,8 @@ class Analyse:
         Finds the contours of the 95% CL.
         """
         fig, ax = plt.subplots(figsize=(10, 6))
-        cuu = np.linspace(self.extent[0, 0], self.extent[0, 1], 100)
-        cug = np.linspace(self.extent[1, 0], self.extent[1, 1], 100)
+        cuu = np.linspace(self.extent[0, 0], self.extent[0, 1], 500)
+        cug = np.linspace(self.extent[1, 0], self.extent[1, 1], 500)
         cuu_plane, cug_plane = np.meshgrid(cuu, cug)
 
         labels = []
@@ -178,6 +178,9 @@ class Analyse:
                 labels.append(r'$\rm{Binning\;%d}$' % i)
 
         self.z_scores_truth, self.z_scores_nn = self.load_z_scores()
+        cond = ~((self.z_scores_nn['cug'] != 0.0) & (self.z_scores_nn['cuu'] != 0.0))
+        self.z_scores_nn = self.z_scores_nn[cond]
+        #self.z_scores_truth = self.z_scores_truth[cond]
 
         # 1D analysis
         #self.analyse1d()
@@ -210,7 +213,7 @@ class Analyse:
         ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
 
-        fig.savefig(os.path.join(self.plots_path, 'ellipses.pdf'))
+        fig.savefig(os.path.join(self.plots_path, 'ellipses_no_diag_v2.pdf'))
 
     def analyse1d(self):
         z_scores_truth = self.z_scores_truth
@@ -230,8 +233,8 @@ class Analyse:
         z_scores_truth_pdiag = z_scores_truth[(z_scores_truth['cuu'] > 0) & (z_scores_truth['cug'] > 0)]
         z_scores_truth_ndiag = z_scores_truth[(z_scores_truth['cuu'] < 0) & (z_scores_truth['cug'] < 0)]
 
-        fig = self.interpolation(z_scores_truth_pcug, z_scores_nn_pcug)
-        fig.savefig(os.path.join(self.plots_path, 'analysis1d.pdf'))
+        fig = self.interpolation(z_scores_truth_pcuu, z_scores_nn_pcuu)
+        fig.savefig(os.path.join(self.plots_path, 'analysis1d_pcuu.pdf'))
 
 
 
@@ -316,19 +319,19 @@ class Analyse:
         plt.plot(x[idx_nn], self.quad_pol(x[idx_nn], *popt_nn), 'kx')
 
         ##### add binned curve
-        # z_scores_binned = []
-        # for c in x:
-        #     self.binned_analyses[0].nu_i = self.binned_analyses[0].expected_entries(np.array([0, c]))
-        #     self.binned_analyses[0].mean_tc_asi, self.binned_analyses[0].std_tc_asi = self.binned_analyses[0].find_pdf_binned_asimov()
-        #     z_score_asi, _ = self.binned_analyses[0].p_value_asimov()
-        #     z_scores_binned.append(z_score_asi)
-        # z_scores_binned = np.array(z_scores_binned)
-        #
-        # plt.plot(x, z_scores_binned, label=r'$\rm{z-score\;(binned)}$', color='C2')
+        z_scores_binned = []
+        for c in x:
+            self.binned_analyses[0].nu_i = self.binned_analyses[0].expected_entries(np.array([0, c]))
+            self.binned_analyses[0].mean_tc_asi, self.binned_analyses[0].std_tc_asi = self.binned_analyses[0].find_pdf_binned_asimov()
+            z_score_asi, _ = self.binned_analyses[0].p_value_asimov()
+            z_scores_binned.append(z_score_asi)
+        z_scores_binned = np.array(z_scores_binned)
+
+        plt.plot(x, z_scores_binned, label=r'$\rm{z-score\;(binning\;0)}$', color='C2')
 
         # Plot settings
         ax.set_ylabel(r'$\rm{z-score}$', fontsize=20)
-        ax.set_xlabel(r'$\rm{c}$', fontsize=20)
+        ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
         ax.set_xlim((xmin, xmax))
 
         epsilon = 0.1 * (np.max(z_score_truth) - np.min(z_score_truth))

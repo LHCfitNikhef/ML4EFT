@@ -48,7 +48,7 @@ if __name__ == "__main__":
         binning_1 = np.append(np.linspace(340, 1000, 4), 4000).astype(int)
         binning_2 = np.append(np.linspace(340, 1000, 1), 4000).astype(int)
 
-        binnings_list = [binning_0, binning_1, binning_2]
+        binnings_list = [binning_0]
 
         extent = np.array([[-1.2, 1.2], [-0.3, 0.3]])
-        analysis = ana.Analyse(root_path, binnings=binnings_list, nn=True, truth=True, fit=False, extent=extent)
+        analysis = ana.Analyse(root_path, binnings=binnings_list, nn=True, truth=False, fit=False, extent=extent)

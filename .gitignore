@@ -286,6 +286,7 @@ TSWLatexianTemp*
 /code/quad_clas/temp/*
 /code/old/*
 /.idea
+/sphinx/_build/*
 
 #Cluster output files
 *.pbs.*
