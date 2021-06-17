@@ -1,9 +1,10 @@
-[![CodeFactor](https://www.codefactor.io/repository/github/lhcfitnikhef/smeft/badge?s=e885406e89637e9e815c3a63dc207b99f4984a60)](https://www.codefactor.io/repository/github/lhcfitnikhef/smeft)
+[![CodeFactor](https://www.codefactor.io/repository/github/lhcfitnikhef/ml4eft/badge?s=4529ce75fe7f8468c4b83b95ee93648e8aba7e6a)](https://www.codefactor.io/repository/github/lhcfitnikhef/ml4eft)
 
 # Introduction
 
 ML4EFT is a python package that studies machine learning (ML) applications for effective field
-theories (EFTs). You can click [here](http://htmlpreview.github.io/?https://github.com/LHCfitNikhef/ML4EFT/blob/main/code/sphinx/_build/html/index.html) to browse the documentation.
+theories (EFTs). You can open [this file](https://github.com/LHCfitNikhef/ML4EFT/blob/main/code/sphinx/_build/html/index.html) on your local machine to browse the documentation.
+
 
 ## Organisation
 
