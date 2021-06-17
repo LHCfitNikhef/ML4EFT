@@ -285,7 +285,7 @@ TSWLatexianTemp*
 /code/quad_clas/qc_results/trained_nn/
 /code/quad_clas/temp/
 /code/old/
-/.idea
+/.idea/
 /sphinx/_build/
 
 #Cluster output files
