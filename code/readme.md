@@ -3,7 +3,7 @@
 # Introduction
 
 ML4EFT is a python package that studies machine learning (ML) applications for effective field
-theories (EFTs). You can click [here]() to browse the documentation.
+theories (EFTs). You can click [here](http://htmlpreview.github.io/?https://github.com/LHCfitNikhef/ML4EFT/blob/main/code/sphinx/_build/html/index.html) to browse the documentation.
 
 ## Organisation
 
