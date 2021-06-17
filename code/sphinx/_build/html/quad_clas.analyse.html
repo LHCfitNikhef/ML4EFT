@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>quad_clas.analyse package &mdash; ML4EFT 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="quad_clas.core package" href="quad_clas.core.html" />
+    <link rel="prev" title="quad_clas package" href="quad_clas.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ML4EFT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="quad_clas.html">quad_clas package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="quad_clas.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">quad_clas.analyse package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quad_clas.core.html">quad_clas.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quad_clas.fit.html">quad_clas.fit package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ML4EFT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">Documentation</a> &raquo;</li>
+        
+          <li><a href="quad_clas.html">quad_clas package</a> &raquo;</li>
+        
+      <li>quad_clas.analyse package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/quad_clas.analyse.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="quad-clas-analyse-package">
+<h1>quad_clas.analyse package<a class="headerlink" href="#quad-clas-analyse-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-quad_clas.analyse.analyse">
+<span id="quad-clas-analyse-analyse-module"></span><h2>quad_clas.analyse.analyse module<a class="headerlink" href="#module-quad_clas.analyse.analyse" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="quad_clas.analyse.analyse.Analyse">
+<em class="property">class </em><code class="sig-prename descclassname">quad_clas.analyse.analyse.</code><code class="sig-name descname">Analyse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root_path</span></em>, <em class="sig-param"><span class="n">truth</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">nn</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">binnings</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">extent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fit</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">luminosity</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">mc_runs</span><span class="o">=</span><span class="default_value">100</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This python class object analyses the z-scores that originate from
+a scan over the EFT coefficient space. Results are presented for
+the neural network (nn), truth and binned analyses.</p>
+<p>The (expected) exclusion limits are found by interpolating on the
+z-scores and solving the resulting polynomial for the 95% CL.</p>
+<dl class="simple">
+<dt>root_path:</dt><dd><p>path to root where the output should be stored</p>
+</dd>
+<dt>truth: bool</dt><dd><p>Includes the truth bounds</p>
+</dd>
+<dt>nn: bool</dt><dd><p>Includes the nn bounds</p>
+</dd>
+<dt>binnings: list</dt><dd><p>collection of binnings (array_like) for which to run the analysis</p>
+</dd>
+<dt>extent: array_like, shape (n, 2)</dt><dd><p>It gives the range of the EFT coefficients to scan.</p>
+</dd>
+<dt>fit: bool</dt><dd><p>This should be set to true for every new binning</p>
+</dd>
+<dt>luminosity: float</dt><dd><p>luminosity of the experiment in pb^-1</p>
+</dd>
+<dt>mc_runs: int</dt><dd><p>number of z-scores to load at each EFT point</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.analyse1d">
+<code class="sig-name descname">analyse1d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.analyse1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.analyse1d" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.coefficient_matrix">
+<em class="property">static </em><code class="sig-name descname">coefficient_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">eft_points</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.coefficient_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.coefficient_matrix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.combine_analyses">
+<code class="sig-name descname">combine_analyses</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.combine_analyses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.combine_analyses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the contours of the 95% CL.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.ellipse">
+<em class="property">static </em><code class="sig-name descname">ellipse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">c</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.ellipse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.ellipse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.fit_ellipse">
+<code class="sig-name descname">fit_ellipse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.fit_ellipse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.fit_ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit an ellipse through the z-scores</p>
+<dl class="simple">
+<dt>tuple</dt><dd><p>ellipse parameters for the truth and nn analysis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.interpolation">
+<code class="sig-name descname">interpolation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z_scores_truth</span></em>, <em class="sig-param"><span class="n">z_scores_nn</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.interpolation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.interpolation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.load_z_scores">
+<code class="sig-name descname">load_z_scores</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.load_z_scores"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.load_z_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the z-scores for all the mc runs.</p>
+<dl class="simple">
+<dt>tuple</dt><dd><p>Pandas dataframe for truth and nn</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.quad_pol">
+<em class="property">static </em><code class="sig-name descname">quad_pol</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">c</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.quad_pol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.quad_pol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.read_z_scores">
+<code class="sig-name descname">read_z_scores</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.read_z_scores"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.read_z_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the z-scores</p>
+<dl class="simple">
+<dt>path: str</dt><dd><p>location of the z-scores</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>list</dt><dd><p>list of the z-scores</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.run_binned_analysis">
+<code class="sig-name descname">run_binned_analysis</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.run_binned_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.run_binned_analysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a binned analysis</p>
+<dl class="simple">
+<dt>list</dt><dd><p>binned analyses object for each of the binnings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.stdom">
+<em class="property">static </em><code class="sig-name descname">stdom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.stdom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.stdom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="quad_clas.analyse.analyse.Analyse.wavg">
+<em class="property">static </em><code class="sig-name descname">wavg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">group</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/quad_clas/analyse/analyse.html#Analyse.wavg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#quad_clas.analyse.analyse.Analyse.wavg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="quad_clas.core.html" class="btn btn-neutral float-right" title="quad_clas.core package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="quad_clas.html" class="btn btn-neutral float-left" title="quad_clas package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Jaco ter Hoeve, Maeve Madigan
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

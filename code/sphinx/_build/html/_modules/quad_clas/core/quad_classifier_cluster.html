@@ -1,0 +1,658 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>quad_clas.core.quad_classifier_cluster &mdash; ML4EFT 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> ML4EFT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ML4EFT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>quad_clas.core.quad_classifier_cluster</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for quad_clas.core.quad_classifier_cluster</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Author: Jaco ter Hoeve</span>
+<span class="c1"># This file implements the training of the quadratic classifier</span>
+
+<span class="c1"># !/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.utils.data</span> <span class="k">as</span> <span class="nn">data</span>
+<span class="kn">import</span> <span class="nn">torch.optim</span> <span class="k">as</span> <span class="nn">optim</span>
+<span class="kn">import</span> <span class="nn">pylhe</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="c1"># matplotlib.use(&quot;TkAgg&quot;)</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">rc</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;PDF&#39;</span><span class="p">)</span>
+<span class="n">rc</span><span class="p">(</span><span class="s1">&#39;font&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;family&#39;</span><span class="p">:</span><span class="s1">&#39;sans-serif&#39;</span><span class="p">,</span><span class="s1">&#39;sans-serif&#39;</span><span class="p">:[</span><span class="s1">&#39;Helvetica&#39;</span><span class="p">]})</span>
+<span class="n">rc</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="n">usetex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="n">eft_points</span> <span class="o">=</span> <span class="p">[[</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="MLP"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.MLP">[docs]</a><span class="k">class</span> <span class="nc">MLP</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">architecture</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set up the NN architecture</span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            act_fn - Object of the activation function that should be used as non-linearity in the network.</span>
+<span class="sd">            input_size - Size of the input images in pixels</span>
+<span class="sd">            num_classes - Number of classes we want to predict</span>
+<span class="sd">            hidden_sizes - A list of integers specifying the hidden layer sizes in the NN</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">input_size</span> <span class="o">=</span> <span class="n">architecture</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">hidden_sizes</span> <span class="o">=</span> <span class="n">architecture</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">output_size</span> <span class="o">=</span> <span class="n">architecture</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Create the network based on the specified hidden sizes</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">layer_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">input_size</span><span class="p">]</span> <span class="o">+</span> <span class="n">hidden_sizes</span>
+        <span class="k">for</span> <span class="n">layer_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer_sizes</span><span class="p">)):</span>
+            <span class="n">layers</span> <span class="o">+=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">layer_sizes</span><span class="p">[</span><span class="n">layer_index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">layer_sizes</span><span class="p">[</span><span class="n">layer_index</span><span class="p">]),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()]</span>
+        <span class="n">layers</span> <span class="o">+=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">layer_sizes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">output_size</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">layers</span><span class="p">)</span>  <span class="c1"># nn.Sequential summarizes a list of modules into a single module, applying them in sequence</span>
+
+<div class="viewcode-block" id="MLP.forward"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.MLP.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div></div>
+
+
+<div class="viewcode-block" id="PredictorLinear"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.PredictorLinear">[docs]</a><span class="k">class</span> <span class="nc">PredictorLinear</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the function f(x,c) from the paper (Wulzer et al.) in the linear case</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">architecture</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_alpha</span> <span class="o">=</span> <span class="n">MLP</span><span class="p">(</span><span class="n">architecture</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PredictorLinear.forward"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.PredictorLinear.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="n">n_alpha_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_alpha</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">n_alpha_out</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="PredictorQuadratic"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.PredictorQuadratic">[docs]</a><span class="k">class</span> <span class="nc">PredictorQuadratic</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the function f(x,c) from the paper (Wulzer et al.) in the quadratic case</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">architecture</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_12</span> <span class="o">=</span> <span class="n">MLP</span><span class="p">(</span><span class="n">architecture</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_13</span> <span class="o">=</span> <span class="n">MLP</span><span class="p">(</span><span class="n">architecture</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_22</span> <span class="o">=</span> <span class="n">MLP</span><span class="p">(</span><span class="n">architecture</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_23</span> <span class="o">=</span> <span class="n">MLP</span><span class="p">(</span><span class="n">architecture</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_33</span> <span class="o">=</span> <span class="n">MLP</span><span class="p">(</span><span class="n">architecture</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PredictorQuadratic.forward"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.PredictorQuadratic.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">):</span>
+        <span class="n">n_12</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_12</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">n_13</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_13</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">n_22</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_22</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">n_23</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_23</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">n_33</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_33</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">n_12</span> <span class="o">*</span> <span class="n">ctg</span> <span class="o">+</span> <span class="n">n_13</span> <span class="o">*</span> <span class="n">cuu</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_22</span> <span class="o">*</span> <span class="n">ctg</span> <span class="o">+</span> <span class="n">n_23</span> <span class="o">*</span> <span class="n">cuu</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_33</span> <span class="o">*</span> <span class="n">cuu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="loss_fn"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.loss_fn">[docs]</a><span class="k">def</span> <span class="nf">loss_fn</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">w_e</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param outputs: outputs.shape = (batch_size, 1), output \in (0, 1)</span>
+<span class="sd">    :param labels: labels.shape = (batch_size, 1), labels \in {0, 1}</span>
+<span class="sd">    :param w_e: w_e.shape = (batch_size, 1), w_e \in [0, \infty)</span>
+<span class="sd">    :return: contribution to loss from a sample x ~ pdf(x|H_0,1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">labels</span><span class="p">)</span> <span class="o">*</span> <span class="n">w_e</span> <span class="o">*</span> <span class="n">outputs</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">labels</span> <span class="o">*</span> <span class="n">w_e</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">outputs</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="c1"># add up all the losses in the batch</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EventDataset"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.EventDataset">[docs]</a><span class="k">class</span> <span class="nc">EventDataset</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">path_dict</span><span class="p">,</span> <span class="n">n_dat</span><span class="p">,</span> <span class="n">hypothesis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            c - value of the Wilson coefficient</span>
+<span class="sd">            hypothesis - 0 (False) if EFT and 1 (True) if SM</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_dict</span> <span class="o">=</span> <span class="n">path_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hypothesis</span> <span class="o">=</span> <span class="n">hypothesis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_dat</span> <span class="o">=</span> <span class="n">n_dat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_features</span> <span class="o">=</span> <span class="n">n_features</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">standardized</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_events</span><span class="p">()</span>
+
+<div class="viewcode-block" id="EventDataset.invariant_mass"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.EventDataset.invariant_mass">[docs]</a>    <span class="k">def</span> <span class="nf">invariant_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the invariant mass of an event</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span> <span class="k">if</span> <span class="n">mu</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">mu</span><span class="p">)</span> <span class="o">+</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">mu</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">mu</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">,</span> <span class="s1">&#39;py&#39;</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="EventDataset.rapidity"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.EventDataset.rapidity">[docs]</a>    <span class="k">def</span> <span class="nf">rapidity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the rapidity of an event</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">q0</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">)</span>  <span class="c1"># energy of the top quark pair in the pp COM frame</span>
+        <span class="n">q3</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="n">q0</span> <span class="o">+</span> <span class="n">q3</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">q0</span> <span class="o">-</span> <span class="n">q3</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">y</span></div>
+
+<div class="viewcode-block" id="EventDataset.rescale"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.EventDataset.rescale">[docs]</a>    <span class="k">def</span> <span class="nf">rescale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span></div>
+
+<div class="viewcode-block" id="EventDataset.get_mean_std"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.EventDataset.get_mean_std">[docs]</a>    <span class="k">def</span> <span class="nf">get_mean_std</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the mean and standard deviation of the data and save to disk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span></div>
+
+<div class="viewcode-block" id="EventDataset.find_min_max"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.EventDataset.find_min_max">[docs]</a>    <span class="k">def</span> <span class="nf">find_min_max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the minimum and maximum of the data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">min_values</span><span class="p">,</span> <span class="n">max_values</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">c_i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_values</span><span class="p">:</span>
+            <span class="n">dataset_eft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_eft</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c_i</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dataset_sm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_sm</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c_i</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">min_value_eft</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dataset_eft</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">max_value_eft</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dataset_eft</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">min_value_sm</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dataset_sm</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">max_value_sm</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dataset_sm</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_value</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">min_value_eft</span><span class="p">,</span> <span class="n">min_value_sm</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">min_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_value</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">max_value_eft</span><span class="p">,</span> <span class="n">max_value_sm</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">max_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_value</span><span class="p">)</span>
+
+        <span class="n">min_values</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">min_values</span><span class="p">)</span>
+        <span class="n">max_values</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">max_values</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_value</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">min_values</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">max_values</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EventDataset.lhe_loader"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.EventDataset.lhe_loader">[docs]</a>    <span class="k">def</span> <span class="nf">lhe_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Les Houches Event file reader</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">pylhe</span><span class="o">.</span><span class="n">readLHE</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">mtt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invariant_mass</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">particles</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">e</span><span class="o">.</span><span class="n">particles</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_features</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rapidity</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">particles</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">e</span><span class="o">.</span><span class="n">particles</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">mtt</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_features</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">mtt</span><span class="p">])</span>
+            <span class="n">weight</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">eventinfo</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+
+            <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">cnt</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_dat</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Data loaded&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">n_dat</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_dat</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hypothesis</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_dat</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EventDataset.load_events"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.EventDataset.load_events">[docs]</a>    <span class="k">def</span> <span class="nf">load_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the datasets (eft and sm) from the les Houches event files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path_to_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lhe_loader</span><span class="p">(</span><span class="n">path_to_sample</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EventDataset.visualize"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.EventDataset.visualize">[docs]</a>    <span class="k">def</span> <span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="c1"># f2 = plt.figure()</span>
+        <span class="n">ax1</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+        <span class="c1">#ax2 = f2.add_subplot(111)</span>
+        <span class="n">mtt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_eft_std</span><span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">][</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_eft_std</span><span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">][</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">mtt</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="c1">#ax2.hist(mtt, bins=1, range=(2000, 2500), label=&#39;sm&#39;, histtype=&#39;step&#39;)</span>
+        <span class="c1"># for c in [0.5, 1.0, 2.0]:</span>
+        <span class="c1">#     mtt = self.data_eft[&#39;{}&#39;.format(c)][0][:, 0].view(-1).numpy()</span>
+        <span class="c1">#     y = self.data_eft[&#39;{}&#39;.format(c)][0][:, 1].view(-1).numpy()</span>
+        <span class="c1">#     ax1.scatter(mtt, y, label=&#39;{}&#39;.format(c))</span>
+        <span class="c1">#     ax2.hist(mtt, bins = 1, range=(2000, 2500), label=&#39;{}&#39;.format(c),histtype=&#39;step&#39;)</span>
+
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$m_</span><span class="si">{tt}</span><span class="s1">$ (rescaled)&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;y (rescaled)&#39;</span><span class="p">)</span>
+        <span class="c1">#ax1.set_xlim(2000, 2500)</span>
+
+
+        <span class="c1">#ax2.set_yscale(&#39;log&#39;)</span>
+
+        <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="c1">#ax2.legend()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Number of data points we have.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_dat</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a tuple (eft, sm) with info on the idx-th data point of the dataset</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            - data tuple: (eft event, sm event)</span>
+<span class="sd">            - label tuple: label = 0 for the eft, label = 1 for the sm</span>
+<span class="sd">            - weight tuple: weight per event</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">data_sample</span><span class="p">,</span> <span class="n">weight_sample</span><span class="p">,</span> <span class="n">label_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data_sample</span><span class="p">,</span> <span class="n">weight_sample</span><span class="p">,</span> <span class="n">label_sample</span></div>
+
+
+<div class="viewcode-block" id="plot_training_report"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.plot_training_report">[docs]</a><span class="k">def</span> <span class="nf">plot_training_report</span><span class="p">(</span><span class="n">train_loss</span><span class="p">,</span> <span class="n">val_loss</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">train_loss</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val_loss</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;val&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;epochs&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;loss&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;plots/loss.pdf&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="training_loop"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.training_loop">[docs]</a><span class="k">def</span> <span class="nf">training_loop</span><span class="p">(</span><span class="n">n_epochs</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+
+    <span class="n">loss_list_train</span><span class="p">,</span> <span class="n">loss_list_val</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>  <span class="c1"># stores the training loss per epoch</span>
+
+    <span class="c1"># we want to be able to keep track of potential over-fitting, so introduce a counter that gets increased</span>
+    <span class="c1"># by one whenever the the validation loss increases during an epoch</span>
+    <span class="n">loss_val_old</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">overfit_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">patience</span> <span class="o">=</span> <span class="mi">10</span>
+
+    <span class="c1"># outer loop that runs over the number of epochs</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_epochs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">loss_train</span><span class="p">,</span> <span class="n">loss_val</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+
+        <span class="c1"># We save the model parameters at the start of each epoch</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;trained_nn_</span><span class="si">{}</span><span class="s1">.pt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epoch</span><span class="p">))</span>
+
+        <span class="c1"># the * denotes the unpacking operator. It passes all the list elements</span>
+        <span class="c1"># of train_loader as separate arguments to the zip function, e.g f(a[0], a[1]) = f(*a).</span>
+        <span class="c1"># Here we have zip(DataLoader_1, DataLoader_2, ..) which enables looping over our mini-batches.</span>
+        <span class="k">for</span> <span class="n">minibatch</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">train_loader</span><span class="p">):</span>
+            <span class="n">train_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">n_eft_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eft_points</span><span class="p">)</span>
+            <span class="c1"># loop over all the datasets within the minibatch and compute their contribution to the loss</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">[</span><span class="n">event</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">label</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">minibatch</span><span class="p">):</span>
+                <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span> <span class="o">=</span> <span class="n">eft_points</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="n">n_eft_points</span><span class="p">]</span>  <span class="c1"># reset the argument to 0 after n_eft_points</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+                <span class="n">train_loss</span> <span class="o">+=</span> <span class="n">loss</span>
+
+            <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">train_loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+            <span class="n">loss_train</span> <span class="o">+=</span> <span class="n">train_loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">minibatch</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">val_loader</span><span class="p">):</span>
+                <span class="n">val_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">n_eft_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eft_points</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">[</span><span class="n">event</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">label</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">minibatch</span><span class="p">):</span>
+                    <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span> <span class="o">=</span> <span class="n">eft_points</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="n">n_eft_points</span><span class="p">]</span>
+                    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)</span>
+                    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+                    <span class="n">val_loss</span> <span class="o">+=</span> <span class="n">loss</span>
+                <span class="k">assert</span> <span class="n">val_loss</span><span class="o">.</span><span class="n">requires_grad</span> <span class="ow">is</span> <span class="kc">False</span>
+
+                <span class="n">loss_val</span> <span class="o">+=</span> <span class="n">val_loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="n">loss_list_train</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_train</span><span class="p">)</span>
+        <span class="n">loss_list_val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_val</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> Epoch </span><span class="si">{}</span><span class="s1">, Training loss </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">loss_train</span><span class="p">),</span>
+              <span class="s1">&#39;Validation loss </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loss_val</span><span class="p">))</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;loss.out&#39;</span><span class="p">,</span> <span class="n">loss_list_train</span><span class="p">)</span>
+
+        <span class="c1"># in case we reach the maximum number of epochs, save the final state</span>
+        <span class="k">if</span> <span class="n">epoch</span> <span class="o">==</span> <span class="n">n_epochs</span><span class="p">:</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;trained_nn.pt&#39;</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="c1"># check whether the network is overfitting by increasing the overfit_counter by one if the</span>
+        <span class="c1"># validation loss increases during the epoch. If the counter increases for 10 epochs straight,</span>
+        <span class="c1"># stop the training.</span>
+
+        <span class="k">if</span> <span class="n">loss_val</span> <span class="o">&gt;</span> <span class="n">loss_val_old</span> <span class="ow">and</span> <span class="n">epoch</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">overfit_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">overfit_counter</span> <span class="o">==</span> <span class="n">patience</span><span class="p">:</span>
+            <span class="n">stopping_point</span> <span class="o">=</span> <span class="n">epoch</span> <span class="o">-</span> <span class="n">patience</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;trained_nn_</span><span class="si">{}</span><span class="s1">.pt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stopping_point</span><span class="p">),</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;trained_nn.pt&#39;</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="n">loss_val_old</span> <span class="o">=</span> <span class="n">loss_val</span>
+
+    <span class="n">plot_training_report</span><span class="p">(</span><span class="n">loss_list_train</span><span class="p">,</span> <span class="n">loss_list_val</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="train_classifier"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.train_classifier">[docs]</a><span class="k">def</span> <span class="nf">train_classifier</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">architecture</span><span class="p">,</span> <span class="n">data_train</span><span class="p">,</span> <span class="n">data_val</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">quadratic</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">PredictorQuadratic</span><span class="p">(</span><span class="n">architecture</span><span class="p">)</span> <span class="k">if</span> <span class="n">quadratic</span> <span class="k">else</span> <span class="n">PredictorLinear</span><span class="p">(</span><span class="n">architecture</span><span class="p">)</span>
+
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+
+    <span class="c1"># set n_batches to the number of mini-batches you want to use</span>
+    <span class="n">n_batches</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># we use PyTorche&#39;s dataloader object to allow for mini-batches. After each epoch, the minibatches reshuffle.</span>
+    <span class="c1"># we create a dataloader object for each eft point + sm and put them all in one big list train_data_loader (val_data_loader)</span>
+    <span class="n">train_data_loader</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">dataset_train</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span><span class="o">/</span><span class="n">n_batches</span><span class="p">),</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">dataset_train</span> <span class="ow">in</span> <span class="n">data_train</span><span class="p">]</span>
+    <span class="n">val_data_loader</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset_val</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">dataset_val</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span><span class="o">/</span><span class="n">n_batches</span><span class="p">),</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">dataset_val</span> <span class="ow">in</span> <span class="n">data_val</span><span class="p">]</span>
+
+    <span class="n">training_loop</span><span class="p">(</span>
+        <span class="n">n_epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">train_loader</span><span class="o">=</span><span class="n">train_data_loader</span><span class="p">,</span>
+        <span class="n">val_loader</span><span class="o">=</span><span class="n">val_data_loader</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../quad_clas.core.html#quad_clas.core.quad_classifier_cluster.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mc_run</span><span class="p">,</span> <span class="o">**</span><span class="n">run_dict</span><span class="p">):</span>
+    <span class="n">quadratic</span> <span class="o">=</span> <span class="n">run_dict</span><span class="p">[</span><span class="s1">&#39;quadratic&#39;</span><span class="p">]</span>
+    <span class="n">n_dat</span> <span class="o">=</span> <span class="n">run_dict</span><span class="p">[</span><span class="s1">&#39;n_dat&#39;</span><span class="p">]</span>
+    <span class="n">epochs</span> <span class="o">=</span> <span class="n">run_dict</span><span class="p">[</span><span class="s1">&#39;epochs&#39;</span><span class="p">]</span>
+    <span class="n">network_size</span> <span class="o">=</span> <span class="p">[</span><span class="n">run_dict</span><span class="p">[</span><span class="s1">&#39;input_size&#39;</span><span class="p">]]</span> <span class="o">+</span> <span class="n">run_dict</span><span class="p">[</span><span class="s1">&#39;hidden_sizes&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">run_dict</span><span class="p">[</span><span class="s1">&#39;output_size&#39;</span><span class="p">]]</span>
+
+    <span class="n">path_dict_eft</span><span class="p">,</span> <span class="n">path_dict_sm</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="n">n_eft_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eft_points</span><span class="p">)</span>
+
+    <span class="c1"># draw a new sm dataset each time we train</span>
+    <span class="n">random_sm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">37</span><span class="p">)</span> <span class="c1">#TODO update the upper bound</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_eft_points</span><span class="p">):</span>
+        <span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span> <span class="o">=</span> <span class="n">eft_points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">mc_run</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="n">path_to_data_eft</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_</span><span class="si">{process}</span><span class="s1">/bin/process_</span><span class="si">{process}</span><span class="s1">/Events/run_</span><span class="si">{mc_run}</span><span class="s1">/unweighted_events.lhe&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">process</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">mc_run</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">+</span><span class="n">mc_run</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path_to_data_eft</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_</span><span class="si">{process}</span><span class="s1">/bin/process_</span><span class="si">{process}</span><span class="s1">/Events/run_</span><span class="si">{mc_run}</span><span class="s1">/unweighted_events.lhe&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">process</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">mc_run</span><span class="o">=</span><span class="n">mc_run</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">random_sm</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="n">path_to_data_sm</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_</span><span class="si">{random_sm}</span><span class="s1">/unweighted_events.lhe&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">random_sm</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">random_sm</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path_to_data_sm</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_</span><span class="si">{random_sm}</span><span class="s1">/unweighted_events.lhe&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">random_sm</span><span class="o">=</span><span class="n">random_sm</span><span class="p">)</span>
+        <span class="n">path_dict_eft</span><span class="p">[(</span><span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)]</span> <span class="o">=</span> <span class="n">path_to_data_eft</span>
+        <span class="n">path_dict_sm</span><span class="p">[(</span><span class="n">ctg</span><span class="p">,</span> <span class="n">cuu</span><span class="p">)]</span> <span class="o">=</span> <span class="n">path_to_data_sm</span>
+
+    <span class="n">c_values</span> <span class="o">=</span> <span class="n">path_dict_eft</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="c1"># we construct an eft and a sm data set for each value of c in c_values and make a list out of it</span>
+    <span class="n">data_all</span> <span class="o">=</span> <span class="p">[</span><span class="n">EventDataset</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">network_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">path_dict</span><span class="o">=</span><span class="n">path_dict_eft</span><span class="p">,</span> <span class="n">n_dat</span><span class="o">=</span><span class="n">n_dat</span><span class="p">,</span> <span class="n">hypothesis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">c_values</span><span class="p">]</span>
+    <span class="n">data_all</span> <span class="o">+=</span> <span class="p">[</span><span class="n">EventDataset</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">network_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">path_dict</span><span class="o">=</span><span class="n">path_dict_sm</span><span class="p">,</span> <span class="n">n_dat</span><span class="o">=</span><span class="n">n_dat</span><span class="p">,</span> <span class="n">hypothesis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">c_values</span><span class="p">]</span>
+
+    <span class="c1"># we determine the mean and std of the feature(s) in our data set</span>
+    <span class="n">mean_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_mean_std</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">data_all</span><span class="p">])</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mean_list</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">std_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_mean_std</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">data_all</span><span class="p">])</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">std_list</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># we save the mean and std to avoid having to reload the data when making predictions</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;scaling.dat&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">]))</span>
+
+    <span class="c1"># rescale the training data to increase the learning speed</span>
+    <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">data_all</span><span class="p">:</span>  <span class="c1"># TODO can this be shortened?</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+
+    <span class="c1"># split each data set in training (50%) and validation (50%).</span>
+    <span class="n">data_split</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">random_split</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span> <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span>
+                  <span class="n">data_all</span><span class="p">]</span>
+    <span class="n">data_train</span><span class="p">,</span> <span class="n">data_val</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="c1"># collect all the training and validation sets</span>
+    <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">data_split</span><span class="p">:</span>
+        <span class="n">data_train</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">data_val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># start the training</span>
+    <span class="n">train_classifier</span><span class="p">(</span><span class="n">path</span><span class="p">,</span>
+                     <span class="n">network_size</span><span class="p">,</span>
+                     <span class="n">data_train</span><span class="p">,</span>
+                     <span class="n">data_val</span><span class="p">,</span>
+                     <span class="n">epochs</span><span class="p">,</span>
+                     <span class="n">quadratic</span><span class="o">=</span><span class="n">quadratic</span><span class="p">,</span>
+                     <span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># read the json run card</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">as</span> <span class="n">json_data</span><span class="p">:</span>
+        <span class="n">run_options</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span>
+
+    <span class="n">mc_run</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">run</span> <span class="o">=</span> <span class="n">run_options</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+
+    <span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;quadratic&#39;</span> <span class="k">if</span> <span class="n">run_options</span><span class="p">[</span><span class="s1">&#39;quadratic&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;linear&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_</span><span class="si">{}</span><span class="s1">/mc_run_</span><span class="si">{}</span><span class="s1">/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">mc_run</span><span class="p">)</span>
+    <span class="c1"># TODO: make the paths more general, or include a warning at least</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;plots&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;animation&#39;</span><span class="p">)</span>
+
+    <span class="c1"># start the training</span>
+    <span class="n">main</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mc_run</span><span class="p">,</span> <span class="o">**</span><span class="n">run_options</span><span class="p">)</span>
+
+    <span class="c1"># copy run card to the appropriate folder</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;run_card.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">run_options</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+
+
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Jaco ter Hoeve, Maeve Madigan
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
