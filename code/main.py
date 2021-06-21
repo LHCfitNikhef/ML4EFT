@@ -3,10 +3,13 @@ import sys
 import quad_clas.analyse.analyse as ana
 import quad_clas.fit.run_bounds as run
 
+import matplotlib
+#matplotlib.use('TkAgg')
 root_path = '/data/theorie/jthoeve/ML4EFT_v2/'
+#root_path = '/Users/jaco/Documents/ML4EFT/code'
 
 if __name__ == "__main__":
-
+    #print(plt.get_backend())
     scan = False
     analyse = True
 
@@ -44,11 +47,13 @@ if __name__ == "__main__":
 
     if analyse:
         #define the binnings
-        binning_0 = np.append(np.linspace(340, 1000, 8), 4000).astype(int)
-        binning_1 = np.append(np.linspace(340, 1000, 4), 4000).astype(int)
-        binning_2 = np.append(np.linspace(340, 1000, 1), 4000).astype(int)
+        binning_0 = np.append(np.linspace(340, 2000, 20), 4000).astype(int)
+        binning_1 = np.append(np.linspace(340, 2000, 10), 4000).astype(int)
+        binning_2 = np.append(np.linspace(340, 2000, 5), 4000).astype(int)
+        binning_3 = np.append(np.linspace(340, 2000, 2), 4000).astype(int)
+        binning_4 = np.append(np.linspace(340, 2000, 1), 4000).astype(int)
 
-        binnings_list = [binning_0]
+        binnings_list = [binning_0, binning_1, binning_2,binning_3, binning_4]
 
         extent = np.array([[-1.2, 1.2], [-0.3, 0.3]])
-        analysis = ana.Analyse(root_path, binnings=binnings_list, nn=True, truth=False, fit=False, extent=extent)
+        analysis = ana.Analyse(root_path, binnings=binnings_list, nn=False, truth=False, fit=False, extent=extent, luminosity=40)

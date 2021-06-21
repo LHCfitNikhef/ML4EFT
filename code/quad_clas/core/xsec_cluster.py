@@ -21,7 +21,7 @@ LambdaSMEFT = 1  # 10**3
 pb_convert = 3.894E2
 yt = 0.9922828427689138
 
-matplotlib.use('PDF')
+#matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 

@@ -1,20 +1,19 @@
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from matplotlib import rc
 import os
 from scipy.stats import norm
 import math
 
-#import own modules
+# import own modules
 from . import xsec_cluster as axs
 from . import analyse
 from .lhelib import lhe
 
-
-matplotlib.use('PDF')
-rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
+# matplotlib.use('PDF')
+rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
 
@@ -58,6 +57,7 @@ class StatAnalysis:
         luminosity: float
             luminosity of the experiment in pb^{-1}
         """
+        # TODO: use same naming convention as used in analyse/analyse.py
         self.path_root = paths['root']
         self.path_output = paths['output']
         self.path_plots = paths['plots']
@@ -112,9 +112,10 @@ class StatAnalysis:
 
             self.cuu_plane = None
             self.cug_plane = None
-            self.p_values_asi = None
-            self.z_scores_asi = None
-
+            # self.p_values_asi = None
+            # self.z_scores_asi = None
+            self.p_values = None
+            self.z_scores = None
 
     # binned methods
 
@@ -128,9 +129,10 @@ class StatAnalysis:
         dataset = []
 
         for i in range(len(self.eft_points)):
-            #TODO: make this more general
+            # TODO: make this more general
             #  path to lhe file
-            path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(i, i)
+            path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(
+                i, i)
             if 5 < i < 12:
                 path = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/cuu/eft_{}.lhe'.format(i - 5)
 
@@ -208,12 +210,14 @@ class StatAnalysis:
         """
         plt.figure(figsize=(8, 6))
         ax = plt.subplot(111)
-        aspect = (self.cuu_plane.max()-self.cuu_plane.min())/(self.cug_plane.max()-self.cug_plane.min())
+        aspect = (self.cuu_plane.max() - self.cuu_plane.min()) / (self.cug_plane.max() - self.cug_plane.min())
         ax.contour(self.cuu_plane, self.cug_plane, self.z_scores_asi, levels=np.array([1.64]))
 
         # from imshow doc: The first two dimensions (M, N) define the rows and columns of the image. Without transposing cuu
         # would create the rows, whereas we want cuu on the horizontal axis.
-        im = ax.imshow(self.z_scores_asi.T, interpolation='hanning', origin='lower', vmin=0, vmax=2, cmap='BuGn', extent=[self.cuu_plane.min(), self.cuu_plane.max(), self.cug_plane.min(), self.cug_plane.max()], aspect=aspect)
+        im = ax.imshow(self.z_scores_asi.T, interpolation='hanning', origin='lower', vmin=0, vmax=2, cmap='BuGn',
+                       extent=[self.cuu_plane.min(), self.cuu_plane.max(), self.cug_plane.min(), self.cug_plane.max()],
+                       aspect=aspect)
 
         ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
         ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
@@ -243,8 +247,10 @@ class StatAnalysis:
         z_scores_asi: (M, N) ndarray
             z scores evaluated on the (M,N) grid
         """
-        p_values_asi = []
-        z_scores_asi = []
+        # p_values_asi = []
+        # z_scores_asi = []
+        p_values = []
+        z_scores = []
         if extent is None:
             cuu_list = np.linspace(-5, 5, 20)
             cug_list = np.linspace(-0.15, 1, 10)
@@ -259,25 +265,54 @@ class StatAnalysis:
                 c = np.array([cuu, cug])
                 self.nu_i = self.expected_entries(c)
 
-                if exact:
-                    self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc()
+                # if exact:
+                #     self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc()
 
-                self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
-                z_score_asi, p_value_asi = self.p_value_asimov()
+                self.mean_tc, self.std_tc = self.find_pdf_binned()
+                z_score, p_value = self.p_value()
 
-                p_values_asi.append(p_value_asi)
-                z_scores_asi.append(z_score_asi)
+                # self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
+                # z_score_asi, p_value_asi = self.p_value_asimov()
 
-        p_values_asi = np.array(p_values_asi)
-        z_scores_asi = np.array(z_scores_asi)
+                p_values.append(p_value)
+                z_scores.append(z_score)
+
+                # p_values_asi.append(p_value_asi)
+                # z_scores_asi.append(z_score_asi)
+
+        # p_values_asi = np.array(p_values_asi)
+        # z_scores_asi = np.array(z_scores_asi)
+        p_values = np.array(p_values)
+        z_scores = np.array(z_scores)
 
         # TODO: how to document this in sphinx?
-        self.p_values_asi = np.reshape(p_values_asi, (len(cug_list), len(cuu_list)))
-        self.z_scores_asi = np.reshape(z_scores_asi, (len(cug_list), len(cuu_list)))
+        # self.p_values_asi = np.reshape(p_values_asi, (len(cug_list), len(cuu_list)))
+        # self.z_scores_asi = np.reshape(z_scores_asi, (len(cug_list), len(cuu_list)))
+
+        self.p_values = np.reshape(p_values, (len(cug_list), len(cuu_list)))
+        self.z_scores = np.reshape(z_scores, (len(cug_list), len(cuu_list)))
         self.cuu_plane, self.cug_plane = np.meshgrid(cuu_list, cug_list)
 
-
         # idx = np.argwhere(np.diff(np.sign(p_values_asi - 0.05))).flatten()
+
+    def find_pdf_binned(self):
+        # tc_mean_sm_asi = self.t_c_asimov('sm', self.nu_i['eft'], self.nu_i['sm'])
+        # tc_mean_eft_asi = self.t_c_asimov('eft', self.nu_i['eft'], self.nu_i['sm'])
+        # tc_std_sm_asi = np.sqrt(2 * self.t_c_asimov('sm', self.nu_i['eft'], self.nu_i['sm']))
+        # tc_std_eft_asi = np.sqrt(-2 * self.t_c_asimov('eft', self.nu_i['eft'], self.nu_i['sm']))
+        nu_eft = np.sum(self.nu_i['eft'])
+        nu_sm = np.sum(self.nu_i['sm'])
+
+        mean_tc_sm = nu_eft - nu_sm - np.sum(self.nu_i['sm'] * np.log(self.nu_i['eft'] / self.nu_i['sm']))
+        mean_tc_eft = nu_eft - nu_sm - np.sum(self.nu_i['eft'] * np.log(self.nu_i['eft'] / self.nu_i['sm']))
+
+        std_tc_sm = np.sqrt(np.sum(np.square(np.log(self.nu_i['eft'] / self.nu_i['sm']) * np.sqrt(self.nu_i['sm']))))
+        std_tc_eft = np.sqrt(np.sum(np.square(np.log(self.nu_i['eft'] / self.nu_i['sm']) * np.sqrt(self.nu_i['eft']))))
+
+        mean_tc = {'sm': mean_tc_sm, 'eft': mean_tc_eft}
+        std_tc = {'sm': std_tc_sm, 'eft': std_tc_eft}
+
+        return mean_tc, std_tc
 
     def expected_entries(self, c):
         """
@@ -317,7 +352,6 @@ class StatAnalysis:
         # total number of expected events is found by taking the sum over the binned expected countings
         expected_eft = np.sum(self.nu_i['eft'])
         expected_sm = np.sum(self.nu_i['sm'])
-
 
         # comment out below to run the cross-check using MC data with nu_i equal to parent nu_i
 
@@ -411,6 +445,20 @@ class StatAnalysis:
 
         return mean, std, tc_data, z_score_binned
 
+    def p_value(self):
+        """
+        Computes the z-score and p-value using the asymptotic distribution
+
+        Returns
+        -------
+        tuple
+            z-score, p-value
+        """
+        z_score = (self.mean_tc['sm'] - self.mean_tc['eft']) / self.std_tc['eft']
+        p_value = 1 - norm.cdf(z_score)
+        return z_score, p_value
+
+
     def p_value_asimov(self):
         """
         Computes the z-score and p-value using the asymptotic distribution
@@ -443,19 +491,43 @@ class StatAnalysis:
 
         self.nu_i = self.expected_entries(c)
 
-        self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc(n_tc=n_tc)
-        self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
+        self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc(
+            n_tc=n_tc)
+        #self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
+        mean_tc, std_tc = self.find_pdf_binned()
 
-        x = np.linspace(self.mean_tc_asi['eft'] - 4 * self.std_tc_asi['eft'],
-                        self.mean_tc_asi['sm'] + 4 * self.std_tc_asi['sm'], 400)
-        tc_asi_eft = self.gauss(x, self.mean_tc_asi['eft'], self.std_tc_asi['eft'])
-        tc_asi_sm = self.gauss(x, self.mean_tc_asi['sm'], self.std_tc_asi['sm'])
+        # x = np.linspace(self.mean_tc_asi['eft'] - 4 * self.std_tc_asi['eft'],
+        #                  self.mean_tc_asi['sm'] + 4 * self.std_tc_asi['sm'], 400)
+        # tc_asi_eft = self.gauss(x, self.mean_tc_asi['eft'], self.std_tc_asi['eft'])
+        # tc_asi_sm = self.gauss(x, self.mean_tc_asi['sm'], self.std_tc_asi['sm'])
 
         # create plots
-        ax.hist(self.tc_data['eft'], bins=80, label=r'$\rm{Exact\;(EFT)}$', density=True, color='C0', alpha=0.5)
-        ax.hist(self.tc_data['sm'], bins=80, label=r'$\rm{Exact\;(SM)}$', density=True, color='C1', alpha=0.5)
-        ax.plot(x, tc_asi_eft, label=r'$\rm{Asymptotic\;(EFT)}$', color='C0')
-        ax.plot(x, tc_asi_sm, label=r'$\rm{Asymptotic\;(SM)}$', color='C1')
+        ax.hist(self.tc_data['eft'], bins=80, label=r'$\rm{Exact\;(EFT)}$', density=True, color='C0', alpha=0.5, align='mid')
+        ax.hist(self.tc_data['sm'], bins=80, label=r'$\rm{Exact\;(SM)}$', density=True, color='C1', alpha=0.5, align='mid')
+        #ax.plot(x, tc_asi_eft, label=r'$\rm{Asymptotic\;(EFT)}$', color='C0')
+        #ax.plot(x, tc_asi_sm, label=r'$\rm{Asymptotic\;(SM)}$', color='C1')
+
+        std_tc_sm = np.sqrt(np.sum(np.square(np.log(self.nu_i['eft'] / self.nu_i['sm']) * np.sqrt(self.nu_i['sm']))))
+        std_tc_eft = np.sqrt(np.sum(np.square(np.log(self.nu_i['eft'] / self.nu_i['sm']) * np.sqrt(self.nu_i['eft']))))
+
+        x = np.linspace(mean_tc['eft'] - 4 * std_tc['eft'],
+                        mean_tc['sm'] + 4 * std_tc['sm'], 400)
+        tc_eft = self.gauss(x, mean_tc['eft'], std_tc_eft)
+        tc_sm = self.gauss(x, mean_tc['sm'], std_tc_sm)
+
+        ax.plot(x, tc_eft, label=r'$\rm{Asymptotic\;(EFT)}$', color='C0')
+        ax.plot(x, tc_sm, label=r'$\rm{Asymptotic\;(SM)}$', color='C1')
+
+        # ax.plot(x, self.gauss(x, self.mean_tc_asi['eft'], np.log(self.nu_i['eft']/self.nu_i['sm'])*np.sqrt(self.nu_i['eft'])), label=r'$\rm{Poisson\;(EFT)}$', color='C3', linestyle='dashed')
+        # ax.plot(x, self.gauss(x, self.mean_tc_asi['sm'],
+        #                       np.log(self.nu_i['eft'] / self.nu_i['sm']) * np.sqrt(self.nu_i['sm'])),
+        #         label=r'$\rm{Poisson\;(SM)}$', color='C3', linestyle='dashed')
+        #
+        # ax.plot(x, self.gauss(x, self.mean_tc_asi['eft'],np.sqrt(-2*self.t_c_asimov('eft', self.nu_i['eft'], self.nu_i['sm']))),
+        #         label=r'$\rm{Poisson2\;(EFT)}$', color='C2')
+        # ax.plot(x, self.gauss(x, self.mean_tc_asi['sm'],
+        #                       np.sqrt(2 * self.t_c_asimov('sm', self.nu_i['eft'], self.nu_i['sm']))),
+        #         label=r'$\rm{Poisson2\;(SM)}$', color='C2')
 
         # plot settings
         ax.set_xlabel(r'$t_c$', fontsize=20)
@@ -463,10 +535,11 @@ class StatAnalysis:
         ax.legend(loc='upper left', fontsize=15, frameon=False)
         plt.tight_layout()
 
-        z_score = (self.mean_tc_asi['sm']-self.mean_tc_asi['eft'])/self.std_tc_asi['eft']
+        #z_score = (self.mean_tc_asi['sm'] - self.mean_tc_asi['eft']) / self.std_tc_asi['eft']
+        z_score = (mean_tc['sm'] - mean_tc['eft']) / std_tc['eft']
         ax.text(0.05, 0.19, r'$\rm{z-score} = %.2f$' % z_score, fontsize=20, transform=ax.transAxes)
-        ax.text(0.05, 0.12, r'$\rm{cuu} = %.2f $' % c[1], fontsize=20, transform=ax.transAxes)
-        ax.text(0.05, 0.05, r'$\rm{cug} = %.2f $' % c[0], fontsize=20, transform=ax.transAxes)
+        ax.text(0.05, 0.12, r'$\rm{cuu} = %.2f $' % c[0], fontsize=20, transform=ax.transAxes)
+        ax.text(0.05, 0.05, r'$\rm{cug} = %.2f $' % c[1], fontsize=20, transform=ax.transAxes)
 
         return ax
 
@@ -520,7 +593,8 @@ class StatAnalysis:
         for i, eft_point in enumerate(self.eft_points):
             # TODO: make the path reference more general!
             # path to lhe file
-            path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(i, i)
+            path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{}/bin/process_{}/Events/run_01/unweighted_events.lhe'.format(
+                i, i)
             if 5 < i < 12:
                 path = '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/cuu/eft_{}.lhe'.format(i - 5)
             y, sigma_y = lhe.total_xs(path)
@@ -563,7 +637,7 @@ class StatAnalysis:
         dict
             expected number of events in the sm and the eft (at point c).
         """
-        #TODO: change the order
+        # TODO: change the order
         cugre = c[0]
         cuu = c[1]
 
@@ -578,7 +652,7 @@ class StatAnalysis:
         c = np.array([1, cugre, cugre ** 2, cuu, cuu ** 2, cugre * cuu])
         xsec_sm = np.dot(a, c)
 
-        nu = {'sm': xsec_sm*self.luminosity, 'eft': xsec_eft*self.luminosity}
+        nu = {'sm': xsec_sm * self.luminosity, 'eft': xsec_eft * self.luminosity}
         return nu
 
     def get_tc_truth(self, hypothesis):
@@ -699,8 +773,8 @@ class StatAnalysis:
         path_sm = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
 
         # load the lhe file and construct the dataset of mtt
-        n = int(1e5) # parent dataset
-        s = int(1e4) # size of subset
+        n = int(1e5)  # parent dataset
+        s = int(1e4)  # size of subset
 
         self.data_eft = [lhe.load_events(path_eft, n, s) * 10 ** -3 for path_eft in self.dict_int.values()]
         self.data_sm = lhe.load_events(path_sm, n, s) * 10 ** -3
@@ -728,7 +802,8 @@ class StatAnalysis:
         if self.nn:
             with open(os.path.join(loc, "z_scores.dat"), "a") as f:
                 for i, (cug, cuu) in enumerate(self.dict_int.keys()):
-                    line = "{}\t{}\t{}\t{}\n".format(cug, cuu, np.mean(self.z_score, axis=1)[i], np.std(self.z_score, axis=1)[i])
+                    line = "{}\t{}\t{}\t{}\n".format(cug, cuu, np.mean(self.z_score, axis=1)[i],
+                                                     np.std(self.z_score, axis=1)[i])
                     f.write(line)
         else:
             with open(os.path.join(loc, "z_scores.dat"), "a") as f:
@@ -737,7 +812,7 @@ class StatAnalysis:
                     f.write(line)
 
 
-def plot_tc_accuracy(binned_analyses, c=np.array([0, 0.5]), n=10000):
+def plot_tc_accuracy(binned_analyses, c=np.array([0.5, 0]), n=10000):
     """
     This function shows a comparison between the asymptotic distribution and the exact sampling based approach.
     When multiple StatAnalysis instances are passed as an array to binned_analysis, the comparison is made for each of them.
@@ -758,12 +833,12 @@ def plot_tc_accuracy(binned_analyses, c=np.array([0, 0.5]), n=10000):
     """
     nplots = len(binned_analyses)
     ncols = 2 if nplots > 1 else 1
-    nrows = math.ceil(nplots/ncols)
+    nrows = math.ceil(nplots / ncols)
     fig = plt.figure(figsize=(ncols * 10, nrows * 6))
     for i, bin in enumerate(binned_analyses):
         ax = fig.add_subplot(nrows, ncols, i + 1)
         plot = bin.plot_tc_binned(c, n_tc=n, ax=ax)
-        plot.set_title(r'$\rm{Binning}\;%d$'%i)
+        plot.set_title(r'$\rm{Binning}\;%d$' % i)
     fig.tight_layout()
     return fig
 
@@ -771,7 +846,7 @@ def plot_tc_accuracy(binned_analyses, c=np.array([0, 0.5]), n=10000):
 # TODO: finish function below.
 # function to plot the expected number of events as a function of c
 def plot_nu_i(binned, path_save):
-    fig = plt.figure(figsize=(10,6))
+    fig = plt.figure(figsize=(10, 6))
     nu_i_eft = []
     cuu = np.linspace(-10, 10, 100)
     for c in cuu:

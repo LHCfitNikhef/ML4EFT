@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import sys
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import csv
@@ -68,13 +68,13 @@ class Analyse:
             self.binned_analyses = self.run_binned_analysis()
 
             # plot accuracy of Asimov method
-            fig = bounds.plot_tc_accuracy(self.binned_analyses, c=np.array([1.0, 0]), n=10000)
-            fig.savefig(os.path.join(self.plots_path, 'tc_comp.pdf'))
+            fig = bounds.plot_tc_accuracy(self.binned_analyses, c=np.array([0.5, 0]), n=100000)
+            fig.savefig(os.path.join(self.plots_path, 'tc_acc/comp_tc_5binnings_100K_high_lumi_80.pdf'))
         else:
             self.binned_analyses = None
 
         # analyse the nn, truth and binned cases (if not None)
-        self.combine_analyses()
+        #self.combine_analyses()
 
     def run_binned_analysis(self):
         """
@@ -94,7 +94,7 @@ class Analyse:
 
             # create an analysis instance and perform the analysis
             analysis = bounds.StatAnalysis(self.paths, bins=binning, fit=self.fit, luminosity=self.luminosity)
-            analysis.binned_analysis(extent=self.extent)
+            #analysis.binned_analysis(extent=self.extent)
 
             # append results
             binned_analyses.append(analysis)
@@ -137,10 +137,15 @@ class Analyse:
         if self.nn:
             path = os.path.join(self.output_path, 'z_scores/nn')
             z_scores = self.read_z_scores(path)
-            z_scores = pd.DataFrame(z_scores, columns=['cug', 'cuu', 'z-score', 'uncertainty'])
-            z_scores_grouped = z_scores.groupby(['cug', 'cuu'])
-            z_scores_grouped = z_scores_grouped.apply(self.wavg)
+            z_scores = np.array(z_scores)
+
+            z_scores = pd.DataFrame(z_scores[:,:-1], columns=['cug', 'cuu', 'z-score'])
+            z_scores_grouped = z_scores.groupby(['cug', 'cuu']).agg({'z-score': ['mean', self.stdom]})
+            z_scores_grouped.columns = ['z-score', 'uncertainty']
             z_scores_grouped_nn = z_scores_grouped.reset_index()
+            # z_scores_grouped = z_scores.groupby(['cug', 'cuu'])
+            # z_scores_grouped = z_scores_grouped.apply(self.wavg)
+            # z_scores_grouped_nn = z_scores_grouped.reset_index()
         else:
             z_scores_grouped_nn = None
 
@@ -161,8 +166,8 @@ class Analyse:
         Finds the contours of the 95% CL.
         """
         fig, ax = plt.subplots(figsize=(10, 6))
-        cuu = np.linspace(self.extent[0, 0], self.extent[0, 1], 500)
-        cug = np.linspace(self.extent[1, 0], self.extent[1, 1], 500)
+        cuu = np.linspace(self.extent[0, 0], self.extent[0, 1], 200)
+        cug = np.linspace(self.extent[1, 0], self.extent[1, 1], 200)
         cuu_plane, cug_plane = np.meshgrid(cuu, cug)
 
         labels = []
@@ -171,38 +176,69 @@ class Analyse:
         if self.binned_analyses is not None:
             sigma = 0.8
             for i, binnings in enumerate(self.binned_analyses):
-                data_smoothed = gaussian_filter(binnings.z_scores_asi, sigma)
+                # data_smoothed = gaussian_filter(binnings.z_scores_asi, sigma)
+                data_smoothed = gaussian_filter(binnings.z_scores, sigma)
                 contour = ax.contour(binnings.cuu_plane, binnings.cug_plane, data_smoothed, levels=np.array([1.64]), colors=colors[i % len(colors)])
                 h0, _ = contour.legend_elements()
                 contours.append(h0[0])
                 labels.append(r'$\rm{Binning\;%d}$' % i)
 
         self.z_scores_truth, self.z_scores_nn = self.load_z_scores()
-        cond = ~((self.z_scores_nn['cug'] != 0.0) & (self.z_scores_nn['cuu'] != 0.0))
-        self.z_scores_nn = self.z_scores_nn[cond]
+        #cond = ~((self.z_scores_nn['cug'] != 0.0) & (self.z_scores_nn['cuu'] != 0.0))
+        #self.z_scores_nn = self.z_scores_nn[cond]
         #self.z_scores_truth = self.z_scores_truth[cond]
 
         # 1D analysis
         #self.analyse1d()
 
         # 2D analysis
-        ellipse_param_truth, ellipse_param_nn = self.fit_ellipse()
+        ellipse_param_truth, ellipse_param_truth_unc,  ellipse_param_nn, ellipse_param_nn_unc = self.fit_ellipse()
+
+
+
+
+
+
 
         if self.truth:
-            cntr_truth = ax.contour(cuu_plane, cug_plane,
-                                    self.ellipse(cuu_plane, cug_plane, *ellipse_param_truth),
-                                    levels=[1.64],
-                                    colors='C0')
-            h0, _ = cntr_truth.legend_elements()
+            ellipse_param_truth_max = ellipse_param_truth + ellipse_param_truth_unc
+            ellipse_param_truth_min = ellipse_param_truth - ellipse_param_truth_unc
+
+            cntr_truth_max = ax.contour(cuu_plane, cug_plane,
+                                        self.ellipse(cuu_plane, cug_plane, *ellipse_param_truth),
+                                        levels=[1.64],
+                                        colors='C0')
+
+            # cntr_truth_max = ax.contour(cuu_plane, cug_plane,
+            #                         self.ellipse(cuu_plane, cug_plane, *ellipse_param_truth_max),
+            #                         levels=[1.64],
+            #                         colors='C0', linestyles='dashed')
+            # cntr_truth_min = ax.contour(cuu_plane, cug_plane,
+            #                             self.ellipse(cuu_plane, cug_plane, *ellipse_param_truth_min),
+            #                             levels=[1.64],
+            #                             colors='C0', linestyles='dashed')
+            h0, _ = cntr_truth_max.legend_elements()
             contours.append(h0[0])
             labels.append(r'$\rm{Truth}$')
 
         if self.nn:
-            cntr_nn = ax.contour(cuu_plane, cug_plane,
-                                    self.ellipse(cuu_plane, cug_plane, *ellipse_param_nn),
-                                    levels=[1.64],
-                                    colors='C1')
-            h0, _ = cntr_nn.legend_elements()
+            ellipse_param_nn_max = ellipse_param_nn + ellipse_param_nn_unc
+            ellipse_param_nn_min = ellipse_param_nn - ellipse_param_nn_unc
+
+            cntr_nn_max = ax.contour(cuu_plane, cug_plane,
+                                     self.ellipse(cuu_plane, cug_plane, *ellipse_param_nn),
+                                     levels=[1.64],
+                                     colors='C1', linestyles='dashed')
+
+            # cntr_nn_max = ax.contour(cuu_plane, cug_plane,
+            #                             self.ellipse(cuu_plane, cug_plane, *ellipse_param_nn_max),
+            #                             levels=[1.64],
+            #                             colors='C1', linestyles='dashed')
+            # cntr_nn_min = ax.contour(cuu_plane, cug_plane,
+            #                             self.ellipse(cuu_plane, cug_plane, *ellipse_param_nn_min),
+            #                             levels=[1.64],
+            #                             colors='C1', linestyles='dashed')
+            h0, _ = cntr_nn_max.legend_elements()
             contours.append(h0[0])
             labels.append(r'$\rm{NN}$')
 
@@ -213,7 +249,7 @@ class Analyse:
         ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
 
-        fig.savefig(os.path.join(self.plots_path, 'ellipses_no_diag_v2.pdf'))
+        fig.savefig(os.path.join(self.plots_path, 'ellipses_asymp_2.pdf'))
 
     def analyse1d(self):
         z_scores_truth = self.z_scores_truth
@@ -247,37 +283,96 @@ class Analyse:
         tuple
             ellipse parameters for the truth and nn analysis
         """
+
+        def poly2d(x, y, a, b, c, d):
+            return a * x ** 2 + b * y ** 2 + c * x * y + d
+
+        def _poly2d(M, a, b, c, d):
+            x, y = M
+            return poly2d(x, y, a, b, c, d)
+
         # solve the linear equation xsec = coeff_matrix * a for a
         if self.truth:
             cuu = self.z_scores_truth.cuu.values
             cug = self.z_scores_truth.cug.values
 
-            eft_points = np.array([cuu, cug]).T
+            eft_points = np.array([cuu, cug])
+            Z = self.z_scores_truth['z-score'].values
+            Z_unc = self.z_scores_truth['uncertainty'].values
 
-            z_score_truth = self.z_scores_truth['z-score'].values
-            z_score_unc_truth = self.z_scores_truth['uncertainty'].values
+            popt, pcov = curve_fit(_poly2d, eft_points, Z, sigma=Z_unc)
+            perr = np.sqrt(np.diag(pcov))
 
-            coeff_mat = self.coefficient_matrix(eft_points)
-
-            a_truth, _, _, _ = np.linalg.lstsq(coeff_mat, z_score_truth, rcond=None)
+            # eft_points = np.array([cuu, cug]).T
+            #
+            # z_score_truth = self.z_scores_truth['z-score'].values
+            # z_score_unc_truth = self.z_scores_truth['uncertainty'].values
+            #
+            # coeff_mat = self.coefficient_matrix(eft_points)
+            #
+            # a_truth, _, _, _ = np.linalg.lstsq(coeff_mat, z_score_truth, rcond=None)
+            a_truth, a_truth_error = popt, perr
         else:
             a_truth = None
+            a_truth_error = None
 
         if self.nn:
             cuu = self.z_scores_nn.cuu.values
             cug = self.z_scores_nn.cug.values
 
-            eft_points = np.array([cuu, cug]).T
+            eft_points = np.array([cuu, cug])
+            Z = self.z_scores_nn['z-score'].values
+            Z_unc = self.z_scores_nn['uncertainty'].values
 
-            z_score_nn = self.z_scores_nn['z-score'].values
-            z_score_unc_nn = self.z_scores_nn['uncertainty'].values
 
-            coeff_mat = self.coefficient_matrix(eft_points)
-            a_nn, _, _, _ = np.linalg.lstsq(coeff_mat, z_score_nn, rcond=None)
+            popt, pcov = curve_fit(_poly2d, eft_points, Z, sigma=Z_unc)
+            perr = np.sqrt(np.diag(pcov))
+
+
+
+            # fig = plt.figure()
+            # ax = fig.gca(projection='3d')
+            #
+            # epsilon_x = 0.01 * (np.max(cuu) - np.min(cuu))
+            # xmin = np.min(cuu) - epsilon_x
+            # xmax = np.max(cuu) + epsilon_x
+            # x = np.linspace(xmin, xmax, 100)
+            #
+            # epsilon_y = 0.01 * (np.max(cug) - np.min(cug))
+            # ymin = np.min(cug) - epsilon_y
+            # ymax = np.max(cug) + epsilon_y
+            # y = np.linspace(ymin, ymax, 100)
+            #
+            # X, Y = np.meshgrid(x, y)
+            # fit = poly2d(X, Y, *popt)
+            #
+            # ax.plot_surface(X, Y, fit, cmap='plasma', alpha=0.4)
+            # ax.scatter(cuu, cug, Z, c='r', s=25)
+            # cset = ax.contour(X, Y, fit, offset=-1, levels=[1.64])
+            # ax.set_xlabel(r'$\rm{cuu}$')
+            # ax.set_ylabel(r'$\rm{cug}$')
+            # ax.set_zlim(-1, np.max(fit))
+            # plt.show()
+            # fig.tight_layout()
+            # fig.savefig(os.path.join(self.plots_path, 'fit.pdf'))
+
+
+
+
+            #eft_points = np.array([cuu, cug]).T
+            #sys.exit()
+
+            #z_score_nn = self.z_scores_nn['z-score'].values
+            #z_score_unc_nn = self.z_scores_nn['uncertainty'].values
+
+            #coeff_mat = self.coefficient_matrix(eft_points)
+            #a_nn, _, _, _ = np.linalg.lstsq(coeff_mat, z_score_nn, rcond=None)
+            a_nn, a_nn_error = popt, perr
         else:
             a_nn = None
+            a_nn_error = None
 
-        return a_truth, a_nn
+        return a_truth, a_truth_error, a_nn, a_nn_error
 
     def interpolation(self, z_scores_truth, z_scores_nn):
 
@@ -355,8 +450,8 @@ class Analyse:
         return a * x ** 2 + b * x + c
 
     @staticmethod
-    def ellipse(x, y, a, b, c):
-        return a * x ** 2 + b * y ** 2 + c * x * y
+    def ellipse(x, y, a, b, c, d):
+        return a * x ** 2 + b * y ** 2 + c * x * y + d
 
     @staticmethod
     def stdom(x):
