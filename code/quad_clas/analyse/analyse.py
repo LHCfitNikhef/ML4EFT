@@ -184,6 +184,10 @@ class Analyse:
                 labels.append(r'$\rm{Binning\;%d}$' % i)
 
         self.z_scores_truth, self.z_scores_nn = self.load_z_scores()
+
+        # uncomment conditions below to select z-scores of your choice
+        #cond = ~((self.z_scores_nn['cug'] != 0.0) & (self.z_scores_nn['cuu'] != 0.0))
+        #self.z_scores_nn = self.z_scores_nn[cond]
         #cond = ~((self.z_scores_nn['cug'] != 0.0) & (self.z_scores_nn['cuu'] != 0.0))
         #self.z_scores_nn = self.z_scores_nn[cond]
         #self.z_scores_truth = self.z_scores_truth[cond]
