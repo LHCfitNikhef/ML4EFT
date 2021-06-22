@@ -96,6 +96,21 @@ def n_alpha_ana(mtt, y):
     else:
         return 0
 
+def dsigma_dx(x, cug, cuu):
+    """
+        Compute the doubly differential cross section in mtt and y at any order NP
+        """
+    mtt, y = x
+    if mtt == 2 * mt: return 0  # if at threshold return zero
+
+    if np.abs(y) < np.log(np.sqrt(s) / mtt):  # check whether x = {mtt, y} falls inside the physically allowed region
+        x1 = mtt / np.sqrt(s) * np.exp(y)
+        x2 = mtt / np.sqrt(s) * np.exp(-y)
+        dsigma_dmtt_dy = 2 * mtt / s * v_weight(mtt, 91.188, x1, x2, cug, cuu) / (x1 * x2)
+        return pb_convert * dsigma_dmtt_dy
+    else:
+        return 0
+
 
 v_weight = np.vectorize(weight, otypes=[np.float])
 

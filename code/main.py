@@ -43,7 +43,7 @@ if __name__ == "__main__":
                         (0.07, 0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_24.lhe'
                         }
 
-        run.ScanBounds(root_path, dict_int, mc_run, luminosity=6, truth=False, nn=True, fit=False)
+        run.ScanBounds(root_path, dict_int, mc_run, luminosity=6, truth=True, nn=False, fit=False)
 
     if analyse:
         #define the binnings
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         binning_3 = np.append(np.linspace(340, 2000, 2), 4000).astype(int)
         binning_4 = np.append(np.linspace(340, 2000, 1), 4000).astype(int)
 
-        binnings_list = [binning_0, binning_1, binning_2,binning_3, binning_4]
+        binnings_list = [binning_0, binning_1, binning_2, binning_3, binning_4]
 
         extent = np.array([[-1.2, 1.2], [-0.3, 0.3]])
-        analysis = ana.Analyse(root_path, binnings=binnings_list, nn=False, truth=False, fit=False, extent=extent, luminosity=40)
+        analysis = ana.Analyse(root_path, nn=True, truth=True, fit=False, extent=extent, luminosity=6)

@@ -13,6 +13,14 @@ def invariant_mass(p1, p2):
     return np.sqrt(
         sum((1 if mu == 'e' else -1) * (getattr(p1, mu) + getattr(p2, mu)) ** 2 for mu in ['e', 'px', 'py', 'pz']))
 
+def rapidity(p1, p2):
+    """
+    Computes the rapidity of an event
+    """
+    q0 = getattr(p1, 'e') + getattr(p2, 'e')  # energy of the top quark pair in the pp COM frame
+    q3 = getattr(p1, 'pz') + getattr(p2, 'pz')
+    y = 0.5 * np.log((q0 + q3) / (q0 - q3))
+    return y
 
 def load_events(path, n, s):
     """ Load a subset of size s from n events from the lhe file.
@@ -40,7 +48,8 @@ def load_events(path, n, s):
         e = next(event_seq)
         if i not in skip:
             mtt = invariant_mass(e.particles[-1], e.particles[-2])
-            event_data.append(mtt)
+            y = rapidity(e.particles[-1], e.particles[-2])
+            event_data.append([mtt * 10 ** -3, y])
     event_data = np.array(event_data)
     return event_data
 

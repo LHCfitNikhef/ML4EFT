@@ -64,7 +64,7 @@ class StatAnalysis:
 
         # make output directories
         for i, path in enumerate(paths.values()):
-            if i == 0:
+            if i == 0:  # skip the root directory (already created)
                 continue
             if not os.path.exists(path):
                 os.makedirs(path)
@@ -81,6 +81,7 @@ class StatAnalysis:
             self.mean_tc_sm = None
             self.sigma_tc_sm = None
             self.z_score = None
+            self.nn_rep = None
 
             self.nn = nn
             self.mc_run = mc_run
@@ -705,6 +706,57 @@ class StatAnalysis:
 
         return mean_tc, sigma_tc
 
+    def get_tc_truth_full_diff(self, hypothesis):
+        """
+        Computes the mean and standard deviation of the extended log likelihood ratio test statistic tc using the
+        analytic likelihood ratio.
+
+        Parameters
+        ----------
+        hypothesis: str
+            sm or eft
+
+        Returns
+        -------
+        tuple
+            mean of tc, standard deviation of tc
+            both have shape = (n eft points, )
+        """
+        dsigma_dx_eft = []
+        dsigma_dx_sm = []
+        for i, (cug, cuu) in enumerate(self.dict_int.keys()):
+            if hypothesis == 'eft':
+                dsigma_dx_eft.append([axs.dsigma_dx(x, cug, cuu) for x in self.data_eft[i]])
+                dsigma_dx_sm.append([axs.dsigma_dx(x, 0, 0) for x in self.data_eft[i]])
+            else:  # hypothesis = sm
+                dsigma_dx_eft.append([axs.dsigma_dx(x, cug, cuu) for x in self.data_sm])
+
+        if hypothesis == 'eft':
+            dsigma_dx_sm = np.array(dsigma_dx_sm)
+        else:  # hypothesis = sm
+            dsigma_dx_sm = np.array([axs.dsigma_dx(x, 0, 0) for x in self.data_sm])
+            dsigma_dx_sm = np.expand_dims(dsigma_dx_sm, axis=0)
+
+        dsigma_dx_eft = np.array(dsigma_dx_eft)
+
+        # likelihood ratio
+        r_c = dsigma_dx_eft / dsigma_dx_sm
+
+        # log-likelihood ratio
+        tau_c = np.log(r_c)  # tau_c.shape = (n_eft_points, n_events)
+        mean_tauc_2 = np.mean(tau_c, axis=1).flatten()
+        mean_tauc_sq = np.mean(tau_c ** 2, axis=1).flatten()
+
+        # expected number of events
+        expected_eft = np.array([nu['eft'] for nu in self.nu])
+        expected_sm = np.array([nu['sm'] for nu in self.nu])
+
+        mean_tc = expected_eft - expected_sm - expected_sm * mean_tauc_2 if hypothesis == 'sm' else expected_eft - expected_sm - expected_eft * mean_tauc_2
+        sigma_tc = np.sqrt(expected_eft * mean_tauc_sq) if hypothesis == 'eft' else np.sqrt(expected_sm * mean_tauc_sq)
+
+        return mean_tc, sigma_tc
+
+
     def get_tc_nn(self, network_size, nn_rep, hypothesis):
         """
         Computes the mean and standard deviation of the extended log likelihood ratio test statistic tc using the
@@ -727,7 +779,7 @@ class StatAnalysis:
         """
         r_c = []
         for i, (cug, cuu) in enumerate(self.dict_int.keys()):
-            ratio_list = []
+            ratio_list = []  # stores the likelihood ratio for each nn replica
             for rep in range(1, nn_rep + 1):
                 pred_path = '/data/theorie/jthoeve/ML4EFT_v2/output/models/model_1/mc_run_{}'.format(rep)
                 mean, std = np.loadtxt(pred_path + '/scaling.dat')
@@ -776,18 +828,18 @@ class StatAnalysis:
         n = int(1e5)  # parent dataset
         s = int(1e4)  # size of subset
 
-        self.data_eft = [lhe.load_events(path_eft, n, s) * 10 ** -3 for path_eft in self.dict_int.values()]
-        self.data_sm = lhe.load_events(path_sm, n, s) * 10 ** -3
+        self.data_eft = [lhe.load_events(path_eft, n, s) for path_eft in self.dict_int.values()]
+        self.data_sm = lhe.load_events(path_sm, n, s)
 
         # compute the mean and std. dev. of the pdf(tc) under either the sm or the eft
         if self.nn:  # mean_tc_eft.shape = (n_eft_points, nn_rep)
             network_size = [1, 30, 30, 30, 30, 30, 1]
-            nn_rep = 40
-            self.mean_tc_eft, self.sigma_tc_eft = self.get_tc_nn(network_size, nn_rep, hypothesis='eft')
-            self.mean_tc_sm, self.sigma_tc_sm = self.get_tc_nn(network_size, nn_rep, hypothesis='sm')
+            self.nn_rep = 40
+            self.mean_tc_eft, self.sigma_tc_eft = self.get_tc_nn(network_size, self.nn_rep, hypothesis='eft')
+            self.mean_tc_sm, self.sigma_tc_sm = self.get_tc_nn(network_size, self.nn_rep, hypothesis='sm')
         else:  # mean_tc_eft.shape = (n_eft_points, )
-            self.mean_tc_eft, self.sigma_tc_eft = self.get_tc_truth(hypothesis='eft')
-            self.mean_tc_sm, self.sigma_tc_sm = self.get_tc_truth(hypothesis='sm')
+            self.mean_tc_eft, self.sigma_tc_eft = self.get_tc_truth_full_diff(hypothesis='eft')
+            self.mean_tc_sm, self.sigma_tc_sm = self.get_tc_truth_full_diff(hypothesis='sm')
 
         # given the mean and std. dev. the z-score can be computed
         # for nn: self.z_score.shape = (n_eft_points, nn_rep)
@@ -800,11 +852,14 @@ class StatAnalysis:
             os.makedirs(loc)
 
         if self.nn:
-            with open(os.path.join(loc, "z_scores.dat"), "a") as f:
-                for i, (cug, cuu) in enumerate(self.dict_int.keys()):
-                    line = "{}\t{}\t{}\t{}\n".format(cug, cuu, np.mean(self.z_score, axis=1)[i],
-                                                     np.std(self.z_score, axis=1)[i])
-                    f.write(line)
+            for rep in range(self.nn_rep):
+                loc_rep = os.path.join(loc, 'rep_{}'.format(rep))
+                if not os.path.exists(loc_rep):
+                    os.makedirs(loc_rep)
+                with open(os.path.join(loc_rep, "z_scores.dat"), "a") as f:
+                    for i, (cug, cuu) in enumerate(self.dict_int.keys()):
+                        line = "{}\t{}\t{}\n".format(cug, cuu, self.z_score[i, rep])
+                        f.write(line)
         else:
             with open(os.path.join(loc, "z_scores.dat"), "a") as f:
                 for i, (cug, cuu) in enumerate(self.dict_int.keys()):
