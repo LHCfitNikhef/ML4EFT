@@ -10,8 +10,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib import animation
 
 # import own pacakges
-from .quad_classifier_cluster import PredictorQuadratic
-from .quad_classifier_cluster import PredictorLinear
+from . import quad_classifier_cluster as quad_clas
 from . import xsec_cluster as axs
 
 #matplotlib.use('PDF')
@@ -30,7 +29,7 @@ def make_predictions_1d(network_path, network_size, ctg, cuu, mean, std):
     """
 
     # Be careful to use the same network architecture as during training
-    loaded_model = PredictorQuadratic(network_size)
+    loaded_model = quad_clas.PredictorQuadratic(network_size)
     loaded_model.load_state_dict(torch.load(network_path))
 
     # Set up coordinates and compute f
@@ -117,35 +116,44 @@ def plot_predictions_1d(network_size):
                 plt.xlim((mtt_min, mtt_max))
                 plt.ylim((0, 1))
                 plt.title(
-                    r'$\rm{NN\:versus\:analytical\:at\:cuu}$' + r'$\:={}$'.format(
-                        cuu) + r'$\rm{\:and\:ctg}$' + r'$\:={}$'.format(
+                    r'$\rm{cuu}$' + r'$\:={}$'.format(
+                        cuu) + r'$\rm{\quad cug}$' + r'$\:={}$'.format(
                         ctg))
                 # plt.legend([ana_plot, (nn_band_plot_1, nn_med_plot_1), (nn_band_plot_2, nn_med_plot_2), (nn_band_plot_3, nn_med_plot_3)], [r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{50K}$', r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{100K}$', r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{20K}$'])
-                plt.legend([ana_plot, (nn_band_plot_1, nn_med_plot_1), (nn_band_plot_2, nn_med_plot_2)],
-                           [r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{\:50K}$',
-                            r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{\:100K}$'])
+                # plt.legend([ana_plot, (nn_band_plot_1, nn_med_plot_1), (nn_band_plot_2, nn_med_plot_2)],
+                #            [r"$\rm{Theory}$", r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{\:50K}$',
+                #             r'$\rm{NN\:(Median\:}$' + r'$+\:2\sigma)$' + r'$\rm{\:100K}$'], frameon=False, loc='best')
 
             if j == 1: # the second subplot (data versus theory)
                 ax = fig.add_subplot(inner[-1, :])
-                ax.plot(x * 1e3, (y - f_pred_median_2) / f_pred_std_2)
-                #ax.plot(x * 1e3, y / f_pred_median_1, color='C0')
-                #ax.plot(x * 1e3, y / f_pred_median_2, color='C1')
-                #ax.hlines(1, mtt_min, mtt_max, linestyles='dashed', colors='black')
+                #ax.plot(x * 1e3, (y - f_pred_median_2) / f_pred_std_2)
+                ax.plot(x * 1e3, y / f_pred_median_1, color='C0')
+                ax.plot(x * 1e3, y / f_pred_median_2, color='C1')
+                ax.hlines(1, mtt_min, mtt_max, linestyles='dashed', colors='black')
                 plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
-                #plt.ylabel(r'$\rm{theory/model}$')
-                plt.ylabel(r'$\rm{pull}$')
+                plt.ylabel(r'$\rm{theory/model}$')
+                #plt.ylabel(r'$\rm{pull}$')
                 plt.xlim((mtt_min, mtt_max))
-                #plt.ylim((0.9*(y / f_pred_median_1).min(), 1.1*(y / f_pred_median_1).max()))
-                plt.ylim((1.2 * np.min((y - f_pred_median_2) / f_pred_std_2),
-                          1.2 * np.max((y - f_pred_median_2) / f_pred_std_2)))
+                plt.ylim((0.9*(y / f_pred_median_1).min(), 1.1*(y / f_pred_median_1).max()))
+                # plt.ylim((1.2 * np.min((y - f_pred_median_2) / f_pred_std_2),
+                #           1.2 * np.max((y - f_pred_median_2) / f_pred_std_2)))
 
             fig.add_subplot(ax)
 
-    fig.savefig('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/' + 'pull.pdf')
+    lines = []
+    labels = []
+    for ax in fig.axes:
+        Line, Label = ax.get_legend_handles_labels()
+        # print(Label)
+        lines.extend(Line)
+        labels.extend(Label)
+    fig.legend(lines, labels, loc='upper right')
+
+    fig.savefig('/data/theorie/jthoeve/ML4EFT_v2/output/plots/nn_acc' + '/nn_acc.pdf')
 
 
 def get_predictions_1d(network_path, network_size, mtt, ctg, cuu, mean, std):
-    loaded_model = PredictorQuadratic(network_size)
+    loaded_model = quad_clas.PredictorQuadratic(network_size)
     loaded_model.load_state_dict(torch.load(network_path))
     x = (mtt * 10**3 - mean) / std  # rescale the inputs
     x = torch.tensor([x])
@@ -154,7 +162,7 @@ def get_predictions_1d(network_path, network_size, mtt, ctg, cuu, mean, std):
     return f_pred
 
 def get_likelihood_ratio_NN(network_path, network_size, mtt, ctg, cuu, mean, std):
-    loaded_model = PredictorQuadratic(network_size)
+    loaded_model = quad_clas.PredictorQuadratic(network_size)
     loaded_model.load_state_dict(torch.load(network_path))
     mtt = torch.from_numpy(mtt*10**3).unsqueeze(1)
     x = (mtt - mean) / std  # rescale the inputs
@@ -320,9 +328,9 @@ def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
 
     # Be careful to use the same network architecture as during training
     if quadratic:
-        loaded_model = PredictorQuadratic(network_size)
+        loaded_model = quad_clas.PredictorQuadratic(network_size)
     else:
-        loaded_model = PredictorLinear(network_size)
+        loaded_model = quad_clas.PredictorLinear(network_size)
 
     # load all the parameters into the trained network
     loaded_model.load_state_dict(torch.load(network_path))
@@ -517,6 +525,6 @@ if __name__ == '__main__':
     # # TODO: continue here tomorrow morning!
 
     lhe_path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/unweighted_events.lhe'
-    save_path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/eft.pdf'
+    save_path = '/data/theorie/jthoeve/ML4EFT_v2/output/plots'
     #plot_mg5_ana_mtt(30*10**-3, 2.5, 1, 0, lhe_path, save_path)
-    plot_xsec_ana(10 * 10 ** -3, 2.5, 0.1, 0, lhe_path, 'mg5_ana.pdf')
+    plot_xsec_ana(10 * 10 ** -3, 2.5, 0.1, 0, lhe_path, save_path)

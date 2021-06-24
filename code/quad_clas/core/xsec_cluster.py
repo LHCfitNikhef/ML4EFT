@@ -249,21 +249,23 @@ def plotData(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
     # show analytical result and mg5 in one plot
     fig = plt.figure(figsize=(10, 6))
     ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(2 * mt, mtt_max))
-    ax1.plot(x, y, '-', c='red', label='Ana')
-    ax1.plot(x, y_sm, '-', c='orange', label='SM')
-    ax1.step(bins_mg[:-1], hist_mg, where='post', label='MG5')
-    plt.title('Analytic versus mg5 at ' + r'$ctg={}$'.format(cuGRe) + ' and ' + r'$cuu={}$'.format(cuu))
+    ax1.plot(x, y, '-', c='red', label=r'$\rm{Ana}$')
+    ax1.plot(x, y_sm, '-', c='orange', label=r'$\rm{SM}$')
+    ax1.step(bins_mg[:-1], hist_mg, where='post', label=r'$\rm{mg5}$')
+    ax1.text(0.05, 0.12, r'$\rm{cuu} = %.2f $' % cuu, fontsize=20, transform=ax1.transAxes)
+    ax1.text(0.05, 0.05, r'$\rm{cug} = %.2f $' % cuGRe, fontsize=20, transform=ax1.transAxes)
+    #plt.title('Analytic versus mg5 at ' + r'$ctg={}$'.format(cuGRe) + ' and ' + r'$cuu={}$'.format(cuu))
 
     plt.yscale('log')
     plt.ylabel(r'$d\sigma/dm_{tt}\;\mathrm{[pb\:TeV^{-1}]}$')
-    plt.legend()
+    plt.legend(frameon=False, loc='best')
 
     # add a subplot that shows the ratio analytical/madgraph
-    ax2 = fig.add_axes([0.15, 0.12, 0.75, 0.2], ylim=(0.9, 1.1))
+    ax2 = fig.add_axes([0.15, 0.14, 0.75, 0.18], ylim=(0.9, 1.1))
     ax2.scatter(x, hist_mg[:len(x)] / y, s=10)
     ax2.hlines(1, 2 * mt, mtt_max, colors='k', linestyles='dashed')
 
-    plt.ylabel('num/ana')
+    plt.ylabel(r'$\rm{num/ana}$')
     plt.xlim((2 * mt, mtt_max))
 
     # ax3 = fig.add_axes([0.15, 0.1, 0.75, 0.20], ylim = (0.8*(y/y_sm).min(), 1.1*(y/y_sm).max()))
@@ -295,13 +297,15 @@ def plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
 
 
     # show analytical result and mg5 in one plot
-    fig, ax = plt.subplots(figsize=(10,6))
-    ax.plot(x, y, '-', c='red', label=r'$\rm{BSM}$')
-    ax.plot(x, y_sm, '-', c='orange', label=r'$\rm{SM}$')
-    plt.title(r'$\rm{Analytic\;xsec\;in\;the\;EFT\;at\;cug=0.1\;and\;cuu=0}$')
+    fig, ax = plt.subplots(figsize=(10,8))
+    ax.plot(x, y, '-', c='C0', label=r'$\rm{EFT}$')
+    ax.plot(x, y_sm, '-', c='C1', label=r'$\rm{SM}$')
+    ax.text(0.05, 0.12, r'$\rm{cuu} = %.2f $' % cuu, fontsize=20, transform=ax.transAxes)
+    ax.text(0.05, 0.05, r'$\rm{cug} = %.2f $' % cuGRe, fontsize=20, transform=ax.transAxes)
+    #plt.title(r'$\rm{Analytic\;xsec\;in\;the\;EFT\;at\;cug=0.1\;and\;cuu=0}$')
     plt.yscale('log')
     plt.ylabel(r'$d\sigma/dm_{tt}\;\mathrm{[pb\:TeV^{-1}]}$')
-    plt.legend()
+    plt.legend(frameon=False, loc='best')
     plt.xlim((2 * mt, mtt_max))
 
     # ax3 = fig.add_axes([0.15, 0.1, 0.75, 0.20], ylim = (0.8*(y/y_sm).min(), 1.1*(y/y_sm).max()))
