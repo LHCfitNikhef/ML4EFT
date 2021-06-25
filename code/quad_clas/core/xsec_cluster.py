@@ -229,8 +229,8 @@ def plotData(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
     """
 
     # compute the analytical result
-    x, y = crossSection(binWidth, mtt_max, cuGRe, cuu)
-    _, y_sm = crossSection(binWidth, mtt_max, 0, 0)
+    #x, y = crossSection(binWidth, mtt_max, cuGRe, cuu)
+    x, y_sm = crossSection(binWidth, mtt_max, 0, 0)
 
     # load the madgraph result
     data_madgraph = []
@@ -249,7 +249,7 @@ def plotData(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
     # show analytical result and mg5 in one plot
     fig = plt.figure(figsize=(10, 6))
     ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(2 * mt, mtt_max))
-    ax1.plot(x, y, '-', c='red', label=r'$\rm{Ana}$')
+    #ax1.plot(x, y, '-', c='red', label=r'$\rm{Ana}$')
     ax1.plot(x, y_sm, '-', c='orange', label=r'$\rm{SM}$')
     ax1.step(bins_mg[:-1], hist_mg, where='post', label=r'$\rm{mg5}$')
     ax1.text(0.05, 0.12, r'$\rm{cuu} = %.2f $' % cuu, fontsize=20, transform=ax1.transAxes)
@@ -262,7 +262,7 @@ def plotData(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
 
     # add a subplot that shows the ratio analytical/madgraph
     ax2 = fig.add_axes([0.15, 0.14, 0.75, 0.18], ylim=(0.9, 1.1))
-    ax2.scatter(x, hist_mg[:len(x)] / y, s=10)
+    ax2.scatter(x, hist_mg[:len(x)] / y_sm, s=10)
     ax2.hlines(1, 2 * mt, mtt_max, colors='k', linestyles='dashed')
 
     plt.ylabel(r'$\rm{num/ana}$')

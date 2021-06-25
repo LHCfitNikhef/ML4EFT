@@ -11,16 +11,16 @@ root_path = '/data/theorie/jthoeve/ML4EFT_v2/'
 
 if __name__ == "__main__":
 
-    lhe_path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_16/bin/process_16/Events/run_01/unweighted_events.lhe'
-    save_path = '/data/theorie/jthoeve/ML4EFT_v2/output/plots/xsec_dist/mg5_ana_1_5.pdf'
+    lhe_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
+    save_path = '/data/theorie/jthoeve/ML4EFT_v2/output/plots/xsec_dist/mg5_ana_sm.pdf'
     # plot_mg5_ana_mtt(30*10**-3, 2.5, 1, 0, lhe_path, save_path)
     #plot.plot_xsec_ana(10 * 10 ** -3, 2.5, 0, 2, lhe_path, save_path)
-    #plot.plot_mg5_ana_mtt(30 * 10 ** -3, 2.5, 5, 1, lhe_path, save_path)
+    plot.plot_mg5_ana_mtt(30 * 10 ** -3, 2.5, 0, 0, lhe_path, save_path)
 
-    network_size = [1, 30, 30, 30, 30, 30, 1]
+    #network_size = [1, 30, 30, 30, 30, 30, 1]
 
     #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])
-    plot.plot_predictions_1d(network_size)
+    #plot.plot_predictions_1d(network_size)
 
     #
     #
