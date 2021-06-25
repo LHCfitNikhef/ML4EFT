@@ -92,7 +92,9 @@ class StatAnalysis:
                 self.xsec, self.xsec_sigma = self.xsec_unbinned()
             else:
                 self.xsec = self.load_xsec_unbinned()
-            self.find_pdf()
+
+            #self.find_pdf()
+            self.find_pdf_tc_exact()
         else:
             self.bins = bins
 
@@ -756,7 +758,6 @@ class StatAnalysis:
 
         return mean_tc, sigma_tc
 
-
     def get_tc_nn(self, network_size, nn_rep, hypothesis):
         """
         Computes the mean and standard deviation of the extended log likelihood ratio test statistic tc using the
@@ -865,6 +866,83 @@ class StatAnalysis:
                 for i, (cug, cuu) in enumerate(self.dict_int.keys()):
                     line = "{}\t{}\t{}\n".format(cug, cuu, self.z_score[i])
                     f.write(line)
+
+    def find_pdf_tc_exact(self):
+        # expected number of events
+
+        nu = self.expected_nevents(np.array([0, 2.0]))
+        nu_eft = nu['eft']
+        nu_sm = nu['sm']
+
+        path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_11/bin/process_11/Events/run_01/unweighted_events.lhe'
+        # n = 100000
+        # s = n
+        # data_eft_parent = lhe.load_events(path_eft,n, s)
+        #
+        # t_c_data = []
+        #
+        # for i in range(100):
+        #     ndat = np.random.poisson(nu_eft, 1)
+        #
+        #     data_eft = np.random.choice(data_eft_parent[:,0], ndat, replace=False)
+        #
+        #     dsigma_dmtt_sm = np.array([axs.dsigma_dmtt(mtt, 0, 0) for mtt in data_eft])
+        #     dsigma_dmtt_eft = np.array([axs.dsigma_dmtt(mtt, 0, 2) for mtt in data_eft])
+        #
+        #     r_c = dsigma_dmtt_eft / dsigma_dmtt_sm
+        #
+        #     # log-likelihood ratio
+        #     tau_c = np.log(r_c)
+        #
+        #     tc = nu_eft - nu_sm - np.sum(tau_c)
+        #     t_c_data.append(tc)
+        # t_c_data = np.array(t_c_data)
+        # np.save(os.path.join(self.path_output, 'exact_tc_low_lumi/tc_{}.npy'.format(self.mc_run)), t_c_data)
+
+        ############
+
+
+        tc_data = []
+        for i in range(1, 100):
+            tc = np.load(os.path.join(self.path_output, 'exact_tc_low_lumi/tc_{}.npy'.format(i)))
+            tc_data.extend(tc)
+        tc_data = np.array(tc_data)
+
+        data_eft_parent = lhe.load_events(path_eft, 100000, 10000)[:,0]
+
+        dsigma_dmtt_sm = np.array([axs.dsigma_dmtt(mtt, 0, 0) for mtt in data_eft_parent])
+        dsigma_dmtt_eft = np.array([axs.dsigma_dmtt(mtt, 0, 2) for mtt in data_eft_parent])
+
+        r_c = dsigma_dmtt_eft / dsigma_dmtt_sm
+
+        # log-likelihood ratio
+        tau_c = np.log(r_c)
+
+        mean_tauc_2 = np.mean(tau_c)
+        mean_tauc_sq = np.mean(tau_c ** 2)
+
+
+
+        mean_tc = nu_eft - nu_sm - nu_eft * mean_tauc_2
+        sigma_tc = np.sqrt(nu_eft * mean_tauc_sq)
+
+        x = np.linspace(mean_tc - 4*sigma_tc, mean_tc + 4*sigma_tc, 200)
+        y = self.gauss(x, mean_tc, sigma_tc)
+
+        fig = plt.figure(figsize=(10, 6))
+        plt.hist(tc_data, bins=60, density=True, label='exact')
+        plt.plot(x, y, label = 'asymptotic')
+        print(os.path.join(self.path_plots, 'tc_exact.pdf'))
+        fig.savefig(os.path.join(self.path_plots, 'tc_exact_low_lumi_v3.pdf'))
+
+
+        # fig, ax = plt.subplots(figsize=(10,6))
+        # ax.hist(t_c_data, bins=30, label='exact')
+        # fig.savefig(os.path.join(self.path_plots, 'tc_exact.pdf'))
+
+
+
+
 
 
 def plot_tc_accuracy(binned_analyses, c=np.array([0.5, 0]), n=10000):
