@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib import rc
 import os
 from scipy.stats import norm
+from scipy.stats import skewnorm
 import math
 
 # import own modules
@@ -875,6 +876,8 @@ class StatAnalysis:
         nu_sm = nu['sm']
 
         path_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_11/bin/process_11/Events/run_01/unweighted_events.lhe'
+
+        #########
         # n = 100000
         # s = n
         # data_eft_parent = lhe.load_events(path_eft,n, s)
@@ -897,18 +900,20 @@ class StatAnalysis:
         #     tc = nu_eft - nu_sm - np.sum(tau_c)
         #     t_c_data.append(tc)
         # t_c_data = np.array(t_c_data)
-        # np.save(os.path.join(self.path_output, 'exact_tc_low_lumi/tc_{}.npy'.format(self.mc_run)), t_c_data)
+        # np.save(os.path.join(self.path_output, 'exact_tc_4/tc_{}.npy'.format(self.mc_run)), t_c_data)
 
         ############
 
 
         tc_data = []
         for i in range(1, 100):
-            tc = np.load(os.path.join(self.path_output, 'exact_tc_low_lumi/tc_{}.npy'.format(i)))
+            tc = np.load(os.path.join(self.path_output, 'exact_tc_4/tc_{}.npy'.format(i)))
             tc_data.extend(tc)
         tc_data = np.array(tc_data)
 
-        data_eft_parent = lhe.load_events(path_eft, 100000, 10000)[:,0]
+        a, loc, scale = skewnorm.fit(tc_data)
+
+        data_eft_parent = lhe.load_events(path_eft, 100000, 100000)[:,0]
 
         dsigma_dmtt_sm = np.array([axs.dsigma_dmtt(mtt, 0, 0) for mtt in data_eft_parent])
         dsigma_dmtt_eft = np.array([axs.dsigma_dmtt(mtt, 0, 2) for mtt in data_eft_parent])
@@ -920,20 +925,32 @@ class StatAnalysis:
 
         mean_tauc_2 = np.mean(tau_c)
         mean_tauc_sq = np.mean(tau_c ** 2)
-
-
+        mean_tauc_cub = np.mean(tau_c ** 3)
 
         mean_tc = nu_eft - nu_sm - nu_eft * mean_tauc_2
         sigma_tc = np.sqrt(nu_eft * mean_tauc_sq)
-
+        skewness = - (1 / np.sqrt(nu_eft)) * (mean_tauc_cub / (mean_tauc_sq ** (3 / 2)))
+        #scale = sigma_tc * (1 - 2 * skewness ** 2 / ((1 + skewness ** 2) * np.pi)) ** (-1/2)
+        #loc = mean_tc - np.sqrt(2/np.pi)*scale*skewness/np.sqrt(1+skewness**2)
         x = np.linspace(mean_tc - 4*sigma_tc, mean_tc + 4*sigma_tc, 200)
-        y = self.gauss(x, mean_tc, sigma_tc)
+        y_skewed = skewnorm.pdf(x, a, loc, scale)
+        y_gauss = self.gauss(x, mean_tc, sigma_tc)
 
-        fig = plt.figure(figsize=(10, 6))
-        plt.hist(tc_data, bins=60, density=True, label='exact')
-        plt.plot(x, y, label = 'asymptotic')
-        print(os.path.join(self.path_plots, 'tc_exact.pdf'))
-        fig.savefig(os.path.join(self.path_plots, 'tc_exact_low_lumi_v3.pdf'))
+        fig, ax = plt.subplots(figsize=(1.1*10, 1.1*6))
+        ax.hist(tc_data, bins=60, density=True, label=r'$\rm{Exact}$')
+        ax.plot(x, y_gauss, label = r'$\rm{Normal}$')
+        ax.plot(x, y_skewed, label=r'$\rm{Skewed\;normal}$')
+        plt.xlabel(r'$t_c$')
+        ax.text(0.05, 0.90, r'$\rm{Luminosity}\;L\;=\;%.3f\;\rm{pb}^{-1}$'%self.luminosity, fontsize=15, transform=ax.transAxes)
+        #ax.text(0.05, 0.83, r'$\rm{shape}\;=\;%.2f$' % a, fontsize=15, transform=ax.transAxes)
+        #ax.text(0.05, 0.76, r'$\rm{scale}\;=\;%.2f$' % scale, fontsize=15, transform=ax.transAxes)
+        #ax.text(0.05, 0.69, r'$\rm{location}\;=\;%.2f$' % loc, fontsize=15, transform=ax.transAxes)
+        ax.text(0.05, 0.83, r'$\rm{skewness}\;=\;%.2f$' % skewness, fontsize=15, transform=ax.transAxes)
+        #ax.text(0.05, 0.55, r'$\rm{mean}\;=\;%.2f$' % mean_tc, fontsize=15, transform=ax.transAxes)
+        #ax.text(0.05, 0.48, r'$\rm{std}\;=\;%.2f$' % sigma_tc, fontsize=15, transform=ax.transAxes)
+        #plt.title(r'$\rm{Luminosity\;L\;=}\;%.3f\;\rm{pb}^{-1}$'%self.luminosity)
+        ax.legend(loc='upper right', fontsize=15, frameon=False)
+        fig.savefig(os.path.join(self.path_plots, 'tc_exact_4.pdf'))
 
 
         # fig, ax = plt.subplots(figsize=(10,6))

@@ -58,7 +58,7 @@ if __name__ == "__main__":
                         (0.07, 0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_24.lhe'
                         }
 
-        run.ScanBounds(root_path, dict_int, mc_run, luminosity=6*10**-1, truth=True, nn=False, fit=False)
+        run.ScanBounds(root_path, dict_int, mc_run, luminosity=6, truth=True, nn=False, fit=False)
 
     if analyse:
         #define the binnings
