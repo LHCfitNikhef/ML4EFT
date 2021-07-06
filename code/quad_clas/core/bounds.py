@@ -476,7 +476,7 @@ class StatAnalysis:
         p_value = 1 - norm.cdf(z_score)
         return z_score, p_value
 
-    def plot_tc_binned(self, c, n_tc=10000, ax=None):
+    def plot_tc_binned(self, c, n_tc=10000, ax=None, print=False):
         """
 
         Parameters
@@ -497,19 +497,21 @@ class StatAnalysis:
 
         self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc(
             n_tc=n_tc)
-        #self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
+        self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
         mean_tc, std_tc = self.find_pdf_binned()
+
+        if print:
+            import pdb
+            pdb.set_trace()
 
         # x = np.linspace(self.mean_tc_asi['eft'] - 4 * self.std_tc_asi['eft'],
         #                  self.mean_tc_asi['sm'] + 4 * self.std_tc_asi['sm'], 400)
-        # tc_asi_eft = self.gauss(x, self.mean_tc_asi['eft'], self.std_tc_asi['eft'])
-        # tc_asi_sm = self.gauss(x, self.mean_tc_asi['sm'], self.std_tc_asi['sm'])
+
 
         # create plots
         ax.hist(self.tc_data['eft'], bins=80, label=r'$\rm{Exact\;(EFT)}$', density=True, color='C0', alpha=0.5, align='mid')
         ax.hist(self.tc_data['sm'], bins=80, label=r'$\rm{Exact\;(SM)}$', density=True, color='C1', alpha=0.5, align='mid')
-        #ax.plot(x, tc_asi_eft, label=r'$\rm{Asymptotic\;(EFT)}$', color='C0')
-        #ax.plot(x, tc_asi_sm, label=r'$\rm{Asymptotic\;(SM)}$', color='C1')
+
 
         std_tc_sm = np.sqrt(np.sum(np.square(np.log(self.nu_i['eft'] / self.nu_i['sm']) * np.sqrt(self.nu_i['sm']))))
         std_tc_eft = np.sqrt(np.sum(np.square(np.log(self.nu_i['eft'] / self.nu_i['sm']) * np.sqrt(self.nu_i['eft']))))
@@ -518,9 +520,13 @@ class StatAnalysis:
                         mean_tc['sm'] + 4 * std_tc['sm'], 400)
         tc_eft = self.gauss(x, mean_tc['eft'], std_tc_eft)
         tc_sm = self.gauss(x, mean_tc['sm'], std_tc_sm)
+        tc_asi_eft = self.gauss(x, self.mean_tc_asi['eft'], self.std_tc_asi['eft'])
+        tc_asi_sm = self.gauss(x, self.mean_tc_asi['sm'], self.std_tc_asi['sm'])
 
         ax.plot(x, tc_eft, label=r'$\rm{Asymptotic\;(EFT)}$', color='C0')
         ax.plot(x, tc_sm, label=r'$\rm{Asymptotic\;(SM)}$', color='C1')
+        ax.plot(x, tc_asi_eft, label=r'$\rm{Asimov\;(EFT)}$', color='C2')
+        ax.plot(x, tc_asi_sm, label=r'$\rm{Asimov\;(SM)}$', color='C3')
 
         # ax.plot(x, self.gauss(x, self.mean_tc_asi['eft'], np.log(self.nu_i['eft']/self.nu_i['sm'])*np.sqrt(self.nu_i['eft'])), label=r'$\rm{Poisson\;(EFT)}$', color='C3', linestyle='dashed')
         # ax.plot(x, self.gauss(x, self.mean_tc_asi['sm'],
@@ -987,7 +993,10 @@ def plot_tc_accuracy(binned_analyses, c=np.array([0.5, 0]), n=10000):
     fig = plt.figure(figsize=(ncols * 10, nrows * 6))
     for i, bin in enumerate(binned_analyses):
         ax = fig.add_subplot(nrows, ncols, i + 1)
-        plot = bin.plot_tc_binned(c, n_tc=n, ax=ax)
+        if i == 4:
+            plot = bin.plot_tc_binned(c, n_tc=n, ax=ax, print=True)
+        else:
+            plot = bin.plot_tc_binned(c, n_tc=n, ax=ax, print=False)
         plot.set_title(r'$\rm{Binning}\;%d$' % i)
     fig.tight_layout()
     return fig

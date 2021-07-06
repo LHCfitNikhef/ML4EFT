@@ -70,12 +70,12 @@ class Analyse:
 
             # plot accuracy of Asimov method
             fig = bounds.plot_tc_accuracy(self.binned_analyses, c=np.array([0.5, 0]), n=100000)
-            fig.savefig(os.path.join(self.plots_path, 'tc_acc/comp_tc_5binnings_100K_high_lumi_80.pdf'))
+            fig.savefig(os.path.join(self.plots_path, 'tc_acc/asimov_comp.pdf'))
         else:
             self.binned_analyses = None
 
         # analyse the nn, truth and binned cases (if not None)
-        self.combine_analyses()
+        #self.combine_analyses()
 
     def run_binned_analysis(self):
         """

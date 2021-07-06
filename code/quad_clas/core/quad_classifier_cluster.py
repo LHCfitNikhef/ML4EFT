@@ -19,6 +19,9 @@ from matplotlib import rc
 from torch import nn
 import sys
 import shutil
+from sklearn.cluster import KMeans
+
+from . import analyse as analyse
 
 matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
@@ -105,9 +108,10 @@ def loss_fn(outputs, labels, w_e):
     :return: contribution to loss from a sample x ~ pdf(x|H_0,1)
     """
 
-    loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
+    #loss_CE = -(1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
+    loss_QC = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
     # add up all the losses in the batch
-    return torch.sum(loss, dim=0)
+    return torch.sum(loss_QC, dim=0)
 
 
 class EventDataset(data.Dataset):
@@ -197,24 +201,33 @@ class EventDataset(data.Dataset):
         """
         Les Houches Event file reader
         """
-        weight = []
+        #weight = []
         cnt = 0
-        for e in pylhe.readLHE(path):
-            mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
-            if self.n_features == 2:
-                y = self.rapidity(e.particles[-1], e.particles[-2])
-                self.event_data.append([mtt, y])
-            if self.n_features == 1:
-                self.event_data.append([mtt])
-            weight.append(e.eventinfo.weight)
+        data = np.load(os.path.join(path, 'event_data.npy'))
+        if self.n_features == 2:
+            events = data[:self.n_dat, :-1].reshape(-1, 1)
+        else:
+            events = data[:self.n_dat, 0].reshape(-1, 1)
+        weights = data[:self.n_dat, -1].reshape(-1, 1)
 
-            cnt += 1
-            if cnt == self.n_dat:
-                break
+        # for e in pylhe.readLHE(path):
+        #     mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
+        #     if self.n_features == 2:
+        #         y = self.rapidity(e.particles[-1], e.particles[-2])
+        #         self.event_data.append([mtt, y])
+        #     if self.n_features == 1:
+        #         self.event_data.append([mtt])
+        #     weight.append(e.eventinfo.weight)
+        #
+        #     cnt += 1
+        #     if cnt == self.n_dat:
+        #         break
         print("Data loaded")
-        self.events = torch.tensor(self.event_data)
-        self.weights = (torch.tensor(weight)/self.n_dat).unsqueeze(-1)
+
+        self.events = torch.tensor(events)
+        self.weights = torch.tensor(weights)/self.n_dat
         self.labels = torch.ones(self.n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(self.n_dat).unsqueeze(-1)
+
 
     def load_events(self):
         """
@@ -251,7 +264,7 @@ class EventDataset(data.Dataset):
 
     def __len__(self):
         # Number of data points we have.
-        return self.n_dat
+        return len(self.events)
 
     def __getitem__(self, idx):
         """
@@ -276,7 +289,7 @@ def plot_training_report(train_loss, val_loss, path):
     f.savefig(path + 'plots/loss.pdf')
 
 
-def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
+def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
@@ -284,9 +297,10 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
     # by one whenever the the validation loss increases during an epoch
     loss_val_old = 0
     overfit_counter = 0
-    patience = 10
+    patience = 20
 
     # outer loop that runs over the number of epochs
+    iterations = 0
     for epoch in range(1, n_epochs + 1):
         loss_train, loss_val = 0.0, 0.0
 
@@ -351,8 +365,15 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path):
             break
 
         loss_val_old = loss_val
+        iterations += 1
 
     plot_training_report(loss_list_train, loss_list_val, path)
+    animate_performance(path, architecture, 0, 2, iterations)
+
+
+def animate_performance(path, architecture, ctg, cuu, epochs):
+    mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
+    analyse.animate_learning_1d(path, architecture, ctg, cuu, epochs, mean, std)
 
 
 def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True):
@@ -368,13 +389,15 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
     train_data_loader = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()/n_batches), shuffle=True) for dataset_train in data_train]
     val_data_loader = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__()/n_batches), shuffle=False) for dataset_val in data_val]
 
+
     training_loop(
         n_epochs=epochs,
         optimizer=optimizer,
         model=model,
         train_loader=train_data_loader,
         val_loader=val_data_loader,
-        path=path
+        path=path,
+        architecture=architecture
     )
 
 
@@ -393,20 +416,45 @@ def main(path, mc_run, **run_dict):
     for i in range(n_eft_points):
         ctg, cuu = eft_points[i]
         if int(mc_run) < 10:
-            path_to_data_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{process}/bin/process_{process}/Events/run_{mc_run}/unweighted_events.lhe'.format(process=i, mc_run=str(0)+mc_run)
+            path_to_data_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{process}/bin/process_{process}/Events/run_{mc_run}'.format(process=i, mc_run=str(0)+mc_run)
         else:
-            path_to_data_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{process}/bin/process_{process}/Events/run_{mc_run}/unweighted_events.lhe'.format(process=i, mc_run=mc_run)
+            path_to_data_eft = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_{process}/bin/process_{process}/Events/run_{mc_run}'.format(process=i, mc_run=mc_run)
         if random_sm < 10:
-            path_to_data_sm = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_{random_sm}/unweighted_events.lhe'.format(random_sm=str(0)+str(random_sm))
+            path_to_data_sm = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_{random_sm}'.format(random_sm=str(0)+str(random_sm))
         else:
-            path_to_data_sm = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_{random_sm}/unweighted_events.lhe'.format(random_sm=random_sm)
+            path_to_data_sm = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_{random_sm}'.format(random_sm=random_sm)
         path_dict_eft[(ctg, cuu)] = path_to_data_eft
-        path_dict_sm[(ctg, cuu)] = path_to_data_sm
+        path_dict_sm[(ctg, cuu)] = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_18/bin/process_18/Events/run_01'#path_to_data_sm
 
     c_values = path_dict_eft.keys()
     # we construct an eft and a sm data set for each value of c in c_values and make a list out of it
-    data_all = [EventDataset(c, network_size[0], path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
-    data_all += [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
+    data_eft = [EventDataset(c, network_size[0], path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
+    data_sm = [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
+
+    # clustering and reweighting
+    # n_clusters = 2
+    # for dataset_eft, dataset_sm in zip(data_eft, data_sm):
+    #     kmeans = KMeans(n_clusters=n_clusters)
+    #     clust_pred_eft = kmeans.fit_predict(dataset_eft.events.numpy())
+    #     clust_pred_sm = kmeans.predict(dataset_sm.events.numpy())
+    #     _, counts_eft = np.unique(clust_pred_eft, return_counts=True)
+    #     _, counts_sm = np.unique(clust_pred_sm, return_counts=True)
+    #     xsec_eft = torch.sum(dataset_eft.weights).numpy()
+    #     xsec_eft_clustered = counts_eft * xsec_eft / np.sum(counts_eft)
+    #
+    #     # rescale the weights depending on which cluster the event belongs to
+    #     # weights_eft_resc = [weight / xsec_eft_clustered[clust_pred_eft[i]] for i, weight in
+    #     #                     enumerate(dataset_eft.weights.numpy())]
+    #     # weights_sm_resc = [weight / xsec_eft_clustered[clust_pred_sm[i]] for i, weight in
+    #     #                     enumerate(dataset_sm.weights.numpy())]
+    #     weights_eft_resc = [weight for i, weight in
+    #                         enumerate(dataset_eft.weights.numpy())]
+    #     weights_sm_resc = [weight for i, weight in
+    #                        enumerate(dataset_sm.weights.numpy())]
+    #     dataset_eft.weights = torch.tensor(weights_eft_resc)
+    #     dataset_sm.weights = torch.tensor(weights_sm_resc)
+
+    data_all = data_eft + data_sm
 
     # we determine the mean and std of the feature(s) in our data set
     mean_list = np.array([dataset.get_mean_std()[0].numpy() for dataset in data_all])
@@ -431,6 +479,8 @@ def main(path, mc_run, **run_dict):
         data_train.append(dataset[0])
         data_val.append(dataset[1])
 
+    #animate_performance(path, network_size, 0, 2, 200)
+
     # start the training
     train_classifier(path,
                      network_size,
@@ -440,30 +490,59 @@ def main(path, mc_run, **run_dict):
                      quadratic=quadratic,
                      )
 
-
-if __name__ == '__main__':
+def start(json_path, mc_run):
     # read the json run card
-    with open(sys.argv[1]) as json_data:
+    with open(json_path) as json_data:
         run_options = json.load(json_data)
 
-    mc_run = sys.argv[2]
+    #mc_run = sys.argv[2]
     run = run_options['name']
 
     order = 'quadratic' if run_options['quadratic'] else 'linear'
-    path = '/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_{}/mc_run_{}/'.format(run, mc_run)
-    # TODO: make the paths more general, or include a warning at least
 
-    if not os.path.exists(path):
-        os.makedirs(path)
-        os.makedirs(path + 'plots')
-        os.makedirs(path + 'animation')
+    output_dir = '/data/theorie/jthoeve/ML4EFT_v2/output/models'
+    model_path = os.path.join(output_dir, 'model_{}'.format(run))
+    mc_path = os.path.join(model_path, 'mc_run_{}/'.format(mc_run))
+
+    if not os.path.exists(mc_path):
+        os.makedirs(mc_path)
+        os.makedirs(os.path.join(mc_path, 'plots'))
+        os.makedirs(os.path.join(mc_path, 'animation'))
 
     # start the training
-    main(path, mc_run, **run_options)
+    main(mc_path, mc_run, **run_options)
 
     # copy run card to the appropriate folder
-    with open(path + 'run_card.json', 'w') as outfile:
+    with open(mc_path + 'run_card.json', 'w') as outfile:
         json.dump(run_options, outfile)
+
+# if __name__ == '__main__':
+#
+#     # read the json run card
+#     with open(sys.argv[1]) as json_data:
+#         run_options = json.load(json_data)
+#
+#     mc_run = sys.argv[2]
+#     run = run_options['name']
+#
+#     order = 'quadratic' if run_options['quadratic'] else 'linear'
+#
+#     output_dir = '/data/theorie/jthoeve/ML4EFT_v2/output/models'
+#     model_path = os.path.join(output_dir, 'model_{}'.format(run))
+#     mc_path = os.path.join(model_path, 'mc_run_{}/'.format(mc_run))
+#
+#     if not os.path.exists(mc_path):
+#         os.makedirs(mc_path)
+#         os.makedirs(os.path.join(mc_path, 'plots'))
+#         os.makedirs(os.path.join(mc_path, 'animation'))
+#
+#
+#     # start the training
+#     main(mc_path, mc_run, **run_options)
+#
+#     # copy run card to the appropriate folder
+#     with open(mc_path + 'run_card.json', 'w') as outfile:
+#         json.dump(run_options, outfile)
 
 
 

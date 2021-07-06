@@ -70,7 +70,9 @@ def plot_predictions_1d(network_size):
 
         f_pred = np.array(f_pred)
         f_pred_median_1 = np.median(f_pred, axis=0)
-        f_pred_std_1 = np.std(f_pred, axis=0)
+        f_pred_cl_low_1 = np.percentile(f_pred, 2.5, axis=0)
+        f_pred_cl_high_1 = np.percentile(f_pred, 97.5, axis=0)
+        #f_pred_std_1 = np.std(f_pred, axis=0)
 
         # repeat, but now for 100K data points (run 8)
         f_pred = []
@@ -82,7 +84,10 @@ def plot_predictions_1d(network_size):
 
         f_pred = np.array(f_pred)
         f_pred_median_2 = np.median(f_pred, axis=0)
-        f_pred_std_2 = np.std(f_pred, axis=0)
+        f_pred_cl_low_2 = np.percentile(f_pred, 2.5, axis=0)
+        f_pred_cl_high_2 = np.percentile(f_pred, 97.5, axis=0)
+
+        #f_pred_std_2 = np.std(f_pred, axis=0)
 
         for j in range(2):
             if j == 0: # the main subplot (error band)
@@ -90,20 +95,16 @@ def plot_predictions_1d(network_size):
                 ax.set_xticks([])
 
                 # Plot the NN prediction
-                nn_med_plot_1, = ax.plot(mtt[:, 0], f_pred_median_1, '--', linewidth=0.75)
-                ax.plot(mtt[:, 0], f_pred_median_1 + 2 * f_pred_std_1, color='C0', linewidth=0.75)
-                ax.plot(mtt[:, 0], f_pred_median_1 - 2 * f_pred_std_1, color='C0', linewidth=0.75)
-                nn_band_plot_1 = ax.fill_between(mtt[:, 0], f_pred_median_1 - 2 * f_pred_std_1,
-                                                 f_pred_median_1 + 2 * f_pred_std_1,
-                                                 alpha=0.3)
+                nn_med_plot_1, = ax.plot(mtt[:, 0], f_pred_median_1, '--', linewidth=0.75, color='C0')
+                #ax.plot(mtt[:, 0], f_pred_cl_high_1, color='C0', linewidth=0.75)
+                #ax.plot(mtt[:, 0], f_pred_cl_low_1, color='C0', linewidth=0.75)
+                nn_band_plot_1 = ax.fill_between(mtt[:, 0], f_pred_cl_low_1, f_pred_cl_high_1,alpha=0.3, color='C0')
 
                 # Plot the NN prediction
-                nn_med_plot_2, = ax.plot(mtt[:, 0], f_pred_median_2, '--', linewidth=0.75)
-                ax.plot(mtt[:, 0], f_pred_median_2 + 2 * f_pred_std_2, color='C1', linewidth=0.75)
-                ax.plot(mtt[:, 0], f_pred_median_2 - 2 * f_pred_std_2, color='C1', linewidth=0.75)
-                nn_band_plot_2 = ax.fill_between(mtt[:, 0], f_pred_median_2 - 2 * f_pred_std_2,
-                                                 f_pred_median_2 + 2 * f_pred_std_2,
-                                                 alpha=0.3)
+                nn_med_plot_2, = ax.plot(mtt[:, 0], f_pred_median_2, '--', linewidth=0.75, color='C1')
+                #ax.plot(mtt[:, 0], f_pred_cl_high_2, color='C1', linewidth=0.75)
+                #ax.plot(mtt[:, 0], f_pred_cl_low_2, color='C1', linewidth=0.75)
+                nn_band_plot_2 = ax.fill_between(mtt[:, 0], f_pred_cl_low_2,f_pred_cl_high_2,alpha=0.3, color='C1')
 
                 # Plot the analytical result
                 x, y = axs.plot_likelihood_ratio_1D(mtt_min * 10 ** -3, mtt_max * 10 ** -3, ctg, cuu)
@@ -127,8 +128,12 @@ def plot_predictions_1d(network_size):
             if j == 1: # the second subplot (data versus theory)
                 ax = fig.add_subplot(inner[-1, :])
                 #ax.plot(x * 1e3, (y - f_pred_median_2) / f_pred_std_2)
-                ax.plot(x * 1e3, y / f_pred_median_1, color='C0')
-                ax.plot(x * 1e3, y / f_pred_median_2, color='C1')
+                #ax.plot(x * 1e3, y / f_pred_median_1, color='C0')
+
+                ax.fill_between(x * 1e3, y / f_pred_cl_low_1, y / f_pred_cl_high_1, alpha=0.3, color='C0')
+                ax.fill_between(x * 1e3, y / f_pred_cl_low_2, y / f_pred_cl_high_2, alpha=0.3, color='C1')
+                ax.plot(x * 1e3, y / f_pred_median_1, '--', color='C0')
+                ax.plot(x * 1e3, y / f_pred_median_2, '--', color='C1')
                 ax.hlines(1, mtt_min, mtt_max, linestyles='dashed', colors='black')
                 plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
                 plt.ylabel(r'$\rm{theory/model}$')
@@ -374,29 +379,29 @@ def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
 
 def animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std):
 
-
     mtt_min, mtt_max = 1000, 4000
     # First set up the figure, the axis, and the plot element we want to animate
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(1.1*10,1.1*6))
     ax = plt.axes(xlim=(mtt_min, mtt_max), ylim=(0, 1))
 
     # Compute the analytic likelihood ratio and plot
     x, y = axs.plot_likelihood_ratio_1D(mtt_min * 10 ** -3, mtt_max * 10 ** -3, ctg, cuu)
     x = np.array(x)
     y = np.array(y)
-    ax.plot(x * 1e3, y, '--', c='red', label='Analytical result')
+    ax.plot(x * 1e3, y, '--', c='red', label=r'$\rm{Truth}$')
 
     plt.ylabel(r'$f\;(m_{tt}, c)$')
     plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
     plt.xlim((mtt_min, mtt_max))
     plt.ylim((0, 1))
-    plt.title('NN versus analytical at ctg = {ctg} and cuu = {cuu}'.format(ctg=ctg, cuu=cuu))
+    #plt.title('NN versus analytical at ctg = {ctg} and cuu = {cuu}'.format(ctg=ctg, cuu=cuu))
 
-    line, = ax.plot([], [], lw=2, label='NN prediction')
-    epoch_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
-    loss_text = ax.text(0.02, 0.90, '', transform=ax.transAxes)
+    line, = ax.plot([], [], lw=2, label=r'$\rm{NN}$')
+    epoch_text = ax.text(0.02, 0.92, '', transform=ax.transAxes, fontsize=15)
+    loss_text = ax.text(0.02, 0.85, '', transform=ax.transAxes, fontsize=15)
     loss = np.loadtxt(path + 'loss.out')
-    plt.legend()
+
+    plt.legend(loc='upper right', fontsize=15, frameon=False)
 
     # initialization function: plot the background of each frame
     def init():
@@ -410,9 +415,11 @@ def animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std):
         print(i)
         x, f_pred = make_predictions_1d(path + 'trained_nn_{}.pt'.format(i + 1), network_size, ctg, cuu, mean, std)
         line.set_data(x, f_pred)
-        epoch_text.set_text('epoch = {}'.format(i))
-        loss_text.set_text('loss = {:.4f}'.format(loss[i]))
+        epoch_text.set_text(r'$\rm{epoch\;%d}$'%i)
+        loss_text.set_text(r'$\rm{loss\;=\;%.4f}$'%loss[i])
         return line, epoch_text, loss_text
+
+
 
     # call the animator.  blit=True means only re-draw the parts that have changed.
     anim = animation.FuncAnimation(fig, animate, init_func=init,
@@ -520,11 +527,12 @@ if __name__ == '__main__':
     # network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
     #
     # #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])
-    # plot_predictions_1d(network_size)
+
+    #plot_predictions_1d(network_size)
     # #plot_predictions_2d('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_11/mc_run_1/', network_size, )
     # # TODO: continue here tomorrow morning!
 
     lhe_path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/unweighted_events.lhe'
     save_path = '/data/theorie/jthoeve/ML4EFT_v2/output/plots'
     #plot_mg5_ana_mtt(30*10**-3, 2.5, 1, 0, lhe_path, save_path)
-    plot_xsec_ana(10 * 10 ** -3, 2.5, 0.1, 0, lhe_path, save_path)
+    #plot_xsec_ana(10 * 10 ** -3, 2.5, 0.1, 0, lhe_path, save_path)

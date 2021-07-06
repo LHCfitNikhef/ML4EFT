@@ -2,10 +2,12 @@ import numpy as np
 import sys
 import quad_clas.analyse.analyse as ana
 import quad_clas.fit.run_bounds as run
+import quad_clas.core.quad_classifier_cluster as train
 import quad_clas.core.analyse as plot
+import quad_clas.preproc.lhe_to_npy as lhe_to_npy
 
 import matplotlib
-#matplotlib.use('TkAgg')
+matplotlib.use('Agg')
 root_path = '/data/theorie/jthoeve/ML4EFT_v2/'
 #root_path = '/Users/jaco/Documents/ML4EFT/code'
 
@@ -17,16 +19,23 @@ if __name__ == "__main__":
     # #plot.plot_xsec_ana(10 * 10 ** -3, 2.5, 0, 2, lhe_path, save_path)
     # plot.plot_mg5_ana_mtt(30 * 10 ** -3, 2.5, 0, 0, lhe_path, save_path)
 
+    #lhe_to_npy.lhe_to_npy(n_processes=19)
+    #sys.exit()
+
     #network_size = [1, 30, 30, 30, 30, 30, 1]
 
     #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])
     #plot.plot_predictions_1d(network_size)
+    train.start(json_path='/data/theorie/jthoeve/ML4EFT_v2/cluster/launch_scripts/run_card_cluster.json', mc_run='1')
+    sys.exit()
+
+
 
     #
     #
     # #print(plt.get_backend())
-    scan = True
-    analyse = False
+    scan = False
+    analyse = True
 
     if scan:
         mc_run = sys.argv[1]
@@ -71,4 +80,4 @@ if __name__ == "__main__":
         binnings_list = [binning_0, binning_1, binning_2, binning_3, binning_4]
 
         extent = np.array([[-1.2, 1.2], [-0.3, 0.3]])
-        analysis = ana.Analyse(root_path, nn=True, truth=True, fit=False, extent=extent, luminosity=6)
+        analysis = ana.Analyse(root_path, binnings=binnings_list, nn=True, truth=True, fit=False, extent=extent, luminosity=6000)
