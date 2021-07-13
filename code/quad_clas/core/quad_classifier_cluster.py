@@ -28,7 +28,8 @@ rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 rc('text', usetex=True)
 
 
-eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0]]
+eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0]]
+#, [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0]]
 
 
 class MLP(nn.Module):
@@ -368,7 +369,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         iterations += 1
 
     plot_training_report(loss_list_train, loss_list_val, path)
-    animate_performance(path, architecture, 0, 2, iterations)
+    animate_performance(path, architecture, 5, 0, iterations)
 
 
 def animate_performance(path, architecture, ctg, cuu, epochs):
@@ -479,16 +480,16 @@ def main(path, mc_run, **run_dict):
         data_train.append(dataset[0])
         data_val.append(dataset[1])
 
-    #animate_performance(path, network_size, 0, 2, 200)
+    animate_performance(path, network_size, 5, 0, 160)
 
     # start the training
-    train_classifier(path,
-                     network_size,
-                     data_train,
-                     data_val,
-                     epochs,
-                     quadratic=quadratic,
-                     )
+    # train_classifier(path,
+    #                  network_size,
+    #                  data_train,
+    #                  data_val,
+    #                  epochs,
+    #                  quadratic=quadratic,
+    #                  )
 
 def start(json_path, mc_run):
     # read the json run card
@@ -543,6 +544,8 @@ def start(json_path, mc_run):
 #     # copy run card to the appropriate folder
 #     with open(mc_path + 'run_card.json', 'w') as outfile:
 #         json.dump(run_options, outfile)
+
+
 
 
 
