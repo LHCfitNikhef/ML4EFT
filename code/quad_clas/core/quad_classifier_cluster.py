@@ -290,7 +290,8 @@ def plot_training_report(train_loss, val_loss, path):
     f.savefig(path + 'plots/loss.pdf')
 
 
-def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture):
+def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture, cluster_min=None,
+                     cluster_max=None, selected_cluster=None):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
@@ -369,15 +370,19 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         iterations += 1
 
     plot_training_report(loss_list_train, loss_list_val, path)
-    animate_performance(path, architecture, 5, 0, iterations)
+    animate_performance(path, architecture, 5, 0, iterations, cluster_min=cluster_min,
+                     cluster_max=cluster_max, selected_cluster=selected_cluster)
 
 
-def animate_performance(path, architecture, ctg, cuu, epochs):
+def animate_performance(path, architecture, ctg, cuu, epochs, cluster_min=None,
+                     cluster_max=None, selected_cluster=None):
     mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
-    analyse.animate_learning_1d(path, architecture, ctg, cuu, epochs, mean, std)
+    analyse.animate_learning_1d(path, architecture, ctg, cuu, epochs, mean, std, cluster_min=cluster_min,
+                     cluster_max=cluster_max, selected_cluster=selected_cluster)
 
 
-def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True):
+def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True, cluster_min=None,
+                     cluster_max=None, selected_cluster=None):
     model = PredictorQuadratic(architecture) if quadratic else PredictorLinear(architecture)
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -398,7 +403,10 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
         train_loader=train_data_loader,
         val_loader=val_data_loader,
         path=path,
-        architecture=architecture
+        architecture=architecture,
+        cluster_min=cluster_min,
+        cluster_max=cluster_max,
+        selected_cluster=selected_cluster
     )
 
 
@@ -432,12 +440,19 @@ def main(path, mc_run, **run_dict):
     data_eft = [EventDataset(c, network_size[0], path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
     data_sm = [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
 
+    n_clusters = 4
+    kmeans = KMeans(n_clusters=n_clusters)
+    clust_pred_sm = kmeans.fit_predict(data_sm[0].events.numpy())
+
+    cluster_min = [np.min(data_sm[0].events.numpy()[clust_pred_sm == i]) for i in range(n_clusters)]
+    cluster_max = [np.max(data_sm[0].events.numpy()[clust_pred_sm == i]) for i in range(n_clusters)]
+
+    selected_cluster_idx = np.argsort(kmeans.cluster_centers_.flatten())[-1]
     # clustering and reweighting
-    n_clusters = 1
+
     for dataset_eft, dataset_sm in zip(data_eft, data_sm):
-        kmeans = KMeans(n_clusters=n_clusters)
-        clust_pred_eft = kmeans.fit_predict(dataset_eft.events.numpy())
-        clust_pred_sm = kmeans.predict(dataset_sm.events.numpy())
+        clust_pred_eft = kmeans.predict(dataset_eft.events.numpy())
+
         _, counts_eft = np.unique(clust_pred_eft, return_counts=True)
         _, counts_sm = np.unique(clust_pred_sm, return_counts=True)
         xsec_eft = torch.sum(dataset_eft.weights).numpy()
@@ -448,9 +463,9 @@ def main(path, mc_run, **run_dict):
         #                     enumerate(dataset_eft.weights.numpy())]
         # weights_sm_resc = [weight / xsec_eft_clustered[clust_pred_sm[i]] for i, weight in
         #                     enumerate(dataset_sm.weights.numpy())]
-        weights_eft_resc = [weight for i, weight in
+        weights_eft_resc = [weight if clust_pred_eft[i] == selected_cluster_idx else np.zeros(1) for i, weight in
                             enumerate(dataset_eft.weights.numpy())]
-        weights_sm_resc = [weight for i, weight in
+        weights_sm_resc = [weight if clust_pred_sm[i] == selected_cluster_idx else np.zeros(1) for i, weight in
                            enumerate(dataset_sm.weights.numpy())]
         dataset_eft.weights = torch.tensor(weights_eft_resc)
         dataset_sm.weights = torch.tensor(weights_sm_resc)
@@ -489,6 +504,9 @@ def main(path, mc_run, **run_dict):
                      data_val,
                      epochs,
                      quadratic=quadratic,
+                     cluster_min=cluster_min,
+                     cluster_max=cluster_max,
+                     selected_cluster=selected_cluster_idx
                      )
 
 def start(json_path, mc_run):

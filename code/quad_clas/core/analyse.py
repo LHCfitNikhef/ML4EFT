@@ -377,11 +377,12 @@ def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
         return xx, yy, f_pred, n_alpha, f_ana
 
 
-def animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std):
+def animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std, cluster_min=None,
+                     cluster_max=None, selected_cluster=None):
 
     mtt_min, mtt_max = 400, 4000
     # First set up the figure, the axis, and the plot element we want to animate
-    fig, ax = plt.subplots(figsize=(1.1*10,1.1*6))
+    fig, ax = plt.subplots(figsize=(1.1*10, 1.1*6))
     ax = plt.axes(xlim=(mtt_min, mtt_max), ylim=(0, 1))
 
     # Compute the analytic likelihood ratio and plot
@@ -389,6 +390,14 @@ def animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std):
     x = np.array(x)
     y = np.array(y)
     ax.plot(x * 1e3, y, '--', c='red', label=r'$\rm{Truth}$')
+
+    for i, line in enumerate(cluster_min):
+        if i == selected_cluster:
+            ax.axvline(line, 0, 1, color='red')
+    for i, line in enumerate(cluster_max):
+        if i == selected_cluster:
+            ax.axvline(line, 0, 1, color='blue')
+
 
     plt.ylabel(r'$f\;(m_{tt}, c)$')
     plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
