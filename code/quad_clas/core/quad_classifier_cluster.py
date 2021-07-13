@@ -360,10 +360,10 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         if loss_val > loss_val_old and epoch > 1:
             overfit_counter += 1
 
-        if overfit_counter == patience:
-            stopping_point = epoch - patience
-            shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
-            break
+        # if overfit_counter == patience:
+        #     stopping_point = epoch - patience
+        #     shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
+        #     break
 
         loss_val_old = loss_val
         iterations += 1
@@ -433,27 +433,27 @@ def main(path, mc_run, **run_dict):
     data_sm = [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
 
     # clustering and reweighting
-    # n_clusters = 2
-    # for dataset_eft, dataset_sm in zip(data_eft, data_sm):
-    #     kmeans = KMeans(n_clusters=n_clusters)
-    #     clust_pred_eft = kmeans.fit_predict(dataset_eft.events.numpy())
-    #     clust_pred_sm = kmeans.predict(dataset_sm.events.numpy())
-    #     _, counts_eft = np.unique(clust_pred_eft, return_counts=True)
-    #     _, counts_sm = np.unique(clust_pred_sm, return_counts=True)
-    #     xsec_eft = torch.sum(dataset_eft.weights).numpy()
-    #     xsec_eft_clustered = counts_eft * xsec_eft / np.sum(counts_eft)
-    #
-    #     # rescale the weights depending on which cluster the event belongs to
-    #     # weights_eft_resc = [weight / xsec_eft_clustered[clust_pred_eft[i]] for i, weight in
-    #     #                     enumerate(dataset_eft.weights.numpy())]
-    #     # weights_sm_resc = [weight / xsec_eft_clustered[clust_pred_sm[i]] for i, weight in
-    #     #                     enumerate(dataset_sm.weights.numpy())]
-    #     weights_eft_resc = [weight for i, weight in
-    #                         enumerate(dataset_eft.weights.numpy())]
-    #     weights_sm_resc = [weight for i, weight in
-    #                        enumerate(dataset_sm.weights.numpy())]
-    #     dataset_eft.weights = torch.tensor(weights_eft_resc)
-    #     dataset_sm.weights = torch.tensor(weights_sm_resc)
+    n_clusters = 1
+    for dataset_eft, dataset_sm in zip(data_eft, data_sm):
+        kmeans = KMeans(n_clusters=n_clusters)
+        clust_pred_eft = kmeans.fit_predict(dataset_eft.events.numpy())
+        clust_pred_sm = kmeans.predict(dataset_sm.events.numpy())
+        _, counts_eft = np.unique(clust_pred_eft, return_counts=True)
+        _, counts_sm = np.unique(clust_pred_sm, return_counts=True)
+        xsec_eft = torch.sum(dataset_eft.weights).numpy()
+        xsec_eft_clustered = counts_eft * xsec_eft / np.sum(counts_eft)
+
+        # rescale the weights depending on which cluster the event belongs to
+        # weights_eft_resc = [weight / xsec_eft_clustered[clust_pred_eft[i]] for i, weight in
+        #                     enumerate(dataset_eft.weights.numpy())]
+        # weights_sm_resc = [weight / xsec_eft_clustered[clust_pred_sm[i]] for i, weight in
+        #                     enumerate(dataset_sm.weights.numpy())]
+        weights_eft_resc = [weight for i, weight in
+                            enumerate(dataset_eft.weights.numpy())]
+        weights_sm_resc = [weight for i, weight in
+                           enumerate(dataset_sm.weights.numpy())]
+        dataset_eft.weights = torch.tensor(weights_eft_resc)
+        dataset_sm.weights = torch.tensor(weights_sm_resc)
 
     data_all = data_eft + data_sm
 
@@ -480,16 +480,16 @@ def main(path, mc_run, **run_dict):
         data_train.append(dataset[0])
         data_val.append(dataset[1])
 
-    animate_performance(path, network_size, 5, 0, 160)
+    #animate_performance(path, network_size, 5, 0, 160)
 
     # start the training
-    # train_classifier(path,
-    #                  network_size,
-    #                  data_train,
-    #                  data_val,
-    #                  epochs,
-    #                  quadratic=quadratic,
-    #                  )
+    train_classifier(path,
+                     network_size,
+                     data_train,
+                     data_val,
+                     epochs,
+                     quadratic=quadratic,
+                     )
 
 def start(json_path, mc_run):
     # read the json run card

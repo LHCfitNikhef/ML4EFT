@@ -33,7 +33,7 @@ def make_predictions_1d(network_path, network_size, ctg, cuu, mean, std):
     loaded_model.load_state_dict(torch.load(network_path))
 
     # Set up coordinates and compute f
-    mtt_min, mtt_max = 1000, 4000
+    mtt_min, mtt_max = 400, 4000
     mtt = torch.arange(mtt_min, mtt_max, 10).unsqueeze(1)
     x = (mtt - mean) / std  # rescale the inputs
 
@@ -379,7 +379,7 @@ def make_predictions_2d(network_path, network_size, train_dataset, quadratic, ct
 
 def animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std):
 
-    mtt_min, mtt_max = 1000, 4000
+    mtt_min, mtt_max = 400, 4000
     # First set up the figure, the axis, and the plot element we want to animate
     fig, ax = plt.subplots(figsize=(1.1*10,1.1*6))
     ax = plt.axes(xlim=(mtt_min, mtt_max), ylim=(0, 1))
