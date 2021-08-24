@@ -13,7 +13,7 @@ from quad_clas.core import xsec_cluster as xsec
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 s = 14 ** 2 # Collider COM energy squared [TeV^2]
 mu = 91.188 # fact. scale for pdfs = Mz
-mt = 0.172 # top quark mass [TeV]
+mt = 0.17276 # top quark mass [TeV]
 pb_convert = 3.894E2 # conversion factor to pb
 
 # ttbar production
@@ -40,7 +40,7 @@ def dsigma_dtheta_part(theta, mtt):
     """
     hats = mtt ** 2
     alfa_s = 0.118
-    num = 8 * alfa_s ** 2 * np.sqrt(1 - 4 * mt ** 2 / hats) * (
+    num = alfa_s ** 2 * np.sqrt(1 - 4 * mt ** 2 / hats) * (
                 4 * mt ** 2 + hats - 4 * mt ** 2 * np.cos(theta) ** 2 + hats * np.cos(theta) ** 2)
     den = 18 * hats ** 2
     return (num / den) * 2 * np.pi * np.sin(theta)
@@ -55,7 +55,7 @@ def g(x, mtt):
     x1 = np.sqrt(hats / s) * np.exp(y)
     x2 = np.sqrt(hats / s) * np.exp(-y)
     pdfs = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
-    return pb_convert * 2 * mtt / s * dsigma_dtheta_part(theta, mtt) * pdfs
+    return pb_convert * 2 * mtt / s * dsigma_dtheta_part(theta, mtt) * pdfs / (x1 * x2)
 
 
 def dsigma_dmtt(mtt, nitn=100, neval=1000):
@@ -83,14 +83,20 @@ def dsigma_dmtt(mtt, nitn=100, neval=1000):
 # result =  dsigma_dmtt(0.5)
 # print(result.summary())
 # print('result = %s    Q = %.2f' % (result, result.Q))
-
-x = np.linspace(0.3, 1.0, 10)
+x, y_fq = xsec.crossSection(10 * 10 ** -3, 1.0, 0, 0)
 cross_section = []
 for mtt in x:
-    result = dsigma_dmtt(mtt)
+    result = dsigma_dmtt(mtt, nitn = 50)
     print(result.mean)
     cross_section.append(result.mean)
+#%%
 
+#%%
+plt.plot(x, cross_section, label='vegas')
+plt.plot(x, y_fq, label='fixed quad')
+plt.legend()
+plt.yscale('log')
+plt.show()
 
 #%%
 

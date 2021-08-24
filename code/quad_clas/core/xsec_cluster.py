@@ -71,8 +71,8 @@ def weight(sqrts, mu, x1, x2, cuGRe, cuu):
     order parameter: work at one specific order
     """
     hats = sqrts ** 2
-    w_ii = (xsec.sigma_part_gg(hats, cuGRe, cuu)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
-    w_ii += (xsec.sigma_part_qq(hats, cuGRe, 0)) * (
+    #w_ii = (xsec.sigma_part_gg(hats, cuGRe, cuu)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
+    w_ii = (xsec.sigma_part_qq(hats, cuGRe, 0)) * (
                 p.xfxQ(1, x1, mu) * p.xfxQ(-1, x2, mu) + p.xfxQ(3, x1, mu) * p.xfxQ(-3, x2, mu) + p.xfxQ(5, x1,
                                                                                                          mu) * p.xfxQ(
             -5, x2, mu))
