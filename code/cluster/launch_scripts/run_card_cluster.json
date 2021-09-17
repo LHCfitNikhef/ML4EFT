@@ -1,6 +1,6 @@
 {
-  "name": 68,
-  "epochs": 200,
+  "name": 84,
+  "epochs": 400,
   "input_size": 1,
   "output_size": 1,
   "hidden_sizes": [30, 30, 30, 30, 30],

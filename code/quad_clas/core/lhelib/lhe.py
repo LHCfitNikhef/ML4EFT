@@ -49,7 +49,7 @@ def load_events(path, n, s):
         if i not in skip:
             mtt = invariant_mass(e.particles[-1], e.particles[-2])
             y = rapidity(e.particles[-1], e.particles[-2])
-            event_data.append([mtt * 10 ** -3, y])
+            event_data.append([mtt * 10 ** -3])
     event_data = np.array(event_data)
     return event_data
 

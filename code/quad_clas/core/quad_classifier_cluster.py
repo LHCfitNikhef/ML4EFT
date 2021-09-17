@@ -28,8 +28,7 @@ rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 rc('text', usetex=True)
 
 
-eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0]]
-#, [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0]]
+eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5],[0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0],[10.0, 2.0]]
 
 
 class MLP(nn.Module):
@@ -98,6 +97,7 @@ class PredictorQuadratic(nn.Module):
         n_23 = self.n_23(x)
         n_33 = self.n_33(x)
         r = (1 + n_12 * ctg + n_13 * cuu) ** 2 + (n_22 * ctg + n_23 * cuu) ** 2 + (n_33 * cuu)**2
+        #r = 1 + n_12 ** 2 * ctg + n_13 ** 2 * cuu + n_22 ** 2 * ctg ** 2 + n_23 ** 2 * cuu ** 2 + n_33 ** 2 * cuu * ctg
         return 1 / (1 + r)
 
 
@@ -210,6 +210,9 @@ class EventDataset(data.Dataset):
         else:
             events = data[:self.n_dat, 0].reshape(-1, 1)
         weights = data[:self.n_dat, -1].reshape(-1, 1)
+
+        print("mean: ", np.mean(events))
+        print("mean + 5 sigma: ", np.mean(events) + 5*np.std(events))
 
         # for e in pylhe.readLHE(path):
         #     mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
@@ -348,6 +351,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
               'Validation loss {}'.format(loss_val))
 
         np.savetxt(path + 'loss.out', loss_list_train)
+        np.savetxt(path + 'loss_val.out', loss_list_val)
 
         # in case we reach the maximum number of epochs, save the final state
         if epoch == n_epochs:
@@ -370,7 +374,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         iterations += 1
 
     plot_training_report(loss_list_train, loss_list_val, path)
-    animate_performance(path, architecture, 5, 0, iterations, cluster_min=cluster_min,
+    animate_performance(path, architecture, 0, 0.5, iterations, cluster_min=cluster_min,
                      cluster_max=cluster_max, selected_cluster=selected_cluster)
 
 
@@ -440,35 +444,44 @@ def main(path, mc_run, **run_dict):
     data_eft = [EventDataset(c, network_size[0], path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
     data_sm = [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
 
+    sys.exit()
+
     n_clusters = 4
     kmeans = KMeans(n_clusters=n_clusters)
-    clust_pred_sm = kmeans.fit_predict(data_sm[0].events.numpy())
+    #clust_pred_sm = kmeans.fit_predict(data_sm[0].events.numpy())
 
-    cluster_min = [np.min(data_sm[0].events.numpy()[clust_pred_sm == i]) for i in range(n_clusters)]
-    cluster_max = [np.max(data_sm[0].events.numpy()[clust_pred_sm == i]) for i in range(n_clusters)]
+    cluster_min = None#[np.min(data_sm[0].events.numpy()[clust_pred_sm == i]) for i in range(n_clusters)]
+    cluster_max = None#[np.max(data_sm[0].events.numpy()[clust_pred_sm == i]) for i in range(n_clusters)]
 
-    selected_cluster_idx = np.argsort(kmeans.cluster_centers_.flatten())[-1]
+    #selected_cluster_idx = np.argsort(kmeans.cluster_centers_.flatten())[-1]
     # clustering and reweighting
 
-    for dataset_eft, dataset_sm in zip(data_eft, data_sm):
-        clust_pred_eft = kmeans.predict(dataset_eft.events.numpy())
-
-        _, counts_eft = np.unique(clust_pred_eft, return_counts=True)
-        _, counts_sm = np.unique(clust_pred_sm, return_counts=True)
-        xsec_eft = torch.sum(dataset_eft.weights).numpy()
-        xsec_eft_clustered = counts_eft * xsec_eft / np.sum(counts_eft)
-
-        # rescale the weights depending on which cluster the event belongs to
-        # weights_eft_resc = [weight / xsec_eft_clustered[clust_pred_eft[i]] for i, weight in
-        #                     enumerate(dataset_eft.weights.numpy())]
-        # weights_sm_resc = [weight / xsec_eft_clustered[clust_pred_sm[i]] for i, weight in
-        #                     enumerate(dataset_sm.weights.numpy())]
-        weights_eft_resc = [weight if clust_pred_eft[i] == selected_cluster_idx else np.zeros(1) for i, weight in
-                            enumerate(dataset_eft.weights.numpy())]
-        weights_sm_resc = [weight if clust_pred_sm[i] == selected_cluster_idx else np.zeros(1) for i, weight in
-                           enumerate(dataset_sm.weights.numpy())]
-        dataset_eft.weights = torch.tensor(weights_eft_resc)
-        dataset_sm.weights = torch.tensor(weights_sm_resc)
+    # for dataset_eft, dataset_sm in zip(data_eft, data_sm):
+    #     clust_pred_sm = kmeans.fit_predict(dataset_sm.events.numpy())
+    #     clust_pred_eft = kmeans.predict(dataset_eft.events.numpy())
+    #
+    #     _, counts_eft = np.unique(clust_pred_eft, return_counts=True)
+    #     _, counts_sm = np.unique(clust_pred_sm, return_counts=True)
+    #     xsec_eft = torch.sum(dataset_eft.weights).numpy()
+    #     xsec_eft_clustered = counts_eft * xsec_eft / np.sum(counts_eft)
+    #     xsec_eft_clustered = counts_eft * xsec_eft / np.sum(counts_eft)
+    #
+    #     # rescale the weights depending on which cluster the event belongs to
+    #     weights_eft_resc = [10 ** 5 * weight / counts_sm[clust_pred_eft[i]] for i, weight in
+    #                         enumerate(dataset_eft.weights.numpy())]
+    #     weights_sm_resc = [10 ** 5 * weight / counts_sm[clust_pred_sm[i]] for i, weight in
+    #                        enumerate(dataset_sm.weights.numpy())]
+    #
+    #
+    #
+    #
+    #     # weights_eft_resc = [weight if clust_pred_eft[i] == selected_cluster_idx else np.zeros(1) for i, weight in
+    #     #                     enumerate(dataset_eft.weights.numpy())]
+    #     # weights_sm_resc = [weight if clust_pred_sm[i] == selected_cluster_idx else np.zeros(1) for i, weight in
+    #     #                    enumerate(dataset_sm.weights.numpy())]
+    #
+    #     dataset_eft.weights = torch.tensor(weights_eft_resc)
+    #     dataset_sm.weights = torch.tensor(weights_sm_resc)
 
     data_all = data_eft + data_sm
 
@@ -506,7 +519,7 @@ def main(path, mc_run, **run_dict):
                      quadratic=quadratic,
                      cluster_min=cluster_min,
                      cluster_max=cluster_max,
-                     selected_cluster=selected_cluster_idx
+                     selected_cluster=None
                      )
 
 def start(json_path, mc_run):

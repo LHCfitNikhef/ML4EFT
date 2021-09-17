@@ -391,12 +391,12 @@ def animate_learning_1d(path, network_size, ctg, cuu, epochs, mean, std, cluster
     y = np.array(y)
     ax.plot(x * 1e3, y, '--', c='red', label=r'$\rm{Truth}$')
 
-    for i, line in enumerate(cluster_min):
-        if i == selected_cluster:
-            ax.axvline(line, 0, 1, color='red')
-    for i, line in enumerate(cluster_max):
-        if i == selected_cluster:
-            ax.axvline(line, 0, 1, color='blue')
+    # for i, line in enumerate(cluster_min):
+    #     if i == selected_cluster:
+    #         ax.axvline(line, 0, 1, color='red')
+    # for i, line in enumerate(cluster_max):
+    #     if i == selected_cluster:
+    #         ax.axvline(line, 0, 1, color='blue')
 
 
     plt.ylabel(r'$f\;(m_{tt}, c)$')

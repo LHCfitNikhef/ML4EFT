@@ -49,5 +49,5 @@ class ScanBounds:
             self.paths['output'] = os.path.join(self.output_path, 'truth_v2')
             bounds.StatAnalysis(self.paths, dict_int=self.dict_int, nn=False, mc_run=self.mc_run, fit=self.fit, luminosity=self.luminosity)
         if self.nn:
-            self.paths['output'] = os.path.join(self.output_path, 'nn_v2')
+            self.paths['output'] = os.path.join(self.output_path, 'nn_v8')
             bounds.StatAnalysis(self.paths, dict_int=self.dict_int, nn=True, mc_run=self.mc_run, fit=self.fit, luminosity=self.luminosity)

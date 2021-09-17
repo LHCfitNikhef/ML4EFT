@@ -94,8 +94,8 @@ class StatAnalysis:
             else:
                 self.xsec = self.load_xsec_unbinned()
 
-            #self.find_pdf()
-            self.find_pdf_tc_exact()
+            self.find_pdf()
+            #self.find_pdf_tc_exact()
         else:
             self.bins = bins
 
@@ -789,11 +789,11 @@ class StatAnalysis:
         for i, (cug, cuu) in enumerate(self.dict_int.keys()):
             ratio_list = []  # stores the likelihood ratio for each nn replica
             for rep in range(1, nn_rep + 1):
-                pred_path = '/data/theorie/jthoeve/ML4EFT_v2/output/models/model_1/mc_run_{}'.format(rep)
+                pred_path = '/data/theorie/jthoeve/ML4EFT_v2/output/models/model_84/mc_run_{}'.format(rep)
                 mean, std = np.loadtxt(pred_path + '/scaling.dat')
                 data = self.data_sm if hypothesis is 'sm' else self.data_eft[i]
-                ratio = analyse.get_likelihood_ratio_NN(pred_path + '/trained_nn.pt', network_size, data,
-                                                        cug, cuu, mean, std)
+                ratio = analyse.get_likelihood_ratio_NN(pred_path + '/trained_nn.pt', network_size, data,cug, cuu, mean, std)
+
                 ratio_list.append(ratio)
             r_c.append(ratio_list)
         r_c = np.array(r_c)  # r_c.shape = (n_eft_points, nn_rep, n_events)

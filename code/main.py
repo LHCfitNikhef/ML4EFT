@@ -13,21 +13,23 @@ root_path = '/data/theorie/jthoeve/ML4EFT_v2/'
 
 if __name__ == "__main__":
 
-    # lhe_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
-    # save_path = '/data/theorie/jthoeve/ML4EFT_v2/output/plots/xsec_dist/mg5_ana_sm.pdf'
+    lhe_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
+    save_path = '/Users/jaco/Documents/ML4EFT/code/output/plots/xsec_dist/vegas_check.pdf'
     # # plot_mg5_ana_mtt(30*10**-3, 2.5, 1, 0, lhe_path, save_path)
-    # #plot.plot_xsec_ana(10 * 10 ** -3, 2.5, 0, 2, lhe_path, save_path)
+    plot.plot_xsec_ana(10 * 10 ** -3, 2.5, 0, 0, lhe_path, save_path)
+    sys.exit()
     # plot.plot_mg5_ana_mtt(30 * 10 ** -3, 2.5, 0, 0, lhe_path, save_path)
 
-    #lhe_to_npy.lhe_to_npy(n_processes=19)
+    #lhe_to_npy.lhe_to_npy(n_processes=18)
     #sys.exit()
 
     #network_size = [1, 30, 30, 30, 30, 30, 1]
 
     #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])
     #plot.plot_predictions_1d(network_size)
-    train.start(json_path='/data/theorie/jthoeve/ML4EFT_v2/cluster/launch_scripts/run_card_cluster.json', mc_run='1')
-    sys.exit()
+    #mc_run = sys.argv[1]
+    #train.start(json_path='/data/theorie/jthoeve/ML4EFT_v2/cluster/launch_scripts/run_card_cluster.json', mc_run=str(mc_run))
+
 
 
 
@@ -67,7 +69,7 @@ if __name__ == "__main__":
                         (0.07, 0.7): '/data/theorie/jthoeve/ML4EFT/quad_clas/z_scores/events/eft_24.lhe'
                         }
 
-        run.ScanBounds(root_path, dict_int, mc_run, luminosity=6, truth=True, nn=False, fit=False)
+        run.ScanBounds(root_path, dict_int, mc_run, luminosity=6, truth=False, nn=True, fit=False)
 
     if analyse:
         #define the binnings
@@ -80,4 +82,4 @@ if __name__ == "__main__":
         binnings_list = [binning_0, binning_1, binning_2, binning_3, binning_4]
 
         extent = np.array([[-1.2, 1.2], [-0.3, 0.3]])
-        analysis = ana.Analyse(root_path, binnings=binnings_list, nn=True, truth=True, fit=False, extent=extent, luminosity=6000)
+        analysis = ana.Analyse(root_path, nn=True, truth=True, fit=False, extent=extent, luminosity=6)

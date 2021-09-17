@@ -75,7 +75,7 @@ class Analyse:
             self.binned_analyses = None
 
         # analyse the nn, truth and binned cases (if not None)
-        #self.combine_analyses()
+        self.combine_analyses()
 
     def run_binned_analysis(self):
         """
@@ -159,7 +159,7 @@ class Analyse:
         """
 
         if self.nn:
-            path = os.path.join(self.output_path, 'z_scores/nn_v2')
+            path = os.path.join(self.output_path, 'z_scores/nn_v3')
             z_scores = self.read_z_scores(path)
             z_scores_nn_df = []
             for rep in range(z_scores.shape[1]):
@@ -264,7 +264,7 @@ class Analyse:
         ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
 
-        fig.savefig(os.path.join(self.plots_path, 'ellipses_diff.pdf'))
+        fig.savefig(os.path.join(self.plots_path, 'ellipses_diff_new_8.pdf'))
 
     def analyse1d(self):
         z_scores_truth = self.z_scores_truth

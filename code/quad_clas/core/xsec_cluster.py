@@ -12,7 +12,7 @@ from scipy import integrate
 import pylhe
 
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
-mt = 0.17276  # 172 #Top quark mass in GeV
+mt = 0.17276  # 172 #Top quark mass plot_mg5_ana_mttin GeV
 s = 14 ** 2  # (14*10**3)**2#GeV^2
 Gf = 0.0000116637
 v = 1 / np.sqrt(Gf * np.sqrt(2)) * 10 ** -3  # 1/np.sqrt(Gf*np.sqrt(2))
