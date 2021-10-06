@@ -8,7 +8,8 @@ import quad_clas.preproc.lhe_to_npy as lhe_to_npy
 
 import matplotlib
 matplotlib.use('Agg')
-root_path = '/data/theorie/jthoeve/ML4EFT_v2/'
+#root_path = '/data/theorie/jthoeve/ML4EFT_v2/'
+root_path = '/Users/jaco/Documents/ML4EFT/code/output'
 #root_path = '/Users/jaco/Documents/ML4EFT/code'
 
 if __name__ == "__main__":
@@ -16,8 +17,8 @@ if __name__ == "__main__":
     lhe_path = '/data/theorie/jthoeve/ML4EFT/quad_clas/sm_events.lhe'
     save_path = '/Users/jaco/Documents/ML4EFT/code/output/plots/xsec_dist/vegas_check.pdf'
     # # plot_mg5_ana_mtt(30*10**-3, 2.5, 1, 0, lhe_path, save_path)
-    plot.plot_xsec_ana(10 * 10 ** -3, 2.5, 0, 0, lhe_path, save_path)
-    sys.exit()
+    #plot.plot_xsec_ana(10 * 10 ** -3, 2.5, 0, 0, lhe_path, save_path)
+    #sys.exit()
     # plot.plot_mg5_ana_mtt(30 * 10 ** -3, 2.5, 0, 0, lhe_path, save_path)
 
     #lhe_to_npy.lhe_to_npy(n_processes=18)
@@ -73,13 +74,22 @@ if __name__ == "__main__":
 
     if analyse:
         #define the binnings
-        binning_0 = np.append(np.linspace(340, 2000, 20), 4000).astype(int)
-        binning_1 = np.append(np.linspace(340, 2000, 10), 4000).astype(int)
-        binning_2 = np.append(np.linspace(340, 2000, 5), 4000).astype(int)
-        binning_3 = np.append(np.linspace(340, 2000, 2), 4000).astype(int)
-        binning_4 = np.append(np.linspace(340, 2000, 1), 4000).astype(int)
+        # binning_0 = np.append(np.linspace(340, 2000, 20), 4000).astype(int)
+        # binning_1 = np.append(np.linspace(340, 2000, 10), 4000).astype(int)
+        # binning_2 = np.append(np.linspace(340, 2000, 5), 4000).astype(int)
+        # binning_3 = np.append(np.linspace(340, 2000, 2), 4000).astype(int)
+        # binning_4 = np.append(np.linspace(340, 2000, 1), 4000).astype(int)
+        #
+        # binnings_list = [binning_0, binning_1, binning_2, binning_3, binning_4]
+        #
 
-        binnings_list = [binning_0, binning_1, binning_2, binning_3, binning_4]
+        mz = 91.188 * 10 ** -3  # z boson mass [TeV]
+        mh = 0.125
+        binning_0 = np.linspace(mz + mh, 1, 21)  # 20 bins
+        binning_1 = np.linspace(mz + mh, 1, 11) # 10 bins
+        binning_2 = np.linspace(mz + mh, 1, 6) # 5 bins
+        binning_3 = np.linspace(mz + mh, 1, 2) # 1 bin
+        binnings_list = [binning_0, binning_1, binning_2, binning_3]
 
         extent = np.array([[-1.2, 1.2], [-0.3, 0.3]])
-        analysis = ana.Analyse(root_path, nn=True, truth=True, fit=False, extent=extent, luminosity=6)
+        analysis = ana.Analyse(root_path, binnings=binnings_list,truth=False, fit=False, extent=extent, luminosity=60000)

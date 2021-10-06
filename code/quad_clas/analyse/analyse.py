@@ -4,6 +4,7 @@ import sys
 #import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
 import pandas as pd
 import csv
 from scipy.ndimage.filters import gaussian_filter
@@ -69,8 +70,8 @@ class Analyse:
             self.binned_analyses = self.run_binned_analysis()
 
             # plot accuracy of Asimov method
-            fig = bounds.plot_tc_accuracy(self.binned_analyses, c=np.array([0.5, 0]), n=100000)
-            fig.savefig(os.path.join(self.plots_path, 'tc_acc/asimov_comp.pdf'))
+            #fig = bounds.plot_tc_accuracy(self.binned_analyses, c=np.array([0.5, 0]), n=100000)
+            #fig.savefig(os.path.join(self.plots_path, 'tc_acc/asimov_comp.pdf'))
         else:
             self.binned_analyses = None
 
@@ -95,7 +96,7 @@ class Analyse:
 
             # create an analysis instance and perform the analysis
             analysis = bounds.StatAnalysis(self.paths, bins=binning, fit=self.fit, luminosity=self.luminosity)
-            #analysis.binned_analysis(extent=self.extent)
+            analysis.binned_analysis(extent=self.extent)
 
             # append results
             binned_analyses.append(analysis)
@@ -200,18 +201,20 @@ class Analyse:
 
         labels = []
         contours = []
-        colors = ['C2', 'C3', 'C4']
+        #colors = ['C2', 'C3', 'C4']
         if self.binned_analyses is not None:
             sigma = 0.8
+            color = iter(cm.rainbow(np.linspace(0, 1, len(self.binned_analyses))))
             for i, binnings in enumerate(self.binned_analyses):
                 # data_smoothed = gaussian_filter(binnings.z_scores_asi, sigma)
+                c = next(color)
                 data_smoothed = gaussian_filter(binnings.z_scores, sigma)
-                contour = ax.contour(binnings.cuu_plane, binnings.cug_plane, data_smoothed, levels=np.array([1.64]), colors=colors[i % len(colors)])
+                contour = ax.contour(binnings.cuu_plane, binnings.cug_plane, data_smoothed, levels=np.array([1.64]), colors=[c])
                 h0, _ = contour.legend_elements()
                 contours.append(h0[0])
-                labels.append(r'$\rm{Binning\;%d}$' % i)
+                labels.append(r'$\rm{%d\;bins}$' % (len(binnings.bins)-1))
 
-        self.z_scores_truth, self.z_scores_nn = self.load_z_scores()
+        #self.z_scores_truth, self.z_scores_nn = self.load_z_scores()
 
 
         # uncomment conditions below to select z-scores of your choice
@@ -225,7 +228,7 @@ class Analyse:
         #self.analyse1d()
 
         # 2D analysis
-        ellipse_param_truth,  ellipse_param_nn = self.fit_ellipse()
+        #ellipse_param_truth,  ellipse_param_nn = self.fit_ellipse()
 
 
 
@@ -233,38 +236,39 @@ class Analyse:
 
 
 
-        if self.truth:
-
-
-            cntr_truth = ax.contour(cuu_plane, cug_plane,
-                                    self.ellipse(cuu_plane, cug_plane, *ellipse_param_truth),
-                                    levels=[1.64],
-                                    colors='C0')
-
-            h0, _ = cntr_truth.legend_elements()
-            contours.append(h0[0])
-            labels.append(r'$\rm{Truth}$')
-
-        if self.nn:
-
-            for ellipse_param_nn_rep in ellipse_param_nn:
-                cntr_nn = ax.contour(cuu_plane, cug_plane,
-                                     self.ellipse(cuu_plane, cug_plane, *ellipse_param_nn_rep),
-                                     levels=[1.64],
-                                     colors='C1')
-                h0, _ = cntr_nn.legend_elements()
-
-            contours.append(h0[0])
-            labels.append(r'$\rm{NN}$')
+        # if self.truth:
+        #
+        #
+        #     cntr_truth = ax.contour(cuu_plane, cug_plane,
+        #                             self.ellipse(cuu_plane, cug_plane, *ellipse_param_truth),
+        #                             levels=[1.64],
+        #                             colors='C0')
+        #
+        #     h0, _ = cntr_truth.legend_elements()
+        #     contours.append(h0[0])
+        #     labels.append(r'$\rm{Truth}$')
+        #
+        # if self.nn:
+        #
+        #     for ellipse_param_nn_rep in ellipse_param_nn:
+        #         cntr_nn = ax.contour(cuu_plane, cug_plane,
+        #                              self.ellipse(cuu_plane, cug_plane, *ellipse_param_nn_rep),
+        #                              levels=[1.64],
+        #                              colors='C1')
+        #         h0, _ = cntr_nn.legend_elements()
+        #
+        #     contours.append(h0[0])
+        #     labels.append(r'$\rm{NN}$')
 
 
         # plot settings
         ax.legend(contours, labels, fontsize=15, frameon=False, loc='best')
-        ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
-        ax.set_ylabel(r'$\rm{cug}$', fontsize=20)
+        ax.set_xlabel(r'$\rm{cHW}$', fontsize=20)
+        ax.set_ylabel(r'$\rm{cHq3}$', fontsize=20)
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
 
-        fig.savefig(os.path.join(self.plots_path, 'ellipses_diff_new_8.pdf'))
+        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin.pdf')
+        #fig.savefig(os.path.join(self.plots_path, 'ellipses_diff_new_8.pdf'))
 
     def analyse1d(self):
         z_scores_truth = self.z_scores_truth

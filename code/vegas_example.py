@@ -272,7 +272,7 @@ plt.show()
 #%%
 #madgraph
 import pylhe
-path_to_file = '/Users/jaco/Documents/ML4EFT/code/unweighted_events.lhe'
+path_to_file = '/Users/jaco/Documents/ML4EFT/data/events/uubarzh.lhe'
 data_madgraph = []
 found_weight = False
 for e in pylhe.readLHE(path_to_file):
@@ -287,8 +287,8 @@ hist_mg *= weight
 #%%
 fig = plt.figure(figsize=(10, 6))
 ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(0.1, 1))
-ax1.plot(x, cross_section_vh_vegas, '-', c='red', label=r'$\rm{FormCalc}$')
-#ax1.plot(x, cross_section_vh_vegas_ellis, '-', c='C2', label=r'$\rm{Ellis}$')
+#ax1.plot(x, cross_section_vh_vegas, '-', c='red', label=r'$\rm{FormCalc}$')
+ax1.plot(x, cross_section_vh_vegas_ellis, '-', c='C2', label=r'$\rm{FormCalc}$')
 ax1.step(bins_mg[:-1], hist_mg, where='post', label=r'$\rm{mg5}$')
 
 plt.yscale('log')
@@ -302,8 +302,8 @@ ax2.hlines(1, 0.1, 1, colors='k', linestyles='dashed')
 plt.ylabel(r'$\rm{num/ana}$')
 plt.xlim((0.1, 1))
 
-# ax3 = fig.add_axes([0.15, 0.1, 0.75, 0.20], ylim = (0.8*(y/y_sm).min(), 1.1*(y/y_sm).max()))
-# ax3.plot(x, y/y_sm, '-')
+#ax3 = fig.add_axes([0.15, 0.1, 0.75, 0.20], ylim = (0.8*(y/y_sm).min(), 1.1*(y/y_sm).max()))
+#ax3.plot(x, y/y_sm, '-')
 
 plt.xlabel(r'$m_{HZ}\;\mathrm{[TeV]}$')
 
@@ -311,11 +311,11 @@ plt.show()
 
 #%%
 def sigma_part_vh_ellis(hats):
-    pz2 = (hats ** 2 + mw ** 4 + mh ** 4 - 2 * hats * mw ** 2 - 2 * hats * mh ** 2 - 2 * mw ** 2 * mh ** 2)
+    pz2 = (hats ** 2 + mw ** 4 + mh ** 4 - 2 * hats * mw ** 2 - 2 * hats * mh ** 2 - 2 * mw ** 2 * mh ** 2)/(4*hats)
     pz = np.sqrt(pz2)
     sth2 = 1 - (mw / mz) ** 2
     Vq = 1 / 2 - 4 / 3 * sth2
-    Aq = 1/ 2
+    Aq = 1 / 2
     xsec = (Gf * mz ** 2) ** 2 / (9 * np.pi) * (Vq ** 2 + Aq ** 2) * pz / np.sqrt(hats) * (3 * mz ** 2 + pz2)/((hats - mz ** 2) ** 2)
     return xsec
 
@@ -376,7 +376,7 @@ def dsigma_dmvh_ellis(mvh, nitn=100, neval=1000):
 #%%
 cross_section_vh_vegas_ellis = []
 x = np.linspace(mz + mh, 1, 100)
-for mvh in x:
+for mvh in bins_mg[:100]:
     result_vegas = dsigma_dmvh_ellis(mvh, nitn = 50)
     print(result_vegas)
     cross_section_vh_vegas_ellis.append(result_vegas.mean)

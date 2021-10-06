@@ -1,6 +1,6 @@
 # Author: Jaco ter Hoeve
 # This files contains the analytical cross sections in the eft as obtained through FeynCalc
-
+#%%
 from __future__ import division
 import lhapdf
 import numpy as np
@@ -137,6 +137,8 @@ def dsigma_dmtt(mtt, cuGRe, cuu):
     y_min, y_max = -0.5 * np.log(s / mtt), 0.5 * np.log(s / mtt)
     dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, cuGRe, cuu), n=10)[0] #TODO: n=100 previously, does n= 10 also give good performances?
     return dsigma_dmtt
+
+#%%
 
 
 def likelihood_ratio(y, mtt, cuGRe, cuu):

@@ -12,6 +12,7 @@ import math
 from . import xsec_cluster as axs
 from . import analyse
 from .lhelib import lhe
+from . import vh_prod_fq
 
 # matplotlib.use('PDF')
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
@@ -159,7 +160,7 @@ class StatAnalysis:
         with open(os.path.join(self.path_output, "xsec_bin.npy"), 'wb') as f:
             np.save(f, dataset)
 
-    def expected_events_binned(self, c):
+    def expected_events_binned(self, c, a):
         """
         Computes the expected number of events in each of the bins at the eft point c
 
@@ -170,16 +171,18 @@ class StatAnalysis:
         """
 
         path_xsec_binned = os.path.join(self.path_output, "xsec_bin.npy")
-        with open(path_xsec_binned, 'rb') as f:
-            dataset = np.load(f)
+        # with open(path_xsec_binned, 'rb') as f:
+        #     dataset = np.load(f)
 
         # build the matrix of coefficients
-        coeff_mat = self.coefficient_matrix()
+        # coeff_mat = self.coefficient_matrix()
 
         # solve the linear equation xsec = coeff_matrix * a for a
 
         # TODO: rewrite the below so that the fit does not have to be done each time the function is called
-        a, _, _, _ = np.linalg.lstsq(coeff_mat, dataset, rcond=None)
+        #a, _, _, _ = np.linalg.lstsq(coeff_mat, dataset, rcond=None)
+
+
 
         # find the x_sec per bin at the specified point in eft parameter space
         cuu, cug = c[0], c[1]
@@ -264,10 +267,11 @@ class StatAnalysis:
             cuu_list = np.linspace(cuu_min, cuu_max, 200)
             cug_list = np.linspace(cug_min, cug_max, 200)
 
+        a = vh_prod_fq.findCoeff(self.bins)
         for cug in cug_list:
             for cuu in cuu_list:
                 c = np.array([cuu, cug])
-                self.nu_i = self.expected_entries(c)
+                self.nu_i = self.expected_entries(c, a)
 
                 # if exact:
                 #     self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc()
@@ -318,7 +322,7 @@ class StatAnalysis:
 
         return mean_tc, std_tc
 
-    def expected_entries(self, c):
+    def expected_entries(self, c, a):
         """
 
         Parameters
@@ -330,8 +334,8 @@ class StatAnalysis:
         dict
             dictionary with expected number of events per bin for both the sm and the eft
         """
-        nu_i_eft = self.expected_events_binned(c).astype(int)
-        nu_i_sm = self.expected_events_binned(np.zeros(len(c))).astype(int)
+        nu_i_eft = self.expected_events_binned(c, a).astype(int)
+        nu_i_sm = self.expected_events_binned(np.zeros(len(c)), a).astype(int)
         nu_i = {'sm': nu_i_sm, 'eft': nu_i_eft}
         return nu_i
 
