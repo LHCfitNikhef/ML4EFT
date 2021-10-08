@@ -65,11 +65,13 @@ def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
     Vq = - 1 / 2 + 2 / 3 * sth2
     Aq = -1 / 2
     xsec_sm = (Gf * mz ** 2) ** 2 / (9 * np.pi) * (Vq ** 2 + Aq ** 2) * pz / np.sqrt(hats) * (3 * mz ** 2 + pz2) / (
-                (hats - mz ** 2) ** 2)
+            (hats - mz ** 2) ** 2)
 
     LambdaSMEFT = 1
-    xsec_lin_cHW = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz ** 2 + pz2) * cth2 * Gf * mz ** 2 * (
-                9 - 24 * sth2 + 32 * sth2 ** 2)) / (27 * np.pi * (mz ** 2 - hats) ** 2)
+    xsec_lin_cHW = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz ** 2 + pz2) * cth2 * Gf * mz ** 2 * sth2 * (
+                9 - 12 * sth2 + 8 * sth2 ** 2)) / (27 * np.pi * (mz ** 2 - hats) ** 2 * sth2)
+    # xsec_lin_cHW = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz ** 2 + pz2) * cth2 * Gf * mz ** 2 * (
+    #             9 - 24 * sth2 + 32 * sth2 ** 2)) / (27 * np.pi * (mz ** 2 - hats) ** 2)
     # xsec_lin_cHWB = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz ** 2 + pz2) * np.sqrt(cth2) * np.sqrt(sth2) * Gf * mz ** 2 *(9 - 24 * sth2 + 32 * sth2 ** 2)) / (27 * np.pi * (mz ** 2 - hats) ** 2 )
     xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (4 * sth2 - 3)) / (
                 27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
@@ -91,21 +93,23 @@ def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
 # %%
 def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     """
-    NP parameter: order in the EFT
-    order parameter: work at one specific order
     """
     hats = sqrts ** 2
-    flavor_up = [2, 4]
-    flavor_down = [1, 3, 5]
+    flavor_up = [2]
+    flavor_down = [1]#, 3, 5]
 
-    pdfs_up = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_up])
-    pdfs_down = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_down])
-
+    pdfs_up = np.sum(
+        [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in flavor_up])
+    #pdfs_up = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_up])
+    #pdfs_down = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_down])
+    pdfs_down = np.sum(
+        [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in
+         flavor_down])
 
 
     weight_up = (sigma_part_vh_up(hats, cHW, cHq3, lin, quad)) * pdfs_up
     weight_down = (sigma_part_vh_down(hats, cHW, cHq3, lin, quad)) * pdfs_down
-    return weight_down + weight_up
+    return weight_down
 
 
 v_weight = np.vectorize(weight, otypes=[np.float])
@@ -198,11 +202,11 @@ def nu_i(a, cHW, cHq3, luminosity):
 
 
 # %%
-lhe_path = "/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/ppzh_smeftsim_sm.lhe"
+lhe_path = "/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/ddbar_zh_smeftsim_lin_cHW_1.lhe"
 bin_width = 10 * 10 ** -3
 hist_mg_sm, bins_mg_sm = mg5_reader(lhe_path, bin_width, bin_min=mh + mz)
 
-#data_madgraph = np.load("events.npy")
+#data_madgraph = np.load("/Users/jaco/Documents/ML4EFT/code/events.npy")
 bin_min = mh + mz
 #hist_mg, bins_mg = np.histogram(data_madgraph[1:,0], bins=np.arange(bin_min, np.max(data_madgraph), bin_width),
 #                                    density=True)
@@ -210,7 +214,7 @@ bin_min = mh + mz
 
 cross_section_vh_vegas = []
 x = np.arange(mz + mh + bin_width / 2, 1.0, bin_width)
-cross_section_vh = [dsigma_dmvh(mvh, cHW=0, cHq3=0, lin=True, quad=False) for mvh in x]
+cross_section_vh = [dsigma_dmvh(mvh, cHW=1, cHq3=0, lin=True, quad=False) for mvh in x]
 
 fig = plt.figure(figsize=(10, 6))
 ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(0.1, 1))
