@@ -10,7 +10,7 @@ import random
 from quad_clas.core import xsec_cluster as xsec
 from quad_clas.core.lhelib import lhe as lhe
 import sys
-
+from scipy.stats import chi2, norm, ncx2, poisson
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 s = 14 ** 2  # Collider COM energy squared [TeV^2]
 mu = 91.188  # fact. scale for pdfs = Mz
@@ -25,7 +25,7 @@ pb_convert = 3.894E2  # conversion factor to pb
 
 # %%
 
-def sigma_part_vh(hats, cHW, cHq3, lin, quad):
+def sigma_part_vh_up(hats, cHW, cHq3, lin, quad):
     pz2 = (hats ** 2 + mz ** 4 + mh ** 4 - 2 * hats * mz ** 2 - 2 * hats * mh ** 2 - 2 * mz ** 2 * mh ** 2) / (4 * hats)
     pz = np.sqrt(pz2)
     sth2 = 1 - (mw / mz) ** 2
@@ -43,7 +43,7 @@ def sigma_part_vh(hats, cHW, cHq3, lin, quad):
                 27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
 
     if lin:
-        return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3
+        return 5 * xsec_sm + 5 * cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3
     if quad:
         xsec_quad_cHq3_cHq3 = (mz ** 4 * pz * (3 * mz ** 2 + pz2)) / (
                     36 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats))
@@ -57,7 +57,37 @@ def sigma_part_vh(hats, cHW, cHq3, lin, quad):
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
                cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
 
+def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
+    pz2 = (hats ** 2 + mz ** 4 + mh ** 4 - 2 * hats * mz ** 2 - 2 * hats * mh ** 2 - 2 * mz ** 2 * mh ** 2) / (4 * hats)
+    pz = np.sqrt(pz2)
+    sth2 = 1 - (mw / mz) ** 2
+    cth2 = 1 - sth2
+    Vq = - 1 / 2 + 2 / 3 * sth2
+    Aq = 1 / 2
+    xsec_sm = (Gf * mz ** 2) ** 2 / (9 * np.pi) * (Vq ** 2 + Aq ** 2) * pz / np.sqrt(hats) * (3 * mz ** 2 + pz2) / (
+                (hats - mz ** 2) ** 2)
 
+    LambdaSMEFT = 1
+    xsec_lin_cHW = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz ** 2 + pz2) * cth2 * Gf * mz ** 2 * (
+                9 - 24 * sth2 + 32 * sth2 ** 2)) / (27 * np.pi * (mz ** 2 - hats) ** 2)
+    # xsec_lin_cHWB = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz ** 2 + pz2) * np.sqrt(cth2) * np.sqrt(sth2) * Gf * mz ** 2 *(9 - 24 * sth2 + 32 * sth2 ** 2)) / (27 * np.pi * (mz ** 2 - hats) ** 2 )
+    xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (4 * sth2 - 3)) / (
+                27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
+
+    if lin:
+        return 5 * xsec_sm + 5 * cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3
+    if quad:
+        xsec_quad_cHq3_cHq3 = (mz ** 4 * pz * (3 * mz ** 2 + pz2)) / (
+                    36 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats))
+
+        xsec_quad_cHW_cHW = (cth2 ** 2 * mz ** 2 * pz * (3 * mz ** 2 + 2 * pz2) * np.sqrt(hats) * (
+                    9 - 24 * sth2 + 32 * sth2 ** 2)) / (81 * np.pi * (mz ** 2 - hats) ** 2)
+
+        xsec_quad_cHW_cHq3 = -(2 * cth2 * mz ** 4 * pz * np.sqrt(mz ** 2 + pz2) * (-3 + 4 * sth2)) / (
+                    9 * np.pi * (mz ** 2 - hats) ** 2)
+
+        return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
+               cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
 # %%
 def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     """
@@ -65,7 +95,7 @@ def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     order parameter: work at one specific order
     """
     hats = sqrts ** 2
-    w_ii = (sigma_part_vh(hats, cHW, cHq3, lin, quad)) * (p.xfxQ(2, x1, mu) * p.xfxQ(-2, x2, mu))
+    w_ii = (sigma_part_vh_up(hats, cHW, cHq3, lin, quad)) * (p.xfxQ(2, x1, mu) * p.xfxQ(-2, x2, mu))
     return w_ii
 
 
@@ -151,8 +181,7 @@ def findCoeff(bins):
     return coeff
 
 
-def nu_i(bins, cHW, cHq3, luminosity):
-    a = findCoeff(bins)
+def nu_i(a, cHW, cHq3, luminosity):
     eft_point = np.array([1, cHW, cHW ** 2, cHq3, cHq3 ** 2, cHW * cHq3])
     xsec = np.einsum('ij,i', a, eft_point)
     nu = xsec * luminosity
@@ -164,14 +193,20 @@ lhe_path = "/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/uubarzh_smefts
 bin_width = 10 * 10 ** -3
 # hist_mg, bins_mg = mg5_reader(lhe_path, bin_width, bin_min=mh + mz)
 
+data_madgraph = np.load("events.npy")
+bin_min = mh + mz
+hist_mg, bins_mg = np.histogram(data_madgraph[1:,0], bins=np.arange(bin_min, np.max(data_madgraph), bin_width),
+                                    density=True)
+hist_mg *= data_madgraph[0, 0]
+
 cross_section_vh_vegas = []
 x = np.arange(mz + mh + bin_width / 2, 1.0, bin_width)
-cross_section_vh = [dsigma_dmtt(mvh) for mvh in x]
+cross_section_vh = [dsigma_dmvh(mvh, cHW=10, cHq3=0, lin=True, quad=False) for mvh in x]
 
 fig = plt.figure(figsize=(10, 6))
 ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(0.1, 1))
 
-# ax1.step(bins_mg[:-1], hist_mg, c='C0', where='post', label=r'$\rm{mg5}$')
+ax1.step(bins_mg[:-1], hist_mg, c='C0', where='post', label=r'$\rm{mg5}$')
 ax1.plot(x, cross_section_vh, '-', c='C1', label=r'$\rm{FormCalc,\;SM}$')
 
 plt.yscale('log')
@@ -189,7 +224,7 @@ plt.xlim((0.1, 1))
 plt.xlabel(r'$m_{HZ}\;\mathrm{[TeV]}$')
 plt.show()
 
-plt.savefig("/Users/jaco/Documents/ML4EFT/plots/uubarzh_smeftsim_quad_cHq3_cHq3.pdf")
+#plt.savefig("/Users/jaco/Documents/ML4EFT/plots/uubarzh_smeftsim_quad_cHq3_cHq3.pdf")
 
 # %%
 #unbinned plr
@@ -270,14 +305,6 @@ while exp < n_exp:
     log_l_list.append(log_l_value)
     exp += 1
 
-# %%
-
-# binned PLR without systematics
-binning_2 = np.linspace(mz + mh, 1, 6) # 5 bins
-nu_i_eft = nu_i(binning_2, 1, 1, 3000) # eft
-nu_i_sm = nu_i(binning_2, 0, 0, 3000) # sm
-#%%
-q_list, q_list_alt, t_asimov = sample_dist(100000, nu_i_eft, nu_i_sm)
 #%%
 def sample_dist(n_exp, nu_i, nu_i_alt):
 
@@ -302,8 +329,70 @@ def sample_dist(n_exp, nu_i, nu_i_alt):
     return q_list, q_list_alt, t_asimov
 
 
+def scan_p(binning):
+    a = findCoeff(binning)
+    exp_p_list = []
+    for cHq3 in np.linspace(-0.3, 0.3, 200):
+        for cHW in np.linspace(-1, 1, 100):
+            nu_i_eft = nu_i(a, cHW, cHq3, 60000)  # eft
+            nu_i_alt = nu_i(a, 0, 0, 60000)
+
+            t_asimov = 2 * np.sum(nu_i_alt * np.log(nu_i_alt / nu_i_eft) + nu_i_eft - nu_i_alt)
+
+
+            n_bins = len(nu_i_eft)
+            rv_nc = ncx2(df=n_bins, nc=t_asimov)
+            rv_chi2 = chi2(df=n_bins)
+
+
+            med_q = rv_nc.ppf(0.5)  # median q under alt
+            exp_p = rv_chi2.sf(med_q)  # expected p value under null
+
+            exp_p_list.append(exp_p)
+    exp_p_list = np.array(exp_p_list)
+    exp_p_list = np.reshape(exp_p_list, (200, 100))
+    return exp_p_list
 #%%
+# binned PLR without systematics
+binning_2 = np.linspace(mz + mh, 1, 3) # 5 bins
+p_values = scan_p(binning_2)
+#%%
+a = findCoeff(binning_2)
+nu_i_eft = nu_i(a, 0, 0.1, 60000) # eft
+nu_i_sm = nu_i(a, 0, 0, 60000) # sm
+#%%
+q_list, q_list_alt, t_asimov = sample_dist(100000, nu_i_eft, nu_i_sm)
+
+rv_nc = ncx2(df=2, nc=t_asimov)
+rv_chi2 = chi2(df=2)
+med_q = rv_nc.ppf(0.5)  # median q under alt
+exp_p = rv_chi2.sf(med_q)
+print(exp_p)
 fig, ax = plt.subplots(figsize=(10, 6))
 ax.hist(q_list, bins=70, density=True, alpha=0.3)
 ax.hist(q_list_alt, bins=70, density=True, alpha=0.3)
+
+df = len(binning_2) - 1
+nc=t_asimov
+rv_chi2 = chi2(df=df)
+rv_nc = ncx2(df=df, nc=nc)
+
+med_q = rv_nc.ppf(0.5) # median q under alt
+exp_p = rv_chi2.sf(med_q) # expected p value under null
+
+x = np.linspace(0, 20, 500)#np.linspace(rv_chi2.ppf(1e-4), rv_nc.ppf(1-1e-3), 400)
+ax.plot(x, rv_chi2.pdf(x), color='C0', lw=2, label=r'$\chi^2(%d, %d)$'%(df, 0))
+ax.plot(x, rv_nc.pdf(x), color='C1', lw=2, label=r'$\chi^2(%d, %.2f)$'%(df, nc))
+plt.show()
+
+#%%
+from scipy.ndimage.filters import gaussian_filter
+fig, ax = plt.subplots(figsize=(10, 6))
+cHq3 = np.linspace(-0.3, 0.3, 200)
+cHW = np.linspace(-1, 1, 100)
+
+cHq3_plane, cHW_plane = np.meshgrid(cHq3, cHW)
+sigma = 0.8
+data_smoothed = gaussian_filter(p_values, sigma)
+contour = ax.contour(cHq3_plane,cHW_plane, data_smoothed.T, levels=np.array([0.05]), colors='red')
 plt.show()

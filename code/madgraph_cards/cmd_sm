@@ -1,0 +1,20 @@
+import model SMEFTsim_U35_MwScheme_UFO
+define p = p b b~
+generate p p > z > z h NP=1
+output vh_sm
+launch vh_sm -i
+multi_run 1
+set mu 0
+set md 0
+set mc 0
+set ms 0
+set mb 0
+set nevents 5000
+set ebeam1 7000
+set ebeam2 7000
+set pdlabel lhapdf
+set lhaid 315000
+set fixed_ren_scale True
+set fixed_fac_scale True
+set use_syst False
+print_results --path=./vh_sm/cs.txt --format=short
