@@ -1,3 +1,4 @@
+#%%
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,8 +15,9 @@ mh = 0.125
 bin_width = 10 * 10 ** -3
 
 
-title = r'$\rm{VH}\;\rm{production}\;\rm{benchmark,}\;\rm{SM}$'
-event_path = "/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/events.npy"
+
+title = r'$\rm{VH}\;\rm{production}\;\rm{benchmark,}\;\rm{LO+}\mathcal{O}\left(\Lambda^{-4}\right)$'
+event_path = "/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/events_0.npy"
 
 def plot_benchmark(event_path, cHW, cHq3, title):
     data_madgraph = np.load(event_path)
@@ -25,14 +27,19 @@ def plot_benchmark(event_path, cHW, cHq3, title):
     hist_mg *= data_madgraph[0, 0]
 
     x = np.arange(mz + mh + bin_width / 2, 1.0, bin_width)
-    cross_section_vh = [vh_prod.dsigma_dmvh(mvh, cHW=cHW, cHq3=cHq3, lin=True, quad=False) for mvh in x]
+    cross_section_vh = [vh_prod.dsigma_dmvh(mvh, cHW=cHW, cHq3=cHq3, lin=False, quad=True) for mvh in x]
 
     fig = plt.figure(figsize=(8, 5))
-    ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(0.1, 1))
+    ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[])
 
     ax1.step(bins_mg[:-1], hist_mg, c='C0', where='post', label=r'$\rm{mg5}$')
     ax1.plot(x, cross_section_vh, '-', c='C1', label=r'$\rm{FormCalc}$')
-    ax1.set_ylim((10 ** -2, 10))
+    ax1.text(0.05, 0.1,r'$\rm{cHq3=%d}$'%cHq3, transform=ax1.transAxes)
+    ax1.text(0.05, 0.2, r'$\rm{cHW=%d}$' % cHW, transform=ax1.transAxes)
+
+    y_min = np.min(cross_section_vh)
+    y_max = np.max(cross_section_vh)
+    ax1.set_ylim((0.8*y_min, 1.2*y_max))
     ax1.set_xlim((0.2, 1))
     plt.yscale('log')
     plt.title(title)
@@ -50,5 +57,5 @@ def plot_benchmark(event_path, cHW, cHq3, title):
     return fig
 
 
-fig = plot_benchmark(event_path, 10, 0, title)
-fig.savefig("/Users/jaco/Documents/ML4EFT/code/higgs21/plots/vh_linear_cHW.pdf")
+fig = plot_benchmark(event_path, 10, 10, title)
+fig.savefig("/Users/jaco/Documents/ML4EFT/code/higgs21/plots/vh_quad_cHq3_cHW.pdf")

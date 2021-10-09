@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import lhapdf
 from scipy import integrate
@@ -43,9 +44,9 @@ def sigma_part_vh_up(hats, cHW, cHq3, lin, quad):
         xsec_quad_cHW_cHq3 = -(2 * cth2 * mz ** 4 * pz * np.sqrt(mz ** 2 + pz2) * (-3 + 4 * sth2)) / (
                     9 * np.pi * (mz ** 2 - hats) ** 2)
 
+
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
                cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
-
 
 def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
     pz2 = (hats ** 2 + mz ** 4 + mh ** 4 - 2 * hats * mz ** 2 - 2 * hats * mh ** 2 - 2 * mz ** 2 * mh ** 2) / (4 * hats)
@@ -55,12 +56,14 @@ def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
     Vq = - 1 / 2 + 2 / 3 * sth2
     Aq = -1 / 2
     xsec_sm = (Gf * mz ** 2) ** 2 / (9 * np.pi) * (Vq ** 2 + Aq ** 2) * pz / np.sqrt(hats) * (3 * mz ** 2 + pz2) / (
-                (hats - mz ** 2) ** 2)
+            (hats - mz ** 2) ** 2)
 
     LambdaSMEFT = 1
-    xsec_lin_cHW = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz**2 + pz2)*cth2*Gf**2*mz**2*sth2*(9-12*sth2+8*sth2**2))/(27*np.pi*(mz**2 - hats)**2*sth2)
+    xsec_lin_cHW = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz ** 2 + pz2) * cth2 * Gf * mz ** 2 * sth2 * (
+                9 - 12 * sth2 + 8 * sth2 ** 2)) / (27 * np.pi * (mz ** 2 - hats) ** 2 * sth2)
+
     # xsec_lin_cHWB = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz ** 2 + pz2) * np.sqrt(cth2) * np.sqrt(sth2) * Gf * mz ** 2 *(9 - 24 * sth2 + 32 * sth2 ** 2)) / (27 * np.pi * (mz ** 2 - hats) ** 2 )
-    xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (4 * sth2 - 3)) / (
+    xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (2 * sth2 - 3)) / (
                 27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
 
     if lin:
@@ -70,14 +73,14 @@ def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
                     36 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats))
 
         xsec_quad_cHW_cHW = (cth2 ** 2 * mz ** 2 * pz * (3 * mz ** 2 + 2 * pz2) * np.sqrt(hats) * (
-                    9 - 24 * sth2 + 32 * sth2 ** 2)) / (81 * np.pi * (mz ** 2 - hats) ** 2)
+                    9 - 12 * sth2 + 8 * sth2 ** 2)) / (81 * np.pi * (mz ** 2 - hats) ** 2)
 
-        xsec_quad_cHW_cHq3 = -(2 * cth2 * mz ** 4 * pz * np.sqrt(mz ** 2 + pz2) * (-3 + 4 * sth2)) / (
+        xsec_quad_cHW_cHq3 = -(2 * cth2 * mz ** 4 * pz * np.sqrt(mz ** 2 + pz2) * (-3 + 2 * sth2)) / (
                     9 * np.pi * (mz ** 2 - hats) ** 2)
+
 
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
                cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
-
 
 def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     """
@@ -86,9 +89,13 @@ def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     flavor_up = [2, 4]
     flavor_down = [1, 3, 5]
 
+    # pdfs_up = np.sum(
+    #     [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in flavor_up])
     pdfs_up = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_up])
     pdfs_down = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_down])
-
+    # pdfs_down = np.sum(
+    #     [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in
+    #      flavor_down])
 
 
     weight_up = (sigma_part_vh_up(hats, cHW, cHq3, lin, quad)) * pdfs_up
