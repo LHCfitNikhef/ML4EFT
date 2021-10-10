@@ -83,11 +83,11 @@ class PredictorQuadratic(nn.Module):
 
     def forward(self, x, c, path_lin):
         n_beta_out = self.n_beta(x)
-
-        n_lin = self.PredictorLinear(self.architecture)
+        n_lin = PredictorLinear(self.architecture)
         n_lin.load_state_dict(torch.load(path_lin))
-
-        r = 1 + c * n_lin + c ** 2 * n_beta_out ** 2
+        n_lin_out = n_lin(x, c)
+        n_lin_out = (1/n_lin_out - 2)/c
+        r = 1 + c * n_lin_out + c ** 2 * n_beta_out ** 2
 
         return 1 / (1 + r)
 
@@ -291,7 +291,7 @@ class EventDataset(data.Dataset):
         return data_sample, weight_sample, label_sample
 
 
-def plot_training_report(train_loss, val_loss, path, architecture, c):
+def plot_training_report(train_loss, val_loss, path, architecture, c, path_lin):
 
     # loss plot
     fig = plt.figure()
@@ -310,7 +310,7 @@ def plot_training_report(train_loss, val_loss, path, architecture, c):
 
     mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
     x = np.linspace(mh + mz + 1e-2, 1, 100)
-    f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c, mean, std)
+    f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c, mean, std, path_lin)
     f_ana = axs.plot_likelihood_ratio_1D(x, c)
 
     ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
@@ -324,7 +324,7 @@ def plot_training_report(train_loss, val_loss, path, architecture, c):
     fig.savefig(path + 'plots/f_perf.pdf')
 
 
-def training_loop(n_epochs,eft_point, optimizer, model, train_loader, val_loader, path, architecture, animate):
+def training_loop(n_epochs,eft_point, optimizer, model, train_loader, val_loader, path, architecture, animate, path_lin=None):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
@@ -349,7 +349,10 @@ def training_loop(n_epochs,eft_point, optimizer, model, train_loader, val_loader
             train_loss = torch.zeros(1)
             # loop over all the datasets within the minibatch and compute their contribution to the loss
             for i, [event, weight, label] in enumerate(minibatch):
-                output = model(event.float(), eft_point)
+                if isinstance(model, PredictorQuadratic):
+                    output = model(event.float(), eft_point, path_lin)
+                else:
+                    output = model(event.float(), eft_point)
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
 
@@ -363,7 +366,10 @@ def training_loop(n_epochs,eft_point, optimizer, model, train_loader, val_loader
             for minibatch in zip(*val_loader):
                 val_loss = torch.zeros(1)
                 for i, [event, weight, label] in enumerate(minibatch):
-                    output = model(event.float(), eft_point)
+                    if isinstance(model, PredictorQuadratic):
+                        output = model(event.float(), eft_point, path_lin)
+                    else:
+                        output = model(event.float(), eft_point)
                     loss = loss_fn(output, label, weight)
                     val_loss += loss
                 assert val_loss.requires_grad is False
@@ -399,7 +405,7 @@ def training_loop(n_epochs,eft_point, optimizer, model, train_loader, val_loader
         loss_val_old = loss_val
         iterations += 1
 
-    plot_training_report(loss_list_train, loss_list_val, path, architecture, 2)
+    plot_training_report(loss_list_train, loss_list_val, path, architecture, 2, path_lin)
 
     if animate:
         animate_performance(path, architecture, 2, 0, iterations)
@@ -410,7 +416,7 @@ def animate_performance(path, architecture, ctg, cuu, epochs):
     analyse.animate_learning_1d(path, architecture, ctg, cuu, epochs, mean, std)
 
 
-def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True, animate=False):
+def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True, animate=False, path_lin=None):
 
     model = PredictorQuadratic(architecture) if quadratic else PredictorLinear(architecture)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -434,6 +440,7 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
         path=path,
         architecture=architecture,
         animate=animate,
+        path_lin=path_lin
     )
 
 def plot_data(data_eft, data_sm):
@@ -454,6 +461,7 @@ def main(path, mc_run, **run_dict):
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
     eft_points = run_dict['coeff']
     event_data_path = run_dict['event_data']
+    path_lin = run_dict['path_lin'].format(mc_run)
 
     eft_value = eft_points['value']
     eft_op = eft_points['op']
@@ -504,7 +512,8 @@ def main(path, mc_run, **run_dict):
                      data_val,
                      epochs,
                      quadratic=quadratic,
-                     animate=run_dict['animation']
+                     animate=run_dict['animation'],
+                     path_lin=path_lin,
                      )
 
 def start(json_path, mc_run, output_dir):

@@ -8,5 +8,6 @@
   "quadratic": 0,
   "animation": 0,
   "coeff": {"op": "cHW", "value": 10.0},
-  "event_data": "/Users/jaco/Documents/ML4EFT/data/events"
+  "event_data": "/Users/jaco/Documents/ML4EFT/data/events",
+  "path_lin": "/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW_lin_3/mc_run_{}/trained_nn.pt"
 }
