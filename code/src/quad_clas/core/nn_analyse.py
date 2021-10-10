@@ -18,7 +18,7 @@ rc('text', usetex=True)
 eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5], [0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0], [10.0, 2.0]]
 
 
-def make_predictions_1d(network_path, network_size, c, mean, std):
+def make_predictions_1d(x, network_path, network_size, c, mean, std):
     """
     :param network_path: path to the saved NN to be loaded
     :param train_dataset: training data needed to find the mean and std
@@ -31,16 +31,13 @@ def make_predictions_1d(network_path, network_size, c, mean, std):
     loaded_model.load_state_dict(torch.load(network_path))
 
     # Set up coordinates and compute f
-    mz = 91.188 * 10 ** -3  # z boson mass [TeV]
-    mh = 0.125
-    mvh_min, mvh_max = mz + mh, 1
-    mtt = torch.arange(mvh_min + 1e-2, mvh_max, 1e-2).unsqueeze(1)
-    x = (mtt - mean) / std  # rescale the inputs
+    x_unscaled = torch.from_numpy(x).unsqueeze(-1)
+    x = (x_unscaled - mean) / std  # rescale the inputs
 
-    f_pred = loaded_model.forward(x.float(), float(sum(c))) # TODO extend to more than 1 EFT param
+    f_pred = loaded_model.forward(x.float(), c)
     f_pred = f_pred.view(-1).detach().numpy()
 
-    return mtt.numpy(), f_pred
+    return f_pred
 
 
 def plot_predictions_1d(network_size):

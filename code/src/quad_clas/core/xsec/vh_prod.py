@@ -124,7 +124,8 @@ def dsigma_dmvh_dy(y, mvh, c1, c2, lin, quad):
 
 def dsigma_dmvh(mvh, c, lin, quad):
     y_min, y_max = -0.5 * np.log(s / mvh), 0.5 * np.log(s / mvh)
-    c1, c2 = c
+    c1 = c
+    c2 = 0
     dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mvh, c1, c2, lin, quad), n=10)[0]
     return dsigma_dmtt
 

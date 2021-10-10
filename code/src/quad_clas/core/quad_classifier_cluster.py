@@ -14,7 +14,7 @@ import os
 from matplotlib import pyplot as plt
 from matplotlib import rc
 from torch import nn
-
+import shutil
 from . import nn_analyse as analyse
 from quad_clas.core.xsec import tt_prod as axs
 
@@ -22,9 +22,8 @@ from quad_clas.core.xsec import tt_prod as axs
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 rc('text', usetex=True)
 
-
-eft_points = [[10, 0]]
-
+mz = 91.188 * 10 ** -3  # z boson mass [TeV]
+mh = 0.125
 
 class MLP(nn.Module):
 
@@ -79,23 +78,17 @@ class PredictorQuadratic(nn.Module):
 
     def __init__(self, architecture):
         super().__init__()
-        self.n_12 = MLP(architecture)
-        self.n_13 = MLP(architecture)
-        self.n_22 = MLP(architecture)
-        self.n_23 = MLP(architecture)
-        self.n_33 = MLP(architecture)
+        self.architecture = architecture
+        self.n_beta = MLP(architecture)
 
-    def forward(self, x, c):
+    def forward(self, x, c, path_lin):
+        n_beta_out = self.n_beta(x)
 
-        raise NotImplementedError("Quadratic classifier not implemented yet")
-        # TODO: write general method for any dimension of c, now only works for 2
-        n_12 = self.n_12(x)
-        n_13 = self.n_13(x)
-        n_22 = self.n_22(x)
-        n_23 = self.n_23(x)
-        n_33 = self.n_33(x)
-        r = (1 + n_12 * ctg + n_13 * cuu) ** 2 + (n_22 * ctg + n_23 * cuu) ** 2 + (n_33 * cuu)**2
-        #r = 1 + n_12 ** 2 * ctg + n_13 ** 2 * cuu + n_22 ** 2 * ctg ** 2 + n_23 ** 2 * cuu ** 2 + n_33 ** 2 * cuu * ctg
+        n_lin = self.PredictorLinear(self.architecture)
+        n_lin.load_state_dict(torch.load(path_lin))
+
+        r = 1 + c * n_lin + c ** 2 * n_beta_out ** 2
+
         return 1 / (1 + r)
 
 
@@ -316,11 +309,10 @@ def plot_training_report(train_loss, val_loss, path, architecture, c):
     ax = plt.axes(ylim=(0, 1))
 
     mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
-    x, f_pred = analyse.make_predictions_1d(path + 'trained_nn.pt', architecture, c, mean, std)
-    _, f_ana = axs.plot_likelihood_ratio_1D(0.3, 1.0, c)
+    x = np.linspace(mh + mz + 1e-2, 1, 100)
+    f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c, mean, std)
+    f_ana = axs.plot_likelihood_ratio_1D(x, c)
 
-    x = np.array(x)
-    f_ana = np.array(f_ana)
     ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
     ax.plot(x, f_pred, lw=2, label=r'$\rm{NN}$')
     plt.legend()
@@ -332,7 +324,7 @@ def plot_training_report(train_loss, val_loss, path, architecture, c):
     fig.savefig(path + 'plots/f_perf.pdf')
 
 
-def training_loop(n_epochs, n_eft_points, eft_points, optimizer, model, train_loader, val_loader, path, architecture, animate):
+def training_loop(n_epochs,eft_point, optimizer, model, train_loader, val_loader, path, architecture, animate):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
@@ -357,8 +349,7 @@ def training_loop(n_epochs, n_eft_points, eft_points, optimizer, model, train_lo
             train_loss = torch.zeros(1)
             # loop over all the datasets within the minibatch and compute their contribution to the loss
             for i, [event, weight, label] in enumerate(minibatch):
-                c = sum(eft_points) #eft_points[i % n_eft_points]  # reset the argument to 0 after n_eft_points #TODO: works only for fitting one c at a time.
-                output = model(event.float(), c)
+                output = model(event.float(), eft_point)
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
 
@@ -371,10 +362,8 @@ def training_loop(n_epochs, n_eft_points, eft_points, optimizer, model, train_lo
         with torch.no_grad():
             for minibatch in zip(*val_loader):
                 val_loss = torch.zeros(1)
-                n_eft_points = len(eft_points)
                 for i, [event, weight, label] in enumerate(minibatch):
-                    c = eft_points[i % n_eft_points]
-                    output = model(event.float(), c)
+                    output = model(event.float(), eft_point)
                     loss = loss_fn(output, label, weight)
                     val_loss += loss
                 assert val_loss.requires_grad is False
@@ -402,15 +391,15 @@ def training_loop(n_epochs, n_eft_points, eft_points, optimizer, model, train_lo
         if loss_val > loss_val_old and epoch > 1:
             overfit_counter += 1
 
-        # if overfit_counter == patience:
-        #     stopping_point = epoch - patience
-        #     shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
-        #     break
+        if overfit_counter == patience:
+            stopping_point = epoch - patience
+            shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
+            break
 
         loss_val_old = loss_val
         iterations += 1
 
-    plot_training_report(loss_list_train, loss_list_val, path, architecture, [2,0])
+    plot_training_report(loss_list_train, loss_list_val, path, architecture, 2)
 
     if animate:
         animate_performance(path, architecture, 2, 0, iterations)
@@ -428,8 +417,7 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
 
     # set n_batches to the number of mini-batches you want to use
     n_batches = 1
-    n_eft_points = len(data_train[0].dataset.c)
-    eft_points = data_train[0].dataset.c
+    eft_point = data_train[0].dataset.c
 
     # we use PyTorche's dataloader object to allow for mini-batches. After each epoch, the minibatches reshuffle.
     # we create a dataloader object for each eft point + sm and put them all in one big list train_data_loader (val_data_loader)
@@ -438,8 +426,7 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
 
     training_loop(
         n_epochs=epochs,
-        n_eft_points=n_eft_points,
-        eft_points=eft_points,
+        eft_point=eft_point,
         optimizer=optimizer,
         model=model,
         train_loader=train_data_loader,
@@ -468,19 +455,14 @@ def main(path, mc_run, **run_dict):
     eft_points = run_dict['coeff']
     event_data_path = run_dict['event_data']
 
-    eft_point = []
-    for item in eft_points:
-        eft_point.append(item['value'])
-        if item['value'] != 0:
-            eft_coeff = item['op']
-    eft_point = tuple(eft_point)
+    eft_value = eft_points['value']
+    eft_op = eft_points['op']
 
     path_dict_eft, path_dict_sm = {}, {}
-    n_eft_points = len(eft_point)
 
     eft_data_path = 'quad/{eft_coeff}/events_{mc_run}.npy' if quadratic else 'lin/{eft_coeff}/events_{mc_run}.npy'
-    path_dict_sm[eft_point] = os.path.join(event_data_path, 'sm/events_{}.npy'.format(mc_run))
-    path_dict_eft[eft_point] = os.path.join(event_data_path, eft_data_path.format(eft_coeff=eft_coeff, mc_run=mc_run))#'/Users/jaco/Documents/ML4EFT/data/events/linear_cHW/events_0.npy'
+    path_dict_sm[eft_value] = os.path.join(event_data_path, 'sm/events_{}.npy'.format(mc_run))
+    path_dict_eft[eft_value] = os.path.join(event_data_path, eft_data_path.format(eft_coeff=eft_op, mc_run=mc_run))#'/Users/jaco/Documents/ML4EFT/data/events/linear_cHW/events_0.npy'
 
     c_values = path_dict_eft.keys()
 
