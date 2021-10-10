@@ -153,12 +153,12 @@ def likelihood_ratio(y, mtt, cuGRe, cuu):
     return ratio
 
 
-def likelihood_ratio_1D(mtt, cuGRe, cuu):
+def likelihood_ratio_1D(mtt, c):
     """
     Compute the 1D analytic likelihood ratio r(x, c)
     """
-    dsigma_0 = vh_prod.dsigma_dmvh(mtt, cuGRe, cuu, lin=True, quad=False)  # EFT
-    dsigma_1 = vh_prod.dsigma_dmvh(mtt, 0, 0, lin=True, quad=False)  # SM
+    dsigma_0 = vh_prod.dsigma_dmvh(mtt, c, lin=True, quad=False)  # EFT
+    dsigma_1 = vh_prod.dsigma_dmvh(mtt, c=[0,0], lin=True, quad=False)  # SM
     ratio = dsigma_0 / dsigma_1 if dsigma_1 != 0 else 0
     return ratio
 
@@ -357,9 +357,9 @@ def plot_likelihood_ratio():
     fig.savefig('likelihood_ratio_EFT_Linear.pdf')
 
 
-def plot_likelihood_ratio_1D(mtt_min, mtt_max, cuGRe, cuu):
+def plot_likelihood_ratio_1D(mtt_min, mtt_max, c):
     x = np.arange(mtt_min, mtt_max, 10 * 1e-3)
-    y = [1 / (1 + likelihood_ratio_1D(x_i, cuGRe, cuu)) for x_i in x]
+    y = [1 / (1 + likelihood_ratio_1D(x_i, c)) for x_i in x]
     return x, y
 
 likelihood_ratio_1D_v = np.vectorize(likelihood_ratio_1D, otypes=[np.float])

@@ -85,7 +85,10 @@ class PredictorQuadratic(nn.Module):
         self.n_23 = MLP(architecture)
         self.n_33 = MLP(architecture)
 
-    def forward(self, x, ctg, cuu):
+    def forward(self, x, c):
+
+        raise NotImplementedError("Quadratic classifier not implemented yet")
+        # TODO: write general method for any dimension of c, now only works for 2
         n_12 = self.n_12(x)
         n_13 = self.n_13(x)
         n_22 = self.n_22(x)
@@ -295,40 +298,41 @@ class EventDataset(data.Dataset):
         return data_sample, weight_sample, label_sample
 
 
-def plot_training_report(train_loss, val_loss, path, architecture, cHW, cHq3):
-    f = plt.figure()
+def plot_training_report(train_loss, val_loss, path, architecture, c):
+
+    # loss plot
+    fig = plt.figure()
     plt.plot(np.array(train_loss), label='train')
     plt.plot(np.array(val_loss), label='val')
     plt.xlabel('epochs')
     plt.ylabel('loss')
     plt.legend()
-    f.savefig(path + 'plots/loss.pdf')
+    fig.savefig(path + 'plots/loss.pdf')
 
-    mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
-    x, f_pred = analyse.make_predictions_1d(path + 'trained_nn.pt', architecture, cHW, cHq3, mean, std)
+    # f accuracy plot
 
     # First set up the figure, the axis, and the plot element we want to animate
     fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-
-
     ax = plt.axes(ylim=(0, 1))
 
-    # Compute the analytic likelihood ratio and plot
-    _, y = axs.plot_likelihood_ratio_1D(0.3, 1.0, cHW, cHq3)
+    mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
+    x, f_pred = analyse.make_predictions_1d(path + 'trained_nn.pt', architecture, c, mean, std)
+    _, f_ana = axs.plot_likelihood_ratio_1D(0.3, 1.0, c)
+
     x = np.array(x)
-    y = np.array(y)
-    ax.plot(x, y, '--', c='red', label=r'$\rm{Truth}$')
+    f_ana = np.array(f_ana)
+    ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
     ax.plot(x, f_pred, lw=2, label=r'$\rm{NN}$')
     plt.legend()
-    # matplotlib.use('agg')
-    plt.ylabel(r'$f\;(m_{tt}, c)$')
-    plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
+
+    plt.ylabel(r'$f\;(m_{VH}, c)$')
+    plt.xlabel(r'$m_{VH}\;[\mathrm{TeV}]$')
     # plt.xlim((mtt_min, mtt_max))
     plt.ylim((0, 1))
     fig.savefig(path + 'plots/f_perf.pdf')
 
 
-def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture, animate):
+def training_loop(n_epochs, n_eft_points, eft_points, optimizer, model, train_loader, val_loader, path, architecture, animate):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
@@ -351,11 +355,10 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         # Here we have zip(DataLoader_1, DataLoader_2, ..) which enables looping over our mini-batches.
         for minibatch in zip(*train_loader):
             train_loss = torch.zeros(1)
-            n_eft_points = len(eft_points)
             # loop over all the datasets within the minibatch and compute their contribution to the loss
             for i, [event, weight, label] in enumerate(minibatch):
-                ctg, cuu = eft_points[i % n_eft_points]  # reset the argument to 0 after n_eft_points
-                output = model(event.float(), ctg) # TODO: extend to more than 1 eft param
+                c = sum(eft_points) #eft_points[i % n_eft_points]  # reset the argument to 0 after n_eft_points #TODO: works only for fitting one c at a time.
+                output = model(event.float(), c)
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
 
@@ -370,8 +373,8 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
                 val_loss = torch.zeros(1)
                 n_eft_points = len(eft_points)
                 for i, [event, weight, label] in enumerate(minibatch):
-                    ctg, cuu = eft_points[i % n_eft_points]
-                    output = model(event.float(), ctg) # TODO: extend to more than 1 eft param
+                    c = eft_points[i % n_eft_points]
+                    output = model(event.float(), c)
                     loss = loss_fn(output, label, weight)
                     val_loss += loss
                 assert val_loss.requires_grad is False
@@ -407,20 +410,8 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         loss_val_old = loss_val
         iterations += 1
 
-    plot_training_report(loss_list_train, loss_list_val, path, architecture, 2, 0)
+    plot_training_report(loss_list_train, loss_list_val, path, architecture, [2,0])
 
-    # mtt_min, mtt_max = 0.3, 1.0
-    # # First set up the figure, the axis, and the plot element we want to animate
-    # fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-    #
-    # ax = plt.axes(ylim=(0, 1), xlim=(mtt_min, mtt_max))
-    #
-    # # Compute the analytic likelihood ratio and plot
-    # x, y = axs.plot_likelihood_ratio_1D(mtt_min, mtt_max, 0, 0)
-    # x = np.array(x)
-    # y = np.array(y)
-    # ax.plot(x, y, '--', c='red', label=r'$\rm{Truth}$')
-    # fig.savefig('/Users/jaco/Documents/ML4EFT/code/higgs21/plots/pred.pdf')
     if animate:
         animate_performance(path, architecture, 2, 0, iterations)
 
@@ -431,21 +422,24 @@ def animate_performance(path, architecture, ctg, cuu, epochs):
 
 
 def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True, animate=False):
-    model = PredictorQuadratic(architecture) if quadratic else PredictorLinear(architecture)
 
+    model = PredictorQuadratic(architecture) if quadratic else PredictorLinear(architecture)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
     # set n_batches to the number of mini-batches you want to use
     n_batches = 1
+    n_eft_points = len(data_train[0].dataset.c)
+    eft_points = data_train[0].dataset.c
 
     # we use PyTorche's dataloader object to allow for mini-batches. After each epoch, the minibatches reshuffle.
     # we create a dataloader object for each eft point + sm and put them all in one big list train_data_loader (val_data_loader)
     train_data_loader = [data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__()/n_batches), shuffle=True) for dataset_train in data_train]
     val_data_loader = [data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__()/n_batches), shuffle=False) for dataset_val in data_val]
 
-
     training_loop(
         n_epochs=epochs,
+        n_eft_points=n_eft_points,
+        eft_points=eft_points,
         optimizer=optimizer,
         model=model,
         train_loader=train_data_loader,
@@ -537,8 +531,6 @@ def start(json_path, mc_run, output_dir):
         run_options = json.load(json_data)
 
     run = run_options['name']
-    #order = 'quadratic' if run_options['quadratic'] else 'linear'
-
     model_path = os.path.join(output_dir, 'model_{}'.format(run))
     mc_path = os.path.join(model_path, 'mc_run_{}/'.format(mc_run))
 

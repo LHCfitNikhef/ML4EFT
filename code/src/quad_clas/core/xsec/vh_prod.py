@@ -15,7 +15,9 @@ v = 1 / np.sqrt(Gf * np.sqrt(2))  # vev [TeV]
 pb_convert = 3.894E2  # conversion factor to pb
 
 
-def sigma_part_vh_up(hats, cHW, cHq3, lin, quad):
+def sigma_part_vh_up(hats, c1, c2, lin, quad):
+    cHW = c1
+    cHq3 = c2
     pz2 = (hats ** 2 + mz ** 4 + mh ** 4 - 2 * hats * mz ** 2 - 2 * hats * mh ** 2 - 2 * mz ** 2 * mh ** 2) / (4 * hats)
     pz = np.sqrt(pz2)
     sth2 = 1 - (mw / mz) ** 2
@@ -48,7 +50,9 @@ def sigma_part_vh_up(hats, cHW, cHq3, lin, quad):
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
                cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
 
-def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
+def sigma_part_vh_down(hats, c1, c2, lin, quad):
+    cHW = c1
+    cHq3 = c2
     pz2 = (hats ** 2 + mz ** 4 + mh ** 4 - 2 * hats * mz ** 2 - 2 * hats * mh ** 2 - 2 * mz ** 2 * mh ** 2) / (4 * hats)
     pz = np.sqrt(pz2)
     sth2 = 1 - (mw / mz) ** 2
@@ -82,7 +86,7 @@ def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
                cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
 
-def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
+def weight(sqrts, mu, x1, x2, c1, c2, lin, quad):
     """
     """
     hats = sqrts ** 2
@@ -98,12 +102,12 @@ def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     #      flavor_down])
 
 
-    weight_up = (sigma_part_vh_up(hats, cHW, cHq3, lin, quad)) * pdfs_up
-    weight_down = (sigma_part_vh_down(hats, cHW, cHq3, lin, quad)) * pdfs_down
+    weight_up = (sigma_part_vh_up(hats, c1, c2, lin, quad)) * pdfs_up
+    weight_down = (sigma_part_vh_down(hats, c1, c2, lin, quad)) * pdfs_down
     return weight_down + weight_up
 
 
-def dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin, quad):
+def dsigma_dmvh_dy(y, mvh, c1, c2, lin, quad):
     """
     Compute the doubly differential cross section in mtt and y at any order NP
     """
@@ -112,15 +116,16 @@ def dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin, quad):
     if np.abs(y) < np.log(np.sqrt(s) / mvh):  # check whether x = {mtt, y} falls inside the physically allowed region
         x1 = mvh / np.sqrt(s) * np.exp(y)
         x2 = mvh / np.sqrt(s) * np.exp(-y)
-        dsigma_dmtt_dy = 2 * mvh / s * v_weight(mvh, 91.188, x1, x2, cHW, cHq3, lin, quad) / (x1 * x2)
+        dsigma_dmtt_dy = 2 * mvh / s * v_weight(mvh, 91.188, x1, x2, c1, c2, lin, quad) / (x1 * x2)
         return pb_convert * dsigma_dmtt_dy
     else:
         return 0
 
 
-def dsigma_dmvh(mvh, cHW, cHq3, lin, quad):
+def dsigma_dmvh(mvh, c, lin, quad):
     y_min, y_max = -0.5 * np.log(s / mvh), 0.5 * np.log(s / mvh)
-    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mvh, cHW, cHq3, lin, quad), n=10)[0]
+    c1, c2 = c
+    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mvh, c1, c2, lin, quad), n=10)[0]
     return dsigma_dmtt
 
 
