@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 from matplotlib import rc
 from torch import nn
 
-from . import analyse as analyse
+from . import nn_analyse as analyse
 from quad_clas.core.xsec import tt_prod as axs
 
 #matplotlib.use('PDF')
@@ -325,10 +325,10 @@ def plot_training_report(train_loss, val_loss, path, architecture, cHW, cHq3):
     plt.xlabel(r'$m_{tt}\;[\mathrm{GeV}]$')
     # plt.xlim((mtt_min, mtt_max))
     plt.ylim((0, 1))
-    plt.show()
+    fig.savefig(path + 'plots/f_perf.pdf')
 
 
-def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture):
+def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture, animate):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
@@ -421,8 +421,8 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
     # y = np.array(y)
     # ax.plot(x, y, '--', c='red', label=r'$\rm{Truth}$')
     # fig.savefig('/Users/jaco/Documents/ML4EFT/code/higgs21/plots/pred.pdf')
-
-    #animate_performance(path, architecture, 2, 0, iterations)
+    if animate:
+        animate_performance(path, architecture, 2, 0, iterations)
 
 
 def animate_performance(path, architecture, ctg, cuu, epochs):
@@ -430,7 +430,7 @@ def animate_performance(path, architecture, ctg, cuu, epochs):
     analyse.animate_learning_1d(path, architecture, ctg, cuu, epochs, mean, std)
 
 
-def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True):
+def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=True, animate=False):
     model = PredictorQuadratic(architecture) if quadratic else PredictorLinear(architecture)
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -452,6 +452,7 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
         val_loader=val_data_loader,
         path=path,
         architecture=architecture,
+        animate=animate,
     )
 
 def plot_data(data_eft, data_sm):
@@ -465,28 +466,39 @@ def plot_data(data_eft, data_sm):
     return fig
 
 def main(path, mc_run, **run_dict):
+
     quadratic = run_dict['quadratic']
     n_dat = run_dict['n_dat']
     epochs = run_dict['epochs']
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
+    eft_points = run_dict['coeff']
+    event_data_path = run_dict['event_data']
+
+    eft_point = []
+    for item in eft_points:
+        eft_point.append(item['value'])
+        if item['value'] != 0:
+            eft_coeff = item['op']
+    eft_point = tuple(eft_point)
 
     path_dict_eft, path_dict_sm = {}, {}
-    n_eft_points = len(eft_points)
+    n_eft_points = len(eft_point)
 
-    path_dict_sm[(10, 0)] = '/Users/jaco/Documents/ML4EFT/data/events/sm/events_0.npy'
-    path_dict_eft[(10, 0)] = '/Users/jaco/Documents/ML4EFT/data/events/linear_cHW/events_0.npy'
-
+    eft_data_path = 'quad/{eft_coeff}/events_{mc_run}.npy' if quadratic else 'lin/{eft_coeff}/events_{mc_run}.npy'
+    path_dict_sm[eft_point] = os.path.join(event_data_path, 'sm/events_{}.npy'.format(mc_run))
+    path_dict_eft[eft_point] = os.path.join(event_data_path, eft_data_path.format(eft_coeff=eft_coeff, mc_run=mc_run))#'/Users/jaco/Documents/ML4EFT/data/events/linear_cHW/events_0.npy'
 
     c_values = path_dict_eft.keys()
+
     # we construct an eft and a sm data set for each value of c in c_values and make a list out of it
     data_eft = [EventDataset(c, network_size[0], path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
     data_sm = [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
-    fig = plot_data(data_eft, data_sm)  # plot the event data
-    fig.savefig(os.path.join(path, 'plots/training_data_cHW2.pdf'))
     data_all = data_eft + data_sm
 
+    fig = plot_data(data_eft, data_sm)  # plot the event data
+    fig.savefig(os.path.join(path, 'plots/training_data_cHW2.pdf'))
 
-    # we determine the mean and std of the feature(s) in our data set
+    # determine the mean and std of the feature(s) in our data set
     mean_list = np.array([dataset.get_mean_std()[0].numpy() for dataset in data_all])
     mean = np.mean(mean_list, axis=0)
     std_list = np.array([dataset.get_mean_std()[1].numpy() for dataset in data_all])
@@ -518,6 +530,7 @@ def main(path, mc_run, **run_dict):
                      data_val,
                      epochs,
                      quadratic=quadratic,
+                     animate=run_dict['animation']
                      )
 
 def start(json_path, mc_run, output_dir):
@@ -525,11 +538,9 @@ def start(json_path, mc_run, output_dir):
     with open(json_path) as json_data:
         run_options = json.load(json_data)
 
-
     run = run_options['name']
-    order = 'quadratic' if run_options['quadratic'] else 'linear'
+    #order = 'quadratic' if run_options['quadratic'] else 'linear'
 
-    output_dir = '/Users/jaco/Documents/ML4EFT/code/higgs21/models'
     model_path = os.path.join(output_dir, 'model_{}'.format(run))
     mc_path = os.path.join(model_path, 'mc_run_{}/'.format(mc_run))
 
@@ -544,37 +555,5 @@ def start(json_path, mc_run, output_dir):
     # copy run card to the appropriate folder
     with open(mc_path + 'run_card.json', 'w') as outfile:
         json.dump(run_options, outfile)
-
-# if __name__ == '__main__':
-#
-#     # read the json run card
-#     with open(sys.argv[1]) as json_data:
-#         run_options = json.load(json_data)
-#
-#     mc_run = sys.argv[2]
-#     run = run_options['name']
-#
-#     order = 'quadratic' if run_options['quadratic'] else 'linear'
-#
-#     output_dir = '/Users/jaco/Documents/ML4EFT/code/higgs21/models'
-#     model_path = os.path.join(output_dir, 'model_{}'.format(run))
-#     mc_path = os.path.join(model_path, 'mc_run_{}/'.format(mc_run))
-#
-#     if not os.path.exists(mc_path):
-#         os.makedirs(mc_path)
-#         os.makedirs(os.path.join(mc_path, 'plots'))
-#         os.makedirs(os.path.join(mc_path, 'animation'))
-#
-#
-#     # start the training
-#     main(mc_path, mc_run, **run_options)
-#
-#     # copy run card to the appropriate folder
-#     with open(mc_path + 'run_card.json', 'w') as outfile:
-#         json.dump(run_options, outfile)
-
-
-
-
 
 
