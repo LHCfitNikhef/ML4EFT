@@ -496,7 +496,7 @@ def main(path, mc_run, **run_dict):
     data_all = data_eft + data_sm
 
     fig = plot_data(data_eft, data_sm)  # plot the event data
-    fig.savefig(os.path.join(path, 'plots/training_data_cHW2.pdf'))
+    fig.savefig(os.path.join(path, 'plots/training_data.pdf'))
 
     # determine the mean and std of the feature(s) in our data set
     mean_list = np.array([dataset.get_mean_std()[0].numpy() for dataset in data_all])
@@ -508,20 +508,18 @@ def main(path, mc_run, **run_dict):
     np.savetxt(path + 'scaling.dat', np.array([mean, std]))
 
     # rescale the training data to increase the learning speed
-    for dataset in data_all:  # TODO can this be shortened?
+    for dataset in data_all:
         dataset.rescale(mean, std)
 
     # split each data set in training (50%) and validation (50%).
     data_split = [data.random_split(dataset, [int(len(dataset) / 2), int(len(dataset) / 2)]) for dataset in
                   data_all]
-    data_train, data_val = [], []
 
     # collect all the training and validation sets
+    data_train, data_val = [], []
     for dataset in data_split:
         data_train.append(dataset[0])
         data_val.append(dataset[1])
-
-    #animate_performance(path, network_size, 5, 0, 160)
 
     # start the training
     train_classifier(path,
@@ -555,5 +553,3 @@ def start(json_path, mc_run, output_dir):
     # copy run card to the appropriate folder
     with open(mc_path + 'run_card.json', 'w') as outfile:
         json.dump(run_options, outfile)
-
-
