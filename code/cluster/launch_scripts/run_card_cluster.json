@@ -1,19 +1,10 @@
 {
-  "name": 84,
+  "name": 6,
   "epochs": 400,
   "input_size": 1,
   "output_size": 1,
   "hidden_sizes": [30, 30, 30, 30, 30],
-  "n_dat": 20000,
-  "quadratic": 1,
-  "coeff": [
-    {
-      "op": "ctg",
-      "value": 0.1
-    },
-    {
-      "op": "cuu",
-      "value": 0.1
-    }
-  ]
+  "n_dat": 10000,
+  "quadratic": 0,
+  "animation": 0
 }

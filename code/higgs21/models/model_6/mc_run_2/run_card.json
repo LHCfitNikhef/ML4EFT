@@ -1,0 +1,1 @@
+{"name": 6, "epochs": 400, "input_size": 1, "output_size": 1, "hidden_sizes": [30, 30, 30, 30, 30], "n_dat": 10000, "quadratic": 0, "coeff": [{"op": "ctg", "value": 0.1}, {"op": "cuu", "value": 0.1}]}

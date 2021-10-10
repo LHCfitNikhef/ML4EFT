@@ -1,16 +1,12 @@
 # %%
-import vegas
-import math
 import numpy as np
 import lhapdf
 import matplotlib.pyplot as plt
 from scipy import integrate
 import pylhe
-import random
-from quad_clas.core import xsec_cluster as xsec
 from quad_clas.core.lhelib import lhe as lhe
-import sys
-from scipy.stats import chi2, norm, ncx2, poisson
+from scipy.stats import chi2, ncx2
+
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 s = 14 ** 2  # Collider COM energy squared [TeV^2]
 mu = 91.188  # fact. scale for pdfs = Mz
