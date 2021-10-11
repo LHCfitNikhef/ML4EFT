@@ -1,7 +1,7 @@
 {
   "name": "cHW_lin",
   "epochs": 200,
-  "input_size": 1,
+  "input_size": 2,
   "output_size": 1,
   "hidden_sizes": [30, 30, 30, 30, 30],
   "n_dat": 20000,
