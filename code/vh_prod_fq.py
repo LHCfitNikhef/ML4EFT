@@ -198,7 +198,7 @@ def nu_i(a, cHW, cHq3, luminosity):
 
 
 # %%
-lhe_path = "/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/vh_cHW_cHq3_ddbar.lhe"
+lhe_path = "/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/uubarzh_cHD.lhe"
 bin_width = 10 * 10 ** -3
 hist_mg_sm, bins_mg_sm = mg5_reader(lhe_path, bin_width, bin_min=mh + mz)
 
@@ -210,7 +210,7 @@ bin_min = mh + mz
 
 cross_section_vh_vegas = []
 x = np.arange(mz + mh + bin_width / 2, 1.0, bin_width)
-cross_section_vh = [dsigma_dmvh(mvh, cHW=10, cHq3=10, lin=False, quad=True) for mvh in x]
+cross_section_vh = [dsigma_dmvh(mvh, cHW=0, cHq3=0, lin=False, quad=True) for mvh in x]
 
 fig = plt.figure(figsize=(10, 6))
 ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(0.1, 1))

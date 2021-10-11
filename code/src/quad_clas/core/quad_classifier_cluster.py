@@ -193,10 +193,10 @@ class EventDataset(data.Dataset):
 
         data = np.load(path)
         if self.n_features == 2:
-            events = data[1:self.n_dat + 1, :].reshape(-1, 1) # TODO: not correct shape
+            events = data[1:self.n_dat + 1, :]
         else:
             events = data[1:self.n_dat + 1, 0].reshape(-1, 1)
-        weights = data[0, 0] * np.ones(events.shape)
+        weights = data[0, 0] * np.ones((events.shape[0], 1))
 
         self.events = torch.tensor(events)
         self.weights = torch.tensor(weights) / self.n_dat
@@ -291,7 +291,7 @@ class EventDataset(data.Dataset):
         return data_sample, weight_sample, label_sample
 
 
-def plot_training_report(train_loss, val_loss, path, architecture, c, path_lin):
+def plot_training_report(model, train_loss, val_loss, path, architecture, c, path_lin):
 
     # loss plot
     fig = plt.figure()
@@ -405,7 +405,8 @@ def training_loop(n_epochs,eft_point, optimizer, model, train_loader, val_loader
         loss_val_old = loss_val
         iterations += 1
 
-    plot_training_report(loss_list_train, loss_list_val, path, architecture, 2, path_lin)
+    # produce training report
+    plot_training_report(model, loss_list_train, loss_list_val, path, architecture, 2, path_lin)
 
     if animate:
         animate_performance(path, architecture, 2, 0, iterations)
@@ -461,7 +462,7 @@ def main(path, mc_run, **run_dict):
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
     eft_points = run_dict['coeff']
     event_data_path = run_dict['event_data']
-    path_lin = run_dict['path_lin'].format(mc_run)
+    path_lin = run_dict['path_lin'].format(mc_run) if quadratic else None
 
     eft_value = eft_points['value']
     eft_op = eft_points['op']

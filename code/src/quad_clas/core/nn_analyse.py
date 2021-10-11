@@ -27,15 +27,22 @@ def make_predictions_1d(x, network_path, network_size, c, mean, std, path_lin):
     """
 
     # Be careful to use the same network architecture as during training
-    #loaded_model = quad_clas.PredictorLinear(network_size)
-    loaded_model = quad_clas.PredictorQuadratic(network_size)
-    loaded_model.load_state_dict(torch.load(network_path))
+    #if list(torch.load(network_path).items())[0][1].shape[1] == 2:
+    if path_lin is not None:
+        loaded_model = quad_clas.PredictorQuadratic(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+    else:
+        loaded_model = quad_clas.PredictorLinear(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
 
     # Set up coordinates and compute f
     x_unscaled = torch.from_numpy(x).unsqueeze(-1)
     x = (x_unscaled - mean) / std  # rescale the inputs
 
-    f_pred = loaded_model.forward(x.float(), c, path_lin)
+    if path_lin is not None:
+        f_pred = loaded_model.forward(x.float(), c, path_lin)
+    else:
+        f_pred = loaded_model.forward(x.float(), c)
     f_pred = f_pred.view(-1).detach().numpy()
 
     return f_pred
