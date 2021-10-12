@@ -15,13 +15,16 @@ v = 1 / np.sqrt(Gf * np.sqrt(2))  # vev [TeV]
 pb_convert = 3.894E2  # conversion factor to pb
 
 
-def sigma_part_vh_up(hats, c1, c2, lin, quad):
+def sigma_part_vh_up(hats, c1, c2, c3, lin, quad):
     cHW = c1
     cHq3 = c2
+    cHB = c3
     pz2 = (hats ** 2 + mz ** 4 + mh ** 4 - 2 * hats * mz ** 2 - 2 * hats * mh ** 2 - 2 * mz ** 2 * mh ** 2) / (4 * hats)
     pz = np.sqrt(pz2)
     sth2 = 1 - (mw / mz) ** 2
     cth2 = 1 - sth2
+    sth = np.sqrt(sth2)
+    cht = np.sqrt(cth2)
     Vq = 1 / 2 - 4 / 3 * sth2
     Aq = 1 / 2
     xsec_sm = (Gf * mz ** 2) ** 2 / (9 * np.pi) * (Vq ** 2 + Aq ** 2) * pz / np.sqrt(hats) * (3 * mz ** 2 + pz2) / (
@@ -34,8 +37,11 @@ def sigma_part_vh_up(hats, c1, c2, lin, quad):
     xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (4 * sth2 - 3)) / (
                 27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
 
+    xsec_lin_cHB = xsec_lin_cHW * ( sth2 / cth2)
+
+
     if lin:
-        return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3
+        return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + cHB * xsec_lin_cHB
     if quad:
         xsec_quad_cHq3_cHq3 = (mz ** 4 * pz * (3 * mz ** 2 + pz2)) / (
                     36 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats))
@@ -46,9 +52,14 @@ def sigma_part_vh_up(hats, c1, c2, lin, quad):
         xsec_quad_cHW_cHq3 = -(2 * cth2 * mz ** 4 * pz * np.sqrt(mz ** 2 + pz2) * (-3 + 4 * sth2)) / (
                     9 * np.pi * (mz ** 2 - hats) ** 2)
 
+        xsec_quad_cHB_cHB = xsec_quad_cHW_cHW * (sth2 ** 2 /cth2 ** 2)
+
+        xsec_quad_cHW_cHB = 2 * xsec_quad_cHW_cHW * ((cth2 * sth2) /cth2 ** 2)
+
 
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
-               cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
+               cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3 + cHB ** 2 * xsec_quad_cHB_cHB + cHB * cHW * xsec_quad_cHW_cHB
+
 
 def sigma_part_vh_down(hats, c1, c2, lin, quad):
     cHW = c1
@@ -70,6 +81,8 @@ def sigma_part_vh_down(hats, c1, c2, lin, quad):
     xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (2 * sth2 - 3)) / (
                 27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
 
+    xsec_lin_cHB = xsec_lin_cHW * (sth2 / cth2)
+
     if lin:
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3
     if quad:
@@ -82,6 +95,9 @@ def sigma_part_vh_down(hats, c1, c2, lin, quad):
         xsec_quad_cHW_cHq3 = -(2 * cth2 * mz ** 4 * pz * np.sqrt(mz ** 2 + pz2) * (-3 + 2 * sth2)) / (
                     9 * np.pi * (mz ** 2 - hats) ** 2)
 
+        xsec_quad_cHB_cHB = xsec_quad_cHW_cHW * (sth2 ** 2 / cth2 ** 2)
+
+        xsec_quad_cHW_cHB = 2 * xsec_quad_cHW_cHW * ((cth2 * sth2) / cth2 ** 2)
 
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
                cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT

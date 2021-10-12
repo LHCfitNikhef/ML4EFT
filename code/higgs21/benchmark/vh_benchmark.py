@@ -19,7 +19,7 @@ bin_width = 10 * 10 ** -3
 title = r'$\rm{VH}\;\rm{production}\;\rm{benchmark,}\;\rm{LO+}\mathcal{O}\left(\Lambda^{-4}\right)$'
 event_path = "/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/events_0.npy"
 
-def plot_benchmark(event_path, cHW, cHq3, title):
+def plot_benchmark(event_path, cHW, cHq3, cHB, title):
     data_madgraph = np.load(event_path)
     bin_min = mh + mz
     hist_mg, bins_mg = np.histogram(data_madgraph[1:, 0], bins=np.arange(bin_min, np.max(data_madgraph), bin_width),
@@ -27,7 +27,7 @@ def plot_benchmark(event_path, cHW, cHq3, title):
     hist_mg *= data_madgraph[0, 0]
 
     x = np.arange(mz + mh + bin_width / 2, 1.0, bin_width)
-    cross_section_vh = [vh_prod.dsigma_dmvh(mvh, cHW=cHW, cHq3=cHq3, lin=False, quad=True) for mvh in x]
+    cross_section_vh = [vh_prod.dsigma_dmvh(mvh, cHW=cHW, cHq3=cHq3,cHB=cHB, lin=False, quad=True) for mvh in x]
 
     fig = plt.figure(figsize=(8, 5))
     ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[])

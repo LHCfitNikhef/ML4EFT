@@ -157,7 +157,7 @@ def likelihood_ratio_1D(mtt, c):
     """
     Compute the 1D analytic likelihood ratio r(x, c)
     """
-    dsigma_0 = vh_prod.dsigma_dmvh(mtt, c, lin=True, quad=False)  # EFT
+    dsigma_0 = vh_prod.dsigma_dmvh(mtt, c, lin=False, quad=True)  # EFT
     dsigma_1 = vh_prod.dsigma_dmvh(mtt, c=0, lin=True, quad=False)  # SM
     ratio = dsigma_0 / dsigma_1 if dsigma_1 != 0 else 0
     return ratio
