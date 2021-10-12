@@ -2,9 +2,9 @@ import numpy as np
 import sys
 import quad_clas.analyse.analyse as ana
 import quad_clas.fit.run_bounds as run
-import quad_clas.core.quad_classifier_cluster as train
-import quad_clas.core.analyse as plot
-import quad_clas.preproc.lhe_to_npy as lhe_to_npy
+# import quad_clas.core.quad_classifier_cluster as train
+# import quad_clas.core.analyse as plot
+# import quad_clas.preproc.lhe_to_npy as lhe_to_npy
 
 import matplotlib
 matplotlib.use('Agg')
@@ -85,11 +85,18 @@ if __name__ == "__main__":
 
         mz = 91.188 * 10 ** -3  # z boson mass [TeV]
         mh = 0.125
-        binning_0 = np.linspace(mz + mh, 1, 21)  # 20 bins
-        binning_1 = np.linspace(mz + mh, 1, 11) # 10 bins
-        binning_2 = np.linspace(mz + mh, 1, 6) # 5 bins
-        binning_3 = np.linspace(mz + mh, 1, 2) # 1 bin
+        binning_0 = np.linspace(mz + mh, 1.5, 20)
+        binning_0 = np.append(binning_0, 4.0) # 20 bins
+        binning_1 = np.linspace(mz + mh, 1.5, 10)
+        binning_1 = np.append(binning_1, 4.0)  # 10 bins
+        binning_2 = np.linspace(mz + mh, 1.5, 5)
+        binning_2 = np.append(binning_2, 4.0)  # 5 bins
+        binning_3 = np.linspace(mz + mh, 1.5, 1)
+        binning_3 = np.append(binning_3, 4.0)  # 1 bins
+        # binning_1 = np.linspace(mz + mh, 1.5, 11) # 10 bins
+        # binning_2 = np.linspace(mz + mh, 1.5, 6) # 5 bins
+        # binning_3 = np.linspace(mz + mh, 1.5, 2) # 1 bin
         binnings_list = [binning_0, binning_1, binning_2, binning_3]
 
-        extent = np.array([[-1.2, 1.2], [-0.3, 0.3]])
+        extent = np.array([[-0.5, 0.5], [-0.1, 0.1]])
         analysis = ana.Analyse(root_path, binnings=binnings_list,truth=False, fit=False, extent=extent, luminosity=60000)

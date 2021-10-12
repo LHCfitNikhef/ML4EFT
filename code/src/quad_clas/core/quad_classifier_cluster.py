@@ -311,7 +311,8 @@ def plot_training_report(model, train_loss, val_loss, path, architecture, c, pat
     mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
     x = np.linspace(mh + mz + 1e-2, 1, 100)
     f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c, mean, std, path_lin)
-    f_ana = axs.plot_likelihood_ratio_1D(x, c)
+
+    f_ana = axs.plot_likelihood_ratio_1D(x, c, lin=True, quad=False) if path_lin is None else axs.plot_likelihood_ratio_1D(x, c, lin=False, quad=True)
 
     ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
     ax.plot(x, f_pred, lw=2, label=r'$\rm{NN}$')
@@ -470,7 +471,8 @@ def main(path, mc_run, **run_dict):
     path_dict_eft, path_dict_sm = {}, {}
 
     eft_data_path = 'quad/{eft_coeff}/events_{mc_run}.npy' if quadratic else 'lin/{eft_coeff}/events_{mc_run}.npy'
-    path_dict_sm[eft_value] = os.path.join(event_data_path, 'sm/events_{}.npy'.format(mc_run))
+    mc_run_sm = int(mc_run) % 10
+    path_dict_sm[eft_value] = os.path.join(event_data_path, 'sm/events_{}.npy'.format(mc_run_sm))
     path_dict_eft[eft_value] = os.path.join(event_data_path, eft_data_path.format(eft_coeff=eft_op, mc_run=mc_run))#'/Users/jaco/Documents/ML4EFT/data/events/linear_cHW/events_0.npy'
 
     c_values = path_dict_eft.keys()
