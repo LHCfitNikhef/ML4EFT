@@ -1,5 +1,5 @@
 {
-  "name": "cHW_cHq3_2_feat",
+  "name": "cHW_cHq3_2_feat_imp",
   "epochs": 200,
   "input_size": 2,
   "output_size": 1,

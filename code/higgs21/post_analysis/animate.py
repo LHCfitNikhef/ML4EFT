@@ -15,29 +15,31 @@ architecture = [2, 30, 30, 30, 30, 30, 1]
 fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
 
 f_ana = axs.plot_likelihood_ratio_1D(x, cHW, cHq3, lin=True, quad=False)
-ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
 
-model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW_lin_2_feat/mc_run_{mc_run}'
+
+model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW3_lin_30_reps/mc_run_{mc_run}'
 
 means = []
 stds = []
-for i in range(10):
+for i in range(1, 31):
     mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=i), 'scaling.dat'))
     means.append(mean)
     stds.append(std)
 
 
 lines = []
-for i in range(10):
-    if i == 0:
+for i in range(1, 31):
+    if i == 1:
         lobj = ax.plot([], [], lw=1, color='C0', label=r'$\rm{NN\;replicas}$')[0]
     else:
         lobj = ax.plot([], [], lw=1, color='C0')[0]
     lines.append(lobj)
 
+
+
 f_preds_init = []
 for rep_nr, line in enumerate(lines):
-    path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(1))
+    path = os.path.join(model_dir.format(mc_run=rep_nr + 1), 'trained_nn_{}.pt'.format(1))
     f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), architecture, cHW, cHq3, means[rep_nr], stds[rep_nr], None)
     f_preds_init.append(f_pred)
 f_preds_init = np.array(f_preds_init)
@@ -45,6 +47,7 @@ f_pred_up = np.percentile(f_preds_init, 84, axis=0)
 f_pred_down = np.percentile(f_preds_init, 16, axis=0)
 fill = ax.fill_between(x, f_pred_up, f_pred_down, color='C0', alpha=0.3, label=r'$\rm{NN\;1}\sigma\rm{-band}$')
 
+ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
 epoch_text = ax.text(0.02, 0.92, '', transform=ax.transAxes, fontsize=15)
 
 plt.legend(loc='upper right', fontsize=15, frameon=False)
@@ -66,13 +69,13 @@ def animate(i):
     f_preds = []
 
     for rep_nr, line in enumerate(lines):
-        path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(i + 1))
+        path = os.path.join(model_dir.format(mc_run=rep_nr + 1), 'trained_nn_{}.pt'.format(i + 1))
         if os.path.isfile(path):
             f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), architecture, cHW, cHq3, means[rep_nr], stds[rep_nr], None)
             f_preds.append(f_pred)
             line.set_data(x, f_pred)
         else: # at the end of training
-            path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt'.format(i + 1))
+            path = os.path.join(model_dir.format(mc_run=rep_nr + 1), 'trained_nn.pt'.format(i + 1))
             f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), architecture, cHW, cHq3, means[rep_nr],
                                                  stds[rep_nr], None)
             f_preds.append(f_pred)
@@ -95,4 +98,4 @@ def animate(i):
 anim = animation.FuncAnimation(fig, animate, init_func=init,
                                frames=400, interval=50, blit=True)
 
-anim.save('/data/theorie/jthoeve/ML4EFT_higgs/plots/anim_band_cHW_lin_2_feat.gif')
+anim.save('/data/theorie/jthoeve/ML4EFT_higgs/plots/anim_band_cHW_lin_2_feat_30_reps.gif')

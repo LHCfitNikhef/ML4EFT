@@ -10,8 +10,9 @@ mz = 91.188 * 10 ** -3  # z boson mass [TeV]
 mh = 0.125
 mvh_min, mvh_max = mz + mh, 1.0
 x = np.arange(mvh_min + 1e-2, mvh_max, 1e-2)
-eft = np.array([vh_prod.dsigma_dmvh(mvh, [2,0], True, False) for mvh in x])
-sm = np.array([vh_prod.dsigma_dmvh(mvh, [0,0], True, False) for mvh in x])
+
+eft = np.array([vh_prod.dsigma_dmvh(mvh, 0, 12, False, True) for mvh in x])
+sm = np.array([vh_prod.dsigma_dmvh(mvh, 0, 0, True, False) for mvh in x])
 ratio = eft/sm
 f = 1 / (1 + ratio)
 

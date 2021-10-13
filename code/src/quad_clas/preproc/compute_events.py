@@ -4,12 +4,9 @@ import numpy as np
 
 data_madgraph = []
 found_weight = False
-#path_to_lhe = sys.argv[1]
-path_to_lhe = '/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/vh_cHW_cHq3_quad.lhe'
-save_loc = '/Users/jaco/Documents/ML4EFT/data/events/vh_benchmark/'
-rep = 0
-#save_loc = sys.argv[2]
-#rep = sys.argv[3]
+path_to_lhe = sys.argv[1]
+save_loc = sys.argv[2]
+mc_rep = sys.argv[3]
 
 def invariant_mass(p1, p2):
     """
@@ -36,4 +33,4 @@ for e in pylhe.readLHE(path_to_lhe):
     yvh = rapidity(e.particles[-1], e.particles[-2])
     data_madgraph.append([mvh, yvh])
 data_madgraph = np.array(data_madgraph)
-np.save(os.path.join(save_loc, "events_{}.npy".format(rep)), data_madgraph)
+np.save(os.path.join(save_loc, "events_{}.npy".format(mc_rep)), data_madgraph)

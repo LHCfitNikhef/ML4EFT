@@ -12,10 +12,12 @@ x = np.linspace(0.3, 1.2, 100)
 architecture = [1, 30, 30, 30, 30, 30, 1]
 
 fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-f_ana = axs.plot_likelihood_ratio_1D(x, c)
-ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
+f_ana = axs.plot_likelihood_ratio_1D(x, c, quad=True)
+f_ana_lin = axs.plot_likelihood_ratio_1D(x, c, lin=True)
+ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-4}\right)$')
+ax.plot(x, f_ana_lin, '--', c='C1', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
 
-model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW3_quad_3/mc_run_{mc_run}'
+model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW3_quad_4/mc_run_{mc_run}'
 
 means = []
 stds = []
@@ -95,6 +97,6 @@ def animate(i):
 
 # call the animator.  blit=True means only re-draw the parts that have changed.
 anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=40, interval=50, blit=True)
+                               frames=200, interval=50, blit=True)
 
-anim.save('/data/theorie/jthoeve/ML4EFT_higgs/plots/anim_band_quad_cHW.gif')
+anim.save('/data/theorie/jthoeve/ML4EFT_higgs/plots/anim_band_quad_cHW_v2.gif')
