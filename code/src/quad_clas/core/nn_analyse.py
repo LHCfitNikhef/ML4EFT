@@ -18,7 +18,11 @@ rc('text', usetex=True)
 eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5], [0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0], [10.0, 2.0]]
 
 
-def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std, path_lin):
+def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
+                        path_lin_1=None,
+                        path_lin_2=None,
+                        path_quad_1=None,
+                        path_quad_2=None):
     """
     :param network_path: path to the saved NN to be loaded
     :param train_dataset: training data needed to find the mean and std
@@ -26,30 +30,39 @@ def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std, pat
     :return: comparison between NN prediction and analytically known result for the likelihood ratio
     """
 
-    # Be careful to use the same network architecture as during training
-    #if list(torch.load(network_path).items())[0][1].shape[1] == 2:
-    if path_lin is not None:
-        loaded_model = quad_clas.PredictorQuadratic(network_size)
-        loaded_model.load_state_dict(torch.load(network_path))
-    else:
-        loaded_model = quad_clas.PredictorLinear(network_size)
-        loaded_model.load_state_dict(torch.load(network_path))
-
     # Set up coordinates and compute f
     x_unscaled = torch.from_numpy(x).unsqueeze(-1)
     x = (x_unscaled - mean) / std  # rescale the inputs
 
-    if cHW != 0 and cHq3 != 0:
-        c = cHW * cHq3
-    if cHW != 0 and cHq3 == 0:
-        c = cHW
-    if cHW == 0 and cHq3 != 0:
-        c = cHq3
-
-    if path_lin is not None:
-        f_pred = loaded_model.forward(x.float(), c, path_lin)
+    # Be careful to use the same network architecture as during training
+    #if list(torch.load(network_path).items())[0][1].shape[1] == 2:
+    if path_quad_1 is None:
+        loaded_model = quad_clas.PredictorLinear(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW + cHq3)
+    elif path_quad_2 is None:
+        loaded_model = quad_clas.PredictorQuadratic(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW ** 2 + cHq3 ** 2, path_lin_1)
     else:
-        f_pred = loaded_model.forward(x.float(), c)
+        loaded_model = quad_clas.PredictorCross(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW, cHq3, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+
+
+
+    # if cHW != 0 and cHq3 != 0:
+    #     c = cHW * cHq3
+    # if cHW != 0 and cHq3 == 0:
+    #     c = cHW
+    # if cHW == 0 and cHq3 != 0:
+    #     c = cHq3
+
+
+    # if path_lin is not None:
+    #     f_pred = loaded_model.forward(x.float(), c, path_lin)
+    # else:
+    #     f_pred = loaded_model.forward(x.float(), c)
     f_pred = f_pred.view(-1).detach().numpy()
 
     return f_pred

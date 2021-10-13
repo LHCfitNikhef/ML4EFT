@@ -345,7 +345,11 @@ class EventDataset(data.Dataset):
         return data_sample, weight_sample, label_sample
 
 
-def plot_training_report(model, train_loss, val_loss, path, architecture, c, path_lin):
+def plot_training_report(model, train_loss, val_loss, path, architecture, c1, c2,
+                         path_lin_1=None,
+                         path_lin_2=None,
+                         path_quad_1=None,
+                         path_quad_2=None):
 
     # loss plot
     fig = plt.figure()
@@ -364,9 +368,11 @@ def plot_training_report(model, train_loss, val_loss, path, architecture, c, pat
 
     mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
     x = np.linspace(mh + mz + 1e-2, 1, 100)
-    f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, 0, 2, mean, std, path_lin)
+    f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, 2, 2, mean, std, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
 
-    f_ana = axs.plot_likelihood_ratio_1D(x, 0, c, lin=True, quad=False) if path_lin is None else axs.plot_likelihood_ratio_1D(x, 0, c, lin=False, quad=True)
+    # f_ana = axs.plot_likelihood_ratio_1D(x, 2, 2, lin=True, quad=False) if path_lin is None else axs.plot_likelihood_ratio_1D(x, 2, 2, lin=False, quad=True)
+    f_ana = axs.plot_likelihood_ratio_1D(x, 2, 2, lin=False,
+                                         quad=True)
 
     ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
     ax.plot(x, f_pred, lw=2, label=r'$\rm{NN}$')
@@ -379,7 +385,14 @@ def plot_training_report(model, train_loss, val_loss, path, architecture, c, pat
     fig.savefig(path + 'plots/f_perf.pdf')
 
 
-def training_loop(n_epochs,eft_point_1, eft_point_2, optimizer, model, train_loader, val_loader, path, architecture, animate, path_lin_1=None, path_lin_2=None, path_quad_1=None, path_quad_2=None, eft_value=None):
+def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture, animate,
+                  path_lin_1=None,
+                  path_lin_2=None,
+                  path_quad_1=None,
+                  path_quad_2=None,
+                  eft_value_1=None,
+                  eft_value_2=None,
+    ):
 
     loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
@@ -404,12 +417,12 @@ def training_loop(n_epochs,eft_point_1, eft_point_2, optimizer, model, train_loa
             train_loss = torch.zeros(1)
             # loop over all the datasets within the minibatch and compute their contribution to the loss
             for i, [event, weight, label] in enumerate(minibatch):
-                if isinstance(model, PredictorQuadratic):
-                    output = model(event.float(), eft_point_1, path_lin)
                 if isinstance(model, PredictorLinear):
-                    output = model(event.float(), eft_point_1)
-                if not isinstance(model, PredictorQuadratic) and not isinstance(model, PredictorLinear):
-                    output = model(event.float(), eft_point_1, eft_point_2, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+                    output = model(event.float(), eft_value_1)
+                if isinstance(model, PredictorQuadratic):
+                    output = model(event.float(), eft_value_1, path_lin_1)
+                if isinstance(model, PredictorCross):
+                    output = model(event.float(), eft_value_1, eft_value_2, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
 
@@ -423,12 +436,12 @@ def training_loop(n_epochs,eft_point_1, eft_point_2, optimizer, model, train_loa
             for minibatch in zip(*val_loader):
                 val_loss = torch.zeros(1)
                 for i, [event, weight, label] in enumerate(minibatch):
-                    if isinstance(model, PredictorQuadratic):
-                        output = model(event.float(), eft_point_1, path_lin)
                     if isinstance(model, PredictorLinear):
-                        output = model(event.float(), eft_point_1)
-                    if not isinstance(model, PredictorQuadratic) and not isinstance(model, PredictorLinear):
-                        output = model(event.float(), eft_point_1, eft_point_2, path_lin_1, path_lin_2, path_quad_1,
+                        output = model(event.float(), eft_value_1)
+                    if isinstance(model, PredictorQuadratic):
+                        output = model(event.float(), eft_value_1, path_lin_1)
+                    if isinstance(model, PredictorCross):
+                        output = model(event.float(), eft_value_1, eft_value_2, path_lin_1, path_lin_2, path_quad_1,
                                        path_quad_2)
                     loss = loss_fn(output, label, weight)
                     val_loss += loss
@@ -466,7 +479,7 @@ def training_loop(n_epochs,eft_point_1, eft_point_2, optimizer, model, train_loa
         iterations += 1
 
     # produce training report
-    plot_training_report(model, loss_list_train, loss_list_val, path, architecture, 2, path_lin)
+    plot_training_report(model, loss_list_train, loss_list_val, path, architecture, 2, 2, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
 
     if animate:
         animate_performance(path, architecture, 2, 0, iterations)
@@ -477,10 +490,20 @@ def animate_performance(path, architecture, ctg, cuu, epochs):
     analyse.animate_learning_1d(path, architecture, ctg, cuu, epochs, mean, std)
 
 
-def train_classifier(path, architecture, data_train, data_val, epochs, quadratic=False, cross_term=False, animate=False, path_lin_1=None, path_lin_2=None, path_quad_1=None, path_quad_2=None, eft_point_1=None,
-                     eft_point_2=None,
-                     eft_value=None):
+def train_classifier(
+        path, architecture, data_train, data_val, epochs,
+        quadratic=False,
+        cross_term=False,
+        animate=False,
+        path_lin_1=None,
+        path_lin_2=None,
+        path_quad_1=None,
+        path_quad_2=None,
+        eft_value_1=None,
+        eft_value_2=None
+):
 
+    # specifiy the right model depending on whether we fit linear, quadratic or cross terms
     if quadratic:
         model = PredictorQuadratic(architecture)
     if cross_term:
@@ -501,8 +524,6 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
 
     training_loop(
         n_epochs=epochs,
-        eft_point_1=eft_point_1,
-        eft_point_2=eft_point_2,
         optimizer=optimizer,
         model=model,
         train_loader=train_data_loader,
@@ -514,7 +535,8 @@ def train_classifier(path, architecture, data_train, data_val, epochs, quadratic
         path_lin_2=path_lin_2,
         path_quad_1=path_quad_1,
         path_quad_2=path_quad_2,
-        eft_value=eft_value
+        eft_value_1=eft_value_1,
+        eft_value_2=eft_value_2
     )
 
 def plot_data(data_eft, data_sm):
@@ -531,31 +553,43 @@ def main(path, mc_run, **run_dict):
 
     quadratic = run_dict['quadratic']
     cross_term = run_dict['cross_term']
+
     n_dat = run_dict['n_dat']
     epochs = run_dict['epochs']
     network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
-    eft_points = run_dict['coeff']
-    event_data_path = run_dict['event_data']
-    path_lin_1 = run_dict['path_lin_1'].format(mc_run) if quadratic or cross_term else None
-    path_lin_2 = run_dict['path_lin_2'].format(mc_run) if quadratic or cross_term else None
-    path_quad_1 = run_dict['path_quad_1'].format(mc_run) if cross_term else None
-    path_quad_2 = run_dict['path_quad_2'].format(mc_run) if cross_term else None
+
+    event_data_path = run_dict['event_data'] # path to training data
+
+    eft_dict = run_dict['coeff']
+
+    c1 = eft_dict[0]['value']
+    c2 = eft_dict[1]['value']
+    if c1 != 0 and c2 == 0:
+        eft_op = eft_dict[0]['op']
+        eft_value = c1
+    if c1 == 0 and c2 != 0:
+        eft_op = eft_dict[1]['op']
+        eft_value = c2
+    if c1 != 0 and c2 != 0:
+        eft_op =  eft_dict[0]['op'] + "_" + eft_dict[1]['op']
+        eft_value = c1 * c2
 
 
-    eft_point_1 =  run_dict['eft_point_1']
-    eft_point_2 = run_dict['eft_point_2']
-    eft_value = eft_points['value']
 
-    eft_op = eft_points['op']
-
-    path_dict_eft, path_dict_sm = {}, {}
-
+    # initialise all paths to None, unless we run at pure quadratic or cross term level
+    path_lin_1 = path_lin_2 = path_quad_1 = path_quad_2 = None
+    eft_data_path = 'lin/{eft_coeff}/events_{mc_run}.npy'
     if quadratic:
+        path_lin_1 = run_dict['path_lin_1'].format(mc_run)
         eft_data_path = 'quad/{eft_coeff}/events_{mc_run}.npy'
     if cross_term:
+        path_lin_1 = run_dict['path_lin_1'].format(mc_run)
+        path_lin_2 = run_dict['path_lin_2'].format(mc_run)
+        path_quad_1 = run_dict['path_quad_1'].format(mc_run)
+        path_quad_2 = run_dict['path_quad_2'].format(mc_run)
         eft_data_path = 'cross_term/{eft_coeff}/events_{mc_run}.npy'
-    else:
-        eft_data_path = 'lin/{eft_coeff}/events_{mc_run}.npy'
+
+    path_dict_eft, path_dict_sm = {}, {}
 
     mc_run_sm = int(mc_run) % 10
     path_dict_sm[eft_value] = os.path.join(event_data_path, 'sm/events_{}.npy'.format(mc_run_sm))
@@ -607,9 +641,8 @@ def main(path, mc_run, **run_dict):
                      path_lin_2=path_lin_2,
                      path_quad_1=path_quad_1,
                      path_quad_2=path_quad_2,
-                     eft_point_1=eft_point_1,
-                     eft_point_2=eft_point_2,
-                     eft_value=eft_value
+                     eft_value_1=c1,
+                     eft_value_2=c2,
                      )
 
 def start(json_path, mc_run, output_dir):
