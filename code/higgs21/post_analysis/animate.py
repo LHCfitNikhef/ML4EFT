@@ -7,15 +7,17 @@ import os
 
 mz = 91.188 * 10 ** -3  # z boson mass [TeV]
 mh = 0.125
-c = 2
+cHW = 2
+cHq3 = 0
 x = np.linspace(0.3, 1.2, 100)
-architecture = [1, 30, 30, 30, 30, 30, 1]
+architecture = [2, 30, 30, 30, 30, 30, 1]
 
 fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-f_ana = axs.plot_likelihood_ratio_1D(x, c)
+
+f_ana = axs.plot_likelihood_ratio_1D(x, cHW, cHq3, lin=True, quad=False)
 ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
 
-model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW_lin_3/mc_run_{mc_run}'
+model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW_lin_2_feat/mc_run_{mc_run}'
 
 means = []
 stds = []
@@ -36,7 +38,7 @@ for i in range(10):
 f_preds_init = []
 for rep_nr, line in enumerate(lines):
     path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(1))
-    f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), architecture, c, means[rep_nr], stds[rep_nr], None)
+    f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), architecture, cHW, cHq3, means[rep_nr], stds[rep_nr], None)
     f_preds_init.append(f_pred)
 f_preds_init = np.array(f_preds_init)
 f_pred_up = np.percentile(f_preds_init, 84, axis=0)
@@ -66,12 +68,12 @@ def animate(i):
     for rep_nr, line in enumerate(lines):
         path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(i + 1))
         if os.path.isfile(path):
-            f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), architecture, c, means[rep_nr], stds[rep_nr], None)
+            f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), architecture, cHW, cHq3, means[rep_nr], stds[rep_nr], None)
             f_preds.append(f_pred)
             line.set_data(x, f_pred)
         else: # at the end of training
             path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt'.format(i + 1))
-            f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), architecture, c, means[rep_nr],
+            f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), architecture, cHW, cHq3, means[rep_nr],
                                                  stds[rep_nr], None)
             f_preds.append(f_pred)
             line.set_data(x, f_pred)
@@ -93,4 +95,4 @@ def animate(i):
 anim = animation.FuncAnimation(fig, animate, init_func=init,
                                frames=400, interval=50, blit=True)
 
-anim.save('/data/theorie/jthoeve/ML4EFT_higgs/plots/anim_band_v3.gif')
+anim.save('/data/theorie/jthoeve/ML4EFT_higgs/plots/anim_band_cHW_lin_2_feat.gif')

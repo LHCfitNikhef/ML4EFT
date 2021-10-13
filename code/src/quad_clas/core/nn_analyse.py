@@ -18,7 +18,7 @@ rc('text', usetex=True)
 eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5], [0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0], [10.0, 2.0]]
 
 
-def make_predictions_1d(x, network_path, network_size, c, mean, std, path_lin):
+def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std, path_lin):
     """
     :param network_path: path to the saved NN to be loaded
     :param train_dataset: training data needed to find the mean and std
@@ -38,6 +38,13 @@ def make_predictions_1d(x, network_path, network_size, c, mean, std, path_lin):
     # Set up coordinates and compute f
     x_unscaled = torch.from_numpy(x).unsqueeze(-1)
     x = (x_unscaled - mean) / std  # rescale the inputs
+
+    if cHW != 0 and cHq3 != 0:
+        c = cHW * cHq3
+    if cHW != 0 and cHq3 == 0:
+        c = cHW
+    if cHW == 0 and cHq3 != 0:
+        c = cHq3
 
     if path_lin is not None:
         f_pred = loaded_model.forward(x.float(), c, path_lin)

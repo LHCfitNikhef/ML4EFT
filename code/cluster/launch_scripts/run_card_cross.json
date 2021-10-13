@@ -1,0 +1,19 @@
+{
+  "name": "cHW_cHq3_2_feat",
+  "epochs": 10,
+  "input_size": 2,
+  "output_size": 1,
+  "hidden_sizes": [30, 30, 30, 30, 30],
+  "n_dat": 1000,
+  "quadratic": 0,
+  "cross_term": 1,
+  "animation": 0,
+  "eft_point_1": 10,
+  "eft_point_2": 10,
+  "coeff": [{"op": "cHW", "value": 10.0}, {"op": "cHq3", "value": 0.0}],
+  "event_data": "/Users/jaco/Documents/ML4EFT/data/events",
+  "path_lin_1": "/Users/jaco/Documents/ML4EFT/code/higgs21/models/model_cHW_lin_2_feat/mc_run_{}/trained_nn.pt",
+  "path_lin_2": "/Users/jaco/Documents/ML4EFT/code/higgs21/models/model_cHq3_lin_2_feat/mc_run_{}/trained_nn.pt",
+  "path_quad_1": "/Users/jaco/Documents/ML4EFT/code/higgs21/models/model_cHW_quad_2_feat/mc_run_{}/trained_nn.pt",
+  "path_quad_2": "/Users/jaco/Documents/ML4EFT/code/higgs21/models/model_cHq3_quad_2_feat/mc_run_{}/trained_nn.pt"
+}
