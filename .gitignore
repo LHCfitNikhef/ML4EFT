@@ -287,12 +287,24 @@ code/quad_clas/temp/
 code/old/
 .idea/
 sphinx/_build/
-
+/code/notebooks/feynrules-current/
+/code/higgs21/models/
+/code/notebooks/FormCalc/*.gen
+/code/notebooks/FormCalc/*.mod
+/code/notebooks/FormCalc/*.pars
 #Cluster output files
 *.pbs.*
 
-#pyc fiels
+#pyc files
 *.pyc
+
+#pytorch files
+*.pt
+
+
+
+
+
 
 
 

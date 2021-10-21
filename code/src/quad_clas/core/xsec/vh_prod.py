@@ -146,7 +146,8 @@ def findCoeff(bins):
     cHW_cHq3 = (sigma_bin(bins, cHW=10, cHq3=10, lin=False, quad=True) - (
                 sm + 10 * cHW_lin + 10 ** 2 * cHW_quad + 10 * cHq3_lin + 10 ** 2 * cHq3_quad)) / 10 ** 2
 
-    coeff = np.array([sm, cHW_lin, cHW_quad, cHq3_lin, cHq3_quad, cHW_cHq3])
+    #coeff = np.array([sm, cHW_lin, cHW_quad, cHq3_lin, cHq3_quad, cHW_cHq3])
+    coeff = np.array([sm, cHW_lin, np.zeros(len(cHW_lin)), cHq3_lin, np.zeros(len(cHW_lin)), np.zeros(len(cHW_lin))])
     return coeff
 
 

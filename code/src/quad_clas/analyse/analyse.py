@@ -270,7 +270,7 @@ class Analyse:
         ax.set_ylabel(r'$\rm{cHq3}$', fontsize=20)
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
         plt.tight_layout(pad=1.2)
-        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin_cHW_cHq3_zoomed_in.pdf')
+        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin_linear.pdf')
         #fig.savefig(os.path.join(self.plots_path, 'ellipses_diff_new_8.pdf'))
 
     def analyse1d(self):

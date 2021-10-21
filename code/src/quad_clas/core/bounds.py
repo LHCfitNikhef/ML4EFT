@@ -9,9 +9,9 @@ import math
 
 # import own modules
 from quad_clas.core.xsec import tt_prod as axs
-from . import analyse
+from . import nn_analyse
 from .lhelib import lhe
-from . import vh_prod_fq
+from .xsec import vh_prod
 
 # matplotlib.use('PDF')
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
@@ -266,7 +266,7 @@ class StatAnalysis:
             cuu_list = np.linspace(cuu_min, cuu_max, 200)
             cug_list = np.linspace(cug_min, cug_max, 200)
 
-        a = vh_prod_fq.findCoeff(self.bins)
+        a = vh_prod.findCoeff(self.bins)
         for cug in cug_list:
             for cuu in cuu_list:
                 c = np.array([cuu, cug])
