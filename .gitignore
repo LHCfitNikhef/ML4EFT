@@ -292,7 +292,7 @@ sphinx/_build/
 /code/notebooks/FormCalc/*.gen
 /code/notebooks/FormCalc/*.mod
 /code/notebooks/FormCalc/*.pars
-
+/.ipynb_checkpoints/
 #Cluster output files
 *.pbs.*
 
@@ -305,8 +305,8 @@ sphinx/_build/
 #large (> 100 mb) files
 /talks/ML4EFT-14-07.key
 
-
-
+# specific files
+/2d_data_fitter.ipynb
 
 
 
