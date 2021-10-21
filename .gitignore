@@ -292,6 +292,7 @@ sphinx/_build/
 /code/notebooks/FormCalc/*.gen
 /code/notebooks/FormCalc/*.mod
 /code/notebooks/FormCalc/*.pars
+
 #Cluster output files
 *.pbs.*
 
@@ -301,6 +302,8 @@ sphinx/_build/
 #pytorch files
 *.pt
 
+#large (> 100 mb) files
+/talks/ML4EFT-14-07.key
 
 
 
