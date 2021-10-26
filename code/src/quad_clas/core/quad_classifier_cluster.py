@@ -48,7 +48,7 @@ class MLP(nn.Module):
         layer_sizes = [input_size] + hidden_sizes
         for layer_index in range(1, len(layer_sizes)):
             layers += [nn.Linear(layer_sizes[layer_index - 1], layer_sizes[layer_index]), nn.ReLU()]
-        layers += [nn.Linear(layer_sizes[-1], output_size)]
+        layers += [nn.Linear(layer_sizes[-1], output_size), nn.ReLU()]
         self.layers = nn.Sequential(
             *layers)  # nn.Sequential summarizes a list of modules into a single module, applying them in sequence
 
@@ -68,7 +68,7 @@ class PredictorLinear(nn.Module):
 
     def forward(self, x, c):
         n_alpha_out = self.n_alpha(x)
-        return 1 / (1 + (1 + c * n_alpha_out ** 2)) # TODO try without squaring n_alpha
+        return 1 / (1 + (1 + c * n_alpha_out)) # TODO try without squaring n_alpha
 
 
 class PredictorQuadratic(nn.Module):
@@ -467,13 +467,13 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         # validation loss increases during the epoch. If the counter increases for 10 epochs straight,
         # stop the training.
 
-        if loss_val > loss_val_old and epoch > 1:
-            overfit_counter += 1
-
-        if overfit_counter == patience:
-            stopping_point = epoch - patience
-            shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
-            break
+        # if loss_val > loss_val_old and epoch > 1:
+        #     overfit_counter += 1
+        #
+        # if overfit_counter == patience:
+        #     stopping_point = epoch - patience
+        #     shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
+        #     break
 
         loss_val_old = loss_val
         iterations += 1

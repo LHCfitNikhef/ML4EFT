@@ -126,7 +126,7 @@ def dsigma_dmvh(mvh, cHW, cHq3, lin, quad):
     return dsigma_dmtt
 
 
-def sigma_bin(bins, cHW, cHq3, lin=True, quad=True):
+def sigma_bin(bins, cHW, cHq3, lin=False, quad=False):
     sigma_i = []
     for i in range(len(bins) - 1):
         temp = integrate.fixed_quad(dsigma_dmvh_vec, bins[i], bins[i + 1], args=(cHW, cHq3, lin, quad), n=10)[0]
@@ -136,7 +136,7 @@ def sigma_bin(bins, cHW, cHq3, lin=True, quad=True):
 
 
 def findCoeff(bins):
-    sm = sigma_bin(bins, cHW=0, cHq3=0)
+    sm = sigma_bin(bins, cHW=0, cHq3=0, lin=True)
     cHW_lin = (sigma_bin(bins, cHW=10, cHq3=0, lin=True, quad=False) - sm) / 10
     cHq3_lin = (sigma_bin(bins, cHW=0, cHq3=10, lin=True, quad=False) - sm) / 10
 
@@ -146,13 +146,16 @@ def findCoeff(bins):
     cHW_cHq3 = (sigma_bin(bins, cHW=10, cHq3=10, lin=False, quad=True) - (
                 sm + 10 * cHW_lin + 10 ** 2 * cHW_quad + 10 * cHq3_lin + 10 ** 2 * cHq3_quad)) / 10 ** 2
 
-    #coeff = np.array([sm, cHW_lin, cHW_quad, cHq3_lin, cHq3_quad, cHW_cHq3])
-    coeff = np.array([sm, cHW_lin, np.zeros(len(cHW_lin)), cHq3_lin, np.zeros(len(cHW_lin)), np.zeros(len(cHW_lin))])
+    coeff = np.array([sm, cHW_lin, cHW_quad, cHq3_lin, cHq3_quad, cHW_cHq3])
+    #coeff = np.array([sm, cHW_lin, np.zeros(len(cHW_lin)), cHq3_lin, np.zeros(len(cHW_lin)), np.zeros(len(cHW_lin))])
     return coeff
 
 
-def nu_i(a, cHW, cHq3, luminosity):
-    eft_point = np.array([1, cHW, cHW ** 2, cHq3, cHq3 ** 2, cHW * cHq3])
+def nu_i(a, cHW, cHq3, luminosity, lin=False, quad=False):
+    if lin:
+        eft_point = np.array([1, cHW, 0, cHq3, 0, 0])
+    if quad:
+        eft_point = np.array([1, cHW, cHW ** 2, cHq3, cHq3 ** 2, cHW * cHq3])
     xsec = np.einsum('ij,i', a, eft_point)
     nu = xsec * luminosity
     return nu
