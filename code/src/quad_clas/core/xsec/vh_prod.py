@@ -137,17 +137,17 @@ def sigma_bin(bins, cHW, cHq3, lin=False, quad=False):
 
 def findCoeff(bins):
     sm = sigma_bin(bins, cHW=0, cHq3=0, lin=True)
-    cHW_lin = (sigma_bin(bins, cHW=10, cHq3=0, lin=True, quad=False) - sm) / 10
-    cHq3_lin = (sigma_bin(bins, cHW=0, cHq3=10, lin=True, quad=False) - sm) / 10
+    c1_lin = (sigma_bin(bins, cHW=10, cHq3=0, lin=True, quad=False) - sm) / 10
+    c2_lin = (sigma_bin(bins, cHW=0, cHq3=10, lin=True, quad=False) - sm) / 10
 
-    cHW_quad = (sigma_bin(bins, cHW=10, cHq3=0, lin=False, quad=True) - (sm + 10 * cHW_lin)) / 10 ** 2
-    cHq3_quad = (sigma_bin(bins, cHW=0, cHq3=10, lin=False, quad=True) - (sm + 10 * cHq3_lin)) / 10 ** 2
+    c1_quad = (sigma_bin(bins, cHW=10, cHq3=0, lin=False, quad=True) - (sm + 10 * c1_lin)) / 10 ** 2
+    c2_quad = (sigma_bin(bins, cHW=0, cHq3=10, lin=False, quad=True) - (sm + 10 * c2_lin)) / 10 ** 2
 
-    cHW_cHq3 = (sigma_bin(bins, cHW=10, cHq3=10, lin=False, quad=True) - (
-                sm + 10 * cHW_lin + 10 ** 2 * cHW_quad + 10 * cHq3_lin + 10 ** 2 * cHq3_quad)) / 10 ** 2
+    c1_c2 = (sigma_bin(bins, cHW=10, cHq3=10, lin=False, quad=True) - (
+                sm + 10 * c1_lin + 10 ** 2 * c1_quad + 10 * c2_lin + 10 ** 2 * c2_quad)) / 10 ** 2
 
-    coeff = np.array([sm, cHW_lin, cHW_quad, cHq3_lin, cHq3_quad, cHW_cHq3])
-    #coeff = np.array([sm, cHW_lin, np.zeros(len(cHW_lin)), cHq3_lin, np.zeros(len(cHW_lin)), np.zeros(len(cHW_lin))])
+    coeff = np.array([sm, c1_lin, c1_quad, c2_lin, c2_quad, c1_c2])
+
     return coeff
 
 

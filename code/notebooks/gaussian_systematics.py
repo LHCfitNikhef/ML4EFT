@@ -45,7 +45,7 @@ def chi2(data, coeff, cHW, cHq3, r_sys, beta_i, alpha_i):
 
 
 chi2_values = []
-cHW_range = np.linspace(cHW - 0.5, cHW + 0.5, 200)
+cHW_range = np.linspace(cHW - 1.0, cHW + 1.0, 200)
 r_i_sys_range = np.linspace(r_sys - 4, r_sys + 4, 200)
 coeff = vh_prod.findCoeff(bins)
 for cHW_i in cHW_range:
@@ -76,11 +76,13 @@ plt.scatter(r_sys, cHW, marker='x', color='black', label='Truth')
 idx = np.where(chi2_values == np.min(chi2_values))
 plt.scatter(r_i_sys_range[idx[1]], cHW_range[idx[0]], marker='o', color='black', label=r'$\chi^2_{\rm{min}}$')
 
-img = plt.imshow(chi2_values, extent=[r_i_sys_range[idx[1]][0] - 3, r_i_sys_range[idx[1]][0] + 3, cHW_range[idx[0]][0]-0.2, cHW_range[idx[0]][0]+0.2], origin='lower', cmap='RdGy', aspect='auto', vmin=0)
+img = plt.imshow(chi2_values, extent=[np.min(r_i_sys_range), np.max(r_i_sys_range), np.min(cHW_range), np.max(cHW_range)], origin='lower', cmap='RdGy', aspect='auto', vmin=0)
+#img = plt.imshow(chi2_values, extent=[r_i_sys_range[idx[1]][0] - 3, r_i_sys_range[idx[1]][0] + 3, cHW_range[idx[0]][0]-0.2, cHW_range[idx[0]][0]+0.2], origin='lower', cmap='RdGy', aspect='auto', vmin=0)
 cbar = plt.colorbar(img, extend='max')
-
-plt.xlim(r_i_sys_range[idx[1]] - 3, r_i_sys_range[idx[1]] + 3)
-plt.ylim(cHW_range[idx[0]]-0.2, cHW_range[idx[0]]+0.2)
+plt.xlim(np.min(r_i_sys_range), np.max(r_i_sys_range))
+plt.ylim(np.min(cHW_range), np.max(cHW_range))
+#plt.xlim(r_i_sys_range[idx[1]] - 3, r_i_sys_range[idx[1]] + 3)
+#plt.ylim(cHW_range[idx[0]]-0.2, cHW_range[idx[0]]+0.2)
 
 plt.legend()
 #plt.vlines(r_i_sys_rec, np.min(cHW_range), np.max(cHW_range), linestyles='dashed', color='black')

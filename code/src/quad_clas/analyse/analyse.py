@@ -195,9 +195,9 @@ class Analyse:
         Finds the contours of the 95% CL.
         """
         fig, ax = plt.subplots(figsize=(7.5, 6))
-        cuu = np.linspace(self.extent[0, 0], self.extent[0, 1], 200)
-        cug = np.linspace(self.extent[1, 0], self.extent[1, 1], 200)
-        cuu_plane, cug_plane = np.meshgrid(cuu, cug)
+        #cuu = np.linspace(self.extent[0, 0], self.extent[0, 1], 200)
+        #cug = np.linspace(self.extent[1, 0], self.extent[1, 1], 200)
+        #cuu_plane, cug_plane = np.meshgrid(cuu, cug)
 
         labels = []
         contours = []
@@ -209,9 +209,13 @@ class Analyse:
                 # data_smoothed = gaussian_filter(binnings.z_scores_asi, sigma)
                 c = next(color)
                 data_smoothed = gaussian_filter(binnings.z_scores, sigma)
-                contour = ax.contour(binnings.cuu_plane, binnings.cug_plane, data_smoothed, levels=np.array([1.64]), colors=[c])
+                contour = ax.contour(binnings.c2_plane, binnings.c1_plane, data_smoothed, levels=np.array([1.64]), colors=[c], origin='lower')
                 h0, _ = contour.legend_elements()
                 contours.append(h0[0])
+
+                contour_data = np.array(contour.allsegs[0][0])
+                contour_data[contour_data[:, 1] > 0][0, :]
+
                 if len(binnings.bins)-1 == 1:
                     labels.append(r'$\rm{%d\;bin}$' % (len(binnings.bins) - 1))
                 else:
@@ -266,11 +270,12 @@ class Analyse:
 
         # plot settings
         ax.legend(contours, labels, fontsize=15, frameon=False, loc='best')
-        ax.set_xlabel(r'$\rm{cHW}$', fontsize=20)
-        ax.set_ylabel(r'$\rm{cHq3}$', fontsize=20)
+        ax.set_xlabel(r'$\rm{cHq3}$', fontsize=20)
+        ax.set_ylabel(r'$\rm{cHW}$', fontsize=20)
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
+        ax.scatter(0, 0, marker='x', color='black', label=r'$\rm{SM}$')
         plt.tight_layout(pad=1.2)
-        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin_linear.pdf')
+        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin_quad.pdf')
         #fig.savefig(os.path.join(self.plots_path, 'ellipses_diff_new_8.pdf'))
 
     def analyse1d(self):

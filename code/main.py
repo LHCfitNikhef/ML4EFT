@@ -98,5 +98,5 @@ if __name__ == "__main__":
         # binning_3 = np.linspace(mz + mh, 1.5, 2) # 1 bin
         binnings_list = [binning_0, binning_1, binning_2, binning_3]
 
-        extent = np.array([[-0.5, 0.5], [-0.1, 0.1]])
+        extent = np.array([[-0.15, 0.1], [-0.5, 0.7]]) # y, x
         analysis = ana.Analyse(root_path, binnings=binnings_list,truth=False, fit=False, extent=extent, luminosity=60000)

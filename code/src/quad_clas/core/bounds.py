@@ -169,23 +169,9 @@ class StatAnalysis:
             The number of expected events in each bin at the specified point c
         """
 
-        path_xsec_binned = os.path.join(self.path_output, "xsec_bin.npy")
-        # with open(path_xsec_binned, 'rb') as f:
-        #     dataset = np.load(f)
-
-        # build the matrix of coefficients
-        # coeff_mat = self.coefficient_matrix()
-
-        # solve the linear equation xsec = coeff_matrix * a for a
-
-        # TODO: rewrite the below so that the fit does not have to be done each time the function is called
-        #a, _, _, _ = np.linalg.lstsq(coeff_mat, dataset, rcond=None)
-
-
-
         # find the x_sec per bin at the specified point in eft parameter space
-        cuu, cug = c[0], c[1]
-        eft_point = np.array([1, cug, cug ** 2, cuu, cuu ** 2, cug * cuu])
+        c1, c2 = c[0], c[1]
+        eft_point = np.array([1, c1, c1 ** 2, c2, c2 ** 2, c1 * c2])
         x_sec = np.einsum('ij,i', a, eft_point)
         return x_sec * self.luminosity
 
@@ -261,46 +247,32 @@ class StatAnalysis:
             cuu_list = np.linspace(-5, 5, 20)
             cug_list = np.linspace(-0.15, 1, 10)
         else:
-            cuu_min, cuu_max = extent[0, :]
-            cug_min, cug_max = extent[1, :]
-            cuu_list = np.linspace(cuu_min, cuu_max, 200)
-            cug_list = np.linspace(cug_min, cug_max, 200)
+            c1_min, c1_max = extent[0, :]
+            c2_min, c2_max = extent[1, :]
+            c1_list = np.linspace(c1_min, c1_max, 200)
+            c2_list = np.linspace(c2_min, c2_max, 200)
 
         a = vh_prod.findCoeff(self.bins)
-        for cug in cug_list:
-            for cuu in cuu_list:
-                c = np.array([cuu, cug])
+        for c1 in c1_list:
+            for c2 in c2_list:
+                c = np.array([c1, c2])
                 self.nu_i = self.expected_entries(c, a)
 
-                # if exact:
-                #     self.mean_tc_binned_mc, self.std_tc_binned_mc, self.tc_data, self.z_score_binned_mc = self.find_bound_binned_mc()
 
                 self.mean_tc, self.std_tc = self.find_pdf_binned()
                 z_score, p_value = self.p_value()
 
-                # self.mean_tc_asi, self.std_tc_asi = self.find_pdf_binned_asimov()
-                # z_score_asi, p_value_asi = self.p_value_asimov()
-
                 p_values.append(p_value)
                 z_scores.append(z_score)
 
-                # p_values_asi.append(p_value_asi)
-                # z_scores_asi.append(z_score_asi)
-
-        # p_values_asi = np.array(p_values_asi)
-        # z_scores_asi = np.array(z_scores_asi)
         p_values = np.array(p_values)
         z_scores = np.array(z_scores)
 
-        # TODO: how to document this in sphinx?
-        # self.p_values_asi = np.reshape(p_values_asi, (len(cug_list), len(cuu_list)))
-        # self.z_scores_asi = np.reshape(z_scores_asi, (len(cug_list), len(cuu_list)))
+        self.p_values = np.reshape(p_values, (len(c1_list), len(c2_list)))
+        self.z_scores = np.reshape(z_scores, (len(c1_list), len(c2_list)))
+        self.c1_plane, self.c2_plane = np.meshgrid(c1_list, c2_list, indexing='ij')
 
-        self.p_values = np.reshape(p_values, (len(cug_list), len(cuu_list)))
-        self.z_scores = np.reshape(z_scores, (len(cug_list), len(cuu_list)))
-        self.cuu_plane, self.cug_plane = np.meshgrid(cuu_list, cug_list)
 
-        # idx = np.argwhere(np.diff(np.sign(p_values_asi - 0.05))).flatten()
 
     def find_pdf_binned(self):
         # tc_mean_sm_asi = self.t_c_asimov('sm', self.nu_i['eft'], self.nu_i['sm'])
