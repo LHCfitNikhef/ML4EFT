@@ -2,8 +2,8 @@
 
 # this script unpacks the .lhe.gz event files.
 
-EVENT_DIR=/Users/jaco/Documents/ML4EFT/code/MG5_aMC_v2.7.3/MG5_aMC_v2_7_3/bin/p_value_scan_cHq3/Events
-SAVE_LOCATION=/Users/jaco/Documents/ML4EFT/data/z_scores/cHq3
+EVENT_DIR=/Users/jaco/Documents/ML4EFT/code/MG5_aMC_v2.7.3/MG5_aMC_v2_7_3/bin/p_value_scan_cHW/Events
+SAVE_LOCATION=/Users/jaco/Documents/ML4EFT/data/z_scores/cHW
 
 cd $EVENT_DIR
 
