@@ -73,30 +73,20 @@ if __name__ == "__main__":
         run.ScanBounds(root_path, dict_int, mc_run, luminosity=60000, truth=False, nn=True, fit=False)
 
     if analyse:
-        #define the binnings
-        # binning_0 = np.append(np.linspace(340, 2000, 20), 4000).astype(int)
-        # binning_1 = np.append(np.linspace(340, 2000, 10), 4000).astype(int)
-        # binning_2 = np.append(np.linspace(340, 2000, 5), 4000).astype(int)
-        # binning_3 = np.append(np.linspace(340, 2000, 2), 4000).astype(int)
-        # binning_4 = np.append(np.linspace(340, 2000, 1), 4000).astype(int)
-        #
-        # binnings_list = [binning_0, binning_1, binning_2, binning_3, binning_4]
-        #
+
 
         mz = 91.188 * 10 ** -3  # z boson mass [TeV]
         mh = 0.125
         binning_0 = np.linspace(mz + mh, 1.5, 20)
         binning_0 = np.append(binning_0, 4.0) # 20 bins
-        binning_1 = np.linspace(mz + mh, 1.5, 10)
-        binning_1 = np.append(binning_1, 4.0)  # 10 bins
-        binning_2 = np.linspace(mz + mh, 1.5, 5)
-        binning_2 = np.append(binning_2, 4.0)  # 5 bins
-        binning_3 = np.linspace(mz + mh, 1.5, 1)
-        binning_3 = np.append(binning_3, 4.0)  # 1 bins
-        # binning_1 = np.linspace(mz + mh, 1.5, 11) # 10 bins
-        # binning_2 = np.linspace(mz + mh, 1.5, 6) # 5 bins
-        # binning_3 = np.linspace(mz + mh, 1.5, 2) # 1 bin
-        binnings_list = [binning_0, binning_1, binning_2, binning_3]
+        # binning_1 = np.linspace(mz + mh, 1.5, 10)
+        # binning_1 = np.append(binning_1, 4.0)  # 10 bins
+        # binning_2 = np.linspace(mz + mh, 1.5, 5)
+        # binning_2 = np.append(binning_2, 4.0)  # 5 bins
+        # binning_3 = np.linspace(mz + mh, 1.5, 1)
+        # binning_3 = np.append(binning_3, 4.0)  # 1 bins
+
+        binnings_list = [binning_0]#, binning_1, binning_2, binning_3]
 
         extent = np.array([[-0.15, 0.1], [-0.5, 0.7]]) # y, x
         analysis = ana.Analyse(root_path, binnings=binnings_list,truth=False, fit=False, extent=extent, luminosity=60000)

@@ -210,6 +210,16 @@ class Analyse:
                 c = next(color)
                 data_smoothed = gaussian_filter(binnings.z_scores, sigma)
                 contour = ax.contour(binnings.c2_plane, binnings.c1_plane, data_smoothed, levels=np.array([1.64]), colors=[c], origin='lower')
+
+                contour_points = contour.allsegs[0][0]
+                contour_distance = contour_points[:, 0] ** 2 + contour_points[:, 1] ** 2
+                dist_max_idx = np.argmax(contour_distance)
+                c_max = contour_points[dist_max_idx, :]
+                ax.scatter(*c_max, marker='o')
+                slope = c_max[1]/c_max[0]
+                x = np.linspace(np.min(binnings.c2_plane), np.max(binnings.c2_plane), 100)
+                ax.plot(x, -0.21 * x, linestyle='dashed', color='k')
+
                 h0, _ = contour.legend_elements()
                 contours.append(h0[0])
 
@@ -275,7 +285,7 @@ class Analyse:
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
         ax.scatter(0, 0, marker='x', color='black', label=r'$\rm{SM}$')
         plt.tight_layout(pad=1.2)
-        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin_quad.pdf')
+        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin_quad_test.pdf')
         #fig.savefig(os.path.join(self.plots_path, 'ellipses_diff_new_8.pdf'))
 
     def analyse1d(self):
