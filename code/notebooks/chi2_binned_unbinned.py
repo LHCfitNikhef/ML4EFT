@@ -7,7 +7,7 @@ pseudo_data_full = events_sm[1:, 0]
 
 mz = 91.188 * 10 ** -3  # z boson mass [TeV]
 mh = 0.125
-luminosity = 20000
+luminosity = 30000
 bins = np.array([mz+mh, 4])
 #bins = np.append(bins, 4.0)
 a = vh_prod.findCoeff(bins)
@@ -22,12 +22,12 @@ def chi2_function(data, theory):
 
 
 
-cHW_values = np.linspace(-0.2, 0.2, 1000)
+cHW_values = np.linspace(-1, 1, 1000)
 
 nrows = 3
 ncols = 2
 fig = plt.figure(figsize=(ncols * 8, nrows * 6))
-for i, n_bins in enumerate([1, 2, 5, 10, 20]):
+for i, n_bins in enumerate([2, 5, 10, 15, 20]):
     ax = plt.subplot(nrows, ncols, i + 1)
     if n_bins == 1:
         bins = np.array([mz+mh, 4.0])
@@ -37,10 +37,10 @@ for i, n_bins in enumerate([1, 2, 5, 10, 20]):
     a = vh_prod.findCoeff(bins)
     nu_i_sm = vh_prod.nu_i(a, 0, 0, luminosity, quad=True)
     #pseudo_data_binned, _ = np.histogram(pseudo_data, bins=bins)
-    pseudo_data_binned = np.random.poisson(nu_i_sm, len(nu_i_sm))
+    pseudo_data_binned = np.random.poisson(nu_i_sm, len(nu_i_sm)) # TODO: comparing apples and oranges: don't use a different dataset for per binning
     chi2_values = []
     for cHW in cHW_values:
-        nu_i = vh_prod.nu_i(a, cHW, 0, luminosity, quad=True)
+        nu_i = vh_prod.nu_i(a, cHW, -4.76 * cHW, luminosity, quad=True)
         chi2_values.append(chi2_function(pseudo_data_binned, nu_i))
     chi2_values = np.array(chi2_values)
 
@@ -53,8 +53,19 @@ for i, n_bins in enumerate([1, 2, 5, 10, 20]):
     chi2_min = np.min(chi2_values)
     chi2_low_up_idx = np.argwhere(chi2_values < chi2_min + 4)
 
+    c_min_idx = np.argmin(chi2_values)
+    c_min = cHW_values[c_min_idx]
+    c_low = cHW_values[chi2_low_up_idx[0]]
+    c_up = cHW_values[chi2_low_up_idx[-1]]
+
     ax.axhline(chi2_min + 4, linestyle='dashed', color='C1')
     ax.axvline(0, 0, 1, linestyle='dashed', color='k')
+
+    ax.text(0.9, 0.9, r'$c\;=\;%.2f ^{+%.2f}_{-%.2f}$' % (c_min, c_up - c_min, c_min - c_low),
+            transform=ax.transAxes,
+            horizontalalignment='right',
+            verticalalignment='top',
+            bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=1'))
 
     plt.xlim(cHW_values[chi2_low_up_idx[0]]-0.2, cHW_values[chi2_low_up_idx[-1]]+0.2)
     plt.ylim(chi2_min-1, chi2_min + 10)
