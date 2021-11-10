@@ -10,12 +10,56 @@ from matplotlib import animation
 # import own pacakges
 from . import quad_classifier_cluster as quad_clas
 from quad_clas.core.xsec import tt_prod as axs
+from quad_clas.core.xsec import vh_prod
 
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
-eft_points = [[-10.0, 0], [-5.0, 0], [-1.0, 0], [1.0, 0], [5.0, 0], [10.0, 0], [0, -2.0], [0, -1.0], [0, -0.5], [0, 0.5], [0, 1.0], [0, 2.0], [-10.0, -2.0], [-5.0, -1.0], [-1.0, -0.5], [1.0, 0.5], [5.0, 1.0], [10.0, 2.0]]
+
+def likelihood_ratio(x, c, lin=False, quad=False):
+    """
+    Compute the 1D analytic likelihood ratio r(x, c)
+
+    Parameters
+    ----------
+    x : numpy.ndarray, shape=(M, N)
+        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    c : numpy.ndarray, shape=(M,)
+        EFT point in M dimensions, e.g c = (cHW, cHq3)
+    lin: bool, optional
+        Set to False by default. Turn on for linear corrections.
+    quad: bool, optional
+        Set to False by default. Turn on for quadratic corrections.
+    """
+
+    n_kin = x.shape[1]
+    cHW, cHq3 = c
+
+    if n_kin == 1:
+        dsigma_0 = [vh_prod.dsigma_dmvh(x_i, cHW, cHq3, lin=lin, quad=quad) for x_i in x]  # EFT
+        dsigma_1 = [vh_prod.dsigma_dmvh(x_i, 0, 0, lin=lin, quad=quad) for x_i in x]  # SM
+    elif n_kin == 2:
+        dsigma_0 = [vh_prod.dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin=lin, quad=quad) for (mvh, y) in x]  # EFT
+        dsigma_1 = [vh_prod.dsigma_dmvh_dy(y, mvh, 0, 0, lin=lin, quad=quad) for (mvh, y) in x]  # SM
+    else:
+        raise NotImplementedError("No more than two features are currently supported")
+
+    dsigma_0, dsigma_1 = np.array(dsigma_0), np.array(dsigma_1)
+    ratio = dsigma_0 / dsigma_1
+
+    return ratio.flatten()
+
+def decision_function(x, c, lin=False, quad=False):
+    ratio = likelihood_ratio(x, c, lin, quad)
+    return 1 / (1 + ratio)
+
+
+#
+# def plot_likelihood_ratio_1D(x, cHW, cHq3, lin=False, quad=False):
+#     y = [1 / (1 + likelihood_ratio_1D(x_i, cHW, cHq3, lin=lin, quad=quad)) for x_i in x]
+#     return np.array(y)
 
 
 def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
@@ -23,19 +67,13 @@ def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
                         path_lin_2=None,
                         path_quad_1=None,
                         path_quad_2=None):
-    """
-    :param network_path: path to the saved NN to be loaded
-    :param train_dataset: training data needed to find the mean and std
-    :param ctg: value of the Wilson coefficient ctg
-    :return: comparison between NN prediction and analytically known result for the likelihood ratio
-    """
 
     # Set up coordinates and compute f
     x_unscaled = torch.from_numpy(x).unsqueeze(-1)
     x = (x_unscaled - mean) / std  # rescale the inputs
 
     # Be careful to use the same network architecture as during training
-    #if list(torch.load(network_path).items())[0][1].shape[1] == 2:
+
     if path_quad_1 is None:
         loaded_model = quad_clas.PredictorLinear(network_size)
         loaded_model.load_state_dict(torch.load(network_path))
@@ -49,20 +87,6 @@ def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
         loaded_model.load_state_dict(torch.load(network_path))
         f_pred = loaded_model.forward(x.float(), cHW, cHq3, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
 
-
-
-    # if cHW != 0 and cHq3 != 0:
-    #     c = cHW * cHq3
-    # if cHW != 0 and cHq3 == 0:
-    #     c = cHW
-    # if cHW == 0 and cHq3 != 0:
-    #     c = cHq3
-
-
-    # if path_lin is not None:
-    #     f_pred = loaded_model.forward(x.float(), c, path_lin)
-    # else:
-    #     f_pred = loaded_model.forward(x.float(), c)
     f_pred = f_pred.view(-1).detach().numpy()
 
     return f_pred
@@ -541,26 +565,3 @@ def plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
     :param save_path: path where the plot should be stored
     """
     axs.plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path)
-
-
-if __name__ == '__main__':
-    # with open(sys.argv[1]) as json_data:
-    #     run_dict = json.load(json_data)
-    #
-    # quadratic = run_dict['quadratic']
-    # n_dat = run_dict['n_dat']
-    # epochs = run_dict['epochs']
-    # ctg = run_dict['coeff'][0]['value']
-    # cuu = run_dict['coeff'][1]['value']
-    # network_size = [run_dict['input_size']] + run_dict['hidden_sizes'] + [run_dict['output_size']]
-    #
-    # #plot_pull_heatmap(network_size, [1.50, 1.80, 2.10, 2.40, 3.00, 3.50])
-
-    #plot_predictions_1d(network_size)
-    # #plot_predictions_2d('/data/theorie/jthoeve/ML4EFT/quad_clas/qc_results/trained_nn/run_11/mc_run_1/', network_size, )
-    # # TODO: continue here tomorrow morning!
-
-    lhe_path = '/data/theorie/jthoeve/ML4EFT/mg5_copies/copy_3/bin/process_3/Events/run_01/unweighted_events.lhe'
-    save_path = '/data/theorie/jthoeve/ML4EFT_v2/output/plots'
-    #plot_mg5_ana_mtt(30*10**-3, 2.5, 1, 0, lhe_path, save_path)
-    #plot_xsec_ana(10 * 10 ** -3, 2.5, 0.1, 0, lhe_path, save_path)

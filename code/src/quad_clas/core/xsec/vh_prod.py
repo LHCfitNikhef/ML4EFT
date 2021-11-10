@@ -109,6 +109,7 @@ def dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin, quad):
     """
     Compute the doubly differential cross section in mtt and y at any order NP
     """
+
     if mvh == mz + mh: return 0  # if at threshold return zero
 
     if np.abs(y) < np.log(np.sqrt(s) / mvh):  # check whether x = {mtt, y} falls inside the physically allowed region
@@ -121,9 +122,10 @@ def dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin, quad):
 
 
 def dsigma_dmvh(mvh, cHW, cHq3, lin, quad):
+
     y_min, y_max = -0.5 * np.log(s / mvh), 0.5 * np.log(s / mvh)
-    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mvh, cHW, cHq3, lin, quad), n=10)[0]
-    return dsigma_dmtt
+    dsigma_dmvh = integrate.fixed_quad(dsigma_dmvh_dy_vec, y_min, y_max, args=(mvh, cHW, cHq3, lin, quad), n=10)[0]
+    return dsigma_dmvh
 
 
 def sigma_bin(bins, cHW, cHq3, lin=False, quad=False):
@@ -161,5 +163,5 @@ def nu_i(a, cHW, cHq3, luminosity, lin=False, quad=False):
     return nu
 
 v_weight = np.vectorize(weight, otypes=[np.float])
-dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmvh_dy, otypes=[np.float])
+dsigma_dmvh_dy_vec = np.vectorize(dsigma_dmvh_dy, otypes=[np.float])
 dsigma_dmvh_vec = np.vectorize(dsigma_dmvh, otypes=[np.float])

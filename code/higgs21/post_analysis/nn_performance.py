@@ -12,6 +12,8 @@ c = 2
 x = np.linspace(mh + mz + 1e-2, 2, 100)
 architecture = [1, 30, 30, 30, 30, 30, 1]
 
+#%%
+
 fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
 f_ana = axs.plot_likelihood_ratio_1D(x, c)
 ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
@@ -38,3 +40,13 @@ plt.ylim((0, 1))
 plt.ylabel(r'$f\;(m_{VH}, c)$')
 plt.xlabel(r'$m_{VH}\;[\mathrm{TeV}]$')
 fig.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/nn_rep.pdf')
+
+
+#%%
+x = np.linspace(mh + mz + 0.1, 1, 10).reshape((-1, 1))
+y = np.zeros(10).reshape((-1,1))
+events = np.concatenate((x, y), axis=1)
+cHW = 2
+cHq3 = 2
+c = np.array([cHW, cHq3])
+ratio = analyse.likelihood_ratio(x, c, lin=True)

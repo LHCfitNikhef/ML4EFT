@@ -190,6 +190,11 @@ class Analyse:
 
         return z_scores_grouped_truth, z_scores_nn_df
 
+    def ellipse_truth(self, cHq3, cHW):
+        x = cHq3
+        y = cHW
+        return -1.80592*10**-13 - 1.38675*10**-14 * x + 6.37035*10**-11* x**2 + 5.68408*10**-12 * y + 3.68832*10**-10 * x * y + 1.20585*10**-9 * y**2
+
     def combine_analyses(self):
         """
         Finds the contours of the 95% CL.
@@ -205,23 +210,29 @@ class Analyse:
         if self.binned_analyses is not None:
             sigma = 0.8
             color = iter(cm.rainbow(np.linspace(0, 1, len(self.binned_analyses))))
+
             for i, binnings in enumerate(self.binned_analyses):
                 # data_smoothed = gaussian_filter(binnings.z_scores_asi, sigma)
                 c = next(color)
                 data_smoothed = gaussian_filter(binnings.z_scores, sigma)
                 contour = ax.contour(binnings.c2_plane, binnings.c1_plane, data_smoothed, levels=np.array([1.64]), colors=[c], origin='lower')
-
+                contour_truth = ax.contour(binnings.c2_plane, binnings.c1_plane, self.ellipse_truth(binnings.c2_plane, binnings.c1_plane),
+                           levels=np.array([0]), colors='k', origin='lower')
                 contour_points = contour.allsegs[0][0]
                 contour_distance = contour_points[:, 0] ** 2 + contour_points[:, 1] ** 2
                 dist_max_idx = np.argmax(contour_distance)
                 c_max = contour_points[dist_max_idx, :]
-                ax.scatter(*c_max, marker='o')
+                #ax.scatter(*c_max, marker='o')
                 slope = c_max[1]/c_max[0]
                 x = np.linspace(np.min(binnings.c2_plane), np.max(binnings.c2_plane), 100)
-                ax.plot(x, -0.21 * x, linestyle='dashed', color='k')
+                #ax.plot(x, -0.21 * x, linestyle='dashed', color='k')
 
                 h0, _ = contour.legend_elements()
                 contours.append(h0[0])
+
+                if i == 0:
+                    h0_truth, _ = contour_truth.legend_elements()
+                    contours.append(h0_truth[0])
 
                 contour_data = np.array(contour.allsegs[0][0])
                 contour_data[contour_data[:, 1] > 0][0, :]
@@ -230,6 +241,8 @@ class Analyse:
                     labels.append(r'$\rm{%d\;bin}$' % (len(binnings.bins) - 1))
                 else:
                     labels.append(r'$\rm{%d\;bins}$' % (len(binnings.bins)-1))
+                if i == 0:
+                    labels.append(r'$\rm{Truth}$')
 
         #self.z_scores_truth, self.z_scores_nn = self.load_z_scores()
 
@@ -285,7 +298,7 @@ class Analyse:
         ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
         ax.scatter(0, 0, marker='x', color='black', label=r'$\rm{SM}$')
         plt.tight_layout(pad=1.2)
-        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin_quad_test.pdf')
+        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin_quad_test_ellipse.pdf')
         #fig.savefig(os.path.join(self.plots_path, 'ellipses_diff_new_8.pdf'))
 
     def analyse1d(self):
