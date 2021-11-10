@@ -3,8 +3,76 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import quad_clas.core.xsec.vh_prod as vh_prod
+from quad_clas.core.quad_classifier_cluster import PredictorCross, PredictorLinear, PredictorQuadratic
+import os
+import torch
 
-events_sm = np.load('/Users/jaco/Documents/ML4EFT/data/events/sm/events_0.npy')
+path_lin_1 = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW3_lin_30_reps/'
+path_lin_2 = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHq3_lin_2_feat/'
+path_quad_1 = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW_quad_2_feat/'
+path_quad_2 = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHq3_quad_2_feat/'
+path_cross = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW_cHq3_2_feat/'
+
+n_models = 10
+architecture = [2, 30, 30, 30, 30, 30, 1]
+
+def get_nn_ratio(x, c1, c2, mc_run):
+    path_nn_lin_1 = os.path.join(path_lin_1, 'mc_run_{}', 'trained_nn.pt')
+    path_nn_lin_2 = os.path.join(path_lin_2, 'mc_run_{}', 'trained_nn.pt')
+    path_nn_quad_1 = os.path.join(path_quad_1, 'mc_run_{}', 'trained_nn.pt')
+    path_nn_quad_2 = os.path.join(path_quad_2, 'mc_run_{}', 'trained_nn.pt')
+    path_nn_cross = os.path.join(path_cross, 'mc_run_{}', 'trained_nn.pt')
+
+    with torch.no_grad():
+        n_lin_1 = PredictorLinear(architecture)
+        n_lin_1.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
+
+        mean, std = np.loadtxt(os.path.join(path_lin_1, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+
+        x_scaled = (x - mean) / std
+        n_lin_1_out = n_lin_1.n_alpha(x_scaled.float()) ** 2
+
+        #######
+
+        n_lin_2 = PredictorLinear(architecture)
+        n_lin_2.load_state_dict(torch.load(path_nn_lin_2.format(mc_run)))
+
+        mean, std = np.loadtxt(os.path.join(path_lin_2, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        x_scaled = (x - mean) / std
+        n_lin_2_out = n_lin_2.n_alpha(x_scaled.float()) ** 2
+
+        ########
+
+        n_quad_1 = PredictorQuadratic(architecture)
+        n_quad_1.load_state_dict(torch.load(path_nn_quad_1.format(mc_run)))
+
+        mean, std = np.loadtxt(os.path.join(path_quad_1, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        x_scaled = (x - mean) / std
+        n_quad_1_out = n_quad_1.n_beta(x_scaled.float()) ** 2
+
+        #######
+
+        n_quad_2 = PredictorQuadratic(architecture)
+        n_quad_2.load_state_dict(torch.load(path_nn_quad_2.format(mc_run)))
+
+        mean, std = np.loadtxt(os.path.join(path_quad_2, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        x_scaled = (x - mean) / std
+        n_quad_2_out = n_quad_2.n_beta(x_scaled.float()) ** 2
+
+        #######
+
+        n_cross = PredictorCross(architecture)
+        n_cross.load_state_dict(torch.load(path_nn_cross.format(mc_run)))
+
+        mean, std = np.loadtxt(os.path.join(path_cross, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        x_scaled = (x - mean) / std
+        n_cross_out = n_cross.n_gamma(x_scaled.float()) ** 2
+
+    r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out + c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_cross_out
+
+    return r
+
+events_sm = np.load('/data/theorie/jthoeve/event_generation/events/sm/events_0.npy')
 pseudo_data_full = events_sm[1:, :]
 luminosity = 60000
 
@@ -24,7 +92,6 @@ mh = 0.125
 
 def chi2_function(data, theory):
     return np.sum((data-theory) ** 2 / data)
-
 
 
 cHW_values = np.linspace(-0.3, 0.3, 10)
@@ -91,13 +158,14 @@ cHq3_values = np.linspace(-0.3, 0.3, 10)
 fig = plt.figure()
 likelihood_scan = []
 a = vh_prod.findCoeff(np.array([mz + mh, 4]))
+mc_run = 1
 for cHW in cHW_values:
     print(cHW)
     for cHq3 in cHq3_values:
         nu = vh_prod.nu_i(a, cHW, cHq3, luminosity, quad=True)
-        dsigma_dx = np.array([vh_prod.dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin=False, quad=True) for (mvh, y) in pseudo_data_2_feat[:5000,:]])
-        likelihood = -nu + pseudo_data_2_feat.shape[0] * np.mean(np.log(dsigma_dx))
-        likelihood_scan.append(likelihood)
+        log_r = get_nn_ratio(torch.tensor(pseudo_data_2_feat), cHW, cHq3, mc_run).numpy()
+        log_l = -nu + np.sum(log_r)
+        likelihood_scan.append(log_l)
 
 likelihood_scan = np.array(likelihood_scan)
 likelihood_scan = np.reshape(likelihood_scan, (len(cHW_values), len(cHq3_values)))
@@ -130,4 +198,4 @@ plt.scatter(0, 0, marker='o', label='SM', color='k')
 plt.legend()
 
 
-plt.show()
+plt.savefig('/data/theorie/jthoeve/Lunteren/nn_bounds.pdf')

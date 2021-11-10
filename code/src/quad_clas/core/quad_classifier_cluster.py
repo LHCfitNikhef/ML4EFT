@@ -205,7 +205,10 @@ class EventDataset(data.Dataset):
         y = 0.5 * np.log((q0 + q3) / (q0 - q3))
         return y
 
-    def rescale(self, mean, std):
+    def rescale(self):
+        self.events = (self.events - mean) / std
+
+    def standardize(self, mean, std):
         self.events = (self.events - mean) / std
 
     def get_mean_std(self):
@@ -248,8 +251,10 @@ class EventDataset(data.Dataset):
         data = np.load(path)
         if self.n_features == 2:
             events = data[1:self.n_dat + 1, :]
+            events = np.append(events, np.log(events[:, 0]).reshape(-1, 1), axis=1)
         else:
             events = data[1:self.n_dat + 1, 0].reshape(-1, 1)
+            np.append(events, np.log(events).reshape(-1, 1), axis=1)
         weights = data[0, 0] * np.ones((events.shape[0], 1))
 
         self.events = torch.tensor(events)
@@ -540,13 +545,57 @@ def train_classifier(
     )
 
 def plot_data(data_eft, data_sm):
-    f_0 = data_eft[0].events.numpy().reshape(1, -1)
-    f_1 = data_sm[0].events.numpy().reshape(1, -1)
 
-    fig = plt.figure(figsize=(10, 6))
-    plt.scatter(f_0, np.zeros(f_0.shape),  label='EFT')
-    plt.scatter(f_1, np.ones(f_1.shape), label='SM')
-    plt.legend()
+    from statsmodels.distributions.empirical_distribution import ECDF
+
+    mvh_data = data_eft[0].events[:, 0].numpy()
+
+    median_mvh = np.percentile(mvh_data, 50)
+    spread_mvh = max(np.abs(median_mvh - np.percentile(mvh_data, 84)), np.abs(median_mvh - np.percentile(mvh_data, 16)))
+    mvh_data_rescaled = (mvh_data - median_mvh)/ spread_mvh
+
+    log_mvh_data = np.log(mvh_data)
+    median_log_mvh = np.percentile(log_mvh_data, 50)
+    spread_log_mvh = max(np.abs(median_log_mvh - np.percentile(log_mvh_data, 84)), np.abs(median_log_mvh - np.percentile(log_mvh_data, 16)))
+    log_mvh_data_rescaled = (log_mvh_data - median_log_mvh) / spread_log_mvh
+
+    # overview plots
+    nrows = 3
+    ncols = 2
+    fig = plt.figure(figsize=(ncols * 8, nrows * 6))
+
+    ax = plt.subplot(nrows, ncols, 1)
+
+    mvh_min = np.min(mvh_data) - 0.1
+    mvh_max = np.percentile(mvh_data, 84)
+    ax.hist(mvh_data, bins=np.linspace(mvh_min, 2 * mvh_max, 20), density=False)
+    #ax.set_xlim(mvh_min, 5 * mvh_max)
+    ax.set_xlabel(r'$m_{VH}$')
+
+    ax = plt.subplot(nrows, ncols, 2)
+    mvh_min_resc = np.min(mvh_data_rescaled) - 0.1
+    mvh_max_resc = np.percentile(mvh_data_rescaled, 84)
+    ax.hist(mvh_data_rescaled, bins=np.linspace(mvh_min_resc, 2 * mvh_max_resc, 20), density=False)
+    # ax.set_xlim(mvh_min, 5 * mvh_max)
+    ax.set_xlabel(r'$m_{VH}\;(\rm{rescaled})$')
+
+    ax = plt.subplot(nrows, ncols, 3)
+    ax.hist(np.log(mvh_data), bins=40, density=False)
+    ax.set_xlabel(r'$\log m_{VH}$')
+
+    ax = plt.subplot(nrows, ncols, 4)
+    ax.hist(log_mvh_data_rescaled, bins=40, density=False)
+    ax.set_xlabel(r'$\log m_{VH}\;(\rm{rescaled})$')
+
+    ax = plt.subplot(nrows, ncols, 5)
+    ecdf = ECDF(mvh_data)
+    ax.hist(ecdf.y, bins=50, density=False)
+    ax.set_xlabel(r'$\rm{eCDF}(x)$')
+
+    ax = plt.subplot(nrows, ncols, 6)
+    ecdf = ECDF(mvh_data)
+    ax.hist((ecdf.y - np.mean(ecdf.y))/np.std(ecdf.y), bins=50, density=False)
+    ax.set_xlabel(r'$\rm{eCDF}(x)\;(\rm{rescaled})$')
     return fig
 
 def main(path, mc_run, **run_dict):
@@ -564,21 +613,25 @@ def main(path, mc_run, **run_dict):
 
     c1 = eft_dict[0]['value']
     c2 = eft_dict[1]['value']
+
+    # single coefficients
     if c1 != 0 and c2 == 0:
         eft_op = eft_dict[0]['op']
         eft_value = c1
     if c1 == 0 and c2 != 0:
         eft_op = eft_dict[1]['op']
         eft_value = c2
+
+    # cross terms
     if c1 != 0 and c2 != 0:
         eft_op =  eft_dict[0]['op'] + "_" + eft_dict[1]['op']
         eft_value = c1 * c2
 
-
-
     # initialise all paths to None, unless we run at pure quadratic or cross term level
     path_lin_1 = path_lin_2 = path_quad_1 = path_quad_2 = None
     eft_data_path = 'lin/{eft_coeff}/events_{mc_run}.npy'
+
+    # for pure quadratic and cross terms only: build the paths to the pretraind models
     if quadratic:
         path_lin_1 = run_dict['path_lin_1'].format(mc_run)
         eft_data_path = 'quad/{eft_coeff}/events_{mc_run}.npy'
@@ -591,19 +644,27 @@ def main(path, mc_run, **run_dict):
 
     path_dict_eft, path_dict_sm = {}, {}
 
-    mc_run_sm = int(mc_run) % 10
-    path_dict_sm[eft_value] = os.path.join(event_data_path, 'sm/events_{}.npy'.format(mc_run_sm))
-    path_dict_eft[eft_value] = os.path.join(event_data_path, eft_data_path.format(eft_coeff=eft_op, mc_run=mc_run))#'/Users/jaco/Documents/ML4EFT/data/events/linear_cHW/events_0.npy'
+    # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
+    # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
+    path_dict_sm[eft_value] = os.path.join(event_data_path, 'sm/events_{}.npy'.format(mc_run))
+    path_dict_eft[eft_value] = os.path.join(event_data_path, eft_data_path.format(eft_coeff=eft_op, mc_run=mc_run))
 
     c_values = path_dict_eft.keys()
 
-    # we construct an eft and a sm data set for each value of c in c_values and make a list out of it
+    # We construct an eft and a sm data set for each value of c in c_values and make a list out of it
+    # As of the new version of the code where only the sm and any non-zero point in EFT space are needed
+    # as an input, the list seems redundant, but this functionality is kept in case one would like to train
+    # on multiple EFT points.
+
     data_eft = [EventDataset(c, network_size[0], path_dict=path_dict_eft, n_dat=n_dat, hypothesis=0) for c in c_values]
     data_sm = [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in c_values]
     data_all = data_eft + data_sm
 
-    fig = plot_data(data_eft, data_sm)  # plot the event data
-    fig.savefig(os.path.join(path, 'plots/training_data.pdf'))
+    # uncomment below to plot the distribution of the training data
+    #fig = plot_data(data_eft, data_sm)  # plot the event data
+    #fig.savefig(os.path.join(path, 'plots/training_data.pdf'))
+
+
 
     # determine the mean and std of the feature(s) in our data set
     mean_list = np.array([dataset.get_mean_std()[0].numpy() for dataset in data_all])
@@ -616,7 +677,8 @@ def main(path, mc_run, **run_dict):
 
     # rescale the training data to increase the learning speed
     for dataset in data_all:
-        dataset.rescale(mean, std)
+        #dataset.standardize(mean, std)
+        dataset.rescale()
 
     # split each data set in training (50%) and validation (50%).
     data_split = [data.random_split(dataset, [int(len(dataset) / 2), int(len(dataset) / 2)]) for dataset in
@@ -629,6 +691,7 @@ def main(path, mc_run, **run_dict):
         data_val.append(dataset[1])
 
     # start the training
+    #TODO: shorten the code using kwargs
     train_classifier(path,
                      network_size,
                      data_train,

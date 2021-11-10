@@ -129,7 +129,7 @@ def dsigma_dmvh(mvh, cHW, cHq3, lin, quad):
 def sigma_bin(bins, cHW, cHq3, lin=False, quad=False):
     sigma_i = []
     for i in range(len(bins) - 1):
-        temp = integrate.fixed_quad(dsigma_dmvh_vec, bins[i], bins[i + 1], args=(cHW, cHq3, lin, quad), n=10)[0]
+        temp = integrate.fixed_quad(dsigma_dmvh_vec, bins[i], bins[i + 1], args=(cHW, cHq3, lin, quad), n=400)[0]
         sigma_i.append(temp)
     sigma_i = np.array(sigma_i)
     return sigma_i
@@ -137,14 +137,14 @@ def sigma_bin(bins, cHW, cHq3, lin=False, quad=False):
 
 def findCoeff(bins):
     sm = sigma_bin(bins, cHW=0, cHq3=0, lin=True)
-    c1_lin = (sigma_bin(bins, cHW=10, cHq3=0, lin=True, quad=False) - sm) / 10
-    c2_lin = (sigma_bin(bins, cHW=0, cHq3=10, lin=True, quad=False) - sm) / 10
+    c1_lin = (sigma_bin(bins, cHW=100, cHq3=0, lin=True, quad=False) - sm) / 100
+    c2_lin = (sigma_bin(bins, cHW=0, cHq3=100, lin=True, quad=False) - sm) / 100
 
-    c1_quad = (sigma_bin(bins, cHW=10, cHq3=0, lin=False, quad=True) - (sm + 10 * c1_lin)) / 10 ** 2
-    c2_quad = (sigma_bin(bins, cHW=0, cHq3=10, lin=False, quad=True) - (sm + 10 * c2_lin)) / 10 ** 2
+    c1_quad = (sigma_bin(bins, cHW=100, cHq3=0, lin=False, quad=True) - (sm + 100 * c1_lin)) / 100 ** 2
+    c2_quad = (sigma_bin(bins, cHW=0, cHq3=100, lin=False, quad=True) - (sm + 100 * c2_lin)) / 100 ** 2
 
-    c1_c2 = (sigma_bin(bins, cHW=10, cHq3=10, lin=False, quad=True) - (
-                sm + 10 * c1_lin + 10 ** 2 * c1_quad + 10 * c2_lin + 10 ** 2 * c2_quad)) / 10 ** 2
+    c1_c2 = (sigma_bin(bins, cHW=100, cHq3=100, lin=False, quad=True) - (
+                sm + 100 * c1_lin + 100 ** 2 * c1_quad + 100 * c2_lin + 100 ** 2 * c2_quad)) / 100 ** 2
 
     coeff = np.array([sm, c1_lin, c1_quad, c2_lin, c2_quad, c1_c2])
 

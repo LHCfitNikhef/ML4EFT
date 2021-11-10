@@ -79,14 +79,14 @@ if __name__ == "__main__":
         mh = 0.125
         binning_0 = np.linspace(mz + mh, 1.5, 20)
         binning_0 = np.append(binning_0, 4.0) # 20 bins
-        # binning_1 = np.linspace(mz + mh, 1.5, 10)
-        # binning_1 = np.append(binning_1, 4.0)  # 10 bins
-        # binning_2 = np.linspace(mz + mh, 1.5, 5)
-        # binning_2 = np.append(binning_2, 4.0)  # 5 bins
-        # binning_3 = np.linspace(mz + mh, 1.5, 1)
-        # binning_3 = np.append(binning_3, 4.0)  # 1 bins
+        binning_1 = np.linspace(mz + mh, 1.5, 10)
+        binning_1 = np.append(binning_1, 4.0)  # 10 bins
+        binning_2 = np.linspace(mz + mh, 1.5, 5)
+        binning_2 = np.append(binning_2, 4.0)  # 5 bins
+        binning_3 = np.linspace(mz + mh, 1.5, 1)
+        binning_3 = np.append(binning_3, 4.0)  # 1 bins
 
-        binnings_list = [binning_0]#, binning_1, binning_2, binning_3]
+        binnings_list = [binning_0, binning_1, binning_2, binning_3]
 
         extent = np.array([[-0.15, 0.1], [-0.5, 0.7]]) # y, x
         analysis = ana.Analyse(root_path, binnings=binnings_list,truth=False, fit=False, extent=extent, luminosity=60000)

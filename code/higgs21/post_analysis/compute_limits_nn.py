@@ -82,18 +82,20 @@ a = vh_prod.findCoeff(bins) # a * eft_point = xsec
 
 
 events_sm = np.load('/data/theorie/jthoeve/ML4EFT_higgs/events/p_value_scan/events_0.npy')
-eft_path = '/data/theorie/jthoeve/ML4EFT_higgs/events/z_scores/cHq3/events_{}.npy'
+eft_path = '/data/theorie/jthoeve/ML4EFT_higgs/events/z_scores/cHW/events_{}.npy'
 
-cHW = 0
+#cHW = 0
+cHq3=0
 n_exp = 10
 exp_size = 10000
 
-cHq3_values = [0.08, 0.06, 0.05, 0.04, 0.02, -0.04, -0.05, -0.06]
+#cHq3_values = [0.08, 0.06, 0.05, 0.04, 0.02, -0.04, -0.05, -0.06]
+cHW_values = [0.03, 0.02, 0.01, 0.005, -0.005, -0.01, -0.02, -0.03]
 mc_runs = 10
 for mc_run in range(1, mc_runs):
     z_scores = []
-    for i, cHq3 in enumerate(cHq3_values):
-        print(mc_run, cHq3)
+    for i, cHW in enumerate(cHW_values):
+        print(mc_run, cHW)
         events_eft = np.load(eft_path.format(i+1))
 
         eft_point = np.array([1, cHW, cHW ** 2, cHq3, cHq3 ** 2, cHW * cHq3])
@@ -136,6 +138,10 @@ for mc_run in range(1, mc_runs):
             z_scores.append(z_score)
 
     z_scores = np.array(z_scores)
-    z_scores = np.reshape(z_scores, (len(cHq3_values), -1))
-    np.save('/data/theorie/jthoeve/ML4EFT_higgs/code/z_scores/cHq3/nn/z_scores_{}.npy'.format(mc_run), z_scores)
+    z_scores = np.reshape(z_scores, (len(cHW_values), -1))
+
+    z_scores = np.concatenate((np.reshape(np.array(cHW_values), (len(cHW_values),-1)), z_scores), axis=1)
+    import pdb
+    pdb.set_trace()
+    np.save('/data/theorie/jthoeve/ML4EFT_higgs/code/z_scores/cHq3/nn/z_scores_{}_v2.npy'.format(mc_run), z_scores)
 

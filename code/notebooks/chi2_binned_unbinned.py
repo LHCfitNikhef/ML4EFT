@@ -8,14 +8,14 @@ pseudo_data_full = events_sm[1:, 0]
 mz = 91.188 * 10 ** -3  # z boson mass [TeV]
 mh = 0.125
 luminosity = 30000
-bins = np.array([mz+mh, 4])
+#bins = np.array([mz+mh, 4])
 #bins = np.append(bins, 4.0)
-a = vh_prod.findCoeff(bins)
-nu_i_sm = vh_prod.nu_i(a, 0, 0, luminosity, quad=True)
-nu_tot = np.sum(nu_i_sm)
+#a = vh_prod.findCoeff(bins)
+#nu_i_sm = vh_prod.nu_i(a, 0, 0, luminosity, quad=True)
+#nu_tot = np.sum(nu_i_sm)
 
-n_tot = np.random.poisson(nu_tot, 1)
-pseudo_data = np.random.choice(pseudo_data_full, n_tot, replace=False)
+#n_tot = np.random.poisson(nu_tot, 1)
+#pseudo_data = np.random.choice(pseudo_data_full, n_tot, replace=False)
 
 def chi2_function(data, theory):
     return np.sum((data-theory) ** 2 / data)

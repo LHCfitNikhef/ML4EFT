@@ -11,7 +11,7 @@ a = vh_prod.findCoeff(bins) # a * eft_point = xsec
 
 
 events_sm = np.load('/Users/jaco/Documents/ML4EFT/data/events/sm/events_0.npy')
-eft_path = '/Users/jaco/Documents/ML4EFT/data/z_scores/cHW_cHq3/events_{}.npy'
+eft_path = '/Users/jaco/Documents/ML4EFT/data/z_scores/cHW_cHq3_v2/events_{}.npy'
 z_scores = []
 tau_cs = []
 #cHW = 0
@@ -24,10 +24,12 @@ exp_size = 10000
 #cHW_values = [0.03, 0.02, 0.01, 0.005, -0.005, -0.01, -0.02, -0.03]
 
 # diag scan
-cHq3_values = np.array([0.2, 0.27752, 0.3])
-cHW_values = np.array([-0.21*cHq3 for cHq3 in cHq3_values])
+#cHq3_values = np.array([0.2, 0.27752, 0.3])
+#cHW_values = np.array([-0.21*cHq3 for cHq3 in cHq3_values])
+cHq3_values = np.array([0.02, 0.03, 0.04, 0.05, 0.06])
+cHW_values = 0.2 * cHq3_values
 for i, (cHW, cHq3) in enumerate(zip(cHW_values, cHq3_values)):
-
+    print(z_scores)
     events_eft = np.load(eft_path.format(i+1))
 
     eft_point = np.array([1, cHW, cHW ** 2, cHq3, cHq3 ** 2, cHW * cHq3])
@@ -40,7 +42,7 @@ for i, (cHW, cHq3) in enumerate(zip(cHW_values, cHq3_values)):
     nu_sm = x_sec_sm * luminosity
 
     for exp in range(n_exp):
-        print(cHW, cHq3, exp, z_scores)
+        print(cHW, cHq3, exp)
         rnd_idx = np.array([random.randint(1, len(events_sm)-2) for dummy in range(exp_size)])
         events_sm_sub = events_sm[rnd_idx, :]
         events_eft_sub = events_eft[rnd_idx, :]
@@ -66,16 +68,15 @@ for i, (cHW, cHq3) in enumerate(zip(cHW_values, cHq3_values)):
         mean_tau_c_H0 = np.mean(tau_c_H0)
         mean_tau_c_H1 = np.mean(tau_c_H1)
 
-        tau_cs.append(mean_tau_c_H0)
-        print(mean_tau_c_H0, mean_tau_c_H1)
+        #tau_cs.append(mean_tau_c_H0)
 
         mean_tau_c_sq_H0 = np.mean(tau_c_H0 ** 2)
         mean_tau_c_sq_H1 = np.mean(tau_c_H1 ** 2)
 
-        mean_tc_H1 = - nu_sm * mean_tau_c_H1
-        mean_tc_H0 = - nu_sm * mean_tau_c_H0
+        mean_tc_H1 = nu_eft - nu_sm - nu_sm * mean_tau_c_H1
+        mean_tc_H0 = nu_eft - nu_sm - nu_eft * mean_tau_c_H0
 
-        sigma_tc_H0 = np.sqrt(nu_sm * mean_tau_c_sq_H0)
+        sigma_tc_H0 = np.sqrt(nu_eft * mean_tau_c_sq_H0)
         sigma_tc_H1 = np.sqrt(nu_sm * mean_tau_c_sq_H1)
 
         z_score = (mean_tc_H1 - mean_tc_H0) / sigma_tc_H0
@@ -84,7 +85,7 @@ for i, (cHW, cHq3) in enumerate(zip(cHW_values, cHq3_values)):
 z_scores = np.array(z_scores)
 z_scores = np.reshape(z_scores, (len(cHW_values), -1))
 
-tau_cs = np.array(tau_cs)
-tau_cs = np.reshape(tau_cs, (len(cHW_values), -1))
+# tau_cs = np.array(tau_cs)
+# tau_cs = np.reshape(tau_cs, (len(cHW_values), -1))
 
-np.save('/Users/jaco/Documents/ML4EFT/code/output/limits/z_scores_truth_cHW_cHq3.npy', z_scores)
+np.save('/Users/jaco/Documents/ML4EFT/code/output/limits/z_scores_truth_cHW_cHq3_v3.npy', z_scores)

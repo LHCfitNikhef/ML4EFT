@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm, expon
+from matplotlib.pyplot import cm
 
 exp_rv = expon()
 norm_rv = norm(loc=3, scale=0.1)
@@ -54,12 +55,22 @@ for i in range (10000):
 pseudo_data_cont = np.array(pseudo_data_cont)
 
 # binned chi2 analysis
-nrows = 3
-ncols = 2
+nrows = 1
+ncols = 1
 fig = plt.figure(figsize=(ncols * 8, nrows * 6))
-for i, n_bins in enumerate([2, 5, 8, 15, 30]):
+contours = []
+labels = []
+x_min = []
+x_max = []
+y_min = []
+y_max = []
+
+xx, yy = np.meshgrid(mass_range, width_range, indexing='ij')
+bins = np.array([2, 5, 8, 15, 30])
+color = iter(cm.Set1(np.linspace(0, 1, len(bins))))
+for i, n_bins in enumerate(bins):
     #n_bins = 10
-    ax = plt.subplot(3, 2, i + 1)
+    #ax = plt.subplot(3, 2, i + 1)
     bins = np.linspace(np.min(x), np.max(x), n_bins + 1)
     #bins = np.array([0.1, 0.5, 3.5, 4.0])
 
@@ -79,25 +90,26 @@ for i, n_bins in enumerate([2, 5, 8, 15, 30]):
     chi2_array = np.array(chi2_array)
     chi2_array = np.reshape(chi2_array, (len(mass_range), len(width_range)))
 
-    xx, yy = np.meshgrid(mass_range, width_range, indexing='ij')
-    plt.contourf(yy, xx, chi2_array, np.array([np.min(chi2_array), np.min(chi2_array) + 2.3]), colors='C0',
-                 origin='lower', alpha=0.5)
-    plt.contourf(yy, xx, chi2_array, np.array([np.min(chi2_array) + 2.3, np.min(chi2_array) + 5.99]), colors='C2', origin='lower', alpha=0.5)
-    plt.contour(yy, xx, chi2_array, np.array([np.min(chi2_array) + 2.3]), colors='k',
-                origin='lower')
 
-    contour = plt.contour(yy, xx, chi2_array, np.array([np.min(chi2_array) + 5.99]), colors='k',
-                 origin='lower')
-    plt.xlabel('width')
-    plt.ylabel('mass')
+    #plt.contourf(yy, xx, chi2_array, np.array([np.min(chi2_array), np.min(chi2_array) + 2.3]), colors='C0',
+    #             origin='lower', alpha=0.5)
+    #plt.contourf(yy, xx, chi2_array, np.array([np.min(chi2_array) + 2.3, np.min(chi2_array) + 5.99]), colors='C2', origin='lower', alpha=0.5)
+    #plt.contour(yy, xx, chi2_array, np.array([np.min(chi2_array) + 2.3]), colors='k',
+    #            origin='lower')
+    c = next(color)
+    contour = plt.contour(yy, xx, chi2_array, np.array([np.min(chi2_array) + 5.99]), colors=[c],
+                 origin='lower', linestyles='dashed', linewidths=1.0)
+    contour_handle, _ = contour.legend_elements()
+    contours.append(contour_handle[0])
+    labels.append(r'$\rm{%d\;bins}$' % n_bins)
 
 
 
-    min_idx_0 = np.argmin(chi2_array) // chi2_array.shape[1] # axis 0
-    min_idx_1 = np.argmin(chi2_array) % chi2_array.shape[1] # axis 1
-    plt.scatter(width_range[min_idx_1], mass_range[min_idx_0], marker='x', label=r'$\chi^2_{\rm{min}}$', color='k')
-    plt.scatter(width_truth, mass_truth, marker='o', label='Truth', color='k')
-    plt.legend()
+    #min_idx_0 = np.argmin(chi2_array) // chi2_array.shape[1] # axis 0
+    #min_idx_1 = np.argmin(chi2_array) % chi2_array.shape[1] # axis 1
+    #plt.scatter(width_range[min_idx_1], mass_range[min_idx_0], marker='x', label=r'$\chi^2_{\rm{min}}$', color='k')
+    #plt.scatter(width_truth, mass_truth, marker='o', label='Truth', color='k')
+    #plt.legend()
 
 
     contour_line = contour.allsegs[0][0]
@@ -105,17 +117,18 @@ for i, n_bins in enumerate([2, 5, 8, 15, 30]):
     width_max, mass_max = np.max(contour_line, axis=0)
     delta_width = width_max - width_min
     delta_mass = mass_max - mass_min
-    x_min = width_min - 0.1 * delta_width
-    x_max = width_max + 0.1 * delta_width
 
-    if i !=0:
-        plt.xlim(max(x_min, np.min(width_range)), min(x_max, np.max(width_range)))
-        plt.ylim(max(mass_min - 0.1 * delta_mass, np.min(mass_range)), min(mass_max + 0.1 * delta_mass, np.max(mass_range)))
 
-    plt.title(r'$\chi^2_{\rm{binned}}\;(%d\;\rm{bins})$'%n_bins)
+    x_min.append(max(width_min - 0.1 * delta_width, np.min(width_range)))
+    x_max.append(min(width_max + 0.1 * delta_width, np.max(width_range)))
+
+    y_min.append(max(mass_min - 0.1 * delta_mass, np.min(mass_range)))
+    y_max.append(min(mass_max + 0.1 * delta_mass, np.max(mass_range)))
+
+plt.title(r'$95\%\rm{\;CL\;intervals}$')
 #     # ax.step(bins[:-1], pseudo_data, where='post')
 # plt.show()
-ax = plt.subplot(3, 2, 6)
+
 # plr analysis
 #fig = plt.figure()
 likelihood_scan = []
@@ -127,57 +140,47 @@ for m in mass_range:
 likelihood_scan = np.array(likelihood_scan)
 likelihood_scan = np.reshape(likelihood_scan, (len(mass_range), len(width_range)))
 
-mass_idx_hat = np.argmax(likelihood_scan) // likelihood_scan.shape[1] # axis 0
-width_idx_hat = np.argmax(likelihood_scan) % likelihood_scan.shape[1]
-mass_hat = mass_range[mass_idx_hat]
-width_hat = width_range[width_idx_hat]
+q_c_array = 2 * (- likelihood_scan + np.max(likelihood_scan))
 
-def q(x, mass, width, mass_hat, width_hat):
-    q_b = -2 * np.sum(np.log(pdf(x, mass, width))) + 2 * np.sum(np.log(pdf(x, mass_hat, width_hat)))
-    return q_b
+# mass_idx_hat = np.argmax(likelihood_scan) // likelihood_scan.shape[1] # axis 0
+# width_idx_hat = np.argmax(likelihood_scan) % likelihood_scan.shape[1]
+# mass_hat = mass_range[mass_idx_hat]
+# width_hat = width_range[width_idx_hat]
 
-q_c_array = []
-for m in mass_range:
-    for w in width_range:
-        q_c = q(pseudo_data_cont, m, w, mass_hat, width_hat)
-        q_c_array.append(q_c)
-q_c_array = np.array(q_c_array)
-q_c_array = np.reshape(q_c_array, (len(mass_range), len(width_range)))
 
 xx, yy = np.meshgrid(mass_range, width_range, indexing='ij')
-plt.contourf(yy, xx, q_c_array, np.array([np.min(q_c_array), np.min(q_c_array) + 2.3]), colors='C0',
-             origin='lower', alpha=0.5)
-plt.contourf(yy, xx, q_c_array, np.array([np.min(q_c_array) + 2.3, np.min(q_c_array) + 5.99]), colors='C2', origin='lower', alpha=0.5)
-plt.contour(yy, xx, q_c_array, np.array([np.min(q_c_array) + 2.3]), colors='k',
-            origin='lower')
+#plt.contourf(yy, xx, q_c_array, np.array([np.min(q_c_array), np.min(q_c_array) + 2.3]), colors='C0',
+#             origin='lower', alpha=0.5)
+#plt.contourf(yy, xx, q_c_array, np.array([np.min(q_c_array) + 2.3, np.min(q_c_array) + 5.99]), colors='C2', origin='lower', alpha=0.5)
+#plt.contour(yy, xx, q_c_array, np.array([np.min(q_c_array) + 2.3]), colors='k',
+#            origin='lower')
 
 contour = plt.contour(yy, xx, q_c_array, np.array([np.min(q_c_array) + 5.99]), colors='k',
-             origin='lower')
+             origin='lower', linestyles='dashed')
+
+contour_handle, _ = contour.legend_elements()
+contours.append(contour_handle[0])
+labels.append('Unbinned')
+
 plt.xlabel('width')
 plt.ylabel('mass')
+plt.title(r'$95\%\rm{\;CL\;intervals}$')
 
 
 
-min_idx_0 = np.argmin(q_c_array) // q_c_array.shape[1] # axis 0
-min_idx_1 = np.argmin(q_c_array) % q_c_array.shape[1] # axis 1
-plt.scatter(width_range[min_idx_1], mass_range[min_idx_0], marker='x', label=r'$\chi^2_{\rm{min}}$', color='k')
+#min_idx_0 = np.argmin(q_c_array) // q_c_array.shape[1] # axis 0
+#min_idx_1 = np.argmin(q_c_array) % q_c_array.shape[1] # axis 1
+#plt.scatter(width_range[min_idx_1], mass_range[min_idx_0], marker='x', label=r'$\chi^2_{\rm{min}}$', color='k')
 plt.scatter(width_truth, mass_truth, marker='o', label='Truth', color='k')
 plt.legend()
 
 
-contour_line = contour.allsegs[0][0]
-width_min, mass_min = np.min(contour_line, axis=0)
-width_max, mass_max = np.max(contour_line, axis=0)
-delta_width = width_max - width_min
-delta_mass = mass_max - mass_min
-x_min = width_min - 0.1 * delta_width
-x_max = width_max + 0.1 * delta_width
+plt.xlim(min(x_min), max(x_max))
+plt.ylim(min(y_min), max(y_max))
+plt.legend(contours, labels, fontsize=15, frameon=False, loc='best')
 
-plt.xlim(max(x_min, np.min(width_range)), min(x_max, np.max(width_range)))
-plt.ylim(max(mass_min - 0.1 * delta_mass, np.min(mass_range)), min(mass_max + 0.1 * delta_mass, np.max(mass_range)))
+#plt.title('Unbinned analysis')
 
-plt.title('Unbinned analysis')
-
-
-fig.savefig('/Users/jaco/Documents/ML4EFT/code/notebooks/chi_toy_model_plots/chi2_binned_unbinned_2d_v5.pdf')
+plt.show()
+#fig.savefig('/Users/jaco/Documents/ML4EFT/code/notebooks/chi_toy_model_plots/chi2_binned_unbinned_2d_v5.pdf')
 
