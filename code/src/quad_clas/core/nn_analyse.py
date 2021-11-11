@@ -56,12 +56,6 @@ def decision_function(x, c, lin=False, quad=False):
     return 1 / (1 + ratio)
 
 
-#
-# def plot_likelihood_ratio_1D(x, cHW, cHq3, lin=False, quad=False):
-#     y = [1 / (1 + likelihood_ratio_1D(x_i, cHW, cHq3, lin=lin, quad=quad)) for x_i in x]
-#     return np.array(y)
-
-
 def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
                         path_lin_1=None,
                         path_lin_2=None,
@@ -69,7 +63,8 @@ def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
                         path_quad_2=None):
 
     # Set up coordinates and compute f
-    x_unscaled = torch.from_numpy(x).unsqueeze(-1)
+    x_unscaled = torch.from_numpy(x)
+    #x_unscaled = torch.cat((x_unscaled, torch.zeros(len(x_unscaled), 1)), dim=1)
     x = (x_unscaled - mean) / std  # rescale the inputs
 
     # Be careful to use the same network architecture as during training

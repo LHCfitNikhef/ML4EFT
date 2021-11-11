@@ -205,10 +205,7 @@ class EventDataset(data.Dataset):
         y = 0.5 * np.log((q0 + q3) / (q0 - q3))
         return y
 
-    def rescale(self):
-        self.events = (self.events - mean) / std
-
-    def standardize(self, mean, std):
+    def rescale(self, mean, std):
         self.events = (self.events - mean) / std
 
     def get_mean_std(self):
@@ -219,39 +216,12 @@ class EventDataset(data.Dataset):
         self.std = torch.std(self.events, dim=0)
         return self.mean, self.std
 
-    def find_min_max(self):
-        """
-        Find the minimum and maximum of the data
-        """
-
-        min_values, max_values = [], []
-
-        for c_i in self.c_values:
-            dataset_eft = self.data_eft['{}'.format(c_i)][0]
-            dataset_sm = self.data_sm['{}'.format(c_i)][0]
-            min_value_eft, _ = torch.min(dataset_eft, dim=0)
-            max_value_eft, _ = torch.max(dataset_eft, dim=0)
-            min_value_sm, _ = torch.min(dataset_sm, dim=0)
-            max_value_sm, _ = torch.max(dataset_sm, dim=0)
-
-            self.min_value, _ = torch.min(torch.stack((min_value_eft, min_value_sm)), dim=0)
-            min_values.append(self.min_value)
-
-            self.max_value, _ = torch.max(torch.stack((max_value_eft, max_value_sm)), dim=0)
-            max_values.append(self.max_value)
-
-        min_values = torch.stack(min_values)
-        max_values = torch.stack(max_values)
-
-        self.min_value, _ = torch.min(min_values, dim=0)
-        self.max_value, _ = torch.max(max_values, dim=0)
-
     def event_loader(self, path):
 
         data = np.load(path)
         if self.n_features == 2:
             events = data[1:self.n_dat + 1, :]
-            events = np.append(events, np.log(events[:, 0]).reshape(-1, 1), axis=1)
+            #events = np.append(events, np.log(events[:, 0]).reshape(-1, 1), axis=1)
         else:
             events = data[1:self.n_dat + 1, 0].reshape(-1, 1)
             np.append(events, np.log(events).reshape(-1, 1), axis=1)
@@ -263,49 +233,13 @@ class EventDataset(data.Dataset):
 
         print("Data loaded")
 
-
-    def lhe_loader(self, path):
-        """
-        Les Houches Event file reader
-        """
-        #weight = []
-        cnt = 0
-        data = np.load(os.path.join(path, 'event_data.npy'))
-        if self.n_features == 2:
-            events = data[:self.n_dat, :-1].reshape(-1, 1)
-        else:
-            events = data[:self.n_dat, 0].reshape(-1, 1)
-        weights = data[:self.n_dat, -1].reshape(-1, 1)
-
-        print("mean: ", np.mean(events))
-        print("mean + 5 sigma: ", np.mean(events) + 5*np.std(events))
-
-        # for e in pylhe.readLHE(path):
-        #     mtt = self.invariant_mass(e.particles[-1], e.particles[-2])
-        #     if self.n_features == 2:
-        #         y = self.rapidity(e.particles[-1], e.particles[-2])
-        #         self.event_data.append([mtt, y])
-        #     if self.n_features == 1:
-        #         self.event_data.append([mtt])
-        #     weight.append(e.eventinfo.weight)
-        #
-        #     cnt += 1
-        #     if cnt == self.n_dat:
-        #         break
-        print("Data loaded")
-
-        self.events = torch.tensor(events)
-        self.weights = torch.tensor(weights)/self.n_dat
-        self.labels = torch.ones(self.n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(self.n_dat).unsqueeze(-1)
-
-
     def load_events(self):
         """
         Load the datasets (eft and sm) from the les Houches event files.
         """
         path_to_sample = self.path_dict[self.c]
         self.event_loader(path_to_sample)
-        #self.lhe_loader(path_to_sample)
+
 
     def visualize(self):
         f1 = plt.figure()
@@ -373,14 +307,16 @@ def plot_training_report(model, train_loss, val_loss, path, architecture, c1, c2
 
     mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
     x = np.linspace(mh + mz + 1e-2, 1, 100)
-    f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, 2, 2, mean, std, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+    x = np.stack((x, np.zeros(len(x))), axis=-1)
 
-    # f_ana = axs.plot_likelihood_ratio_1D(x, 2, 2, lin=True, quad=False) if path_lin is None else axs.plot_likelihood_ratio_1D(x, 2, 2, lin=False, quad=True)
-    f_ana = axs.plot_likelihood_ratio_1D(x, 2, 2, lin=False,
-                                         quad=True)
+    # TODO: when only one dimension: remember to integrate over y
+    f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c1, c2, mean, std, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
 
-    ax.plot(x, f_ana, '--', c='red', label=r'$\rm{Truth}$')
-    ax.plot(x, f_pred, lw=2, label=r'$\rm{NN}$')
+    # TODO: generalise to any order
+    f_ana = analyse.decision_function(x, np.array([c1, c2]), lin=True,quad=False)
+
+    ax.plot(x[:,0].flatten(), f_ana, '--', c='red', label=r'$\rm{Truth}$')
+    ax.plot(x[:,0].flatten(), f_pred, lw=2, label=r'$\rm{NN}$')
     plt.legend()
 
     plt.ylabel(r'$f\;(m_{VH}, c)$')
@@ -472,20 +408,22 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         # validation loss increases during the epoch. If the counter increases for 10 epochs straight,
         # stop the training.
 
-        # if loss_val > loss_val_old and epoch > 1:
-        #     overfit_counter += 1
-        #
-        # if overfit_counter == patience:
-        #     stopping_point = epoch - patience
-        #     shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
-        #     break
+        if loss_val > loss_val_old and epoch > 1:
+            overfit_counter += 1
+
+        if overfit_counter == patience:
+            stopping_point = epoch - patience
+            shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
+            break
 
         loss_val_old = loss_val
         iterations += 1
 
     # produce training report
-    plot_training_report(model, loss_list_train, loss_list_val, path, architecture, 2, 2, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
 
+    plot_training_report(model, loss_list_train, loss_list_val, path, architecture, eft_value_1/10, eft_value_2/10, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+
+    # TODO: fix the animation option, it thros a TypeError: 'float' object is not iterable (10/11/21)
     if animate:
         animate_performance(path, architecture, 2, 0, iterations)
 
@@ -664,8 +602,6 @@ def main(path, mc_run, **run_dict):
     #fig = plot_data(data_eft, data_sm)  # plot the event data
     #fig.savefig(os.path.join(path, 'plots/training_data.pdf'))
 
-
-
     # determine the mean and std of the feature(s) in our data set
     mean_list = np.array([dataset.get_mean_std()[0].numpy() for dataset in data_all])
     mean = np.mean(mean_list, axis=0)
@@ -677,8 +613,7 @@ def main(path, mc_run, **run_dict):
 
     # rescale the training data to increase the learning speed
     for dataset in data_all:
-        #dataset.standardize(mean, std)
-        dataset.rescale()
+        dataset.rescale(mean, std)
 
     # split each data set in training (50%) and validation (50%).
     data_split = [data.random_split(dataset, [int(len(dataset) / 2), int(len(dataset) / 2)]) for dataset in
