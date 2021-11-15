@@ -6,8 +6,63 @@ import os
 
 import quad_clas.core.xsec.vh_prod as vh_prod
 import quad_clas.core.quad_classifier_cluster as quad_classifier_cluster
+import quad_clas.core.nn_analyse as analysis
 
 cmap = copy.copy(plt.get_cmap("seismic"))
+
+def coeff_comp():
+
+    s = 14 ** 2
+    mvh_min, mvh_max = 0.3, 2
+    y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
+
+    x_spacing, y_spacing = 1e-2, 0.01
+    mvh_span = np.arange(mvh_min, mvh_max, x_spacing)
+    y_span = np.arange(y_min, y_max, y_spacing)
+
+    mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
+    grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
+
+    ratio_truth_c1 = analysis.likelihood_ratio_truth(grid, np.array([10, 0]), lin=True)
+    ratio_truth_c2 = analysis.likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
+    mask = ratio_truth_c1 == 0
+
+    n_alpha = np.ma.masked_where(mask, (1 - ratio_truth_c1) / 10)
+    n_beta = np.ma.masked_where(mask, (1 - ratio_truth_c2) / 10)
+
+    cmap = copy.copy(plt.get_cmap("GnBu"))
+    cmap.set_bad(color='white')
+
+    # n_alpha
+    fig, ax = plt.subplots(figsize=(8, 7))
+    im = ax.imshow(n_alpha.reshape(xx.shape), extent=[mvh_min, mvh_max, y_min, y_max],
+                         origin='lower', cmap=cmap, aspect=(mvh_max - mvh_min) / (y_max - y_min),
+                         interpolation='quadric')
+
+    cbar = fig.colorbar(im, ax=ax, shrink=0.9)
+    cbar.minorticks_on()
+    plt.xlabel(r'$m_{ZH}\;\rm{[TeV]}$')
+    plt.ylabel(r'$\rm{Rapidity}$')
+    plt.title(r'$n_{\alpha}$')
+    plt.show()
+
+    # n_beta
+    fig, ax = plt.subplots(figsize=(8, 7))
+    im = ax.imshow(n_beta.reshape(xx.shape), extent=[mvh_min, mvh_max, y_min, y_max],
+                   origin='lower', cmap=cmap, aspect=(mvh_max - mvh_min) / (y_max - y_min),
+                   interpolation='quadric')
+
+    cbar = fig.colorbar(im, ax=ax, shrink=0.9)
+    cbar.minorticks_on()
+    plt.xlabel(r'$m_{ZH}\;\rm{[TeV]}$')
+    plt.ylabel(r'$\rm{Rapidity}$')
+    plt.title(r'$n_{\beta}$')
+
+    plt.show()
+
+coeff_comp()
+
+#%%
 
 def likelihood_ratio(y, mvh, c, lin, quad):
     """
@@ -43,7 +98,8 @@ x_span = np.arange(mvh_min, mvh_max, x_spacing)
 y_span = np.arange(y_min, y_max, y_spacing)
 
 xx, yy = np.meshgrid(x_span, y_span)
-grid_unscaled = torch.Tensor(np.c_[xx.ravel(), yy.ravel()])
+grid_unscaled = np.c_[xx.ravel(), yy.ravel()]
+grid_unscaled_tensor = torch.Tensor(grid_unscaled)
 
 c = 2
 network_size = [2, 30, 30, 30, 30, 30, 1]
@@ -62,7 +118,7 @@ for rep_nr in range(1, mc_runs + 1):
     # load all the parameters into the trained network
     loaded_model.load_state_dict(torch.load(network_path))
 
-    grid = (grid_unscaled - mean) / std
+    grid = (grid_unscaled_tensor - mean) / std
 
     f_pred = loaded_model.forward(grid.float(), c)
     f_pred = f_pred.view(xx.shape).detach().numpy()
