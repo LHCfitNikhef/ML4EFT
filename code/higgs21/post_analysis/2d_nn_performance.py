@@ -58,8 +58,8 @@ def coeff_comp():
     # models
 
     network_size = [2, 30, 30, 30, 30, 30, 1]
-    #model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHq3_lin_v2/mc_run_{mc_run}'
-    model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_test/mc_run_{mc_run}'
+    model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHq3_lin_v2/mc_run_{mc_run}'
+    #model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_test/mc_run_{mc_run}'
 
     n_betas = []
     mc_runs = 30
@@ -85,7 +85,7 @@ def coeff_comp():
     n_beta_low = np.percentile(n_betas, 16, axis=0)
     n_beta_unc = (n_beta_high - n_beta_low) / 2
 
-    fig1 = plot_heatmap(n_alpha_truth/n_beta_median,
+    fig1 = plot_heatmap(n_beta_truth/n_beta_median,
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
                         ylabel=r'$\rm{Rapidity}$',
                         title=r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$',
@@ -94,9 +94,9 @@ def coeff_comp():
                         vmin=0.95,
                         vmax=1.05)
 
-    fig1.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/15_11/n_alpha_ratio.pdf')
+    fig1.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/16_11/n_beta_ratio.pdf')
 
-    fig2 = plot_heatmap(np.abs((n_alpha_truth - n_beta_median) / n_beta_unc),
+    fig2 = plot_heatmap(np.abs((n_beta_truth - n_beta_median) / n_beta_unc),
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
                         ylabel=r'$\rm{Rapidity}$',
                         title=r'$\rm{Pull}$',
@@ -105,7 +105,7 @@ def coeff_comp():
                         vmax=2,
                         cmap='seismic')
 
-    fig2.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/15_11/n_alpha_ratio_pull.pdf')
+    fig2.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/16_11/n_beta_ratio_pull.pdf')
 
     import pdb
     pdb.set_trace()

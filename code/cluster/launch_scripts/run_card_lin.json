@@ -1,13 +1,13 @@
 {
-  "name": "test",
-  "epochs": 200,
+  "name": "test_v10",
+  "epochs": 500,
   "input_size": 2,
   "output_size": 1,
   "hidden_sizes": [30, 30, 30, 30, 30],
-  "n_dat": 10000,
+  "n_dat": 50000,
   "quadratic": 0,
   "cross_term": 0,
-  "animation": 1,
+  "animation": 0,
   "coeff": [{"op": "cHW", "value": 10.0}, {"op": "cHq3", "value": 0}],
   "event_data": "/Users/jaco/Documents/ML4EFT/data/events"
 }

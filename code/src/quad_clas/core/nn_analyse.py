@@ -6,18 +6,20 @@ import sys
 import copy
 import matplotlib.gridspec as gridspec
 from matplotlib import animation
+import os
 
 # import own pacakges
 from . import quad_classifier_cluster as quad_clas
 from quad_clas.core.xsec import tt_prod as axs
 from quad_clas.core.xsec import vh_prod
+from quad_clas.core.quad_classifier_cluster import PredictorCross, PredictorLinear, PredictorQuadratic
 
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
 
-def likelihood_ratio(x, c, lin=False, quad=False):
+def likelihood_ratio_truth(x, c, lin=False, quad=False):
     """
     Compute the 1D analytic likelihood ratio r(x, c)
 
@@ -47,14 +49,104 @@ def likelihood_ratio(x, c, lin=False, quad=False):
         raise NotImplementedError("No more than two features are currently supported")
 
     dsigma_0, dsigma_1 = np.array(dsigma_0), np.array(dsigma_1)
-    ratio = dsigma_0 / dsigma_1
+
+    ratio = np.divide(dsigma_0, dsigma_1, out=np.zeros_like(dsigma_0), where=dsigma_1 != 0)
+    #ratio = dsigma_0 / dsigma_1
 
     return ratio.flatten()
 
-def decision_function(x, c, lin=False, quad=False):
+def decision_function_truth(x, c, lin=False, quad=False):
     ratio = likelihood_ratio(x, c, lin, quad)
     return 1 / (1 + ratio)
 
+def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, quad=False):
+    """
+
+    Parameters
+    ----------
+    x : numpy.ndarray, shape=(M, N)
+        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    c : numpy.ndarray, shape=(M,)
+        EFT point in M dimensions, e.g c = (cHW, cHq3)
+    path_to_models: dict
+        Path to the nn model root directory
+    mc_run: int
+        Monte Carlo replica number
+    lin: bool, optional
+        Set to False by default. Turn on for linear corrections.
+    quad: bool, optional
+        Set to False by default. Turn on for quadratic corrections.
+
+    Returns
+    -------
+
+    """
+    cHW, cHq3 = c
+
+    path_nn_lin = path_to_models['lin'] # shape = (len(c), )
+    # path_nn_quad = path_to_models['quad'] # shape = (len(c), )
+    # path_nn_cross = path_to_models['cross'] # TODO: shape
+
+    with torch.no_grad():
+
+        n_lin_1 = PredictorLinear(architecture)
+
+        path_nn_lin_1 = os.path.join(path_nn_lin[0], 'mc_run_{}', 'trained_nn.pt')
+        n_lin_1.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
+        mean, std = np.loadtxt(os.path.join(path_nn_lin[0], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+
+        x_scaled = (x - mean) / std
+        n_lin_1_out = n_lin_1.n_alpha(x_scaled.float())
+
+        #######
+
+        n_lin_2 = PredictorLinear(architecture)
+
+        path_nn_lin_2 = os.path.join(path_nn_lin[1], 'mc_run_{}', 'trained_nn.pt')
+        n_lin_2.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
+        mean, std = np.loadtxt(os.path.join(path_nn_lin[1], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+
+        x_scaled = (x - mean) / std
+        n_lin_2_out = n_lin_2.n_alpha(x_scaled.float())
+
+        ########
+
+        # n_quad_1 = PredictorQuadratic(architecture)
+        # n_quad_1.load_state_dict(torch.load(path_nn_quad_1.format(mc_run)))
+        #
+        # mean, std = np.loadtxt(os.path.join(path_quad_1, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        # x_scaled = (x - mean) / std
+        # n_quad_1_out = n_quad_1.n_beta(x_scaled.float()) ** 2
+        #
+        # #######
+        #
+        # n_quad_2 = PredictorQuadratic(architecture)
+        # n_quad_2.load_state_dict(torch.load(path_nn_quad_2.format(mc_run)))
+        #
+        # mean, std = np.loadtxt(os.path.join(path_quad_2, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        # x_scaled = (x - mean) / std
+        # n_quad_2_out = n_quad_2.n_beta(x_scaled.float()) ** 2
+        #
+        # #######
+        #
+        # n_cross = PredictorCross(architecture)
+        # n_cross.load_state_dict(torch.load(path_nn_cross.format(mc_run)))
+        #
+        # mean, std = np.loadtxt(os.path.join(path_cross, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        # x_scaled = (x - mean) / std
+        # n_cross_out = n_cross.n_gamma(x_scaled.float()) ** 2
+
+    #r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out #+ c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_cross_out
+
+    r = 1 + cHW * n_lin_1_out + cHq3 * n_lin_2_out
+    lin_nn = [n_lin_1_out, n_lin_2_out]
+
+    return r, [lin_nn]
+
+def decision_function_nn(x, c, mc_run, lin=False, quad=False):
+    ratio = likelihood_ratio_nn(x, c, lin, quad)
+    return 1 / (1 + ratio)
 
 def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
                         path_lin_1=None,

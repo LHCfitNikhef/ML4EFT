@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 from matplotlib import rc
 from torch import nn
 import shutil
-from . import nn_analyse as analyse
+#from . import nn_analyse as analyse
 from quad_clas.core.xsec import tt_prod as axs
 
 #matplotlib.use('PDF')
@@ -284,46 +284,46 @@ class EventDataset(data.Dataset):
         return data_sample, weight_sample, label_sample
 
 
-def plot_training_report(model, train_loss, val_loss, path, architecture, c1, c2,
-                         path_lin_1=None,
-                         path_lin_2=None,
-                         path_quad_1=None,
-                         path_quad_2=None):
-
-    # loss plot
-    fig = plt.figure()
-    plt.plot(np.array(train_loss), label='train')
-    plt.plot(np.array(val_loss), label='val')
-    plt.xlabel('epochs')
-    plt.ylabel('loss')
-    plt.legend()
-    fig.savefig(path + 'plots/loss.pdf')
-
-    # f accuracy plot
-
-    # First set up the figure, the axis, and the plot element we want to animate
-    fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-    ax = plt.axes(ylim=(0, 1))
-
-    mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
-    x = np.linspace(mh + mz + 1e-2, 1, 100)
-    x = np.stack((x, np.zeros(len(x))), axis=-1)
-
-    # TODO: when only one dimension: remember to integrate over y
-    f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c1, c2, mean, std, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
-
-    # TODO: generalise to any order
-    f_ana = analyse.decision_function(x, np.array([c1, c2]), lin=True,quad=False)
-
-    ax.plot(x[:,0].flatten(), f_ana, '--', c='red', label=r'$\rm{Truth}$')
-    ax.plot(x[:,0].flatten(), f_pred, lw=2, label=r'$\rm{NN}$')
-    plt.legend()
-
-    plt.ylabel(r'$f\;(m_{VH}, c)$')
-    plt.xlabel(r'$m_{VH}\;[\mathrm{TeV}]$')
-    # plt.xlim((mtt_min, mtt_max))
-    plt.ylim((0, 1))
-    fig.savefig(path + 'plots/f_perf.pdf')
+# def plot_training_report(model, train_loss, val_loss, path, architecture, c1, c2,
+#                          path_lin_1=None,
+#                          path_lin_2=None,
+#                          path_quad_1=None,
+#                          path_quad_2=None):
+#
+#     # loss plot
+#     fig = plt.figure()
+#     plt.plot(np.array(train_loss), label='train')
+#     plt.plot(np.array(val_loss), label='val')
+#     plt.xlabel('epochs')
+#     plt.ylabel('loss')
+#     plt.legend()
+#     fig.savefig(path + 'plots/loss.pdf')
+#
+#     # f accuracy plot
+#
+#     # First set up the figure, the axis, and the plot element we want to animate
+#     fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
+#     ax = plt.axes(ylim=(0, 1))
+#
+#     mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
+#     x = np.linspace(mh + mz + 1e-2, 2.5, 100)
+#     x = np.stack((x, np.zeros(len(x))), axis=-1)
+#
+#     # TODO: when only one dimension: remember to integrate over y
+#     f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c1, c2, mean, std, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+#
+#     # TODO: generalise to any order
+#     f_ana = analyse.decision_function(x, np.array([c1, c2]), lin=True,quad=False)
+#
+#     ax.plot(x[:,0].flatten(), f_ana, '--', c='red', label=r'$\rm{Truth}$')
+#     ax.plot(x[:,0].flatten(), f_pred, lw=2, label=r'$\rm{NN}$')
+#     plt.legend()
+#
+#     plt.ylabel(r'$f\;(m_{VH}, c)$')
+#     plt.xlabel(r'$m_{VH}\;[\mathrm{TeV}]$')
+#     # plt.xlim((mtt_min, mtt_max))
+#     plt.ylim((0, 1))
+#     fig.savefig(path + 'plots/f_perf.pdf')
 
 
 def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture, animate,
@@ -421,7 +421,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
 
     # produce training report
 
-    plot_training_report(model, loss_list_train, loss_list_val, path, architecture, eft_value_1/10, eft_value_2/10, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+    #plot_training_report(model, loss_list_train, loss_list_val, path, architecture, eft_value_1/10, eft_value_2/10, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
 
     # TODO: fix the animation option, it thros a TypeError: 'float' object is not iterable (10/11/21)
     if animate:
