@@ -326,6 +326,18 @@ class EventDataset(data.Dataset):
 #     fig.savefig(path + 'plots/f_perf.pdf')
 
 
+def weight_reset(m):
+    """
+    Reset the weights and biases associated with the model ``m``.
+
+    Parameters
+    ----------
+    m: MLP
+        Model of type :py:meth:`MLP <MLP>`.
+    """
+    if isinstance(m, nn.Linear):
+        m.reset_parameters()
+
 def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture, animate,
                   path_lin_1=None,
                   path_lin_2=None,
@@ -346,6 +358,14 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
     # outer loop that runs over the number of epochs
     iterations = 0
     for epoch in range(1, n_epochs + 1):
+
+        # check for plateau
+        if len(loss_list_train) > 10:
+            # if the loss after the first epoch queals the latest loss, we reset the weights
+            if loss_list_train[1] == loss_list_train[-1]:
+                print("Detected stagant training, reset the weights")
+                model.apply(weight_reset)
+
         loss_train, loss_val = 0.0, 0.0
 
         # We save the model parameters at the start of each epoch

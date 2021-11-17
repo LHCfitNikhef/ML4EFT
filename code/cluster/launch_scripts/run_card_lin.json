@@ -1,7 +1,7 @@
 {
   "name": "test_v11",
   "epochs": 500,
-  "lr": 1e-4,
+  "lr": 1e-3,
   "n_batches": 4,
   "input_size": 2,
   "output_size": 1,
