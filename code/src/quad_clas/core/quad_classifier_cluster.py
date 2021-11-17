@@ -11,12 +11,13 @@ import numpy as np
 import datetime
 import json
 import os
+import time
 # matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
 from matplotlib import rc
 from torch import nn
 import shutil
-#from . import nn_analyse as analyse
+import quad_clas.core.nn_analyse as analyse
 from quad_clas.core.xsec import tt_prod as axs
 
 #matplotlib.use('PDF')
@@ -301,50 +302,49 @@ def plot_loss(train_loss, val_loss):
     """
 
     fig = plt.figure()
-    plt.plot(np.array(train_loss), label=r'$\rm{Train}$')
-    plt.plot(np.array(val_loss), label=r'$\rm{Val}$')
+    plt.plot(np.array(train_loss[-50:]), label=r'$\rm{Train}$')
+    plt.plot(np.array(val_loss[-50:]), label=r'$\rm{Val}$')
     plt.xlabel(r'$\rm{Epochs}$')
     plt.ylabel(r'$\rm{Loss}$')
     plt.legend()
+    plt.yscale('log')
     plt.tight_layout()
     return fig
-
 
 def plot_training_report(model, train_loss, val_loss, path, architecture, c1, c2,
                          path_lin_1=None,
                          path_lin_2=None,
                          path_quad_1=None,
                          path_quad_2=None):
+    """
+    Produce a training report
+
+    Parameters
+    ----------
+    model
+    train_loss
+    val_loss
+    path
+    architecture
+    c1
+    c2
+    path_lin_1
+    path_lin_2
+    path_quad_1
+    path_quad_2
+    """
+
+    training_report_path = path + 'plots/training_report/'
+    if not os.path.exists(training_report_path):
+        os.makedirs(training_report_path)
 
     # loss plot
     fig = plot_loss(train_loss, val_loss)
-    fig.savefig(path + 'plots/loss.pdf')
+    fig.savefig(training_report_path + 'loss.pdf')
 
     # f accuracy plot
-
-    # First set up the figure, the axis, and the plot element we want to animate
-    # fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-    # ax = plt.axes(ylim=(0, 1))
-    #
-    # mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
-    # x = np.linspace(mh + mz + 1e-2, 2.5, 100)
-    # x = np.stack((x, np.zeros(len(x))), axis=-1)
-    #
-    # # TODO: when only one dimension: remember to integrate over y
-    # f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c1, c2, mean, std, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
-    #
-    # # TODO: generalise to any order
-    # f_ana = analyse.decision_function(x, np.array([c1, c2]), lin=True,quad=False)
-    #
-    # ax.plot(x[:,0].flatten(), f_ana, '--', c='red', label=r'$\rm{Truth}$')
-    # ax.plot(x[:,0].flatten(), f_pred, lw=2, label=r'$\rm{NN}$')
-    # plt.legend()
-    #
-    # plt.ylabel(r'$f\;(m_{VH}, c)$')
-    # plt.xlabel(r'$m_{VH}\;[\mathrm{TeV}]$')
-    # # plt.xlim((mtt_min, mtt_max))
-    # plt.ylim((0, 1))
-    # fig.savefig(path + 'plots/f_perf.pdf')
+    fig = analyse.coeff_comp(path, architecture, c1, c2)
+    fig.savefig(training_report_path + 'performance.pdf')
 
 
 def weight_reset(m):
@@ -359,7 +359,7 @@ def weight_reset(m):
     if isinstance(m, nn.Linear):
         m.reset_parameters()
 
-def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture, animate,
+def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, architecture, training_report, animate,
                   path_lin_1=None,
                   path_lin_2=None,
                   path_quad_1=None,
@@ -384,7 +384,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         if len(loss_list_train) > 10:
             # if the loss after the first epoch queals the latest loss, we reset the weights
             if loss_list_train[1] == loss_list_train[-1]:
-                print("Detected stagant training, reset the weights")
+                logging.info("Detected stagant training, reset the weights")
                 model.apply(weight_reset)
 
         loss_train, loss_val = 0.0, 0.0
@@ -449,11 +449,13 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
             break
 
         # check whether the network is overfitting by increasing the overfit_counter by one if the
-        # validation loss increases during the epoch. If the counter increases for 10 epochs straight,
-        # stop the training.
+        # validation loss increases during the epoch. If the counter increases for patience epochs straight
+        # the training is stopped
 
-        if loss_val > loss_val_old and epoch > 1:
+        if loss_val > min(loss_list_val) and epoch > 1:
             overfit_counter += 1
+        else:
+            overfit_counter = 0
 
         if overfit_counter == patience:
             stopping_point = epoch - patience
@@ -464,18 +466,20 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         iterations += 1
 
     # produce training report
-    logging.info("Finished training, producing training report")
-
-    plot_training_report(model,
-                         loss_list_train,
-                         loss_list_val,
-                         path, architecture,
-                         eft_value_1/10,
-                         eft_value_2/10,
-                         path_lin_1,
-                         path_lin_2,
-                         path_quad_1,
-                         path_quad_2)
+    if training_report:
+        logging.info("Finished training, producing training report at {}".format(path + 'plots/training_report/'))
+        plot_training_report(model,
+                             loss_list_train,
+                             loss_list_val,
+                             path, architecture,
+                             eft_value_1/10,
+                             eft_value_2/10,
+                             path_lin_1,
+                             path_lin_2,
+                             path_quad_1,
+                             path_quad_2)
+    else:
+        logging.info("Finished training")
 
     # TODO: fix the animation option, it thros a TypeError: 'float' object is not iterable (10/11/21)
     if animate:
@@ -488,7 +492,7 @@ def animate_performance(path, architecture, ctg, cuu, epochs):
 
 
 def train_classifier(
-        path, architecture, data_train, data_val, epochs, lr, n_batches,
+        path, architecture, data_train, data_val, epochs, lr, n_batches, training_report,
         quadratic=False,
         cross_term=False,
         animate=False,
@@ -525,6 +529,7 @@ def train_classifier(
         val_loader=val_data_loader,
         path=path,
         architecture=architecture,
+        training_report=training_report,
         animate=animate,
         path_lin_1=path_lin_1,
         path_lin_2=path_lin_2,
@@ -589,6 +594,8 @@ def plot_data(data_eft, data_sm):
     return fig
 
 def main(path, mc_run, **run_dict):
+
+    training_report = run_dict["training_report"]
 
     lr = run_dict["lr"]
     n_batches = run_dict["n_batches"]
@@ -689,6 +696,7 @@ def main(path, mc_run, **run_dict):
                      epochs,
                      lr,
                      n_batches,
+                     training_report,
                      quadratic=quadratic,
                      cross_term=cross_term,
                      animate=run_dict['animation'],
@@ -716,10 +724,15 @@ def start(json_path, mc_run, output_dir):
         os.makedirs(os.path.join(mc_path, 'animation'))
         os.makedirs(log_path)
 
-    # start the training
-    logging.basicConfig(filename=log_path + '/training.log', level=logging.INFO,
+    # create log file with timestamp
+    t = time.localtime()
+    current_time = time.strftime("%H_%M_%S", t)
+
+    logging.basicConfig(filename=log_path + '/training_{}.log'.format(current_time), level=logging.INFO,
                         format='%(asctime)s:%(levelname)s:%(message)s')
     logging.info("All directories created, ready to load the data")
+
+    # start the training
     main(mc_path, mc_run, **run_options)
 
     # copy run card to the appropriate folder

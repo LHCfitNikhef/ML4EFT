@@ -1,3 +1,4 @@
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib import rc
 import numpy as np
@@ -12,7 +13,6 @@ import os
 from . import quad_classifier_cluster as quad_clas
 from quad_clas.core.xsec import tt_prod as axs
 from quad_clas.core.xsec import vh_prod
-from quad_clas.core.quad_classifier_cluster import PredictorCross, PredictorLinear, PredictorQuadratic
 
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
@@ -90,7 +90,7 @@ def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, q
 
     with torch.no_grad():
 
-        n_lin_1 = PredictorLinear(architecture)
+        n_lin_1 = quad_clas.PredictorLinear(architecture)
 
         path_nn_lin_1 = os.path.join(path_nn_lin[0], 'mc_run_{}', 'trained_nn.pt')
         n_lin_1.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
@@ -101,7 +101,7 @@ def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, q
 
         #######
 
-        n_lin_2 = PredictorLinear(architecture)
+        n_lin_2 = quad_clas.PredictorLinear(architecture)
 
         path_nn_lin_2 = os.path.join(path_nn_lin[1], 'mc_run_{}', 'trained_nn.pt')
         n_lin_2.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
@@ -147,6 +147,101 @@ def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, q
 def decision_function_nn(x, c, mc_run, lin=False, quad=False):
     ratio = likelihood_ratio_nn(x, c, lin, quad)
     return 1 / (1 + ratio)
+
+def plot_heatmap(im, xlabel, ylabel, title, extent, cmap='GnBu', vmin=None, vmax=None):
+
+    # discrete colorbar
+    cmap = copy.copy(mpl.cm.get_cmap(cmap))
+    bounds = [0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05]
+    norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
+    cmap.set_under("#fc8c03")
+    cmap.set_over("#fac05c")
+
+    # continious colormap
+
+    # cmap = copy.copy(plt.get_cmap(cmap))
+    # cmap.set_bad(color='white')
+    # cmap.set_over("#FFAF33")
+    # cmap.set_under("#FFAF33")
+
+    fig, ax = plt.subplots(figsize=(8, 7))
+    heatmap = ax.imshow(im, extent=extent,
+                   origin='lower', cmap=cmap, aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]),
+                   interpolation='quadric', vmin=vmin, vmax=vmax)
+
+    if vmin == 0:
+
+        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
+                     ax=ax, shrink=0.9)
+
+        #cbar = fig.colorbar(heatmap, ax=ax, shrink=0.9, extend='max')
+    else:
+        #cbar = fig.colorbar(heatmap, ax=ax, shrink=0.9, extend='both')
+
+        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
+                     ax=ax, shrink=0.9)
+
+    cbar.minorticks_on()
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    return fig
+
+def coeff_comp(path_model, network_size, c1, c2):
+
+    s = 14 ** 2
+    mvh_min, mvh_max = 0.3, 2
+    y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
+
+    x_spacing, y_spacing = 1e-2, 0.01
+    mvh_span = np.arange(mvh_min, mvh_max, x_spacing)
+    y_span = np.arange(y_min, y_max, y_spacing)
+
+    mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
+    grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
+    grid_unscaled_tensor = torch.Tensor(grid)
+
+    # truth
+    if c1 != 0:
+        ratio_truth_c1 = likelihood_ratio_truth(grid, np.array([10, 0]), lin=True)
+        mask = ratio_truth_c1 == 0
+        coeff_truth = np.ma.masked_where(mask, (ratio_truth_c1 - 1) / 10)
+        coeff_truth = coeff_truth.reshape(mvh_grid.shape)
+        title = r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$'
+    elif c2 != 0:
+        ratio_truth_c2 = likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
+        mask = ratio_truth_c2 == 0
+        coeff_truth = np.ma.masked_where(mask, (ratio_truth_c2 - 1) / 10)
+        coeff_truth = coeff_truth.reshape(mvh_grid.shape)
+        title = r'$n_2^{\rm{truth}}/n_2^{\rm{NN}}\;\rm{(median)}$'
+    else:
+        loggin.info("c1 and c2 cannot both be zero.")
+
+    # models
+
+    mean, std = np.loadtxt(os.path.join(path_model, 'scaling.dat'))
+    loaded_model = quad_clas.PredictorLinear(network_size)
+    network_path = os.path.join(path_model, 'trained_nn.pt')
+
+    # load all the parameters into the trained network
+    loaded_model.load_state_dict(torch.load(network_path))
+    grid = (grid_unscaled_tensor - mean) / std
+
+    coeff_nn = loaded_model.n_alpha(grid.float())
+    coeff_nn = coeff_nn.view(mvh_grid.shape).detach().numpy()
+
+
+    fig = plot_heatmap(coeff_truth/coeff_nn,
+                        xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
+                        ylabel=r'$\rm{Rapidity}$',
+                        title=title,
+                        extent=[mvh_min, mvh_max, y_min, y_max],
+                        cmap='seismic',
+                        vmin=0.95,
+                        vmax=1.05)
+
+    return fig
+
 
 def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
                         path_lin_1=None,
