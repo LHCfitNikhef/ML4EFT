@@ -58,12 +58,12 @@ def coeff_comp():
     # models
 
     network_size = [2, 30, 30, 30, 30, 30, 1]
-    model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHq3_lin_v2/mc_run_{mc_run}'
+    model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHq3_lin_v3/mc_run_{mc_run}'
     #model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_test/mc_run_{mc_run}'
 
     n_betas = []
     mc_runs = 30
-    for rep_nr in range(0, mc_runs):
+    for rep_nr in range(1, mc_runs):
         print(rep_nr)
         mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
         loaded_model = quad_classifier_cluster.PredictorLinear(network_size)
@@ -94,7 +94,7 @@ def coeff_comp():
                         vmin=0.95,
                         vmax=1.05)
 
-    fig1.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/16_11/n_beta_ratio.pdf')
+    fig1.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/16_11/n_beta_ratio_v2.pdf')
 
     fig2 = plot_heatmap(np.abs((n_beta_truth - n_beta_median) / n_beta_unc),
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
@@ -105,7 +105,7 @@ def coeff_comp():
                         vmax=2,
                         cmap='seismic')
 
-    fig2.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/16_11/n_beta_ratio_pull.pdf')
+    fig2.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/16_11/n_beta_ratio_pull_v2.pdf')
 
     import pdb
     pdb.set_trace()

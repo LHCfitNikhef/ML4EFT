@@ -56,7 +56,7 @@ def likelihood_ratio_truth(x, c, lin=False, quad=False):
     return ratio.flatten()
 
 def decision_function_truth(x, c, lin=False, quad=False):
-    ratio = likelihood_ratio(x, c, lin, quad)
+    ratio = likelihood_ratio_truth(x, c, lin, quad)
     return 1 / (1 + ratio)
 
 def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, quad=False):

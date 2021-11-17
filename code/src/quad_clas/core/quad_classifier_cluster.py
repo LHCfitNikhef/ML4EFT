@@ -228,7 +228,7 @@ class EventDataset(data.Dataset):
         weights = data[0, 0] * np.ones((events.shape[0], 1))
 
         self.events = torch.tensor(events)
-        self.weights = torch.tensor(weights) / self.n_dat
+        self.weights = torch.tensor(weights)# / self.n_dat
         self.labels = torch.ones(self.n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(self.n_dat).unsqueeze(-1)
 
         print("Data loaded")
@@ -367,9 +367,11 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
                 loss = loss_fn(output, label, weight)
                 train_loss += loss
 
+            # do gradient descent after each minibatch. Move to the next epoch when all minibatches are looped over.
             optimizer.zero_grad()
             train_loss.backward()
             optimizer.step()
+
 
             loss_train += train_loss.item()
 
@@ -434,7 +436,7 @@ def animate_performance(path, architecture, ctg, cuu, epochs):
 
 
 def train_classifier(
-        path, architecture, data_train, data_val, epochs,
+        path, architecture, data_train, data_val, epochs, lr, n_batches,
         quadratic=False,
         cross_term=False,
         animate=False,
@@ -454,11 +456,9 @@ def train_classifier(
     if not quadratic and not cross_term:
         model = PredictorLinear(architecture)
 
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    #optimizer = optim.SGD(model.parameters(), lr=1e-3, momentum=0.5)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    # set n_batches to the number of mini-batches you want to use
-    n_batches = 1
-    #eft_point = data_train[0].dataset.c
 
     # we use PyTorche's dataloader object to allow for mini-batches. After each epoch, the minibatches reshuffle.
     # we create a dataloader object for each eft point + sm and put them all in one big list train_data_loader (val_data_loader)
@@ -537,6 +537,9 @@ def plot_data(data_eft, data_sm):
     return fig
 
 def main(path, mc_run, **run_dict):
+
+    lr = run_dict["lr"]
+    n_batches = run_dict["n_batches"]
 
     quadratic = run_dict['quadratic']
     cross_term = run_dict['cross_term']
@@ -632,6 +635,8 @@ def main(path, mc_run, **run_dict):
                      data_train,
                      data_val,
                      epochs,
+                     lr,
+                     n_batches,
                      quadratic=quadratic,
                      cross_term=cross_term,
                      animate=run_dict['animation'],
