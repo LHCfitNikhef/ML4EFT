@@ -1,8 +1,9 @@
 # Author: Jaco ter Hoeve
-# This file implements the training of the quadratic classifier
+# This file implements the training of the likelihood ratio
 
 # !/usr/bin/env python
 # coding: utf-8
+import logging
 import torch
 import torch.utils.data as data
 import torch.optim as optim
@@ -231,7 +232,7 @@ class EventDataset(data.Dataset):
         self.weights = torch.tensor(weights)# / self.n_dat
         self.labels = torch.ones(self.n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(self.n_dat).unsqueeze(-1)
 
-        print("Data loaded")
+        logging.info("Dataset loaded from {}".format(path))
 
     def load_events(self):
         """
@@ -283,47 +284,67 @@ class EventDataset(data.Dataset):
         data_sample, weight_sample, label_sample = self.events[idx], self.weights[idx], self.labels[idx]
         return data_sample, weight_sample, label_sample
 
+def plot_loss(train_loss, val_loss):
+    """
+    Plot the training and validation loss per epoch
 
-# def plot_training_report(model, train_loss, val_loss, path, architecture, c1, c2,
-#                          path_lin_1=None,
-#                          path_lin_2=None,
-#                          path_quad_1=None,
-#                          path_quad_2=None):
-#
-#     # loss plot
-#     fig = plt.figure()
-#     plt.plot(np.array(train_loss), label='train')
-#     plt.plot(np.array(val_loss), label='val')
-#     plt.xlabel('epochs')
-#     plt.ylabel('loss')
-#     plt.legend()
-#     fig.savefig(path + 'plots/loss.pdf')
-#
-#     # f accuracy plot
-#
-#     # First set up the figure, the axis, and the plot element we want to animate
-#     fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-#     ax = plt.axes(ylim=(0, 1))
-#
-#     mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
-#     x = np.linspace(mh + mz + 1e-2, 2.5, 100)
-#     x = np.stack((x, np.zeros(len(x))), axis=-1)
-#
-#     # TODO: when only one dimension: remember to integrate over y
-#     f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c1, c2, mean, std, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
-#
-#     # TODO: generalise to any order
-#     f_ana = analyse.decision_function(x, np.array([c1, c2]), lin=True,quad=False)
-#
-#     ax.plot(x[:,0].flatten(), f_ana, '--', c='red', label=r'$\rm{Truth}$')
-#     ax.plot(x[:,0].flatten(), f_pred, lw=2, label=r'$\rm{NN}$')
-#     plt.legend()
-#
-#     plt.ylabel(r'$f\;(m_{VH}, c)$')
-#     plt.xlabel(r'$m_{VH}\;[\mathrm{TeV}]$')
-#     # plt.xlim((mtt_min, mtt_max))
-#     plt.ylim((0, 1))
-#     fig.savefig(path + 'plots/f_perf.pdf')
+    Parameters
+    ----------
+    train_loss: numpy.ndarray, shape=(M,)
+        Training loss for M epochs
+    val_loss: numpy.ndarray, shape=(M,)
+        Validation loss for M epochs
+
+    Returns
+    -------
+    fig
+    """
+
+    fig = plt.figure()
+    plt.plot(np.array(train_loss), label=r'$\rm{Train}$')
+    plt.plot(np.array(val_loss), label=r'$\rm{Val}$')
+    plt.xlabel(r'$\rm{Epochs}$')
+    plt.ylabel(r'$\rm{Loss}$')
+    plt.legend()
+    plt.tight_layout()
+    return fig
+
+
+def plot_training_report(model, train_loss, val_loss, path, architecture, c1, c2,
+                         path_lin_1=None,
+                         path_lin_2=None,
+                         path_quad_1=None,
+                         path_quad_2=None):
+
+    # loss plot
+    fig = plot_loss(train_loss, val_loss)
+    fig.savefig(path + 'plots/loss.pdf')
+
+    # f accuracy plot
+
+    # First set up the figure, the axis, and the plot element we want to animate
+    # fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
+    # ax = plt.axes(ylim=(0, 1))
+    #
+    # mean, std = np.loadtxt(os.path.join(path, 'scaling.dat'))
+    # x = np.linspace(mh + mz + 1e-2, 2.5, 100)
+    # x = np.stack((x, np.zeros(len(x))), axis=-1)
+    #
+    # # TODO: when only one dimension: remember to integrate over y
+    # f_pred = analyse.make_predictions_1d(x, path + 'trained_nn.pt', architecture, c1, c2, mean, std, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+    #
+    # # TODO: generalise to any order
+    # f_ana = analyse.decision_function(x, np.array([c1, c2]), lin=True,quad=False)
+    #
+    # ax.plot(x[:,0].flatten(), f_ana, '--', c='red', label=r'$\rm{Truth}$')
+    # ax.plot(x[:,0].flatten(), f_pred, lw=2, label=r'$\rm{NN}$')
+    # plt.legend()
+    #
+    # plt.ylabel(r'$f\;(m_{VH}, c)$')
+    # plt.xlabel(r'$m_{VH}\;[\mathrm{TeV}]$')
+    # # plt.xlim((mtt_min, mtt_max))
+    # plt.ylim((0, 1))
+    # fig.savefig(path + 'plots/f_perf.pdf')
 
 
 def weight_reset(m):
@@ -415,8 +436,9 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         loss_list_train.append(loss_train)
         loss_list_val.append(loss_val)
 
-        print('{} Epoch {}, Training loss {}'.format(datetime.datetime.now(), epoch, loss_train),
-              'Validation loss {}'.format(loss_val))
+        training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}".\
+            format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val)
+        logging.info(training_status)
 
         np.savetxt(path + 'loss.out', loss_list_train)
         np.savetxt(path + 'loss_val.out', loss_list_val)
@@ -442,8 +464,18 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
         iterations += 1
 
     # produce training report
+    logging.info("Finished training, producing training report")
 
-    #plot_training_report(model, loss_list_train, loss_list_val, path, architecture, eft_value_1/10, eft_value_2/10, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+    plot_training_report(model,
+                         loss_list_train,
+                         loss_list_val,
+                         path, architecture,
+                         eft_value_1/10,
+                         eft_value_2/10,
+                         path_lin_1,
+                         path_lin_2,
+                         path_quad_1,
+                         path_quad_2)
 
     # TODO: fix the animation option, it thros a TypeError: 'float' object is not iterable (10/11/21)
     if animate:
@@ -676,13 +708,18 @@ def start(json_path, mc_run, output_dir):
     run = run_options['name']
     model_path = os.path.join(output_dir, 'model_{}'.format(run))
     mc_path = os.path.join(model_path, 'mc_run_{}/'.format(mc_run))
+    log_path = os.path.join(mc_path, 'logs')
 
     if not os.path.exists(mc_path):
         os.makedirs(mc_path)
         os.makedirs(os.path.join(mc_path, 'plots'))
         os.makedirs(os.path.join(mc_path, 'animation'))
+        os.makedirs(log_path)
 
     # start the training
+    logging.basicConfig(filename=log_path + '/training.log', level=logging.INFO,
+                        format='%(asctime)s:%(levelname)s:%(message)s')
+    logging.info("All directories created, ready to load the data")
     main(mc_path, mc_run, **run_options)
 
     # copy run card to the appropriate folder
