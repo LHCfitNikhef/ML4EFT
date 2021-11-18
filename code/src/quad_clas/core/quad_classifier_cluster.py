@@ -343,7 +343,7 @@ def plot_training_report(model, train_loss, val_loss, path, architecture, c1, c2
     fig.savefig(training_report_path + 'loss.pdf')
 
     # f accuracy plot
-    fig = analyse.coeff_comp(path, architecture, c1, c2)
+    fig = analyse.coeff_comp_rep(path, architecture, c1, c2)
     fig.savefig(training_report_path + 'performance.pdf')
 
 

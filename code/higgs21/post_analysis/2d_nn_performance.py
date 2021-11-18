@@ -1,3 +1,5 @@
+import matplotlib as mpl
+import matplotlib.ticker as tick
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -8,32 +10,43 @@ import quad_clas.core.xsec.vh_prod as vh_prod
 import quad_clas.core.quad_classifier_cluster as quad_classifier_cluster
 import quad_clas.core.nn_analyse as analysis
 
+mz = 91.188 * 10 ** -3  # z boson mass [TeV]
+mh = 0.125
 
-def plot_heatmap(im, xlabel, ylabel, title, extent, cmap='GnBu', vmin=None, vmax=None):
+def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu', events=None):
 
-    cmap = copy.copy(plt.get_cmap(cmap))
-    cmap.set_bad(color='white')
+    cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
 
-    fig, ax = plt.subplots(figsize=(8, 7))
-    heatmap = ax.imshow(im, extent=extent,
-                   origin='lower', cmap=cmap, aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]),
-                   interpolation='quadric', vmin=vmin, vmax=vmax)
 
-    if vmin == 0:
-        cbar = fig.colorbar(heatmap, ax=ax, shrink=0.9, extend='max')
-    else:
-        cbar = fig.colorbar(heatmap, ax=ax, shrink=0.9, extend='both')
+    norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
+
+    cmap_copy.set_bad(color='gainsboro')
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.imshow(im, extent=extent, origin='lower', cmap=cmap_copy, norm=norm,
+              aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]))
+
+    cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax,
+                        format=tick.FormatStrFormatter(r'$%.2f$'))
     cbar.minorticks_on()
+
+    if events is not None:
+        plt.scatter(events[:, 0], events[:, 1], facecolors='none', edgecolors='orange')
+
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+    plt.xlim((extent[0], extent[1]))
+    plt.ylim((extent[2], extent[3]))
     plt.title(title)
+    plt.tight_layout()
     return fig
 
 
-def coeff_comp():
+def coeff_comp(path_sm_data):
 
     s = 14 ** 2
-    mvh_min, mvh_max = 0.3, 2
+    epsilon = 1e-2
+    mvh_min, mvh_max = mz + mh + epsilon, 2
     y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
 
     x_spacing, y_spacing = 1e-2, 0.01
@@ -58,13 +71,14 @@ def coeff_comp():
     # models
 
     network_size = [2, 30, 30, 30, 30, 30, 1]
-    model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHq3_lin_v3/mc_run_{mc_run}'
+    model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/17_11/model_final_lin_cHW/mc_run_{mc_run}'
     #model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_test/mc_run_{mc_run}'
 
     n_betas = []
     mc_runs = 30
-    for rep_nr in range(1, mc_runs):
+    for rep_nr in range(0, mc_runs):
         print(rep_nr)
+        
         mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
         loaded_model = quad_classifier_cluster.PredictorLinear(network_size)
         network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
@@ -75,8 +89,7 @@ def coeff_comp():
 
         n_beta = loaded_model.n_alpha(grid.float())
         n_beta = n_beta.view(mvh_grid.shape).detach().numpy()
-        if np.sum(n_beta) == 0:
-            continue
+
         n_betas.append(n_beta)
 
     n_betas = np.array(n_betas)
@@ -85,27 +98,39 @@ def coeff_comp():
     n_beta_low = np.percentile(n_betas, 16, axis=0)
     n_beta_unc = (n_beta_high - n_beta_low) / 2
 
-    fig1 = plot_heatmap(n_beta_truth/n_beta_median,
+    # visualise sm events
+    if path_sm_data is not None:
+        path_dict_sm = {0: path_sm_data}
+        data_sm = quad_classifier_cluster.EventDataset(c=0,
+                                                       n_features=2,
+                                                       path_dict=path_dict_sm,
+                                                       n_dat=500,
+                                                       hypothesis=1)
+        sm_events = data_sm.events.numpy()
+    else:
+        sm_events = None
+
+    # median
+    fig1 = plot_heatmap(n_alpha_truth/n_beta_median,
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
                         ylabel=r'$\rm{Rapidity}$',
                         title=r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$',
                         extent=[mvh_min, mvh_max, y_min, y_max],
                         cmap='seismic',
-                        vmin=0.95,
-                        vmax=1.05)
+                        bounds=[0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05])
 
-    fig1.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/16_11/n_beta_ratio_v2.pdf')
+    fig1.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/17_11/n_beta_ratio_v6.pdf')
 
-    fig2 = plot_heatmap(np.abs((n_beta_truth - n_beta_median) / n_beta_unc),
+    # pull
+    fig2 = plot_heatmap((n_alpha_truth - n_beta_median) / n_beta_unc,
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
                         ylabel=r'$\rm{Rapidity}$',
                         title=r'$\rm{Pull}$',
                         extent=[mvh_min, mvh_max, y_min, y_max],
-                        vmin=0,
-                        vmax=2,
-                        cmap='seismic')
+                        cmap='seismic',
+                        bounds=np.linspace(-1.5, 1.5, 10))
 
-    fig2.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/16_11/n_beta_ratio_pull_v2.pdf')
+    fig2.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/17_11/n_beta_ratio_pull_v3.pdf')
 
     import pdb
     pdb.set_trace()
@@ -126,7 +151,7 @@ def coeff_comp():
 
 
 
-coeff_comp()
+coeff_comp(path_sm_data='/data/theorie/jthoeve/event_generation/events_high_stats/sm/events_0.npy')
 import pdb
 pdb.set_trace()
 #%%
