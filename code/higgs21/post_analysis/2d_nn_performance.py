@@ -17,7 +17,6 @@ def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu', events=
 
     cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
 
-
     norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
 
     cmap_copy.set_bad(color='gainsboro')

@@ -374,7 +374,7 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
     # by one whenever the the validation loss increases during an epoch
     loss_val_old = 0
     overfit_counter = 0
-    patience = 20
+    patience = 50
 
     # outer loop that runs over the number of epochs
     iterations = 0
@@ -400,9 +400,9 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
             # loop over all the datasets within the minibatch and compute their contribution to the loss
             for i, [event, weight, label] in enumerate(minibatch):
                 if isinstance(model, PredictorLinear):
-                    output = model(event.float(), eft_value_1)
+                    output = model(event.float(), eft_value_1 + eft_value_2)
                 if isinstance(model, PredictorQuadratic):
-                    output = model(event.float(), eft_value_1, path_lin_1)
+                    output = model(event.float(), eft_value_1 + eft_value_2, path_lin_1)
                 if isinstance(model, PredictorCross):
                     output = model(event.float(), eft_value_1, eft_value_2, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
                 loss = loss_fn(output, label, weight)
@@ -421,9 +421,9 @@ def training_loop(n_epochs, optimizer, model, train_loader, val_loader, path, ar
                 val_loss = torch.zeros(1)
                 for i, [event, weight, label] in enumerate(minibatch):
                     if isinstance(model, PredictorLinear):
-                        output = model(event.float(), eft_value_1)
+                        output = model(event.float(), eft_value_1 + eft_value_2)
                     if isinstance(model, PredictorQuadratic):
-                        output = model(event.float(), eft_value_1, path_lin_1)
+                        output = model(event.float(), eft_value_1 + eft_value_2, path_lin_1)
                     if isinstance(model, PredictorCross):
                         output = model(event.float(), eft_value_1, eft_value_2, path_lin_1, path_lin_2, path_quad_1,
                                        path_quad_2)
