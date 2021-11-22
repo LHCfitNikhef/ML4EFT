@@ -1,15 +1,16 @@
 {
-  "name": "test_v11",
-  "epochs": 500,
+  "name": "test_v22",
+  "epochs": 10,
   "lr": 1e-3,
-  "n_batches": 4,
+  "n_batches": 5,
   "input_size": 2,
   "output_size": 1,
   "hidden_sizes": [30, 30, 30, 30, 30],
-  "n_dat": 10000,
+  "n_dat": 1000,
   "quadratic": 0,
   "cross_term": 0,
   "animation": 0,
   "coeff": [{"op": "cHW", "value": 10.0}, {"op": "cHq3", "value": 0}],
-  "event_data": "/Users/jaco/Documents/ML4EFT/data/events_high_stats"
+  "event_data": "/Users/jaco/Documents/ML4EFT/data/events_high_stats",
+  "training_report": 1
 }
