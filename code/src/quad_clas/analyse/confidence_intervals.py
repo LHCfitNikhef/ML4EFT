@@ -14,72 +14,7 @@ from ..core.truth import vh_prod
 mz = constants.mz
 mh = constants.mh
 
-#%%
 
-
-# def get_nn_ratio(x, c1, c2, mc_run):
-#     path_nn_lin_1 = os.path.join(path_lin_1, 'mc_run_{}', 'trained_nn.pt')
-#     path_nn_lin_2 = os.path.join(path_lin_2, 'mc_run_{}', 'trained_nn.pt')
-#     # path_nn_quad_1 = os.path.join(path_quad_1, 'mc_run_{}', 'trained_nn.pt')
-#     # path_nn_quad_2 = os.path.join(path_quad_2, 'mc_run_{}', 'trained_nn.pt')
-#     # path_nn_cross = os.path.join(path_cross, 'mc_run_{}', 'trained_nn.pt')
-#
-#
-#     n_lin_1 = PredictorLinear(architecture)
-#     n_lin_1.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
-#
-#     mean, std = np.loadtxt(os.path.join(path_lin_1, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-#
-#     x_scaled = (x - mean) / std
-#     n_lin_1_out = n_lin_1.n_alpha(x_scaled.float())
-#
-#     n_lin_1 = PredictorLinear(architecture)
-#     n_lin_1.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
-#
-#
-#
-#     #######
-#
-#     n_lin_2 = PredictorLinear(architecture)
-#     n_lin_2.load_state_dict(torch.load(path_nn_lin_2.format(mc_run)))
-#
-#     mean, std = np.loadtxt(os.path.join(path_lin_2, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-#     x_scaled = (x - mean) / std
-#     n_lin_2_out = n_lin_2.n_alpha(x_scaled.float())
-#
-#
-#
-#
-#     ########
-#
-#     # n_quad_1 = PredictorQuadratic(architecture)
-#     # n_quad_1.load_state_dict(torch.load(path_nn_quad_1.format(mc_run)))
-#     #
-#     # mean, std = np.loadtxt(os.path.join(path_quad_1, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-#     # x_scaled = (x - mean) / std
-#     # n_quad_1_out = n_quad_1.n_beta(x_scaled.float()) ** 2
-#     #
-#     # #######
-#     #
-#     # n_quad_2 = PredictorQuadratic(architecture)
-#     # n_quad_2.load_state_dict(torch.load(path_nn_quad_2.format(mc_run)))
-#     #
-#     # mean, std = np.loadtxt(os.path.join(path_quad_2, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-#     # x_scaled = (x - mean) / std
-#     # n_quad_2_out = n_quad_2.n_beta(x_scaled.float()) ** 2
-#     #
-#     # #######
-#     #
-#     # n_cross = PredictorCross(architecture)
-#     # n_cross.load_state_dict(torch.load(path_nn_cross.format(mc_run)))
-#     #
-#     # mean, std = np.loadtxt(os.path.join(path_cross, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-#     # x_scaled = (x - mean) / std
-#     # n_cross_out = n_cross.n_gamma(x_scaled.float()) ** 2
-#
-#     r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out #+ c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_cross_out
-#     #r[r<0] = 1
-#     return r
 class Limits:
 
     def __init__(self, luminosity, bins, scan_domain, path_to_models, mc_reps, data_sm, plot_path, architecture,
