@@ -62,18 +62,16 @@ def likelihood_ratio_truth(x, c, lin=False, quad=False):
 
     return ratio.flatten()
 
-
 def decision_function_truth(x, c, lin=False, quad=False):
     ratio = likelihood_ratio_truth(x, c, lin, quad)
     return 1 / (1 + ratio)
-
 
 def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, quad=False):
     """
 
     Parameters
     ----------
-    x : numpy.ndarray, shape=(M, N)
+    x : torch.tensor, shape=(M, N)
         Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
         the invariant mass and the rapidity.
     c : numpy.ndarray, shape=(M,)
@@ -147,17 +145,15 @@ def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, q
 
     # r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out #+ c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_cross_out
 
-    # r = 1 + cHW * n_lin_1_out + cHq3 * n_lin_2_out
-    r = 1 + cHq3 * n_lin_2_out
+    r = 1 + cHW * n_lin_1_out + cHq3 * n_lin_2_out
+    #r = 1 + cHq3 * n_lin_2_out
     # lin_nn = [n_lin_1_out, n_lin_2_out]
 
     return r  # , [lin_nn]
 
-
 def decision_function_nn(x, c, mc_run, lin=False, quad=False):
     ratio = likelihood_ratio_nn(x, c, lin, quad)
     return 1 / (1 + ratio)
-
 
 def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
     # discrete colorbar
@@ -186,7 +182,6 @@ def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
     plt.title(title)
     plt.tight_layout()
     return fig
-
 
 def coeff_comp_rep(path_model, network_size, c1, c2):
     """
@@ -268,7 +263,6 @@ def coeff_comp_rep(path_model, network_size, c1, c2):
                        bounds=bounds)
 
     return fig
-
 
 def coeff_comp(path_sm_data):
     s = 14 ** 2
@@ -357,7 +351,6 @@ def coeff_comp(path_sm_data):
 
     fig2.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/17_11/n_beta_ratio_pull_v3.pdf')
 
-
 def load_models(architecture, model_dir, model_nrs):
     models = []
     for rep_nr in model_nrs:
@@ -371,7 +364,6 @@ def load_models(architecture, model_dir, model_nrs):
         models.append(loaded_model)
 
     return models
-
 
 def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
                         path_lin_1=None,
