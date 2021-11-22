@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import quad_clas.core.nn_analyse as analyse
-import quad_clas.core.xsec.tt_prod as axs
+import quad_clas.analyse.analyse as analyse
+import quad_clas.core.truth.tt_prod as axs
 from matplotlib import animation
 import os
 

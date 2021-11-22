@@ -294,6 +294,7 @@ sphinx/_build/
 /code/notebooks/FormCalc/*.pars
 /.ipynb_checkpoints/
 /code/src/ML4EFT.egg-info/
+/models/
 #Cluster output files
 *.pbs.*
 
@@ -308,6 +309,7 @@ sphinx/_build/
 
 # specific files
 /2d_data_fitter.ipynb
+
 
 
 

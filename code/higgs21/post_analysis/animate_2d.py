@@ -5,9 +5,9 @@ import numpy as np
 import sys, os
 import torch
 
-import quad_clas.core.xsec.vh_prod as vh_prod
-import quad_clas.core.quad_classifier_cluster as quad_classifier_cluster
-from quad_clas.core.xsec import tt_prod as axs
+import quad_clas.core.truth.vh_prod as vh_prod
+import quad_clas.core.classifier as quad_classifier_cluster
+from quad_clas.core.truth import tt_prod as axs
 
 def likelihood_ratio(y, mvh, c, lin, quad):
     """

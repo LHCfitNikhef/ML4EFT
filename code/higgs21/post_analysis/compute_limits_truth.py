@@ -1,7 +1,7 @@
 #%%
 import random
 import numpy as np
-import quad_clas.core.xsec.vh_prod as vh_prod
+import quad_clas.core.truth.vh_prod as vh_prod
 
 mz = 91.188 * 10 ** -3  # z boson mass [TeV]
 mh = 0.125

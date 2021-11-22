@@ -17,8 +17,7 @@ from matplotlib import pyplot as plt
 from matplotlib import rc
 from torch import nn
 import shutil
-import quad_clas.core.nn_analyse as analyse
-from quad_clas.core.xsec import tt_prod as axs
+import quad_clas.analyse.analyse as analyse
 
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
@@ -58,7 +57,6 @@ class MLP(nn.Module):
         out = self.layers(x)
         return out
 
-
 class PredictorLinear(nn.Module):
     """
     Returns the function f(x,c) from the paper (Wulzer et al.) in the linear case
@@ -71,7 +69,6 @@ class PredictorLinear(nn.Module):
     def forward(self, x, c):
         n_alpha_out = self.n_alpha(x)
         return 1 / (1 + (1 + c * n_alpha_out)) # TODO try without squaring n_alpha
-
 
 class PredictorQuadratic(nn.Module):
     """
@@ -284,6 +281,7 @@ class EventDataset(data.Dataset):
 
         data_sample, weight_sample, label_sample = self.events[idx], self.weights[idx], self.labels[idx]
         return data_sample, weight_sample, label_sample
+
 
 def plot_loss(train_loss, val_loss):
     """

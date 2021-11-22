@@ -2,8 +2,8 @@ import torch
 import numpy as np
 import os
 import random
-from quad_clas.core.quad_classifier_cluster import PredictorCross, PredictorLinear, PredictorQuadratic
-import quad_clas.core.xsec.vh_prod as vh_prod
+from quad_clas.core.classifier import PredictorCross, PredictorLinear, PredictorQuadratic
+import quad_clas.core.truth.vh_prod as vh_prod
 import matplotlib.pyplot as plt
 
 path_lin_1 = '/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW3_lin_30_reps/'

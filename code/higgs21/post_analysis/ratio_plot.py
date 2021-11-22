@@ -1,10 +1,9 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-import quad_clas.core.nn_analyse as analyse
-import quad_clas.core.xsec.tt_prod as axs
-import quad_clas.core.xsec.vh_prod as vh_prod
-import quad_clas.core.quad_classifier_cluster as quad_classifier_cluster
+import quad_clas.analyse.analyse as analyse
+import quad_clas.core.truth.tt_prod as axs
+import quad_clas.core.truth.vh_prod as vh_prod
 
 mz = 91.188 * 10 ** -3  # z boson mass [TeV]
 mh = 0.125
@@ -65,10 +64,9 @@ plt.legend()
 plt.show()
 
 #%%
-import quad_clas
 import torch
 import copy
-import quad_clas.core.quad_classifier_cluster as quad_classifier_cluster
+import quad_clas.core.classifier as quad_classifier_cluster
 
 cmap = copy.copy(plt.get_cmap("seismic"))
 

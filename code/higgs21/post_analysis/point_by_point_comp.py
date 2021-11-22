@@ -1,5 +1,5 @@
-from quad_clas.core.nn_analyse import likelihood_ratio_nn, likelihood_ratio_truth
-import quad_clas.core.quad_classifier_cluster as quad_classifier_cluster
+from quad_clas.analyse.analyse import likelihood_ratio_nn, likelihood_ratio_truth
+import quad_clas.core.classifier as quad_classifier_cluster
 import torch
 import matplotlib.pyplot as plt
 import numpy as np

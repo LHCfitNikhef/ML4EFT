@@ -6,9 +6,9 @@ import torch
 import copy
 import os
 
-import quad_clas.core.xsec.vh_prod as vh_prod
-import quad_clas.core.quad_classifier_cluster as quad_classifier_cluster
-import quad_clas.core.nn_analyse as analysis
+import quad_clas.core.truth.vh_prod as vh_prod
+import quad_clas.core.classifier as quad_classifier_cluster
+import quad_clas.analyse.analyse as analysis
 
 mz = 91.188 * 10 ** -3  # z boson mass [TeV]
 mh = 0.125

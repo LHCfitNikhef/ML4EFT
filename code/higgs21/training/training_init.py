@@ -1,6 +1,6 @@
 #%%
 
-import quad_clas.core.quad_classifier_cluster as train
+import quad_clas.core.classifier as train
 
 # training settings
 path_to_json = '/Users/jaco/Documents/ML4EFT/code/cluster/launch_scripts/run_card_lin.json'

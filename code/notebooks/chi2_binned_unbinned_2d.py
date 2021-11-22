@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import quad_clas.core.xsec.vh_prod as vh_prod
+import quad_clas.core.truth.vh_prod as vh_prod
 
 events_sm = np.load('/Users/jaco/Documents/ML4EFT/data/events/sm/events_0.npy')
 pseudo_data_full = events_sm[1:, 0]

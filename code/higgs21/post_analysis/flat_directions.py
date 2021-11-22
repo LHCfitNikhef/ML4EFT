@@ -1,7 +1,7 @@
 #%%
 import random
 import numpy as np
-import quad_clas.core.xsec.vh_prod as vh_prod
+import quad_clas.core.truth.vh_prod as vh_prod
 import matplotlib.pyplot as plt
 
 

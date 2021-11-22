@@ -1,490 +1,406 @@
+# This module contains all necessary functions to analyse and process the models
+
+
+# import standard packages
+import matplotlib as mpl
+from matplotlib import pyplot as plt
+from matplotlib import rc
 import numpy as np
-import os
+import torch
 import sys
-#import matplotlib
-#matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import cm
-import pandas as pd
-import csv
-from scipy.ndimage.filters import gaussian_filter
-from scipy.optimize import curve_fit
-from ..core import bounds as bounds
+import copy
+import matplotlib.gridspec as gridspec
+from matplotlib import animation
+import os
+
+# import own pacakges
+from quad_clas.core import classifier as quad_clas
+from quad_clas.core.truth import tt_prod as axs
+from quad_clas.core.truth import vh_prod
+
+mz = 91.188 * 10 ** -3  # z boson mass [TeV]
+mh = 0.125
+
+# matplotlib.use('PDF')
+rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
+rc('text', usetex=True)
 
 
-class Analyse:
+def likelihood_ratio_truth(x, c, lin=False, quad=False):
     """
-    This python class object analyses the z-scores that originate from
-    a scan over the EFT coefficient space. Results are presented for
-    the neural network (nn), truth and binned analyses.
+    Compute the 1D analytic likelihood ratio r(x, c)
 
-    The (expected) exclusion limits are found by interpolating on the
-    z-scores and solving the resulting polynomial for the 95% CL.
+    Parameters
+    ----------
+    x : numpy.ndarray, shape=(M, N)
+        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    c : numpy.ndarray, shape=(M,)
+        EFT point in M dimensions, e.g c = (cHW, cHq3)
+    lin: bool, optional
+        Set to False by default. Turn on for linear corrections.
+    quad: bool, optional
+        Set to False by default. Turn on for quadratic corrections.
     """
 
-    def __init__(self, root_path, truth=True, nn=True, binnings=None, extent=None, fit=True, luminosity=6, mc_runs=100, nn_rep=40):
-        """
-        Parameters
-        ----------
-        root_path:
-            path to root where the output should be stored
-        truth: bool
-            Includes the truth bounds
-        nn: bool
-            Includes the nn bounds
-        binnings: list
-            collection of binnings (array_like) for which to run the analysis
-        extent: array_like, shape (n, 2)
-            It gives the range of the EFT coefficients to scan.
-        fit: bool
-            This should be set to true for every new binning
-        luminosity: float
-            luminosity of the experiment in pb^-1
-        mc_runs: int
-            number of z-scores to load at each EFT point
-        """
+    n_kin = x.shape[1]
+    cHW, cHq3 = c
 
-        self.root_path = root_path
-        self.output_path = os.path.join(self.root_path, 'output')
-        self.plots_path = os.path.join(self.output_path, 'plots')
-        self.paths = {'root': self.root_path, 'output': self.output_path, 'plots': self.plots_path}
+    if n_kin == 1:
+        dsigma_0 = [vh_prod.dsigma_dmvh(x_i, cHW, cHq3, lin=lin, quad=quad) for x_i in x]  # EFT
+        dsigma_1 = [vh_prod.dsigma_dmvh(x_i, 0, 0, lin=lin, quad=quad) for x_i in x]  # SM
+    elif n_kin == 2:
+        dsigma_0 = [vh_prod.dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin=lin, quad=quad) for (mvh, y) in x]  # EFT
+        dsigma_1 = [vh_prod.dsigma_dmvh_dy(y, mvh, 0, 0, lin=lin, quad=quad) for (mvh, y) in x]  # SM
+    else:
+        raise NotImplementedError("No more than two features are currently supported")
 
-        self.truth = truth
-        self.z_scores_truth = None
+    dsigma_0, dsigma_1 = np.array(dsigma_0), np.array(dsigma_1)
 
-        self.nn = nn
-        self.z_scores_nn = None
+    ratio = np.divide(dsigma_0, dsigma_1, out=np.zeros_like(dsigma_0), where=dsigma_1 != 0)
+    # ratio = dsigma_0 / dsigma_1
 
-        self.luminosity = luminosity
-        self.extent = extent
-
-        self.mc_runs = mc_runs
-        self.nn_rep = nn_rep
-
-        if binnings is not None:
-
-            self.binnings = binnings
-            self.fit = fit
-
-            # run a binned analysis on each of the binnings
-            self.binned_analyses = self.run_binned_analysis()
-
-            # plot accuracy of Asimov method
-            #fig = bounds.plot_tc_accuracy(self.binned_analyses, c=np.array([0.5, 0]), n=100000)
-            #fig.savefig(os.path.join(self.plots_path, 'tc_acc/asimov_comp.pdf'))
-        else:
-            self.binned_analyses = None
-
-        # analyse the nn, truth and binned cases (if not None)
-        self.combine_analyses()
-
-    def run_binned_analysis(self):
-        """
-        Run a binned analysis
-
-        Returns
-        -------
-        list
-            binned analyses object for each of the binnings
-        """
-
-        binned_analyses = []
-
-        for i, binning in enumerate(self.binnings):
-            # output directory is different for each bin
-            self.paths['output'] = os.path.join(self.output_path, 'binning_{}'.format(i))
-
-            # create an analysis instance and perform the analysis
-            analysis = bounds.StatAnalysis(self.paths, bins=binning, fit=self.fit, luminosity=self.luminosity)
-            analysis.binned_analysis(extent=self.extent)
-
-            # append results
-            binned_analyses.append(analysis)
-
-        return binned_analyses
-
-    def read_z_scores(self, path):
-        """
-        Reads the z-scores
-
-        Parameters
-        ----------
-        path: str
-            location of the z-scores
-
-        Returns
-        -------
-        list
-            list of the z-scores
-            shape = (self.mc_runs, self.nn_rep, n_eft_points, 3)
-        """
-
-        if 'nn' in path:
-            z_scores = []  # shape = (self.mc_runs, self.nn_rep, n_eft_points, 3)
-            for i in range(1, self.mc_runs + 1):
-                z_scores_nn_rep = []  # shape = (self.nn_rep, n_eft_points, 3)
-
-                for j in range(self.nn_rep):
-                    loc = os.path.join(path, "mc_run_{}/rep_{}/z_scores.dat".format(i, j))
-                    with open(loc, "r") as f:
-                        reader = csv.reader(f, delimiter='\t')
-                        z_scores_eft_point = []  # shape = (n_eft_points, 3)
-
-                        for line in reader:
-                            z_scores_eft_point.append([float(value) for value in line])
-                        z_scores_nn_rep.append(z_scores_eft_point)
-
-                z_scores.append(z_scores_nn_rep)
-
-            z_scores = np.array(z_scores)
-        else:
-            z_scores = []
-            for i in range(1, self.mc_runs + 1):
-                loc = os.path.join(path, "mc_run_{}/z_scores.dat".format(i))
-                with open(loc, "r") as f:
-                    reader = csv.reader(f, delimiter='\t')
-                    for line in reader:
-                        z_scores.append([float(value) for value in line])
-            z_scores = np.array(z_scores)
-
-        return z_scores
-
-    def load_z_scores(self):
-        """
-        Loads the z-scores for all the mc runs.
-
-        Returns
-        -------
-        tuple
-            Pandas dataframe for truth and nn
-        """
-
-        if self.nn:
-            path = os.path.join(self.output_path, 'z_scores/nn_v3')
-            z_scores = self.read_z_scores(path)
-            z_scores_nn_df = []
-            for rep in range(z_scores.shape[1]):
-                # select a replica
-                z_scores_rep = z_scores[:, rep, :, :]
-
-                # average over the mc runs
-                z_scores_rep_mc_avg = np.mean(z_scores_rep[:, :, -1], axis=0)
-                z_scores_rep_mc_std = np.std(z_scores_rep[:, :, -1], axis=0)
-
-                # build a pandas dataframe for each replica
-                df = pd.DataFrame(np.array([z_scores_rep[:, :, 0][0], z_scores_rep[:, :, 1][0], z_scores_rep_mc_avg, z_scores_rep_mc_std]).T, columns=['cug', 'cuu', 'z-score', 'unc'])
-                z_scores_nn_df.append(df)
-
-        else:
-            z_scores_nn_df = None
-
-        if self.truth:
-            path = os.path.join(self.output_path, 'z_scores/truth_v2')
-            z_scores = self.read_z_scores(path)
-            z_scores = pd.DataFrame(z_scores, columns=['cug', 'cuu', 'z-score'])
-            z_scores_grouped = z_scores.groupby(['cug', 'cuu']).agg({'z-score': ['mean', self.stdom]})
-            z_scores_grouped.columns = ['z-score', 'uncertainty']
-            z_scores_grouped_truth = z_scores_grouped.reset_index()
-        else:
-            z_scores_grouped_truth = None
-
-        return z_scores_grouped_truth, z_scores_nn_df
-
-    def ellipse_truth(self, cHq3, cHW):
-        x = cHq3
-        y = cHW
-        return -1.80592*10**-13 - 1.38675*10**-14 * x + 6.37035*10**-11* x**2 + 5.68408*10**-12 * y + 3.68832*10**-10 * x * y + 1.20585*10**-9 * y**2
-
-    def combine_analyses(self):
-        """
-        Finds the contours of the 95% CL.
-        """
-        fig, ax = plt.subplots(figsize=(7.5, 6))
-        #cuu = np.linspace(self.extent[0, 0], self.extent[0, 1], 200)
-        #cug = np.linspace(self.extent[1, 0], self.extent[1, 1], 200)
-        #cuu_plane, cug_plane = np.meshgrid(cuu, cug)
-
-        labels = []
-        contours = []
-        #colors = ['C2', 'C3', 'C4']
-        if self.binned_analyses is not None:
-            sigma = 0.8
-            color = iter(cm.rainbow(np.linspace(0, 1, len(self.binned_analyses))))
-
-            for i, binnings in enumerate(self.binned_analyses):
-                # data_smoothed = gaussian_filter(binnings.z_scores_asi, sigma)
-                c = next(color)
-                data_smoothed = gaussian_filter(binnings.z_scores, sigma)
-                contour = ax.contour(binnings.c2_plane, binnings.c1_plane, data_smoothed, levels=np.array([1.64]), colors=[c], origin='lower')
-                contour_truth = ax.contour(binnings.c2_plane, binnings.c1_plane, self.ellipse_truth(binnings.c2_plane, binnings.c1_plane),
-                           levels=np.array([0]), colors='k', origin='lower')
-                contour_points = contour.allsegs[0][0]
-                contour_distance = contour_points[:, 0] ** 2 + contour_points[:, 1] ** 2
-                dist_max_idx = np.argmax(contour_distance)
-                c_max = contour_points[dist_max_idx, :]
-                #ax.scatter(*c_max, marker='o')
-                slope = c_max[1]/c_max[0]
-                x = np.linspace(np.min(binnings.c2_plane), np.max(binnings.c2_plane), 100)
-                #ax.plot(x, -0.21 * x, linestyle='dashed', color='k')
-
-                h0, _ = contour.legend_elements()
-                contours.append(h0[0])
-
-                if i == 0:
-                    h0_truth, _ = contour_truth.legend_elements()
-                    contours.append(h0_truth[0])
-
-                contour_data = np.array(contour.allsegs[0][0])
-                contour_data[contour_data[:, 1] > 0][0, :]
-
-                if len(binnings.bins)-1 == 1:
-                    labels.append(r'$\rm{%d\;bin}$' % (len(binnings.bins) - 1))
-                else:
-                    labels.append(r'$\rm{%d\;bins}$' % (len(binnings.bins)-1))
-                if i == 0:
-                    labels.append(r'$\rm{Truth}$')
-
-        #self.z_scores_truth, self.z_scores_nn = self.load_z_scores()
+    return ratio.flatten()
 
 
-        # uncomment conditions below to select z-scores of your choice
-        #cond = ~((self.z_scores_nn['cug'] != 0.0) & (self.z_scores_nn['cuu'] != 0.0))
-        #self.z_scores_nn = self.z_scores_nn[cond]
-        #cond = ~((self.z_scores_nn['cug'] != 0.0) & (self.z_scores_nn['cuu'] != 0.0))
-        #self.z_scores_nn = self.z_scores_nn[cond]
-        #self.z_scores_truth = self.z_scores_truth[cond]
-
-        # 1D analysis
-        #self.analyse1d()
-
-        # 2D analysis
-        #ellipse_param_truth,  ellipse_param_nn = self.fit_ellipse()
+def decision_function_truth(x, c, lin=False, quad=False):
+    ratio = likelihood_ratio_truth(x, c, lin, quad)
+    return 1 / (1 + ratio)
 
 
+def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, quad=False):
+    """
 
+    Parameters
+    ----------
+    x : numpy.ndarray, shape=(M, N)
+        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    c : numpy.ndarray, shape=(M,)
+        EFT point in M dimensions, e.g c = (cHW, cHq3)
+    path_to_models: dict
+        Path to the nn model root directory
+    mc_run: int
+        Monte Carlo replica number
+    lin: bool, optional
+        Set to False by default. Turn on for linear corrections.
+    quad: bool, optional
+        Set to False by default. Turn on for quadratic corrections.
 
+    Returns
+    -------
 
+    """
+    cHW, cHq3 = c
 
+    path_nn_lin = path_to_models['lin']  # shape = (len(c), )
+    # path_nn_quad = path_to_models['quad'] # shape = (len(c), )
+    # path_nn_cross = path_to_models['cross'] # TODO: shape
 
-        # if self.truth:
+    with torch.no_grad():
+        n_lin_1 = quad_clas.PredictorLinear(architecture)
+
+        path_nn_lin_1 = os.path.join(path_nn_lin[0], 'mc_run_{}', 'trained_nn.pt')
+        n_lin_1.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
+        mean, std = np.loadtxt(os.path.join(path_nn_lin[0], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+
+        x_scaled = (x - mean) / std
+        n_lin_1_out = n_lin_1.n_alpha(x_scaled.float())
+
+        #######
+
+        n_lin_2 = quad_clas.PredictorLinear(architecture)
+
+        path_nn_lin_2 = os.path.join(path_nn_lin[1], 'mc_run_{}', 'trained_nn.pt')
+        n_lin_2.load_state_dict(torch.load(path_nn_lin_2.format(mc_run)))
+        mean, std = np.loadtxt(os.path.join(path_nn_lin[1], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+
+        x_scaled = (x - mean) / std
+        n_lin_2_out = n_lin_2.n_alpha(x_scaled.float())
+
+        ########
+
+        # n_quad_1 = PredictorQuadratic(architecture)
+        # n_quad_1.load_state_dict(torch.load(path_nn_quad_1.format(mc_run)))
         #
+        # mean, std = np.loadtxt(os.path.join(path_quad_1, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        # x_scaled = (x - mean) / std
+        # n_quad_1_out = n_quad_1.n_beta(x_scaled.float()) ** 2
         #
-        #     cntr_truth = ax.contour(cuu_plane, cug_plane,
-        #                             self.ellipse(cuu_plane, cug_plane, *ellipse_param_truth),
-        #                             levels=[1.64],
-        #                             colors='C0')
+        # #######
         #
-        #     h0, _ = cntr_truth.legend_elements()
-        #     contours.append(h0[0])
-        #     labels.append(r'$\rm{Truth}$')
+        # n_quad_2 = PredictorQuadratic(architecture)
+        # n_quad_2.load_state_dict(torch.load(path_nn_quad_2.format(mc_run)))
         #
-        # if self.nn:
+        # mean, std = np.loadtxt(os.path.join(path_quad_2, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        # x_scaled = (x - mean) / std
+        # n_quad_2_out = n_quad_2.n_beta(x_scaled.float()) ** 2
         #
-        #     for ellipse_param_nn_rep in ellipse_param_nn:
-        #         cntr_nn = ax.contour(cuu_plane, cug_plane,
-        #                              self.ellipse(cuu_plane, cug_plane, *ellipse_param_nn_rep),
-        #                              levels=[1.64],
-        #                              colors='C1')
-        #         h0, _ = cntr_nn.legend_elements()
+        # #######
         #
-        #     contours.append(h0[0])
-        #     labels.append(r'$\rm{NN}$')
+        # n_cross = PredictorCross(architecture)
+        # n_cross.load_state_dict(torch.load(path_nn_cross.format(mc_run)))
+        #
+        # mean, std = np.loadtxt(os.path.join(path_cross, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        # x_scaled = (x - mean) / std
+        # n_cross_out = n_cross.n_gamma(x_scaled.float()) ** 2
+
+    # r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out #+ c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_cross_out
+
+    # r = 1 + cHW * n_lin_1_out + cHq3 * n_lin_2_out
+    r = 1 + cHq3 * n_lin_2_out
+    # lin_nn = [n_lin_1_out, n_lin_2_out]
+
+    return r  # , [lin_nn]
 
 
-        # plot settings
-        ax.legend(contours, labels, fontsize=15, frameon=False, loc='best')
-        ax.set_xlabel(r'$\rm{cHq3}$', fontsize=20)
-        ax.set_ylabel(r'$\rm{cHW}$', fontsize=20)
-        ax.set_title(r'$\rm{Expected\;exclusion\;limits}$', fontsize=20)
-        ax.scatter(0, 0, marker='x', color='black', label=r'$\rm{SM}$')
-        plt.tight_layout(pad=1.2)
-        fig.savefig('/Users/jaco/Documents/ML4EFT/code/output/zh_bin_quad_test_ellipse.pdf')
-        #fig.savefig(os.path.join(self.plots_path, 'ellipses_diff_new_8.pdf'))
-
-    def analyse1d(self):
-        z_scores_truth = self.z_scores_truth
-        z_scores_nn = self.z_scores_nn
-
-        z_scores_nn_pcuu = z_scores_nn[(z_scores_nn['cug'] == 0) & (z_scores_nn['cuu'] > 0)]
-        z_scores_nn_ncuu = z_scores_nn[(z_scores_nn['cug'] == 0) & (z_scores_nn['cuu'] < 0)]
-        z_scores_nn_pcug = z_scores_nn[(z_scores_nn['cuu'] == 0) & (z_scores_nn['cug'] > 0)]
-        z_scores_nn_ncug = z_scores_nn[(z_scores_nn['cuu'] == 0) & (z_scores_nn['cug'] < 0)]
-        z_scores_nn_pdiag = z_scores_nn[(z_scores_nn['cuu'] > 0) & (z_scores_nn['cug'] > 0)]
-        z_scores_nn_ndiag = z_scores_nn[(z_scores_nn['cuu'] < 0) & (z_scores_nn['cug'] < 0)]
-
-        z_scores_truth_pcuu = z_scores_truth[(z_scores_truth['cug'] == 0) & (z_scores_truth['cuu'] > 0)]
-        z_scores_truth_ncuu = z_scores_truth[(z_scores_truth['cug'] == 0) & (z_scores_truth['cuu'] < 0)]
-        z_scores_truth_pcug = z_scores_truth[(z_scores_truth['cuu'] == 0) & (z_scores_truth['cug'] > 0)]
-        z_scores_truth_ncug = z_scores_truth[(z_scores_truth['cuu'] == 0) & (z_scores_truth['cug'] < 0)]
-        z_scores_truth_pdiag = z_scores_truth[(z_scores_truth['cuu'] > 0) & (z_scores_truth['cug'] > 0)]
-        z_scores_truth_ndiag = z_scores_truth[(z_scores_truth['cuu'] < 0) & (z_scores_truth['cug'] < 0)]
-
-        fig = self.interpolation(z_scores_truth_pcuu, z_scores_nn_pcuu)
-        fig.savefig(os.path.join(self.plots_path, 'analysis1d_pcuu.pdf'))
+def decision_function_nn(x, c, mc_run, lin=False, quad=False):
+    ratio = likelihood_ratio_nn(x, c, lin, quad)
+    return 1 / (1 + ratio)
 
 
+def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
+    # discrete colorbar
+    cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
 
-    def fit_ellipse(self):
-        """
-        Fit an ellipse through the z-scores
+    norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
 
-        Returns
-        -------
-        tuple
-            ellipse parameters for the truth and nn analysis
-        """
+    cmap_copy.set_bad(color='gainsboro')
 
-        def poly2d(x, y, a, b, c, d):
-            return a * x ** 2 + b * y ** 2 + c * x * y + d
+    # continious colormap
 
-        def _poly2d(M, a, b, c, d):
-            x, y = M
-            return poly2d(x, y, a, b, c, d)
+    # cmap = copy.copy(plt.get_cmap(cmap))
+    # cmap.set_bad(color='white')
+    # cmap.set_over("#FFAF33")
+    # cmap.set_under("#FFAF33")
 
-        # solve the linear equation xsec = coeff_matrix * a for a
-        if self.truth:
-            cuu = self.z_scores_truth.cuu.values
-            cug = self.z_scores_truth.cug.values
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.imshow(im, extent=extent,
+              origin='lower', cmap=cmap_copy, aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), norm=norm)
 
-            eft_points = np.array([cuu, cug])
-            Z = self.z_scores_truth['z-score'].values
-            Z_unc = self.z_scores_truth['uncertainty'].values
+    cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax)
 
-            popt, pcov = curve_fit(_poly2d, eft_points, Z, sigma=Z_unc)
-            perr = np.sqrt(np.diag(pcov))
-
-            # eft_points = np.array([cuu, cug]).T
-            #
-            # z_score_truth = self.z_scores_truth['z-score'].values
-            # z_score_unc_truth = self.z_scores_truth['uncertainty'].values
-            #
-            # coeff_mat = self.coefficient_matrix(eft_points)
-            #
-            # a_truth, _, _, _ = np.linalg.lstsq(coeff_mat, z_score_truth, rcond=None)
-            a_truth, a_truth_error = popt, perr
-        else:
-            a_truth = None
-
-        if self.nn:
-            # fit an ellipse for each replica
-            ellipse_param = []
-            for rep in self.z_scores_nn:
-                cuu = rep.cuu.values
-                cug = rep.cug.values
-
-                eft_points = np.array([cuu, cug])
-                z_score = rep['z-score'].values
-                z_score_unc = rep['unc'].values
-
-                popt, pcov = curve_fit(_poly2d, eft_points, z_score, sigma=z_score_unc)
-                perr = np.sqrt(np.diag(pcov))
-
-                ellipse_param.append(popt)
-
-            a_nn = ellipse_param
-        else:
-            a_nn = None
-
-        return a_truth, a_nn
-
-    def interpolation(self, z_scores_truth, z_scores_nn):
-
-        fig, ax = plt.subplots(figsize=(10, 6))
-
-        z_scores_nn = z_scores_nn.reset_index(drop=True)
-        z_scores_truth = z_scores_truth.reset_index(drop=True)
-        c = z_scores_nn.cuu.values if z_scores_nn.cuu.values[0] != 0 else z_scores_nn.cug.values
-
-        z_score_nn = z_scores_nn['z-score'].values
-        z_score_nn_unc = z_scores_nn['uncertainty'].values
-
-        z_score_truth = z_scores_truth['z-score'].values
-        z_score_truth_unc = z_scores_truth['uncertainty'].values
-
-        ax.errorbar(c, z_score_nn, yerr=z_score_nn_unc, fmt='.', capsize=3,
-                    color='C1', label=r'$\rm{z-score\;(NN)}$')
-
-        ax.errorbar(c, z_score_truth, yerr=z_score_truth_unc, fmt='.', capsize=3,
-                    color='C0', label=r'$\rm{z-score\;(truth)}$')
-
-        popt_nn, _ = curve_fit(self.quad_pol, c, z_score_nn, sigma=z_score_nn_unc)
-        popt_truth, _ = curve_fit(self.quad_pol, c, z_score_truth, sigma=z_score_truth_unc)
-
-        epsilon = 0.1 * (np.max(c) - np.min(c))
-        xmin = np.min(c) - epsilon
-        xmax = np.max(c) + epsilon
-        x = np.linspace(xmin, xmax, 400)
-
-        plt.hlines(1.64, xmin, xmax, color='black', linestyle='dashed')
-        # ax.plot(x, quad_pol(x, *popt_truth), color='C0', linestyle='dotted')#, label=r'$\rm{Exp\;fit\;(true)}$')
-        ax.plot(x, self.quad_pol(x, *popt_truth), color='C0', linestyle='dotted')  # , label=r'$\rm{Exp\;fit\;(NN)}$')
-        ax.plot(x, self.quad_pol(x, *popt_nn), color='C1', linestyle='dotted')  # , label=r'$\rm{Exp\;fit\;(NN)}$')
-
-        idx_truth = np.argwhere(np.diff(np.sign(self.quad_pol(x, *popt_truth) - 1.64))).flatten()
-        idx_nn = np.argwhere(np.diff(np.sign(self.quad_pol(x, *popt_nn) - 1.64))).flatten()
-
-        plt.plot(x[idx_truth], self.quad_pol(x[idx_truth], *popt_truth), 'kx')
-        plt.plot(x[idx_nn], self.quad_pol(x[idx_nn], *popt_nn), 'kx')
-
-        ##### add binned curve
-        z_scores_binned = []
-        for c in x:
-            self.binned_analyses[0].nu_i = self.binned_analyses[0].expected_entries(np.array([0, c]))
-            self.binned_analyses[0].mean_tc_asi, self.binned_analyses[0].std_tc_asi = self.binned_analyses[0].find_pdf_binned_asimov()
-            z_score_asi, _ = self.binned_analyses[0].p_value_asimov()
-            z_scores_binned.append(z_score_asi)
-        z_scores_binned = np.array(z_scores_binned)
-
-        plt.plot(x, z_scores_binned, label=r'$\rm{z-score\;(binning\;0)}$', color='C2')
-
-        # Plot settings
-        ax.set_ylabel(r'$\rm{z-score}$', fontsize=20)
-        ax.set_xlabel(r'$\rm{cuu}$', fontsize=20)
-        ax.set_xlim((xmin, xmax))
-
-        epsilon = 0.1 * (np.max(z_score_truth) - np.min(z_score_truth))
-        ymin = np.min([z_score_truth.min() - epsilon, z_score_nn.min() - epsilon])
-        ymax = np.max([z_score_truth.max() + epsilon, z_score_nn.max() + epsilon])
-
-        ax.set_ylim((ymin, ymax))
-        ax.legend(loc='best', fontsize=15, frameon=False)
-        ax.tick_params(which='both', direction='in', labelsize=20)
-        ax.tick_params(which='major', length=10)
-        ax.tick_params(which='minor', length=5)
-        ax.set_title(r'$\rm{Interpolation\;of\;z-score}$', fontsize=20)
+    cbar.minorticks_on()
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.tight_layout()
+    return fig
 
 
+def coeff_comp_rep(path_model, network_size, c1, c2):
+    """
+    Compares the EFT coefficient function of the replica stored at ``path_model`` with the truth. The ratio is plotted
+    and returned as a matplotlib figure.
 
-        fig.tight_layout()
-        return fig
+    Parameters
+    ----------
+    path_model: str
+        Path to model replica
+    network_size: list
+        The architecture of the model, e.g.
 
-    @staticmethod
-    def quad_pol(x, a, b, c):
-        return a * x ** 2 + b * x + c
+        .. math::
 
-    @staticmethod
-    def ellipse(x, y, a, b, c, d):
-        return a * x ** 2 + b * y ** 2 + c * x * y + d
+            [n_i, 10, 15, 5, n_f],
 
-    @staticmethod
-    def stdom(x):
-        return np.std(x) / np.sqrt(len(x))
+        where :math:`n_i` and :math:`n_f` denote the number of input features and output target values respectively.
 
-    @staticmethod
-    def wavg(group):
-        z = group['z-score']
-        sigma_z = group['uncertainty']
-        z_wavg = ((z / sigma_z ** 2).sum()) / ((1 / sigma_z ** 2).sum())
-        z_wavg_unc = 1 / ((1 / sigma_z ** 2).sum())
-        return pd.Series({'z-score': z_wavg, 'uncertainty': z_wavg_unc})
+    c1: float
+        Value of the 1st EFT coefficient used during training
+    c2: float
+        Value of the 2nd EFT coefficient used during training
 
-    @staticmethod
-    def coefficient_matrix(eft_points):
-        matrix = []
-        for c in eft_points:
-            cuu = c[0]
-            cug = c[1]
-            row = [cuu ** 2, cug ** 2, cug * cuu]
-            matrix.append(row)
-        return np.array(matrix)
+    Returns
+    -------
+    `matplotlib.figure.Figure`
+    """
+
+    s = 14 ** 2
+    epsilon = 1e-2
+    mvh_min, mvh_max = mz + mh + epsilon, 2
+    y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
+
+    x_spacing, y_spacing = 1e-2, 0.01
+    mvh_span = np.arange(mvh_min, mvh_max, x_spacing)
+    y_span = np.arange(y_min, y_max, y_spacing)
+
+    mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
+    grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
+    grid_unscaled_tensor = torch.Tensor(grid)
+
+    # truth
+    if c1 != 0:
+        ratio_truth_c1 = likelihood_ratio_truth(grid, np.array([10, 0]), lin=True)
+        mask = ratio_truth_c1 == 0
+        coeff_truth = np.ma.masked_where(mask, (ratio_truth_c1 - 1) / 10)
+        coeff_truth = coeff_truth.reshape(mvh_grid.shape)
+        title = r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$'
+    elif c2 != 0:
+        ratio_truth_c2 = likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
+        mask = ratio_truth_c2 == 0
+        coeff_truth = np.ma.masked_where(mask, (ratio_truth_c2 - 1) / 10)
+        coeff_truth = coeff_truth.reshape(mvh_grid.shape)
+        title = r'$n_2^{\rm{truth}}/n_2^{\rm{NN}}\;\rm{(median)}$'
+    else:
+        loggin.info("c1 and c2 cannot both be zero.")
+
+    # models
+
+    mean, std = np.loadtxt(os.path.join(path_model, 'scaling.dat'))
+    loaded_model = quad_clas.PredictorLinear(network_size)
+    network_path = os.path.join(path_model, 'trained_nn.pt')
+
+    # load all the parameters into the trained network
+    loaded_model.load_state_dict(torch.load(network_path))
+    grid = (grid_unscaled_tensor - mean) / std
+
+    coeff_nn = loaded_model.n_alpha(grid.float())
+    coeff_nn = coeff_nn.view(mvh_grid.shape).detach().numpy()
+
+    bounds = [0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05]
+    fig = plot_heatmap(coeff_truth / coeff_nn,
+                       xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
+                       ylabel=r'$\rm{Rapidity}$',
+                       title=title,
+                       extent=[mvh_min, mvh_max, y_min, y_max],
+                       cmap='seismic',
+                       bounds=bounds)
+
+    return fig
+
+
+def coeff_comp(path_sm_data):
+    s = 14 ** 2
+    epsilon = 1e-2
+    mvh_min, mvh_max = mz + mh + epsilon, 2
+    y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
+
+    x_spacing, y_spacing = 1e-2, 0.01
+    mvh_span = np.arange(mvh_min, mvh_max, x_spacing)
+    y_span = np.arange(y_min, y_max, y_spacing)
+
+    mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
+    grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
+    grid_unscaled_tensor = torch.Tensor(grid)
+
+    # truth
+    ratio_truth_c1 = analysis.likelihood_ratio_truth(grid, np.array([10, 0]), lin=True)
+    ratio_truth_c2 = analysis.likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
+    mask = ratio_truth_c1 == 0
+
+    n_alpha_truth = np.ma.masked_where(mask, (ratio_truth_c1 - 1) / 10)
+    n_alpha_truth = n_alpha_truth.reshape(mvh_grid.shape)
+
+    n_beta_truth = np.ma.masked_where(mask, (ratio_truth_c2 - 1) / 10)
+    n_beta_truth = n_beta_truth.reshape(mvh_grid.shape)
+
+    # models
+
+    network_size = [2, 30, 30, 30, 30, 30, 1]
+    model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/17_11/model_final_lin_cHW/mc_run_{mc_run}'
+
+    n_betas = []
+    mc_runs = 30
+    for rep_nr in range(0, mc_runs):
+
+        mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
+        loaded_model = quad_classifier_cluster.PredictorLinear(network_size)
+        network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+
+        # load all the parameters into the trained network
+        loaded_model.load_state_dict(torch.load(network_path))
+        grid = (grid_unscaled_tensor - mean) / std
+
+        n_beta = loaded_model.n_alpha(grid.float())
+        n_beta = n_beta.view(mvh_grid.shape).detach().numpy()
+
+        n_betas.append(n_beta)
+
+    n_betas = np.array(n_betas)
+    n_beta_median = np.percentile(n_betas, 50, axis=0)
+    n_beta_high = np.percentile(n_betas, 84, axis=0)
+    n_beta_low = np.percentile(n_betas, 16, axis=0)
+    n_beta_unc = (n_beta_high - n_beta_low) / 2
+
+    # visualise sm events
+    if path_sm_data is not None:
+        path_dict_sm = {0: path_sm_data}
+        data_sm = quad_classifier_cluster.EventDataset(c=0,
+                                                       n_features=2,
+                                                       path_dict=path_dict_sm,
+                                                       n_dat=500,
+                                                       hypothesis=1)
+        sm_events = data_sm.events.numpy()
+    else:
+        sm_events = None
+
+    # median
+    fig1 = plot_heatmap(n_alpha_truth / n_beta_median,
+                        xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
+                        ylabel=r'$\rm{Rapidity}$',
+                        title=r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$',
+                        extent=[mvh_min, mvh_max, y_min, y_max],
+                        cmap='seismic',
+                        bounds=[0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05])
+
+    fig1.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/17_11/n_beta_ratio_v6.pdf')
+
+    # pull
+    fig2 = plot_heatmap((n_alpha_truth - n_beta_median) / n_beta_unc,
+                        xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
+                        ylabel=r'$\rm{Rapidity}$',
+                        title=r'$\rm{Pull}$',
+                        extent=[mvh_min, mvh_max, y_min, y_max],
+                        cmap='seismic',
+                        bounds=np.linspace(-1.5, 1.5, 10))
+
+    fig2.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/17_11/n_beta_ratio_pull_v3.pdf')
+
+
+def load_models(architecture, model_dir, model_nrs):
+    models = []
+    for rep_nr in model_nrs:
+        # load statistics of pretrained models
+        mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
+        loaded_model = quad_clas.PredictorLinear(architecture)
+        network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+
+        # load all the parameters into the trained network and save
+        loaded_model.load_state_dict(torch.load(network_path))
+        models.append(loaded_model)
+
+    return models
+
+
+def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
+                        path_lin_1=None,
+                        path_lin_2=None,
+                        path_quad_1=None,
+                        path_quad_2=None):
+    # Set up coordinates and compute f
+    x_unscaled = torch.from_numpy(x)
+    # x_unscaled = torch.cat((x_unscaled, torch.zeros(len(x_unscaled), 1)), dim=1)
+    x = (x_unscaled - mean) / std  # rescale the inputs
+
+    # Be careful to use the same network architecture as during training
+
+    if path_quad_1 is None:
+        loaded_model = quad_clas.PredictorLinear(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW + cHq3)
+    elif path_quad_2 is None:
+        loaded_model = quad_clas.PredictorQuadratic(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW ** 2 + cHq3 ** 2, path_lin_1)
+    else:
+        loaded_model = quad_clas.PredictorCross(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW, cHq3, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+
+    f_pred = f_pred.view(-1).detach().numpy()
+
+    return f_pred
+
+
 

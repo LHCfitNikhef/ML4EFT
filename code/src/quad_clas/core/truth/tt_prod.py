@@ -11,7 +11,7 @@ from scipy.integrate import quad, dblquad
 from scipy import integrate
 import pylhe
 
-from quad_clas.core.xsec import vh_prod
+from quad_clas.core.truth import vh_prod
 
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 mt = 0.17276  # 172 #Top quark mass plot_mg5_ana_mttin GeV
