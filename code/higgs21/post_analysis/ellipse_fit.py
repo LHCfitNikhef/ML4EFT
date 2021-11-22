@@ -1,1 +1,0 @@
-ellipse_param_truth,  ellipse_param_nn = self.fit_ellipse()

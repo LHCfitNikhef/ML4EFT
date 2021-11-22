@@ -17,9 +17,10 @@ import os
 from quad_clas.core import classifier as quad_clas
 from quad_clas.core.truth import tt_prod as axs
 from quad_clas.core.truth import vh_prod
+from ..preproc import constants
 
-mz = 91.188 * 10 ** -3  # z boson mass [TeV]
-mh = 0.125
+mz = constants.mz # z boson mass [TeV]
+mh = constants.mh
 
 # matplotlib.use('PDF')
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
@@ -33,7 +34,7 @@ def likelihood_ratio_truth(x, c, lin=False, quad=False):
     Parameters
     ----------
     x : numpy.ndarray, shape=(M, N)
-        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+        Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
         the invariant mass and the rapidity.
     c : numpy.ndarray, shape=(M,)
         EFT point in M dimensions, e.g c = (cHW, cHq3)
@@ -146,10 +147,7 @@ def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, q
     # r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out #+ c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_cross_out
 
     r = 1 + cHW * n_lin_1_out + cHq3 * n_lin_2_out
-    #r = 1 + cHq3 * n_lin_2_out
-    # lin_nn = [n_lin_1_out, n_lin_2_out]
-
-    return r  # , [lin_nn]
+    return r
 
 def decision_function_nn(x, c, mc_run, lin=False, quad=False):
     ratio = likelihood_ratio_nn(x, c, lin, quad)
@@ -394,5 +392,65 @@ def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
 
     return f_pred
 
+
+def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=True, quad=False):
+    """
+    Make a point by point comparison between the truth and the models
+
+    Parameters
+    ----------
+    mc_reps: int
+        Number of replicas to include
+    events: numpy.ndarray, shape=(M, N)
+        Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    c: numpy.ndarray, shape=(M,)
+        EFT point in M dimensions, e.g c = (cHW, cHq3)
+    path_to_models: dict
+        dictionary containing the paths to the trained models for each order in the eft expansion (linear, quadratic
+        and cross terms)
+    network_size: list
+        Network architecture
+    """
+
+    r_nn = []
+    for mc_run in range(mc_reps):
+        r_nn_rep = likelihood_ratio_nn(torch.Tensor(events), c, path_to_models, network_size, mc_run=mc_run,
+                                       lin=lin, quad=quad)
+        r_nn_rep = r_nn_rep.numpy().flatten()
+        r_nn.append(r_nn_rep)
+    tau_nn = np.log(r_nn)
+
+    r_truth = likelihood_ratio_truth(events, c, lin=lin, quad=quad)
+    tau_truth = np.log(r_truth)
+
+    # overview plot for all replicas
+    ncols = 5
+    nrows = int(np.ceil(mc_reps/ncols))
+
+    fig1 = plt.figure(figsize=(ncols * 4, nrows * 4))
+
+    x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
+    for i in range(int(ncols * nrows)):
+        plt.subplot(nrows, ncols, i + 1)
+        plt.scatter(tau_truth, tau_nn[i, :], s=5, color='k')
+        plt.plot(x, x, linestyle='dashed', color='grey')
+        plt.xlim((np.min(x), np.max(x)))
+        plt.ylim((np.min(x), np.max(x)))
+
+    plt.tight_layout()
+
+    # median
+    fig2, ax = plt.subplots(figsize=(8, 8))
+    x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
+    plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=5, color='k')
+    plt.plot(x, x, linestyle='dashed', color='grey')
+    plt.xlabel(r'$\tau(x, c)^{\rm{truth}}$')
+    plt.ylabel(r'$\tau(x, c)^{\rm{NN}}$')
+    plt.xlim((np.min(x), np.max(x)))
+    plt.ylim((np.min(x), np.max(x)))
+    plt.tight_layout()
+
+    return fig1, fig2
 
 

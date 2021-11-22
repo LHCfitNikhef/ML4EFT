@@ -82,19 +82,18 @@ mh = constants.mh
 #     return r
 class Limits:
 
-
-
-    def __init__(self, luminosity, bins, scan_domain, mc_reps, data_sm, path_save, architecture,
+    def __init__(self, luminosity, bins, scan_domain, path_to_models, mc_reps, data_sm, plot_path, architecture,
                  lin=False, quad=False, plot_reps=False):
 
         self.luminosity = luminosity
         self.bins = bins
         self.scan_domain = scan_domain
+        self.path_to_models = path_to_models
         self.mc_reps = mc_reps
         self.data_sm = data_sm
         self.lin = lin
         self.quad = quad
-        self.path_save = path_save
+        self.plot_path = plot_path
         self.architecture = architecture
 
         self.q_c_truth = None
@@ -124,7 +123,7 @@ class Limits:
         self.q_c_truth, self.q_c_nn, self.q_c_nn_median = self.unbinned_limits()
 
         fig = self.plot_contours(plot_reps)
-        fig.savefig(self.path_save)
+        fig.savefig(self.plot_path)
 
     def unbinned_limits(self):
 
@@ -160,8 +159,7 @@ class Limits:
                 log_l_nn_reps = []
                 for rep in range(mc_reps):
 
-
-                    r_nn = analyse.likelihood_ratio_nn(torch.tensor(events_mvh_y), [c1, c2], path_to_models, self.architecture,
+                    r_nn = analyse.likelihood_ratio_nn(torch.tensor(events_mvh_y), [c1, c2], self.path_to_models, self.architecture,
                                                     mc_run=rep, lin=self.lin, quad=self.quad).numpy().flatten()
 
                     #r_nn = get_nn_ratio(torch.tensor(events_mvh_y), c1, c2, rep).detach().numpy()

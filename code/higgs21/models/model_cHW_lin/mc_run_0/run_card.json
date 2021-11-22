@@ -1,1 +1,0 @@
-{"name": "cHW_lin", "epochs": 200, "input_size": 1, "output_size": 1, "hidden_sizes": [30, 30, 30, 30, 30], "n_dat": 10000, "quadratic": 0, "animation": 0, "coeff": [{"op": "cHW", "value": 10.0}, {"op": "cHq3", "value": 0}], "event_data": "/Users/jaco/Documents/ML4EFT/data/events"}

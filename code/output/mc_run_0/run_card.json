@@ -1,1 +1,0 @@
-{"name": "cHq3_lin_v2", "epochs": 100, "input_size": 2, "output_size": 1, "hidden_sizes": [30, 30, 30, 30, 30], "n_dat": 50000, "quadratic": 0, "cross_term": 0, "animation": 0, "coeff": [{"op": "cHW", "value": 0.0}, {"op": "cHq3", "value": 10.0}], "event_data": "/data/theorie/jthoeve/event_generation/events_high_stats"}

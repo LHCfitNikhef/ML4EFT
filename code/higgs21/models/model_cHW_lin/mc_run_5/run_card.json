@@ -1,1 +1,0 @@
-{"name": "cHW_lin", "epochs": 200, "input_size": 1, "output_size": 1, "hidden_sizes": [30, 30, 30, 30, 30], "n_dat": 20000, "quadratic": 0, "animation": 0, "coeff": {"op": "cHW", "value": 10.0}, "event_data": "/Users/jaco/Documents/ML4EFT/data/events", "path_lin": "/data/theorie/jthoeve/ML4EFT_higgs/models/model_cHW_lin_3/mc_run_{}/trained_nn.pt"}
