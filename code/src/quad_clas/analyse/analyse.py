@@ -235,13 +235,13 @@ def coeff_comp_rep(path_model, network_size, c1, c2):
         mask = ratio_truth_c1 == 0
         coeff_truth = np.ma.masked_where(mask, (ratio_truth_c1 - 1) / 10)
         coeff_truth = coeff_truth.reshape(mvh_grid.shape)
-        title = r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$'
+        title = r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}$'
     elif c2 != 0:
         ratio_truth_c2 = likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
         mask = ratio_truth_c2 == 0
         coeff_truth = np.ma.masked_where(mask, (ratio_truth_c2 - 1) / 10)
         coeff_truth = coeff_truth.reshape(mvh_grid.shape)
-        title = r'$n_2^{\rm{truth}}/n_2^{\rm{NN}}\;\rm{(median)}$'
+        title = r'$n_2^{\rm{truth}}/n_2^{\rm{NN}}$'
     else:
         loggin.info("c1 and c2 cannot both be zero.")
 

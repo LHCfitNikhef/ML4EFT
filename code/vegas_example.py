@@ -8,7 +8,7 @@ import lhapdf
 import matplotlib.pyplot as plt
 from scipy import integrate
 #%%
-from quad_clas.core.xsec import tt_prod as xsec
+from quad_clas.core.truth import tt_prod as xsec
 from quad_clas.core.lhelib import lhe as lhe
 #%%
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)

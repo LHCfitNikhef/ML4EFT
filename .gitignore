@@ -295,6 +295,7 @@ sphinx/_build/
 /.ipynb_checkpoints/
 /code/src/ML4EFT.egg-info/
 /models/
+/code/output/
 #Cluster output files
 *.pbs.*
 
@@ -304,11 +305,15 @@ sphinx/_build/
 #pytorch files
 *.pt
 
+#plots
+*.pdf
+
 #large (> 100 mb) files
 /talks/ML4EFT-14-07.key
 
 # specific files
 /2d_data_fitter.ipynb
+
 
 
 
