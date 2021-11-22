@@ -6,10 +6,13 @@ from matplotlib.pyplot import cm
 import torch
 import os
 
-from quad_clas.core.classifier import PredictorCross, PredictorLinear, PredictorQuadratic
-import quad_clas.preproc.constants
-from quad_clas.analyse import analyse
-import quad_clas.core.truth.vh_prod as vh_prod
+from ..core.classifier import PredictorCross, PredictorLinear, PredictorQuadratic
+from ..preproc import constants
+from ..analyse import analyse
+from ..core.truth import vh_prod
+
+mz = constants.mz
+mh = constants.mh
 
 #%%
 
@@ -77,32 +80,12 @@ import quad_clas.core.truth.vh_prod as vh_prod
 #     r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out #+ c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_cross_out
 #     #r[r<0] = 1
 #     return r
-architecture = [2, 30, 30, 30, 30, 30, 1]
-path_to_models = {'lin': ['/Users/jaco/Documents/ML4EFT/models/lin/cHW',
-                          '/Users/jaco/Documents/ML4EFT/models/lin/cHq3']}
-
-path_save = '/data/theorie/jthoeve/ML4EFT_higgs/code/binned_unbinned/binned_unbinned_v28.pdf'
-events_sm = np.load('/data/theorie/jthoeve/event_generation/events/sm/events_0.npy')[1:, :]
-luminosity = 5000
-cHW_values = np.linspace(-1, 1, 50)
-cHq3_values = np.linspace(-3, 3, 50)
-scan_domain = np.array([cHW_values, cHq3_values])
-bins = np.array([2, 5, 8, 15])
-mc_reps = 30
-
-limits = Limits(luminosity=luminosity,
-                bins=bins,
-                scan_domain=scan_domain,
-                mc_reps=mc_reps,
-                events_sm=events_sm,
-                lin=True,
-                path_save=path_save,
-                architecture=architecture)
-
 class Limits:
 
-    def __init__(self, luminosity, bins, scan_domain, mc_reps, data_sm, path_save, lin=False, quad=False, plot_reps=False,
-                 architecture=architecture):
+
+
+    def __init__(self, luminosity, bins, scan_domain, mc_reps, data_sm, path_save, architecture,
+                 lin=False, quad=False, plot_reps=False):
 
         self.luminosity = luminosity
         self.bins = bins
@@ -128,7 +111,7 @@ class Limits:
 
         # find expected number of events under the sm
         a_sm = vh_prod.findCoeff(np.array([mz + mh, 4]))
-        nu_tot_sm = vh_prod.nu_i(a, 0, 0, self.luminosity, lin=False, quad=False)
+        nu_tot_sm = vh_prod.nu_i(a_sm, 0, 0, self.luminosity, lin=True, quad=False)
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         # draw a subset of events with size following a Poisson distribution with mean nu_tot
@@ -217,9 +200,9 @@ class Limits:
                 bins = np.linspace(mz + mh, 1.5, n_bins)
                 bins = np.append(bins, 4.0)
 
-            kappa = vh_prod.findCoeff(self.bins)
+            kappa = vh_prod.findCoeff(bins)
 
-            n_i, _ = np.histogram(self.events_mvh, self.bins)
+            n_i, _ = np.histogram(self.events_mvh, bins)
 
             log_likelihood = []
             for c1 in c1_values:
@@ -231,7 +214,7 @@ class Limits:
                     log_likelihood.append(np.sum(log_l_i))
 
             log_likelihood = np.array(log_likelihood)
-            log_likelihood_binned[i] = np.reshape(log_likelihood, (len(cHW_values), len(cHq3_values)))
+            log_likelihood_binned[i] = np.reshape(log_likelihood, (len(c1_values), len(c2_values)))
 
         return log_likelihood_binned
 
