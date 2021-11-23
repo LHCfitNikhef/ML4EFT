@@ -29,7 +29,7 @@ rc('text', usetex=True)
 
 def likelihood_ratio_truth(x, c, lin=False, quad=False):
     """
-    Compute the 1D analytic likelihood ratio r(x, c)
+    Computes the analytic likelihood ratio r(x, c)
 
     Parameters
     ----------
@@ -42,6 +42,11 @@ def likelihood_ratio_truth(x, c, lin=False, quad=False):
         Set to False by default. Turn on for linear corrections.
     quad: bool, optional
         Set to False by default. Turn on for quadratic corrections.
+
+    Returns
+    -------
+    ratio: numpy.ndarray, shape=(M,)
+        Likelihood ratio wrt the SM for the events ``x``
     """
 
     n_kin = x.shape[1]
@@ -59,16 +64,38 @@ def likelihood_ratio_truth(x, c, lin=False, quad=False):
     dsigma_0, dsigma_1 = np.array(dsigma_0), np.array(dsigma_1)
 
     ratio = np.divide(dsigma_0, dsigma_1, out=np.zeros_like(dsigma_0), where=dsigma_1 != 0)
-    # ratio = dsigma_0 / dsigma_1
 
     return ratio.flatten()
 
 def decision_function_truth(x, c, lin=False, quad=False):
+    """
+    Computes the analytic decission function f(x, c)
+
+    Parameters
+    ----------
+    x: numpy.ndarray, shape=(M, N)
+        Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    c: numpy.ndarray, shape=(M,)
+        EFT point in M dimensions, e.g c = (cHW, cHq3)
+    lin: bool, optional
+        Set to False by default. Turn on for linear corrections.
+    quad: bool, optional
+        Set to False by default. Turn on for quadratic corrections.
+
+    Returns
+    -------
+    ratio: numpy.ndarray, shape=(M,)
+        Decission function f for the events ``x``
+    """
+
     ratio = likelihood_ratio_truth(x, c, lin, quad)
-    return 1 / (1 + ratio)
+    f = 1 / (1 + ratio)
+    return f
 
 def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, quad=False):
     """
+    Computes the reconstructed likelihood ratio r(x, c) using the NN models
 
     Parameters
     ----------
@@ -88,7 +115,8 @@ def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, q
 
     Returns
     -------
-
+    ratio: numpy.ndarray, shape=(M,)
+        Reconstructed likelihood ratio wrt the SM for the events ``x``
     """
     cHW, cHq3 = c
 
@@ -149,11 +177,59 @@ def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, q
     r = 1 + cHW * n_lin_1_out + cHq3 * n_lin_2_out
     return r
 
-def decision_function_nn(x, c, mc_run, lin=False, quad=False):
-    ratio = likelihood_ratio_nn(x, c, lin, quad)
-    return 1 / (1 + ratio)
+def decision_function_nn(x, c, path_to_models, mc_run, lin=False, quad=False):
+    """
+    Computes the reconstructed decission function f(x, c)
+
+    Parameters
+    ----------
+    x : torch.tensor, shape=(M, N)
+        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    c : numpy.ndarray, shape=(M,)
+        EFT point in M dimensions, e.g c = (cHW, cHq3)
+    path_to_models: dict
+        Path to the nn model root directory
+    mc_run: int
+        Monte Carlo replica number
+    lin: bool, optional
+        Set to False by default. Turn on for linear corrections.
+    quad: bool, optional
+        Set to False by default. Turn on for quadratic corrections.
+
+    Returns
+    -------
+    f: numpy.ndarray, shape=(M,)
+        Reconstructed decission function f for the events ``x``
+    """
+
+    ratio = likelihood_ratio_nn(x, c, path_to_models, mc_run, lin, quad)
+    f = 1 / (1 + ratio)
+    return f
 
 def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
+    """
+    Plot and return a heatmap of ``im``
+
+    Parameters
+    ----------
+    im: numpy.ndarray, shape=(M, N)
+        Input array
+    xlabel: str
+    ylabel: str
+    title: str
+    extent: list
+        boundaries of the heatmap, e.g. [x_0, x_1, y_1, y_2]
+    bounds: list
+        The boundaries of the discrete colourmap
+    cmap: str
+        colourmap to use, set to 'GnBu' by default
+
+    Returns
+    -------
+    fig: `matplotlib.figure.Figure`
+    """
+
     # discrete colorbar
     cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
 
@@ -183,8 +259,8 @@ def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
 
 def coeff_comp_rep(path_model, network_size, c1, c2):
     """
-    Compares the EFT coefficient function of the replica stored at ``path_model`` with the truth. The ratio is plotted
-    and returned as a matplotlib figure.
+    Compares the EFT coefficient function of the individual replica stored at ``path_model`` with the truth.
+    The ratio is plotted and returned as a matplotlib figure.
 
     Parameters
     ----------
@@ -262,7 +338,32 @@ def coeff_comp_rep(path_model, network_size, c1, c2):
 
     return fig
 
-def coeff_comp(path_sm_data):
+def coeff_comp(mc_reps, path_model, network_size, c1, c2, path_sm_data=None):
+    """
+    Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
+
+    Parameters
+    ----------
+    mc_reps: int
+        Number of replicas to include
+    path_model: str
+        Path to models, e.g. models/model_x/mc_run_{mc_run}
+    network_size: list
+        Architecture of the network
+    c1: float
+        Value of the 1st EFT coefficient used during training
+    c2: float
+        Value of the 2nd EFT coefficient used during training
+    path_sm_data: str, optional
+        Path to sm .npy event file which will be plotted on top of the heatmap
+
+    Returns
+    -------
+    `matplotlib.figure.Figure`
+        Heatmap of coefficient function ratio
+    `matplotlib.figure.Figure`
+        Heatmap of pull
+    """
     s = 14 ** 2
     epsilon = 1e-2
     mvh_min, mvh_max = mz + mh + epsilon, 2
@@ -281,39 +382,35 @@ def coeff_comp(path_sm_data):
     ratio_truth_c2 = analysis.likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
     mask = ratio_truth_c1 == 0
 
-    n_alpha_truth = np.ma.masked_where(mask, (ratio_truth_c1 - 1) / 10)
-    n_alpha_truth = n_alpha_truth.reshape(mvh_grid.shape)
+    n_1_truth = np.ma.masked_where(mask, (ratio_truth_c1 - 1) / 10)
+    n_1_truth = n_1_truth.reshape(mvh_grid.shape)
 
-    n_beta_truth = np.ma.masked_where(mask, (ratio_truth_c2 - 1) / 10)
-    n_beta_truth = n_beta_truth.reshape(mvh_grid.shape)
+    n_2_truth = np.ma.masked_where(mask, (ratio_truth_c2 - 1) / 10)
+    n_2_truth = n_2_truth.reshape(mvh_grid.shape)
 
     # models
 
-    network_size = [2, 30, 30, 30, 30, 30, 1]
-    model_dir = '/data/theorie/jthoeve/ML4EFT_higgs/models/17_11/model_final_lin_cHW/mc_run_{mc_run}'
+    n_alphas = []
+    for rep_nr in range(0, mc_reps):
 
-    n_betas = []
-    mc_runs = 30
-    for rep_nr in range(0, mc_runs):
-
-        mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
+        mean, std = np.loadtxt(os.path.join(path_model.format(mc_run=rep_nr), 'scaling.dat'))
         loaded_model = quad_classifier_cluster.PredictorLinear(network_size)
-        network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+        network_path = os.path.join(path_model.format(mc_run=rep_nr), 'trained_nn.pt')
 
         # load all the parameters into the trained network
         loaded_model.load_state_dict(torch.load(network_path))
         grid = (grid_unscaled_tensor - mean) / std
 
-        n_beta = loaded_model.n_alpha(grid.float())
-        n_beta = n_beta.view(mvh_grid.shape).detach().numpy()
+        n_alpha = loaded_model.n_alpha(grid.float())
+        n_alpha = n_beta.view(mvh_grid.shape).detach().numpy()
 
-        n_betas.append(n_beta)
+        n_alphas.append(n_beta)
 
-    n_betas = np.array(n_betas)
-    n_beta_median = np.percentile(n_betas, 50, axis=0)
-    n_beta_high = np.percentile(n_betas, 84, axis=0)
-    n_beta_low = np.percentile(n_betas, 16, axis=0)
-    n_beta_unc = (n_beta_high - n_beta_low) / 2
+    n_alphas = np.array(n_alphas)
+    n_alpha_median = np.percentile(n_alphas, 50, axis=0)
+    n_alpha_high = np.percentile(n_alphas, 84, axis=0)
+    n_alpha_low = np.percentile(n_alphas, 16, axis=0)
+    n_alpha_unc = (n_alpha_high - n_alpha_low) / 2
 
     # visualise sm events
     if path_sm_data is not None:
@@ -328,7 +425,9 @@ def coeff_comp(path_sm_data):
         sm_events = None
 
     # median
-    fig1 = plot_heatmap(n_alpha_truth / n_beta_median,
+    median_ratio = n_1_truth / n_alpha_median if c1 != 0 else n_2_truth / n_alpha_median
+
+    fig1 = plot_heatmap(n_1_truth / n_alpha_median,
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
                         ylabel=r'$\rm{Rapidity}$',
                         title=r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$',
@@ -336,10 +435,10 @@ def coeff_comp(path_sm_data):
                         cmap='seismic',
                         bounds=[0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05])
 
-    fig1.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/17_11/n_beta_ratio_v6.pdf')
-
     # pull
-    fig2 = plot_heatmap((n_alpha_truth - n_beta_median) / n_beta_unc,
+    pull = (n_1_truth - n_alpha_median) / n_alpha_unc if c1 != 0 else (n_2_truth - n_alpha_median) / n_alpha_unc
+
+    fig2 = plot_heatmap(pull,
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
                         ylabel=r'$\rm{Rapidity}$',
                         title=r'$\rm{Pull}$',
@@ -347,9 +446,27 @@ def coeff_comp(path_sm_data):
                         cmap='seismic',
                         bounds=np.linspace(-1.5, 1.5, 10))
 
-    fig2.savefig('/data/theorie/jthoeve/ML4EFT_higgs/plots/17_11/n_beta_ratio_pull_v3.pdf')
+    return fig1, fig2
 
 def load_models(architecture, model_dir, model_nrs):
+    """
+    Load the pretrained models
+
+    Parameters
+    ----------
+    architecture: list
+        Arcitecture of the model
+    model_dir:
+        path to model directory up to mc_run (pass rep number as string format), e.g.
+        /models/mc_run_{}
+    model_nrs: iterable object
+        An iterable that contains all the replicas that should be loaded
+
+    Returns
+    -------
+    models: list
+        List of loaded models
+    """
     models = []
     for rep_nr in model_nrs:
         # load statistics of pretrained models
@@ -362,36 +479,6 @@ def load_models(architecture, model_dir, model_nrs):
         models.append(loaded_model)
 
     return models
-
-def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
-                        path_lin_1=None,
-                        path_lin_2=None,
-                        path_quad_1=None,
-                        path_quad_2=None):
-    # Set up coordinates and compute f
-    x_unscaled = torch.from_numpy(x)
-    # x_unscaled = torch.cat((x_unscaled, torch.zeros(len(x_unscaled), 1)), dim=1)
-    x = (x_unscaled - mean) / std  # rescale the inputs
-
-    # Be careful to use the same network architecture as during training
-
-    if path_quad_1 is None:
-        loaded_model = quad_clas.PredictorLinear(network_size)
-        loaded_model.load_state_dict(torch.load(network_path))
-        f_pred = loaded_model.forward(x.float(), cHW + cHq3)
-    elif path_quad_2 is None:
-        loaded_model = quad_clas.PredictorQuadratic(network_size)
-        loaded_model.load_state_dict(torch.load(network_path))
-        f_pred = loaded_model.forward(x.float(), cHW ** 2 + cHq3 ** 2, path_lin_1)
-    else:
-        loaded_model = quad_clas.PredictorCross(network_size)
-        loaded_model.load_state_dict(torch.load(network_path))
-        f_pred = loaded_model.forward(x.float(), cHW, cHq3, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
-
-    f_pred = f_pred.view(-1).detach().numpy()
-
-    return f_pred
-
 
 def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=True, quad=False):
     """
@@ -411,6 +498,13 @@ def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=Tr
         and cross terms)
     network_size: list
         Network architecture
+
+    Returns
+    -------
+    `matplotlib.figure.Figure`
+        Overview plot of all the replicas
+    `matplotlib.figure.Figure`
+        Plot of the median only
     """
 
     r_nn = []
@@ -452,3 +546,37 @@ def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=Tr
     plt.tight_layout()
 
     return fig1, fig2
+
+def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
+                        path_lin_1=None,
+                        path_lin_2=None,
+                        path_quad_1=None,
+                        path_quad_2=None):
+    """
+
+    Deprecated, to be removed in future versions
+
+    """
+    # Set up coordinates and compute f
+    x_unscaled = torch.from_numpy(x)
+    # x_unscaled = torch.cat((x_unscaled, torch.zeros(len(x_unscaled), 1)), dim=1)
+    x = (x_unscaled - mean) / std  # rescale the inputs
+
+    # Be careful to use the same network architecture as during training
+
+    if path_quad_1 is None:
+        loaded_model = quad_clas.PredictorLinear(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW + cHq3)
+    elif path_quad_2 is None:
+        loaded_model = quad_clas.PredictorQuadratic(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW ** 2 + cHq3 ** 2, path_lin_1)
+    else:
+        loaded_model = quad_clas.PredictorCross(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW, cHq3, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+
+    f_pred = f_pred.view(-1).detach().numpy()
+
+    return f_pred

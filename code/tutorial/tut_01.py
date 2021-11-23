@@ -52,3 +52,6 @@ fig1, fig2 = analyse.point_by_point_comp(mc_reps=mc_reps,
 fig1.savefig('/Users/jaco/Documents/ML4EFT/plots/22_11/overview_point_by_point.pdf')
 fig2.savefig('/Users/jaco/Documents/ML4EFT/plots/22_11/median_point_by_point.pdf')
 
+#%%
+analyse.coeff_comp(path_sm_data='/data/theorie/jthoeve/event_generation/events_high_stats/sm/events_0.npy')
+
