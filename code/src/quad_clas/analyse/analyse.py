@@ -452,5 +452,3 @@ def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=Tr
     plt.tight_layout()
 
     return fig1, fig2
-
-
