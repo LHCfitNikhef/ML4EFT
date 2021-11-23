@@ -1,4 +1,0 @@
-analyse
-core
-fit
-preproc

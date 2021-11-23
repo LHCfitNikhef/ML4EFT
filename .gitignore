@@ -292,9 +292,8 @@ sphinx/_build/
 /code/notebooks/FormCalc/*.gen
 /code/notebooks/FormCalc/*.mod
 /code/notebooks/FormCalc/*.pars
-/.ipynb_checkpoints/
-/code/src/ML4EFT.egg-info/
-/code/src/quad_clas/ML4EFT.egg-info/
+*/.ipynb_checkpoints/
+**/ML4EFT.egg-info/
 /code/output/
 /plots/
 /models/**/*.pdf
