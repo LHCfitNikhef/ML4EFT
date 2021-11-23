@@ -36,16 +36,8 @@ In this directory you will find the following subdirectories:
 
 ## Run instructions
 
-The file ```main.py```  shows an example how to use the code. We distinguish between the following two
-use cases:
-
-1. Finding the expected exclusion limits at specific points in EFT coefficient space. 
-2. Interpolating the results found from 1 to the entire EFT space. 
-
-Note that 1 has to be done before 2. For step 1, one will have to switch ```scan``` inside the file 
-```main.py``` to ```True```. Then for step 2, one should set ```scan``` to ```False``` and 
-```analyse``` to ```True```. The binned analysis can be run from here as well.
-
+Example jupyter notebooks are provided [here](https://github.com/LHCfitNikhef/ML4EFT/tree/classifier/code/examples) to 
+demonstrate how to run and use the code for the first time. 
 
 
 
