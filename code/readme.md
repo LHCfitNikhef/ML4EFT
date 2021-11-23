@@ -19,6 +19,9 @@ In this directory you will find the following subdirectories:
 * **dev**: contains developmental code (can be ignored)
 
 
+* **examples**: contains code examples (jupyter notebooks)
+
+
 * **madgraph_cards**: contains MG5 runcards
 
 
