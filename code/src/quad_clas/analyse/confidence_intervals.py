@@ -68,8 +68,6 @@ class Limits:
         likelihood_scan_nn = []
         a = vh_prod.findCoeff(bins=np.array([mz + mh, 4]))
 
-        color = iter(cm.tab20c(np.linspace(0, 1, mc_reps)))
-
         # perform a likelihood scan over domain
         for c1 in c1_values:
             for c2 in c2_values:
@@ -92,9 +90,9 @@ class Limits:
                     likelihood_scan_truth.append(likelihood_truth)
 
                 log_l_nn_reps = []
-                for rep in range(mc_reps):
+                for rep in range(self.mc_reps):
 
-                    r_nn = analyse.likelihood_ratio_nn(torch.tensor(events_mvh_y), [c1, c2], self.path_to_models, self.architecture,
+                    r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y), [c1, c2], self.path_to_models, self.architecture,
                                                     mc_run=rep, lin=self.lin, quad=self.quad).numpy().flatten()
 
                     #r_nn = get_nn_ratio(torch.tensor(events_mvh_y), c1, c2, rep).detach().numpy()
@@ -111,7 +109,7 @@ class Limits:
         likelihood_scan_truth = np.reshape(likelihood_scan_truth, (len(c1_values), len(c2_values)))
 
         likelihood_scan_nn = np.array(likelihood_scan_nn, dtype='object')
-        likelihood_scan_nn = np.reshape(likelihood_scan_nn, (len(c1_values), len(c2_values), mc_reps))
+        likelihood_scan_nn = np.reshape(likelihood_scan_nn, (len(c1_values), len(c2_values), self.mc_reps))
 
         q_c_array_truth = 2 * (- likelihood_scan_truth + np.max(likelihood_scan_truth))
         q_c_array_nn = 2 * (- likelihood_scan_nn + np.max(likelihood_scan_nn, axis=(0, 1)))
@@ -123,7 +121,7 @@ class Limits:
     def binned_limits(self):
 
         c1_values, c2_values = self.scan_domain
-        log_likelihood_binned = np.zeros(len(self.bins))
+        log_likelihood_binned = np.zeros(len(self.bins), dtype=np.ndarray)
 
         for i, n_bins in enumerate(self.bins):
 
@@ -197,6 +195,7 @@ class Limits:
         # unbinned contours
 
         # individual replica ellipses
+        color = iter(cm.tab20c(np.linspace(0, 1, self.mc_reps)))
         if plot_reps:
             for rep in range(self.mc_reps):
                 c = next(color)
@@ -215,7 +214,7 @@ class Limits:
         labels.append(r'$\rm{NN\;\rm{(median)}}$')
 
         # truth ellipse
-        contour = plt.contour(yy, xx, self.q_c, np.array([5.99]),
+        contour = plt.contour(yy, xx, self.q_c_truth, np.array([5.99]),
                               origin='lower', linestyles='dashed', linewidths=1.5, colors='k')
 
         contour_handle, _ = contour.legend_elements()

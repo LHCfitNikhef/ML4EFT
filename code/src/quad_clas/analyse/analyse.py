@@ -378,8 +378,8 @@ def coeff_comp(mc_reps, path_model, network_size, c1, c2, path_sm_data=None):
     grid_unscaled_tensor = torch.Tensor(grid)
 
     # truth
-    ratio_truth_c1 = analysis.likelihood_ratio_truth(grid, np.array([10, 0]), lin=True)
-    ratio_truth_c2 = analysis.likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
+    ratio_truth_c1 = likelihood_ratio_truth(grid, np.array([10, 0]), lin=True)
+    ratio_truth_c2 = likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
     mask = ratio_truth_c1 == 0
 
     n_1_truth = np.ma.masked_where(mask, (ratio_truth_c1 - 1) / 10)
@@ -394,7 +394,7 @@ def coeff_comp(mc_reps, path_model, network_size, c1, c2, path_sm_data=None):
     for rep_nr in range(0, mc_reps):
 
         mean, std = np.loadtxt(os.path.join(path_model.format(mc_run=rep_nr), 'scaling.dat'))
-        loaded_model = quad_classifier_cluster.PredictorLinear(network_size)
+        loaded_model = quad_clas.PredictorLinear(network_size)
         network_path = os.path.join(path_model.format(mc_run=rep_nr), 'trained_nn.pt')
 
         # load all the parameters into the trained network
@@ -402,9 +402,9 @@ def coeff_comp(mc_reps, path_model, network_size, c1, c2, path_sm_data=None):
         grid = (grid_unscaled_tensor - mean) / std
 
         n_alpha = loaded_model.n_alpha(grid.float())
-        n_alpha = n_beta.view(mvh_grid.shape).detach().numpy()
+        n_alpha = n_alpha.view(mvh_grid.shape).detach().numpy()
 
-        n_alphas.append(n_beta)
+        n_alphas.append(n_alpha)
 
     n_alphas = np.array(n_alphas)
     n_alpha_median = np.percentile(n_alphas, 50, axis=0)
@@ -426,11 +426,12 @@ def coeff_comp(mc_reps, path_model, network_size, c1, c2, path_sm_data=None):
 
     # median
     median_ratio = n_1_truth / n_alpha_median if c1 != 0 else n_2_truth / n_alpha_median
+    title= r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$' if c1 != 0 else r'$n_2^{\rm{truth}}/n_2^{\rm{NN}}\;\rm{(median)}$'
 
-    fig1 = plot_heatmap(n_1_truth / n_alpha_median,
+    fig1 = plot_heatmap(median_ratio,
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
                         ylabel=r'$\rm{Rapidity}$',
-                        title=r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$',
+                        title=title,
                         extent=[mvh_min, mvh_max, y_min, y_max],
                         cmap='seismic',
                         bounds=[0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05])
