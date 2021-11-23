@@ -3,7 +3,7 @@
 # Introduction
 
 ML4EFT is a python package that studies machine learning (ML) applications for effective field
-theories (EFTs). You can open [this file](https://github.com/LHCfitNikhef/ML4EFT/blob/main/code/sphinx/_build/html/index.html) on your local machine to browse the documentation.
+theories (EFTs). 
 
 
 ## Organisation
@@ -16,32 +16,23 @@ In this directory you will find the following subdirectories:
 * **cluster** : contains scripts for submitting the code to a cluster
 
 
+* **dev**: contains developmental code (can be ignored)
+
+
 * **madgraph_cards**: contains MG5 runcards
 
 
 * **notebooks**: contains mathematica notebooks and/or scripts
 
 
-* **output**: contains all output, such as plots
-
-
-* **quad_clas**: contains the quadratic classifier python package
-
-
 * **sphinx**: contains the code's documentation
 
 
-Furthermore, inside ```quad_clas``` you will find 
-
-* **analyse**: contains code to analyse the z-scores that originate from
-    scanning over EFT coefficient space. Results are presented for
-    the neural network (nn), truth and binned analyses.
-  
-
-* **core**: the neural network training and the computation of the bounds is contained in here.
+* **src**: contains the ML4EFT python package
 
 
-* **fit**: contains modules to start a fit
+* **tutorial**: contains tutorials how to use the code
+
 
 ## Run instructions
 
