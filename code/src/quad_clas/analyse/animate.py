@@ -11,6 +11,9 @@ from ..preproc import constants
 mz = constants.mz
 mh = constants.mh
 
+path_to_models = {'lin': ['/Users/jaco/Documents/ML4EFT/models/lin/cHW', '/Users/jaco/Documents/ML4EFT/models/lin/cHq3'],
+                  'quad': []}
+
 class Animate:
 
     def __init__(self, architecture, c, path_to_models, mc_runs, save_path, lin=False, quad=False):
@@ -32,6 +35,7 @@ class Animate:
         x = np.linspace(mh + mz + 1e-2, 2.5, 100)
         x = np.stack((x, np.zeros(len(x))), axis=-1)
         f_ana = analyse.decision_function_truth(x, np.array([cHW, cHq3]), lin=self.lin, quad=self.quad)
+        f_ana_quad = analyse.decision_function_truth(x, np.array([cHW, cHq3]), quad=True)
 
         fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
 
@@ -57,6 +61,9 @@ class Animate:
         f_preds_init = []
         for rep_nr, line in enumerate(lines):
             path = os.path.join(self.path_to_models.format(mc_run=rep_nr), 'trained_nn_1.pt')
+
+            #f_pred = analyse.decision_function_nn(x, np.array([cHW, cHq3]),{'lin': ['/Users/jaco/Documents/ML4EFT/models/lin/cHW']})
+
             f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), self.architecture, cHW, cHq3, means[rep_nr],
                                                  stds[rep_nr], None, None, None, None)
             if f_pred[-1] == 0.5:
@@ -70,7 +77,8 @@ class Animate:
         fill = ax.fill_between(x[:, 0], f_pred_up, f_pred_down, color='C0', alpha=0.3,
                                label=r'$\rm{NN\;1}\sigma\rm{-band}$')
 
-        ax.plot(x[:, 0], f_ana, '--', c='red', label=r'$\rm{Truth}$')
+        ax.plot(x[:, 0], f_ana, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
+        ax.plot(x[:, 0], f_ana_quad, '--', c='orange', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-4}\right)$')
         epoch_text = ax.text(0.02, 0.92, '', transform=ax.transAxes, fontsize=15)
 
         plt.legend(loc='upper right', fontsize=15, frameon=False)

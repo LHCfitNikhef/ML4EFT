@@ -121,19 +121,30 @@ def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, q
         Reconstructed likelihood ratio wrt the SM for the events ``x``
     """
 
-    coeff_functions_lin = coeff_function_nn(x, path_to_models, architecture, mc_run, lin=True)
+
+    # load the linear coefficient functions
+    n_lin = []
+    for path_to_model in path_to_models['lin']:
+        n_lin.append(coeff_function_nn(x, path_to_model, architecture, lin=True))
+    n_lin = np.array(n_lin)
 
     if lin:
-        r = 1 + np.dot(c, coeff_functions_lin)
-    elif quad:
-        coeff_functions_quad = coeff_function_nn(x, path_to_models, architecture, mc_run, quad=True)
-        coeff_functions_cross = coeff_function_nn(x, path_to_models, architecture, mc_run, cross=True)
+        return 1 + np.dot(c, n_lin)
 
-        r = 1 + np.dot(c, coeff_functions_lin) + np.dot(c ** 2, coeff_functions_quad) + np.prod(c) * coeff_functions_cross
-    else:
-        loggin.info("no order (lin/quad) specified: terminating the program")
-        sys.exit()
-    return r
+    # for quadratic corrections
+    elif quad:
+        n_quad = []
+        for path_to_model in path_to_models['quad']:
+            n_quad.append(coeff_function_nn(x, path_to_model, architecture, quad=True))
+        n_quad = np.array(n_quad)
+
+        n_cross = []
+        for path_to_model in path_to_models['cross']:
+            n_cross.append(coeff_function_nn(x, path_to_model, architecture, cross=True))
+        n_cross = np.array(n_cross)
+
+        return 1 + np.dot(c, n_lin) + np.dot(c ** 2, n_quad) + np.prod(c) * n_cross
+
 
 
 def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False):
@@ -601,7 +612,7 @@ def coeff_comp(mc_reps, path_to_model, network_size, c1, c2, lin=False, quad=Fal
 
     return fig1, fig2
 
-def load_models(architecture, model_dir, model_nrs):
+def load_models(architecture, model_dir, model_nrs, lin=False, quad=False, cross=False):
     """
     Load the pretrained models
 
@@ -620,18 +631,28 @@ def load_models(architecture, model_dir, model_nrs):
     models: list
         List of loaded models
     """
+    if lin:
+        loaded_model = quad_clas.PredictorLinear(architecture)
+    elif quad:
+        loaded_model = quad_clas.PredictorQuadratic(architecture)
+    else:
+        loaded_model = quad_clas.PredictorCross(architecture)
+
+    means, stds = [], []
     models = []
     for rep_nr in model_nrs:
         # load statistics of pretrained models
         mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
-        loaded_model = quad_clas.PredictorLinear(architecture)
+        #loaded_model = quad_clas.PredictorLinear(architecture)
         network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
 
         # load all the parameters into the trained network and save
         loaded_model.load_state_dict(torch.load(network_path))
         models.append(loaded_model)
+        means.append(mean)
+        stds.append(std)
 
-    return models
+    return models, means, stds
 
 def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=True, quad=False):
     """
@@ -700,11 +721,7 @@ def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=Tr
 
     return fig1, fig2
 
-def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
-                        path_lin_1=None,
-                        path_lin_2=None,
-                        path_quad_1=None,
-                        path_quad_2=None):
+def make_predictions_1d(x, path_to_models, network_size, lin=False, quad=False):
     """
 
     Deprecated, to be removed in future versions
@@ -717,7 +734,19 @@ def make_predictions_1d(x, network_path, network_size, cHW, cHq3, mean, std,
 
     # Be careful to use the same network architecture as during training
 
-    if path_quad_1 is None:
+    paths_lin = path_to_models['lin']
+    for path in paths_lin:
+        mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
+        loaded_model = quad_clas.PredictorLinear(architecture)
+        network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+
+        # load all the parameters into the trained network and save
+        loaded_model.load_state_dict(torch.load(network_path))
+        models.append(loaded_model)
+        loaded_model = quad_clas.PredictorLinear(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+
+    if path_lin_1 is None:
         loaded_model = quad_clas.PredictorLinear(network_size)
         loaded_model.load_state_dict(torch.load(network_path))
         f_pred = loaded_model.forward(x.float(), cHW + cHq3)
