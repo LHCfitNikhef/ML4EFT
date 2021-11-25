@@ -27,11 +27,12 @@ n_quad_1_out = n_quad.forward(torch.tensor(x).float(), 2, '/Users/jaco/Documents
 
 
 #%%
+
 animator = animate.Animate(architecture=[2, 30, 30, 30, 30, 30, 1],
                            c=np.array([2, 0]),
                            path_to_models='/Users/jaco/Documents/ML4EFT/models/lin/cHW/mc_run_{mc_run}',
                            mc_runs=30,
-                           save_path='/Users/jaco/Documents/ML4EFT/plots/25_11/cHW_lin_v3.gif',
+                           save_path='/Users/jaco/Documents/ML4EFT/plots/25_11/cHW_lin_v7.gif',
                            lin=True)
 
 #%%
@@ -67,14 +68,16 @@ path_to_models = {'lin': ['/Users/jaco/Documents/ML4EFT/models/lin/cHW/mc_run_{m
                   'quad': ['/Users/jaco/Documents/ML4EFT/models/quad/cHW/mc_run_{mc_run}']}
 mc_reps = 30
 
-def load_coefficients_nn(x, architecture, path_to_models, mc_reps):
+
+def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
+
     n_lin = []
     n_quad = []
     n_cross = []
     for order, paths in path_to_models.items():
         if order == 'lin':
             for path in paths:
-                loaded_models_lin, means, std = analyse.load_models(architecture, path, range(mc_reps), lin=True)
+                loaded_models_lin, means, std = analyse.load_models(architecture, path, range(mc_reps), epoch=epoch, lin=True)
                 n_alphas = []
                 for i in range(mc_reps):
                     x_scaled = (x - means[i]) / std[i]
@@ -85,7 +88,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps):
 
         if order == 'quad':
             for path in paths:
-                loaded_models_quad, means, std = analyse.load_models(architecture, path, range(mc_reps), quad=True)
+                loaded_models_quad, means, std = analyse.load_models(architecture, path, range(mc_reps), epoch=epoch, quad=True)
                 n_betas = []
                 for i in range(mc_reps):
                     x_scaled = (x - means[i]) / std[i]
@@ -96,7 +99,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps):
 
         if order == 'cross':
             for path in paths:
-                loaded_models_cross, means, std = analyse.load_models(architecture, path, range(mc_reps), cross=True)
+                loaded_models_cross, means, std = analyse.load_models(architecture, path, range(mc_reps), epoch=epoch, cross=True)
                 n_gammas = []
                 for i in range(mc_reps):
                     x_scaled = (x - means[i]) / std[i]
@@ -110,8 +113,8 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps):
 
     return n_lin, n_quad, n_cross
 
-def make_predictions_1d(x, c, path_to_models, network_size, lin=False, quad=False):
-    n_lin, n_quad, n_cross = load_coefficients_nn(x, network_size, path_to_models, mc_reps)
+def make_predictions_1d(x, c, path_to_models, network_size, epoch=-1, lin=False, quad=False):
+    n_lin, n_quad, n_cross = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=epoch)
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
     elif quad:
@@ -124,5 +127,12 @@ def make_predictions_1d(x, c, path_to_models, network_size, lin=False, quad=Fals
 #%%
 n_lin, n_quad, n_cross = load_coefficients_nn(x, architecture, path_to_models, mc_reps)
 #%%
-f_pred = make_predictions_1d(x, np.array([2]), path_to_models, architecture, quad=True)
+f_preds_lin = make_predictions_1d(x, np.array([2]), path_to_models, architecture, epoch=1, lin=True)
+f_preds_quad = make_predictions_1d(x, np.array([2]), path_to_models, architecture, epoch=1, quad=True)
 #%%
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(figsize=(10,6))
+for f_lin, f_quad in zip(f_preds_lin, f_preds_quad):
+    plt.plot(x[:,0], f_lin)
+    plt.plot(x[:,0], f_quad)
+plt.show()

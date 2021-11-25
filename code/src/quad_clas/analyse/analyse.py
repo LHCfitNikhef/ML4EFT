@@ -612,7 +612,7 @@ def coeff_comp(mc_reps, path_to_model, network_size, c1, c2, lin=False, quad=Fal
 
     return fig1, fig2
 
-def load_models(architecture, model_dir, model_nrs, lin=False, quad=False, cross=False):
+def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=False, cross=False):
     """
     Load the pretrained models
 
@@ -644,7 +644,14 @@ def load_models(architecture, model_dir, model_nrs, lin=False, quad=False, cross
         # load statistics of pretrained models
         mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
         #loaded_model = quad_clas.PredictorLinear(architecture)
-        network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+        if epoch != -1:
+            path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(epoch))
+            if os.path.exists(path):
+                network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(epoch))
+            else:
+                network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+        else:
+            network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
 
         # load all the parameters into the trained network and save
         loaded_model.load_state_dict(torch.load(network_path))
@@ -721,44 +728,97 @@ def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=Tr
 
     return fig1, fig2
 
-def make_predictions_1d(x, path_to_models, network_size, lin=False, quad=False):
-    """
+def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
 
-    Deprecated, to be removed in future versions
+    n_lin = []
+    n_quad = []
+    n_cross = []
+    for order, paths in path_to_models.items():
+        if order == 'lin':
+            for path in paths:
+                loaded_models_lin, means, std = load_models(architecture, path, range(mc_reps), epoch=epoch, lin=True)
+                n_alphas = []
+                for i in range(mc_reps):
+                    x_scaled = (x - means[i]) / std[i]
+                    with torch.no_grad():
+                        n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(x_scaled).float()).numpy().flatten())
+                n_alphas = np.array(n_alphas)
+                n_lin.append(n_alphas)
 
-    """
-    # Set up coordinates and compute f
-    x_unscaled = torch.from_numpy(x)
-    # x_unscaled = torch.cat((x_unscaled, torch.zeros(len(x_unscaled), 1)), dim=1)
-    x = (x_unscaled - mean) / std  # rescale the inputs
+        if order == 'quad':
+            for path in paths:
+                loaded_models_quad, means, std = load_models(architecture, path, range(mc_reps), epoch=epoch, quad=True)
+                n_betas = []
+                for i in range(mc_reps):
+                    x_scaled = (x - means[i]) / std[i]
+                    with torch.no_grad():
+                        n_betas.append(loaded_models_quad[i].n_beta(torch.tensor(x_scaled).float()).numpy().flatten())
+                n_betas = np.array(n_betas)
+                n_quad.append(n_betas)
 
-    # Be careful to use the same network architecture as during training
+        if order == 'cross':
+            for path in paths:
+                loaded_models_cross, means, std = load_models(architecture, path, range(mc_reps), epoch=epoch, cross=True)
+                n_gammas = []
+                for i in range(mc_reps):
+                    x_scaled = (x - means[i]) / std[i]
+                    with torch.no_grad():
+                        n_gammas.append(loaded_models_cross[i].n_gamma(torch.tensor(x_scaled).float()).numpy().flatten())
+                n_gammas = np.array(n_gammas)
+                n_cross.append(n_gammas)
+    n_lin = np.array(n_lin)
+    n_quad = np.array(n_quad)
+    n_cross = np.array(n_cross)
 
-    paths_lin = path_to_models['lin']
-    for path in paths_lin:
-        mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
-        loaded_model = quad_clas.PredictorLinear(architecture)
-        network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+    return n_lin, n_quad, n_cross
 
-        # load all the parameters into the trained network and save
-        loaded_model.load_state_dict(torch.load(network_path))
-        models.append(loaded_model)
-        loaded_model = quad_clas.PredictorLinear(network_size)
-        loaded_model.load_state_dict(torch.load(network_path))
+def make_predictions_1d(x, c, path_to_models, network_size, mc_reps=30, epoch=-1, lin=False, quad=False):
+    n_lin, n_quad, n_cross = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=epoch)
+    if lin:
+        r = 1 + np.einsum('i, ijk', c, n_lin)
+    elif quad:
+        r = 1 + np.einsum('i, ijk', c, n_lin) + np.einsum('i, ijk', c ** 2, n_quad)
+    return 1 / (1 + r)
 
-    if path_lin_1 is None:
-        loaded_model = quad_clas.PredictorLinear(network_size)
-        loaded_model.load_state_dict(torch.load(network_path))
-        f_pred = loaded_model.forward(x.float(), cHW + cHq3)
-    elif path_quad_2 is None:
-        loaded_model = quad_clas.PredictorQuadratic(network_size)
-        loaded_model.load_state_dict(torch.load(network_path))
-        f_pred = loaded_model.forward(x.float(), cHW ** 2 + cHq3 ** 2, path_lin_1)
-    else:
-        loaded_model = quad_clas.PredictorCross(network_size)
-        loaded_model.load_state_dict(torch.load(network_path))
-        f_pred = loaded_model.forward(x.float(), cHW, cHq3, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
 
-    f_pred = f_pred.view(-1).detach().numpy()
-
-    return f_pred
+# def make_predictions_1d(x, path_to_models, network_size, lin=False, quad=False):
+#     """
+#
+#     Deprecated, to be removed in future versions
+#
+#     """
+#     # Set up coordinates and compute f
+#     x_unscaled = torch.from_numpy(x)
+#     # x_unscaled = torch.cat((x_unscaled, torch.zeros(len(x_unscaled), 1)), dim=1)
+#     x = (x_unscaled - mean) / std  # rescale the inputs
+#
+#     # Be careful to use the same network architecture as during training
+#
+#     paths_lin = path_to_models['lin']
+#     for path in paths_lin:
+#         mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
+#         loaded_model = quad_clas.PredictorLinear(architecture)
+#         network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+#
+#         # load all the parameters into the trained network and save
+#         loaded_model.load_state_dict(torch.load(network_path))
+#         models.append(loaded_model)
+#         loaded_model = quad_clas.PredictorLinear(network_size)
+#         loaded_model.load_state_dict(torch.load(network_path))
+#
+#     if path_lin_1 is None:
+#         loaded_model = quad_clas.PredictorLinear(network_size)
+#         loaded_model.load_state_dict(torch.load(network_path))
+#         f_pred = loaded_model.forward(x.float(), cHW + cHq3)
+#     elif path_quad_2 is None:
+#         loaded_model = quad_clas.PredictorQuadratic(network_size)
+#         loaded_model.load_state_dict(torch.load(network_path))
+#         f_pred = loaded_model.forward(x.float(), cHW ** 2 + cHq3 ** 2, path_lin_1)
+#     else:
+#         loaded_model = quad_clas.PredictorCross(network_size)
+#         loaded_model.load_state_dict(torch.load(network_path))
+#         f_pred = loaded_model.forward(x.float(), cHW, cHq3, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+#
+#     f_pred = f_pred.view(-1).detach().numpy()
+#
+#     return f_pred

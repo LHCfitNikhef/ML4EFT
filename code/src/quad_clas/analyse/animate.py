@@ -58,23 +58,18 @@ class Animate:
             lines.append(lobj)
 
         # make the first frame of the animation
-        f_preds_init = []
-        for rep_nr, line in enumerate(lines):
-            path = os.path.join(self.path_to_models.format(mc_run=rep_nr), 'trained_nn_1.pt')
 
-            #f_pred = analyse.decision_function_nn(x, np.array([cHW, cHq3]),{'lin': ['/Users/jaco/Documents/ML4EFT/models/lin/cHW']})
+        path_to_models = {'lin': ['/Users/jaco/Documents/ML4EFT/models/lin/cHW/mc_run_{mc_run}'],
+                          'quad': ['/Users/jaco/Documents/ML4EFT/models/quad/cHW/mc_run_{mc_run}']}
 
-            f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), self.architecture, cHW, cHq3, means[rep_nr],
-                                                 stds[rep_nr], None, None, None, None)
-            if f_pred[-1] == 0.5:
-                continue
-            f_preds_init.append(f_pred)
+        #f_preds_lin_init = analyse.make_predictions_1d(x, np.array([2]), path_to_models, architecture, epoch=1, lin=True)
+        f_preds_quad_init = analyse.make_predictions_1d(x, np.array([2]), path_to_models, self.architecture, epoch=1, lin=True)
 
         # create uncertainty band and plot
-        f_preds_init = np.array(f_preds_init)
-        f_pred_up = np.percentile(f_preds_init, 84, axis=0)
-        f_pred_down = np.percentile(f_preds_init, 16, axis=0)
-        fill = ax.fill_between(x[:, 0], f_pred_up, f_pred_down, color='C0', alpha=0.3,
+        f_preds_quad_init_up = np.percentile(f_preds_quad_init, 84, axis=0)
+        f_preds_quad_init_down = np.percentile(f_preds_quad_init, 16, axis=0)
+
+        fill = ax.fill_between(x[:, 0], f_preds_quad_init_up, f_preds_quad_init_down, color='C0', alpha=0.3,
                                label=r'$\rm{NN\;1}\sigma\rm{-band}$')
 
         ax.plot(x[:, 0], f_ana, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
@@ -98,35 +93,16 @@ class Animate:
         # animation function.  This is called sequentially
         def animate(i):
             print(i)
-            f_preds = []
-
+            f_preds_quad = analyse.make_predictions_1d(x, np.array([2]), path_to_models, self.architecture, epoch=i+1,
+                                                            lin=True)
             for rep_nr, line in enumerate(lines):
-                path = os.path.join(self.path_to_models.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(i + 1))
-                if os.path.isfile(path):
-
-                    f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), self.architecture, cHW, cHq3,
-                                                         means[rep_nr],
-                                                         stds[rep_nr], None, None, None, None)
-                    if f_pred[-1] == 0.5:
-                        continue
-                    f_preds.append(f_pred)
-                    line.set_data(x[:, 0], f_pred)
-                else:  # at the end of training
-
-                    path = os.path.join(self.path_to_models.format(mc_run=rep_nr + 1), 'trained_nn.pt'.format(i + 1))
-                    f_pred = analyse.make_predictions_1d(x, path.format(mc_run=rep_nr), self.architecture, cHW, cHq3,
-                                                         means[rep_nr],
-                                                         stds[rep_nr], None, None, None, None)
-                    if f_pred[-1] == 0.5:
-                        continue
-                    f_preds.append(f_pred)
-                    line.set_data(x[:, 0], f_pred)
+                line.set_data(x[:, 0], f_preds_quad[rep_nr, :])
 
             epoch_text.set_text(r'$\rm{epoch\;%d}$' % i)
 
-            f_preds = np.array(f_preds)
-            f_pred_up = np.percentile(f_preds, 84, axis=0)
-            f_pred_down = np.percentile(f_preds, 16, axis=0)
+
+            f_pred_up = np.percentile(f_preds_quad, 84, axis=0)
+            f_pred_down = np.percentile(f_preds_quad, 16, axis=0)
 
             path = fill.get_paths()[0]
             verts = path.vertices
@@ -135,8 +111,7 @@ class Animate:
             return lines
 
         anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                       frames=100, interval=50, blit=True)
+                                       frames=200, interval=50, blit=True)
 
         anim.save(self.save_path)
-
 
