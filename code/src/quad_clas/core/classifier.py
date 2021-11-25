@@ -68,7 +68,7 @@ class PredictorLinear(nn.Module):
 
     def forward(self, x, c):
         n_alpha_out = self.n_alpha(x)
-        return 1 / (1 + (1 + c * n_alpha_out)) # TODO try without squaring n_alpha
+        return 1 / (1 + (1 + c * n_alpha_out))
 
 class PredictorQuadratic(nn.Module):
     """
@@ -85,30 +85,7 @@ class PredictorQuadratic(nn.Module):
         n_lin = PredictorLinear(self.architecture)
         n_lin.load_state_dict(torch.load(path_lin))
 
-        #replace with
-        r = 1 + c * (n_lin.n_alpha(x) ** 2) + c ** 2 * n_beta_out ** 2
-        # in the same way, once the quadratic problem has been solved, one
-        # can read the .pt file to get n_beta, the quadratic coefficient
-        #
-        # to train the cross terms, we need to give two quadratic paths, one to cHW^2 and
-        # another one to cHq3^2, and two linear paths, again to cH
-
-        # or...
-        # just give the quadratic ones, use the forward method to get the two linear and
-        # two quadratic pieces, then simply use n_gamma to find the cross term.
-
-        # only at the very end when everything is trained we need separate access to
-        # all the coefficient functions, since we also need to evaluate r at other values
-        # of c than 10.
-
-        # this can be done by giving, for one replica say, the two linear paths, the two quadratic
-        # paths, and the cross term path, to then combine them to form r for any value of c
-        #
-
-        # n_lin_out = n_lin(x, c) # this calls the forward method
-        # n_lin_out = (1/n_lin_out - 2)/c
-        # r = 1 + c * n_lin_out + c ** 2 * n_beta_out ** 2
-
+        r = 1 + c * n_lin.n_alpha(x) + c ** 2 * n_beta_out
         return 1 / (1 + r)
 
 class PredictorCross(nn.Module):
@@ -126,21 +103,21 @@ class PredictorCross(nn.Module):
 
         n_lin_1 = PredictorLinear(self.architecture)
         n_lin_1.load_state_dict(torch.load(path_lin_1))
-        n_lin_1_out = n_lin_1.n_alpha(x) ** 2
+        n_lin_1_out = n_lin_1.n_alpha(x)
 
         n_lin_2 = PredictorLinear(self.architecture)
         n_lin_2.load_state_dict(torch.load(path_lin_2))
-        n_lin_2_out = n_lin_2.n_alpha(x) ** 2
+        n_lin_2_out = n_lin_2.n_alpha(x)
 
         n_quad_1 = PredictorQuadratic(self.architecture)
         n_quad_1.load_state_dict(torch.load(path_quad_1))
-        n_quad_1_out = n_quad_1.n_beta(x) ** 2
+        n_quad_1_out = n_quad_1.n_beta(x)
 
         n_quad_2 = PredictorQuadratic(self.architecture)
         n_quad_2.load_state_dict(torch.load(path_quad_2))
-        n_quad_2_out = n_quad_2.n_beta(x) ** 2
+        n_quad_2_out = n_quad_2.n_beta(x)
 
-        r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out + c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_gamma_out ** 2
+        r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out + c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_gamma_out
 
         return 1 / (1 + r)
 
@@ -324,13 +301,18 @@ class Fitter:
 
         # for pure quadratic and cross terms only: build the paths to the pretraind models
         if self.quadratic:
+
             self.path_lin_1 = self.run_options['path_lin_1'].format(self.mc_run)
             self.model = PredictorQuadratic(self.network_size)
-        if self.cross_term:
+
+        elif self.cross_term:
+
             self.path_lin_1 = self.run_options['path_lin_1'].format(self.mc_run)
             self.path_lin_2 = self.run_options['path_lin_2'].format(self.mc_run)
             self.path_quad_1 = self.run_options['path_quad_1'].format(self.mc_run)
             self.path_quad_2 = self.run_options['path_quad_2'].format(self.mc_run)
+
+
 
         # build the paths to the eft event data and initialize the right model
         if self.quadratic:
@@ -352,7 +334,11 @@ class Fitter:
                             format='%(asctime)s:%(levelname)s:%(message)s')
         logging.info("All directories created, ready to load the data")
 
-        self.load_data()
+        # load the training and validation data
+        data_train, data_val = self.load_data()
+
+        # start the training
+        self.train_classifier(data_train, data_val)
 
         # copy run card to the appropriate folder
         with open(mc_path + 'run_card.json', 'w') as outfile:
@@ -408,8 +394,7 @@ class Fitter:
             data_train.append(dataset[0])
             data_val.append(dataset[1])
 
-        # start the training
-        self.train_classifier(data_train, data_val)
+        return data_train, data_val
 
     def train_classifier(self, data_train, data_val):
 
@@ -562,7 +547,9 @@ class Fitter:
         fig = analyse.coeff_comp_rep(self.path_dict['mc_path'],
                                      self.network_size,
                                      self.c1,
-                                     self.c2)
+                                     self.c2,
+                                     self.quadratic,
+                                     self.cross_term)
         fig.savefig(training_report_path + 'performance.pdf')
 
     def weight_reset(self, m):

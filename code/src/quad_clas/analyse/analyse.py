@@ -11,7 +11,7 @@ import sys
 import copy
 import matplotlib.gridspec as gridspec
 from matplotlib import animation
-import os
+import os, sys
 
 # import own pacakges
 from quad_clas.core import classifier as quad_clas
@@ -112,70 +112,197 @@ def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, q
         Set to False by default. Turn on for linear corrections.
     quad: bool, optional
         Set to False by default. Turn on for quadratic corrections.
+    cross: bool, optional
+        Set to False by default. Turn on for cross term corrections
 
     Returns
     -------
     ratio: numpy.ndarray, shape=(M,)
         Reconstructed likelihood ratio wrt the SM for the events ``x``
     """
-    cHW, cHq3 = c
 
-    path_nn_lin = path_to_models['lin']  # shape = (len(c), )
-    # path_nn_quad = path_to_models['quad'] # shape = (len(c), )
-    # path_nn_cross = path_to_models['cross'] # TODO: shape
+    coeff_functions_lin = coeff_function_nn(x, path_to_models, architecture, mc_run, lin=True)
 
-    with torch.no_grad():
-        n_lin_1 = quad_clas.PredictorLinear(architecture)
+    if lin:
+        r = 1 + np.dot(c, coeff_functions_lin)
+    elif quad:
+        coeff_functions_quad = coeff_function_nn(x, path_to_models, architecture, mc_run, quad=True)
+        coeff_functions_cross = coeff_function_nn(x, path_to_models, architecture, mc_run, cross=True)
 
-        path_nn_lin_1 = os.path.join(path_nn_lin[0], 'mc_run_{}', 'trained_nn.pt')
-        n_lin_1.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
-        mean, std = np.loadtxt(os.path.join(path_nn_lin[0], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-
-        x_scaled = (x - mean) / std
-        n_lin_1_out = n_lin_1.n_alpha(x_scaled.float())
-
-        #######
-
-        n_lin_2 = quad_clas.PredictorLinear(architecture)
-
-        path_nn_lin_2 = os.path.join(path_nn_lin[1], 'mc_run_{}', 'trained_nn.pt')
-        n_lin_2.load_state_dict(torch.load(path_nn_lin_2.format(mc_run)))
-        mean, std = np.loadtxt(os.path.join(path_nn_lin[1], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-
-        x_scaled = (x - mean) / std
-        n_lin_2_out = n_lin_2.n_alpha(x_scaled.float())
-
-        ########
-
-        # n_quad_1 = PredictorQuadratic(architecture)
-        # n_quad_1.load_state_dict(torch.load(path_nn_quad_1.format(mc_run)))
-        #
-        # mean, std = np.loadtxt(os.path.join(path_quad_1, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-        # x_scaled = (x - mean) / std
-        # n_quad_1_out = n_quad_1.n_beta(x_scaled.float()) ** 2
-        #
-        # #######
-        #
-        # n_quad_2 = PredictorQuadratic(architecture)
-        # n_quad_2.load_state_dict(torch.load(path_nn_quad_2.format(mc_run)))
-        #
-        # mean, std = np.loadtxt(os.path.join(path_quad_2, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-        # x_scaled = (x - mean) / std
-        # n_quad_2_out = n_quad_2.n_beta(x_scaled.float()) ** 2
-        #
-        # #######
-        #
-        # n_cross = PredictorCross(architecture)
-        # n_cross.load_state_dict(torch.load(path_nn_cross.format(mc_run)))
-        #
-        # mean, std = np.loadtxt(os.path.join(path_cross, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
-        # x_scaled = (x - mean) / std
-        # n_cross_out = n_cross.n_gamma(x_scaled.float()) ** 2
-
-    # r = 1 + c1 * n_lin_1_out + c2 * n_lin_2_out #+ c1 ** 2 * n_quad_1_out + c2 ** 2 * n_quad_2_out + c1 * c2 * n_cross_out
-
-    r = 1 + cHW * n_lin_1_out + cHq3 * n_lin_2_out
+        r = 1 + np.dot(c, coeff_functions_lin) + np.dot(c ** 2, coeff_functions_quad) + np.prod(c) * coeff_functions_cross
+    else:
+        loggin.info("no order (lin/quad) specified: terminating the program")
+        sys.exit()
     return r
+
+
+def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False):
+    """
+    Computes the truth coefficient functions in the EFT expansion up to either linear or quadratic level
+
+    Parameters
+    ----------
+     x : torch.tensor, shape=(M, N)
+        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    path_to_models: dict
+        Path to the nn model root directory
+    architecture: list
+        The architecture of the model, e.g.
+
+            .. math::
+
+                [n_i, 10, 15, 5, n_f],
+
+        where :math:`n_i` and :math:`n_f` denote the number of input features and output target values respectively.
+    mc_run: int
+        Monte Carlo replica number
+    lin: bool, optional
+        Set to False by default. Turn on for linear corrections.
+    quad: bool, optional
+        Set to False by default. Turn on for quadratic corrections.
+    cross: bool, optional
+        Set to False by default. Turn on for cross term corrections
+
+    Returns
+    -------
+
+    """
+    with torch.no_grad():
+
+        if lin:
+            nn = quad_clas.PredictorLinear(architecture)
+        elif quad:
+            nn = quad_clas.PredictorQuadratic(architecture)
+        elif cross:
+            nn = quad_clas.PredictorCross(architecture)
+
+        path_nn = os.path.join(path_to_model, 'trained_nn.pt')
+        nn.load_state_dict(torch.load(path_nn))
+        mean, std = np.loadtxt(os.path.join(path_to_model, 'scaling.dat'))
+
+        x_scaled = (x - mean) / std
+
+        if lin:
+            n_lin_out = nn.n_alpha(x_scaled.float()).numpy().flatten()
+            return n_lin_out
+        elif quad:
+            n_quad_out = nn.n_beta(x_scaled.float()).numpy().flatten()
+            return n_quad_out
+        elif cross:
+            n_cross_out = nn.n_gamma(x_scaled.float()).numpy().flatten()
+            return n_cross_out
+
+
+        # if lin:
+        #
+        #     n_lin = quad_clas.PredictorLinear(architecture)
+        #
+        #     path_nn_lin = os.path.join(path_to_models , 'trained_nn.pt')
+        #     n_lin.load_state_dict(torch.load(path_nn_lin.format(mc_run)))
+        #     mean, std = np.loadtxt(os.path.join(path_nn_lin, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        #
+        #     x_scaled = (x - mean) / std
+        #     n_lin_out = n_lin.n_alpha(x_scaled.float()).numpy().flatten()
+        #
+        #     return n_lin_out
+        #
+        # elif quad:
+        #
+        #     n_lin = quad_clas.PredictorLinear(architecture)
+        #
+        #     path_nn_lin = os.path.join(path_to_trained_models['lin'], 'trained_nn.pt')
+        #     n_lin.load_state_dict(torch.load(path_nn_lin.format(mc_run)))
+        #     mean, std = np.loadtxt(os.path.join(path_nn_lin, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        #
+        #     x_scaled = (x - mean) / std
+        #     n_lin_1_out = n_lin_1.n_alpha(x_scaled.float()).numpy().flatten()
+        #
+        #
+        #
+        #     path_nn_quad = path_to_models['quad']  # shape = (len(c), )
+        #
+        #     n_quad_1 = PredictorQuadratic(architecture)
+        #
+        #     path_nn_quad_1 = os.path.join(path_nn_quad[0], 'mc_run_{}', 'trained_nn.pt')
+        #     n_quad_1.load_state_dict(torch.load(path_nn_quad_1.format(mc_run)))
+        #     mean, std = np.loadtxt(os.path.join(path_nn_quad[0], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        #
+        #     x_scaled = (x - mean) / std
+        #     n_quad_1_out = n_quad_1.n_beta(x_scaled.float()).numpy().flatten()
+        #
+        #     #######
+        #
+        #     n_quad_2 = PredictorQuadratic(architecture)
+        #
+        #     path_nn_quad_2 = os.path.join(path_nn_quad[1], 'mc_run_{}', 'trained_nn.pt')
+        #     n_quad_2.load_state_dict(torch.load(path_nn_quad_2.format(mc_run)))
+        #     mean, std = np.loadtxt(os.path.join(path_nn_quad[1], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        #
+        #     x_scaled = (x - mean) / std
+        #     n_quad_2_out = n_quad_2.n_beta(x_scaled.float()).numpy().flatten()
+        #
+        #     return np.array([n_quad_1_out, n_quad_2_out], dtype=np.ndarray)
+        #
+        # else: # cross terms
+        #
+        #     path_nn_lin = path_to_models['lin']  # shape = (len(c), )
+        #
+        #     n_lin_1 = quad_clas.PredictorLinear(architecture)
+        #
+        #     path_nn_lin_1 = os.path.join(path_nn_lin[0], 'trained_nn.pt')
+        #     n_lin_1.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
+        #     mean, std = np.loadtxt(os.path.join(path_nn_lin[0], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        #
+        #     x_scaled = (x - mean) / std
+        #     n_lin_1_out = n_lin_1.n_alpha(x_scaled.float()).numpy().flatten()
+        #
+        #     #######
+        #
+        #     n_lin_2 = quad_clas.PredictorLinear(architecture)
+        #
+        #     path_nn_lin_2 = os.path.join(path_nn_lin[1], 'mc_run_{}', 'trained_nn.pt')
+        #     n_lin_2.load_state_dict(torch.load(path_nn_lin_2.format(mc_run)))
+        #     mean, std = np.loadtxt(os.path.join(path_nn_lin[1], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        #
+        #     x_scaled = (x - mean) / std
+        #     n_lin_2_out = n_lin_2.n_alpha(x_scaled.float()).numpy().flatten()
+        #
+        #     n_cross = PredictorCross(architecture)
+        #
+        #     path_nn_cross = os.path.join(path_to_models['cross'], 'mc_run_{}', 'trained_nn.pt')
+        #     n_cross.load_state_dict(torch.load(path_nn_cross.format(mc_run)))
+        #     mean, std = np.loadtxt(os.path.join(path_to_models['cross'], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        #
+        #     x_scaled = (x - mean) / std
+        #     n_cross_out = n_cross.n_gamma(x_scaled.float()).numpy().flatten()
+        #
+        #     ########
+        #
+        #     path_nn_quad = path_to_models['quad']  # shape = (len(c), )
+        #
+        #     n_quad_1 = PredictorQuadratic(architecture)
+        #
+        #     path_nn_quad_1 = os.path.join(path_nn_quad[0], 'mc_run_{}', 'trained_nn.pt')
+        #     n_quad_1.load_state_dict(torch.load(path_nn_quad_1.format(mc_run)))
+        #     mean, std = np.loadtxt(os.path.join(path_nn_quad[0], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        #
+        #     x_scaled = (x - mean) / std
+        #     n_quad_1_out = n_quad_1.n_beta(x_scaled.float()).numpy().flatten()
+        #
+        #     #######
+        #
+        #     n_quad_2 = PredictorQuadratic(architecture)
+        #
+        #     path_nn_quad_2 = os.path.join(path_nn_quad[1], 'mc_run_{}', 'trained_nn.pt')
+        #     n_quad_2.load_state_dict(torch.load(path_nn_quad_2.format(mc_run)))
+        #     mean, std = np.loadtxt(os.path.join(path_nn_quad[1], 'mc_run_{}'.format(mc_run), 'scaling.dat'))
+        #
+        #     x_scaled = (x - mean) / std
+        #     n_quad_2_out = n_quad_2.n_beta(x_scaled.float()).numpy().flatten()
+        #
+        #     return np.array([n_cross_out], dtype=np.ndarray)
+
 
 def decision_function_nn(x, c, path_to_models, mc_run, lin=False, quad=False):
     """
@@ -257,7 +384,48 @@ def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
     plt.tight_layout()
     return fig
 
-def coeff_comp_rep(path_model, network_size, c1, c2):
+def coeff_function_truth(x, c, lin, quad, cross):
+    """
+    Computes the truth coefficient functions in the EFT expansion up to either linear or quadratic level
+
+    Parameters
+    ----------
+     x : numpy.ndarray, shape=(M, N)
+        Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    c : numpy.ndarray, shape=(M,)
+        EFT point in M dimensions, e.g c = (cHW, cHq3)
+    lin: bool, optional
+        Set to False by default. Turn on for linear corrections.
+    quad: bool, optional
+        Set to False by default. Turn on for quadratic corrections.
+
+    Returns
+    -------
+
+    """
+
+    c1, c2 = c
+    ratio_truth_lin = likelihood_ratio_truth(x, c, lin=True)
+    # compute the mask once to select the physical region in phase space
+    mask = ratio_truth_lin == 0
+    coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / np.sum(c))
+
+    if lin: # only one of the c elements can be nonzero
+        return coeff_lin
+    elif quad: # only one of the c elements can be nonzero
+        ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
+        coeff_quad = np.ma.masked_where(mask, (ratio_truth_quad - 1 - np.sum(c) * coeff_lin) / np.sum(c) ** 2)
+        return coeff_quad
+    elif cross:
+        ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
+        ratio_truth_quad_1 = likelihood_ratio_truth(x, np.array([c1, 0]), quad=True)
+        ratio_truth_quad_2 = likelihood_ratio_truth(x, np.array([0, c2]), quad=True)
+        coeff_cross = np.ma.masked_where(mask, (ratio_truth_quad - ratio_truth_quad_1 - ratio_truth_quad_2 + 1) / np.prod(c))
+        return coeff_cross
+
+
+def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
     """
     Compares the EFT coefficient function of the individual replica stored at ``path_model`` with the truth.
     The ratio is plotted and returned as a matplotlib figure.
@@ -279,6 +447,10 @@ def coeff_comp_rep(path_model, network_size, c1, c2):
         Value of the 1st EFT coefficient used during training
     c2: float
         Value of the 2nd EFT coefficient used during training
+    quad: bool
+        Set to True when quadratic coefficient functions are trained
+    cross: bool
+        Set to True when cross term coefficient functions are trained
 
     Returns
     -------
@@ -290,7 +462,7 @@ def coeff_comp_rep(path_model, network_size, c1, c2):
     mvh_min, mvh_max = mz + mh + epsilon, 2
     y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
 
-    x_spacing, y_spacing = 1e-2, 0.01
+    x_spacing, y_spacing = 1e-1, 0.1
     mvh_span = np.arange(mvh_min, mvh_max, x_spacing)
     y_span = np.arange(y_min, y_max, y_spacing)
 
@@ -299,33 +471,22 @@ def coeff_comp_rep(path_model, network_size, c1, c2):
     grid_unscaled_tensor = torch.Tensor(grid)
 
     # truth
-    if c1 != 0:
-        ratio_truth_c1 = likelihood_ratio_truth(grid, np.array([10, 0]), lin=True)
-        mask = ratio_truth_c1 == 0
-        coeff_truth = np.ma.masked_where(mask, (ratio_truth_c1 - 1) / 10)
-        coeff_truth = coeff_truth.reshape(mvh_grid.shape)
-        title = r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}$'
-    elif c2 != 0:
-        ratio_truth_c2 = likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
-        mask = ratio_truth_c2 == 0
-        coeff_truth = np.ma.masked_where(mask, (ratio_truth_c2 - 1) / 10)
-        coeff_truth = coeff_truth.reshape(mvh_grid.shape)
-        title = r'$n_2^{\rm{truth}}/n_2^{\rm{NN}}$'
-    else:
-        loggin.info("c1 and c2 cannot both be zero.")
 
+    lin = True if not (quad or cross) else False # if both quad and cross are false, lin must be true
+
+    coeff_truth = coeff_function_truth(grid, np.array([c1, c2]), lin, quad, cross)
+    coeff_truth = coeff_truth.reshape(mvh_grid.shape)
     # models
 
-    mean, std = np.loadtxt(os.path.join(path_model, 'scaling.dat'))
-    loaded_model = quad_clas.PredictorLinear(network_size)
-    network_path = os.path.join(path_model, 'trained_nn.pt')
+    coeff_nn = coeff_function_nn(grid_unscaled_tensor, path_to_model, network_size, lin, quad, cross)
+    coeff_nn = coeff_nn.reshape(mvh_grid.shape)
 
-    # load all the parameters into the trained network
-    loaded_model.load_state_dict(torch.load(network_path))
-    grid = (grid_unscaled_tensor - mean) / std
-
-    coeff_nn = loaded_model.n_alpha(grid.float())
-    coeff_nn = coeff_nn.view(mvh_grid.shape).detach().numpy()
+    if lin:
+        title=r'$\rm{NN/Truth}\;(lin)$'
+    elif quad:
+        title=r'$\rm{NN/Truth}\;(quad)$'
+    elif cross:
+        title = r'$\rm{NN/Truth}\;(cross)$'
 
     bounds = [0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05]
     fig = plot_heatmap(coeff_truth / coeff_nn,
@@ -338,7 +499,7 @@ def coeff_comp_rep(path_model, network_size, c1, c2):
 
     return fig
 
-def coeff_comp(mc_reps, path_model, network_size, c1, c2, path_sm_data=None):
+def coeff_comp(mc_reps, path_to_model, network_size, c1, c2, lin=False, quad=False, cross=False, path_sm_data=None):
     """
     Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
@@ -378,39 +539,30 @@ def coeff_comp(mc_reps, path_model, network_size, c1, c2, path_sm_data=None):
     grid_unscaled_tensor = torch.Tensor(grid)
 
     # truth
-    ratio_truth_c1 = likelihood_ratio_truth(grid, np.array([10, 0]), lin=True)
-    ratio_truth_c2 = likelihood_ratio_truth(grid, np.array([0, 10]), lin=True)
-    mask = ratio_truth_c1 == 0
 
-    n_1_truth = np.ma.masked_where(mask, (ratio_truth_c1 - 1) / 10)
-    n_1_truth = n_1_truth.reshape(mvh_grid.shape)
+    coeff_truth = coeff_function_truth(grid, np.array([c1, c2]), lin, quad, cross).reshape(mvh_grid.shape)
 
-    n_2_truth = np.ma.masked_where(mask, (ratio_truth_c2 - 1) / 10)
-    n_2_truth = n_2_truth.reshape(mvh_grid.shape)
 
     # models
 
-    n_alphas = []
+    coeff_nns = []
     for rep_nr in range(0, mc_reps):
 
-        mean, std = np.loadtxt(os.path.join(path_model.format(mc_run=rep_nr), 'scaling.dat'))
-        loaded_model = quad_clas.PredictorLinear(network_size)
-        network_path = os.path.join(path_model.format(mc_run=rep_nr), 'trained_nn.pt')
 
-        # load all the parameters into the trained network
-        loaded_model.load_state_dict(torch.load(network_path))
-        grid = (grid_unscaled_tensor - mean) / std
+        coeff_nn = coeff_function_nn(x=grid_unscaled_tensor,
+                          path_to_model=path_to_model.format(mc_run=rep_nr),
+                          architecture=network_size,
+                          lin=lin,
+                          quad=quad,
+                          cross=cross).reshape(mvh_grid.shape)
 
-        n_alpha = loaded_model.n_alpha(grid.float())
-        n_alpha = n_alpha.view(mvh_grid.shape).detach().numpy()
+        coeff_nns.append(coeff_nn)
 
-        n_alphas.append(n_alpha)
-
-    n_alphas = np.array(n_alphas)
-    n_alpha_median = np.percentile(n_alphas, 50, axis=0)
-    n_alpha_high = np.percentile(n_alphas, 84, axis=0)
-    n_alpha_low = np.percentile(n_alphas, 16, axis=0)
-    n_alpha_unc = (n_alpha_high - n_alpha_low) / 2
+    coeff_nns = np.array(coeff_nns)
+    coeff_nn_median = np.percentile(coeff_nns, 50, axis=0)
+    coeff_nn_high = np.percentile(coeff_nns, 84, axis=0)
+    coeff_nn_low = np.percentile(coeff_nns, 16, axis=0)
+    coeff_nn_unc = (coeff_nn_high - coeff_nn_low) / 2
 
     # visualise sm events
     if path_sm_data is not None:
@@ -425,8 +577,8 @@ def coeff_comp(mc_reps, path_model, network_size, c1, c2, path_sm_data=None):
         sm_events = None
 
     # median
-    median_ratio = n_1_truth / n_alpha_median if c1 != 0 else n_2_truth / n_alpha_median
-    title= r'$n_1^{\rm{truth}}/n_1^{\rm{NN}}\;\rm{(median)}$' if c1 != 0 else r'$n_2^{\rm{truth}}/n_2^{\rm{NN}}\;\rm{(median)}$'
+    median_ratio = coeff_truth / coeff_nn_median
+    title= r'$\rm{Truth/NN\;(median)}$'
 
     fig1 = plot_heatmap(median_ratio,
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
@@ -437,7 +589,7 @@ def coeff_comp(mc_reps, path_model, network_size, c1, c2, path_sm_data=None):
                         bounds=[0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05])
 
     # pull
-    pull = (n_1_truth - n_alpha_median) / n_alpha_unc if c1 != 0 else (n_2_truth - n_alpha_median) / n_alpha_unc
+    pull = (coeff_truth - coeff_nn_median) / coeff_nn_unc
 
     fig2 = plot_heatmap(pull,
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',

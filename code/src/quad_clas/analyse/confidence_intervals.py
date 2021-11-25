@@ -93,7 +93,7 @@ class Limits:
                 for rep in range(self.mc_reps):
 
                     r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y), [c1, c2], self.path_to_models, self.architecture,
-                                                    mc_run=rep, lin=self.lin, quad=self.quad).numpy().flatten()
+                                                    mc_run=rep, lin=self.lin, quad=self.quad)
 
                     #r_nn = get_nn_ratio(torch.tensor(events_mvh_y), c1, c2, rep).detach().numpy()
                     log_r = np.log(r_nn)
