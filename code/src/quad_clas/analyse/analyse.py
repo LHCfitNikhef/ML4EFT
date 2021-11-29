@@ -631,16 +631,19 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
     models: list
         List of loaded models
     """
-    if lin:
-        loaded_model = quad_clas.PredictorLinear(architecture)
-    elif quad:
-        loaded_model = quad_clas.PredictorQuadratic(architecture)
-    else:
-        loaded_model = quad_clas.PredictorCross(architecture)
+
 
     means, stds = [], []
     models = []
     for rep_nr in model_nrs:
+
+        if lin:
+            loaded_model = quad_clas.PredictorLinear(architecture)
+        elif quad:
+            loaded_model = quad_clas.PredictorQuadratic(architecture)
+        else:
+            loaded_model = quad_clas.PredictorCross(architecture)
+
         # load statistics of pretrained models
         mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
         #loaded_model = quad_clas.PredictorLinear(architecture)
@@ -781,44 +784,34 @@ def make_predictions_1d(x, c, path_to_models, network_size, mc_reps=30, epoch=-1
     return 1 / (1 + r)
 
 
-# def make_predictions_1d(x, path_to_models, network_size, lin=False, quad=False):
-#     """
-#
-#     Deprecated, to be removed in future versions
-#
-#     """
-#     # Set up coordinates and compute f
-#     x_unscaled = torch.from_numpy(x)
-#     # x_unscaled = torch.cat((x_unscaled, torch.zeros(len(x_unscaled), 1)), dim=1)
-#     x = (x_unscaled - mean) / std  # rescale the inputs
-#
-#     # Be careful to use the same network architecture as during training
-#
-#     paths_lin = path_to_models['lin']
-#     for path in paths_lin:
-#         mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
-#         loaded_model = quad_clas.PredictorLinear(architecture)
-#         network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
-#
-#         # load all the parameters into the trained network and save
-#         loaded_model.load_state_dict(torch.load(network_path))
-#         models.append(loaded_model)
-#         loaded_model = quad_clas.PredictorLinear(network_size)
-#         loaded_model.load_state_dict(torch.load(network_path))
-#
-#     if path_lin_1 is None:
-#         loaded_model = quad_clas.PredictorLinear(network_size)
-#         loaded_model.load_state_dict(torch.load(network_path))
-#         f_pred = loaded_model.forward(x.float(), cHW + cHq3)
-#     elif path_quad_2 is None:
-#         loaded_model = quad_clas.PredictorQuadratic(network_size)
-#         loaded_model.load_state_dict(torch.load(network_path))
-#         f_pred = loaded_model.forward(x.float(), cHW ** 2 + cHq3 ** 2, path_lin_1)
-#     else:
-#         loaded_model = quad_clas.PredictorCross(network_size)
-#         loaded_model.load_state_dict(torch.load(network_path))
-#         f_pred = loaded_model.forward(x.float(), cHW, cHq3, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
-#
-#     f_pred = f_pred.view(-1).detach().numpy()
-#
-#     return f_pred
+def make_predictions_1d_old(x, network_path, network_size, cHW, cHq3, mean, std,
+                        path_lin_1=None,
+                        path_lin_2=None,
+                        path_quad_1=None,
+                        path_quad_2=None):
+    """
+    Deprecated, to be removed in future versions
+    """
+    # Set up coordinates and compute f
+    x_unscaled = torch.from_numpy(x)
+    # x_unscaled = torch.cat((x_unscaled, torch.zeros(len(x_unscaled), 1)), dim=1)
+    x = (x_unscaled - mean) / std  # rescale the inputs
+
+    # Be careful to use the same network architecture as during training
+
+    if path_quad_1 is None:
+        loaded_model = quad_clas.PredictorLinear(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW + cHq3)
+    elif path_quad_2 is None:
+        loaded_model = quad_clas.PredictorQuadratic(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW ** 2 + cHq3 ** 2, path_lin_1)
+    else:
+        loaded_model = quad_clas.PredictorCross(network_size)
+        loaded_model.load_state_dict(torch.load(network_path))
+        f_pred = loaded_model.forward(x.float(), cHW, cHq3, path_lin_1, path_lin_2, path_quad_1, path_quad_2)
+
+    f_pred = f_pred.view(-1).detach().numpy()
+
+    return f_pred
