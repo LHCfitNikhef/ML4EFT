@@ -34,18 +34,10 @@ class Animate:
         # analytical decision function
         x = np.linspace(mh + mz + 1e-2, 2.5, 100)
         x = np.stack((x, np.zeros(len(x))), axis=-1)
-        f_ana = analyse.decision_function_truth(x, np.array([cHW, cHq3]), lin=self.lin, quad=self.quad)
+        f_ana_lin = analyse.decision_function_truth(x, np.array([cHW, cHq3]), lin=True)
         f_ana_quad = analyse.decision_function_truth(x, np.array([cHW, cHq3]), quad=True)
 
         fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-
-        # load the rescaling parameters (means and std)
-        means = []
-        stds = []
-        for i in range(0, self.mc_runs):
-            mean, std = np.loadtxt(os.path.join(self.path_to_models.format(mc_run=i), 'scaling.dat'))
-            means.append(mean)
-            stds.append(std)
 
         # create empty line objects
         lines = []
@@ -59,11 +51,13 @@ class Animate:
 
         # make the first frame of the animation
 
-        path_to_models = {'lin': ['/Users/jaco/Documents/ML4EFT/models/lin/cHW/mc_run_{mc_run}'],
-                          'quad': ['/Users/jaco/Documents/ML4EFT/models/quad/cHW/mc_run_{mc_run}']}
-
         #f_preds_lin_init = analyse.make_predictions_1d(x, np.array([2]), path_to_models, architecture, epoch=1, lin=True)
-        f_preds_quad_init = analyse.make_predictions_1d(x, np.array([2]), path_to_models, self.architecture, epoch=1, lin=True)
+        f_preds_quad_init = analyse.make_predictions_1d(x, np.array([2]),
+                                                        self.path_to_models,
+                                                        self.architecture,
+                                                        epoch=1,
+                                                        lin=self.lin,
+                                                        quad=self.quad)
 
         # create uncertainty band and plot
         f_preds_quad_init_up = np.percentile(f_preds_quad_init, 84, axis=0)
@@ -72,7 +66,7 @@ class Animate:
         fill = ax.fill_between(x[:, 0], f_preds_quad_init_up, f_preds_quad_init_down, color='C0', alpha=0.3,
                                label=r'$\rm{NN\;1}\sigma\rm{-band}$')
 
-        ax.plot(x[:, 0], f_ana, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
+        ax.plot(x[:, 0], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
         ax.plot(x[:, 0], f_ana_quad, '--', c='orange', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-4}\right)$')
         epoch_text = ax.text(0.02, 0.92, '', transform=ax.transAxes, fontsize=15)
 
@@ -93,8 +87,8 @@ class Animate:
         # animation function.  This is called sequentially
         def animate(i):
             print(i)
-            f_preds_quad = analyse.make_predictions_1d(x, np.array([2]), path_to_models, self.architecture, epoch=i+1,
-                                                            lin=True)
+            f_preds_quad = analyse.make_predictions_1d(x, np.array([2]), self.path_to_models, self.architecture, epoch=i+1,
+                                                            lin=self.lin, quad=self.quad)
             for rep_nr, line in enumerate(lines):
                 line.set_data(x[:, 0], f_preds_quad[rep_nr, :])
 

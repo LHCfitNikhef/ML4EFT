@@ -85,6 +85,16 @@ class PredictorQuadratic(nn.Module):
         n_lin = PredictorLinear(self.architecture)
         n_lin.load_state_dict(torch.load(path_lin))
 
+        # undo quad rescaling
+        dir_lin = os.path.dirname(path_lin)
+        dir_quad = dir_lin.replace('lin', 'quad')
+        mean, std = np.loadtxt(os.path.join(dir_quad, 'scaling.dat'))
+        x_orig = (x * std) + mean
+
+        # recale lin
+        mean, std = np.loadtxt(os.path.join(dir_lin, 'scaling.dat'))
+        x = (x_orig - mean) /std
+        #TODO: x does not have any meaning in the linear part: use its own rescaling transformation
         r = 1 + c * n_lin.n_alpha(x) + c ** 2 * n_beta_out
         return 1 / (1 + r)
 

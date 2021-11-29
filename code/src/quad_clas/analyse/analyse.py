@@ -776,11 +776,16 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
     return n_lin, n_quad, n_cross
 
 def make_predictions_1d(x, c, path_to_models, network_size, mc_reps=30, epoch=-1, lin=False, quad=False):
+
+    # nn models at the specified epoch
     n_lin, n_quad, n_cross = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=epoch)
+
+    # trained nn models
+    n_lin_trained, n_quad_trained, n_cross_trained = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=-1)
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
     elif quad:
-        r = 1 + np.einsum('i, ijk', c, n_lin) + np.einsum('i, ijk', c ** 2, n_quad)
+        r = 1 + np.einsum('i, ijk', c, n_lin_trained) + np.einsum('i, ijk', c ** 2, n_quad)
     return 1 / (1 + r)
 
 
