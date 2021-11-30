@@ -121,7 +121,7 @@ def make_predictions_1d(x, c, path_to_models, network_size, epoch=-1, lin=False,
         r = 1 + np.einsum('i, ijk', c, n_lin) + np.einsum('i, ijk', c ** 2, n_quad)
     return 1 / (1 + r)
 
-#f = make_predictions_1d(x, np.array([2]), path_to_models, architecture)
+#f = likelihood_ratio_nn(x, np.array([2]), path_to_models, architecture)
 
 
 #%%

@@ -235,6 +235,7 @@ def coeff_function_truth(x, c, lin, quad, cross):
         return coeff_lin
     elif quad: # only one of the c elements can be nonzero
         ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
+        # TODO: rewrite the below
         coeff_quad = np.ma.masked_where(mask, (ratio_truth_quad - 1 - np.sum(c) * coeff_lin) / np.sum(c) ** 2)
         return coeff_quad
     elif cross:
@@ -282,7 +283,7 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
     mvh_min, mvh_max = mz + mh + epsilon, 2
     y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
 
-    x_spacing, y_spacing = 1e-1, 0.1
+    x_spacing, y_spacing = 1e-2, 0.01
     mvh_span = np.arange(mvh_min, mvh_max, x_spacing)
     y_span = np.arange(y_min, y_max, y_spacing)
 
@@ -456,6 +457,8 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
             loaded_model = quad_clas.PredictorCross(architecture)
 
         # load statistics of pretrained models
+        if not os.path.exists(os.path.join(model_dir.format(mc_run=rep_nr))):
+            continue
         mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
         #loaded_model = quad_clas.PredictorLinear(architecture)
         if epoch != -1:
@@ -514,7 +517,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
             for path in paths:
                 loaded_models_lin, means, std = load_models(architecture, path, range(mc_reps), epoch=epoch, lin=True)
                 n_alphas = []
-                for i in range(mc_reps):
+                for i in range(len(loaded_models_lin)):
                     x_scaled = (x - means[i]) / std[i]
                     with torch.no_grad():
                         n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(x_scaled).float()).numpy().flatten())
@@ -525,7 +528,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
             for path in paths:
                 loaded_models_quad, means, std = load_models(architecture, path, range(mc_reps), epoch=epoch, quad=True)
                 n_betas = []
-                for i in range(mc_reps):
+                for i in range(len(loaded_models_quad)):
                     x_scaled = (x - means[i]) / std[i]
                     with torch.no_grad():
                         n_betas.append(loaded_models_quad[i].n_beta(torch.tensor(x_scaled).float()).numpy().flatten())
@@ -536,7 +539,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
             for path in paths:
                 loaded_models_cross, means, std = load_models(architecture, path, range(mc_reps), epoch=epoch, cross=True)
                 n_gammas = []
-                for i in range(mc_reps):
+                for i in range(len(loaded_models_cross)):
                     x_scaled = (x - means[i]) / std[i]
                     with torch.no_grad():
                         n_gammas.append(loaded_models_cross[i].n_gamma(x_scaled.float()).numpy().flatten())
@@ -657,6 +660,7 @@ def likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
     elif quad:
+
         # TODO: c should have the same dimesnions as n_lin_trained
         # trained nn models
         n_lin_trained, n_quad_trained, n_cross_trained = load_coefficients_nn(x, network_size, path_to_models, mc_reps,
@@ -664,7 +668,7 @@ def likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1
 
         lin_cor = np.einsum('i, ijk', c, n_lin_trained)
         if len(n_cross_trained) > 0: # if cross terms are available
-            quadratic_cor = np.einsum('i, ijk', c ** 2, n_quad_trained) + prod(c) * n_cross
+            quadratic_cor = np.einsum('i, ijk', c ** 2, n_quad_trained) + np.prod(c) * n_cross
         else:
             quadratic_cor = np.einsum('i, ijk', c ** 2, n_quad)
         r = 1 + lin_cor + quadratic_cor

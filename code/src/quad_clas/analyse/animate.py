@@ -11,12 +11,10 @@ from ..preproc import constants
 mz = constants.mz
 mh = constants.mh
 
-path_to_models = {'lin': ['/Users/jaco/Documents/ML4EFT/models/lin/cHW', '/Users/jaco/Documents/ML4EFT/models/lin/cHq3'],
-                  'quad': []}
 
 class Animate:
 
-    def __init__(self, architecture, c, path_to_models, mc_runs, save_path, lin=False, quad=False):
+    def __init__(self, architecture, c, path_to_models, mc_runs, save_path, frames, lin=False, quad=False):
 
         self.architecture = architecture
         self.c = c
@@ -25,7 +23,7 @@ class Animate:
         self.quad = quad
         self.mc_runs = mc_runs
         self.save_path = save_path
-
+        self.frames = frames
         self.make_animation()
 
     def make_animation(self):
@@ -34,8 +32,8 @@ class Animate:
         # analytical decision function
         x = np.linspace(mh + mz + 1e-2, 2.5, 100)
         x = np.stack((x, np.zeros(len(x))), axis=-1)
-        f_ana_lin = analyse.decision_function_truth(x, np.array([cHW, cHq3]), lin=True)
-        f_ana_quad = analyse.decision_function_truth(x, np.array([cHW, cHq3]), quad=True)
+        f_ana_lin = analyse.decision_function_truth(x, self.c, lin=True)
+        f_ana_quad = analyse.decision_function_truth(x, self.c, quad=True)
 
         fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
 
@@ -51,8 +49,8 @@ class Animate:
 
         # make the first frame of the animation
 
-        #f_preds_lin_init = analyse.make_predictions_1d(x, np.array([2]), path_to_models, architecture, epoch=1, lin=True)
-        f_preds_quad_init = analyse.make_predictions_1d(x, np.array([5]),
+        #f_preds_lin_init = analyse.likelihood_ratio_nn(x, np.array([2]), path_to_models, architecture, epoch=1, lin=True)
+        f_preds_quad_init = analyse.decision_function_nn(x, self.c,
                                                         self.path_to_models,
                                                         self.architecture,
                                                         epoch=1,
@@ -87,16 +85,16 @@ class Animate:
         # animation function.  This is called sequentially
         def animate(i):
             print(i)
-            f_preds_quad = analyse.make_predictions_1d(x, np.array([5]), self.path_to_models, self.architecture, epoch=i+1,
-                                                            lin=self.lin, quad=self.quad)
+            f_preds_nn = analyse.decision_function_nn(x, self.c, self.path_to_models, self.architecture, epoch=i + 1,
+                                                       lin=self.lin, quad=self.quad)
             for rep_nr, line in enumerate(lines):
-                line.set_data(x[:, 0], f_preds_quad[rep_nr, :])
+                line.set_data(x[:, 0], f_preds_nn[rep_nr, :])
 
             epoch_text.set_text(r'$\rm{epoch\;%d}$' % i)
 
 
-            f_pred_up = np.percentile(f_preds_quad, 84, axis=0)
-            f_pred_down = np.percentile(f_preds_quad, 16, axis=0)
+            f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
+            f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
 
             path = fill.get_paths()[0]
             verts = path.vertices
@@ -105,7 +103,7 @@ class Animate:
             return lines
 
         anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                       frames=200, interval=50, blit=True)
+                                       frames=self.frames, interval=50, blit=True)
 
         anim.save(self.save_path)
 
