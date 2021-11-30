@@ -93,59 +93,57 @@ def decision_function_truth(x, c, lin=False, quad=False):
     f = 1 / (1 + ratio)
     return f
 
-def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, quad=False):
-    """
-    Computes the reconstructed likelihood ratio r(x, c) using the NN models
-
-    Parameters
-    ----------
-    x : torch.tensor, shape=(M, N)
-        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    c : numpy.ndarray, shape=(M,)
-        EFT point in M dimensions, e.g c = (cHW, cHq3)
-    path_to_models: dict
-        Path to the nn model root directory
-    mc_run: int
-        Monte Carlo replica number
-    lin: bool, optional
-        Set to False by default. Turn on for linear corrections.
-    quad: bool, optional
-        Set to False by default. Turn on for quadratic corrections.
-    cross: bool, optional
-        Set to False by default. Turn on for cross term corrections
-
-    Returns
-    -------
-    ratio: numpy.ndarray, shape=(M,)
-        Reconstructed likelihood ratio wrt the SM for the events ``x``
-    """
-
-
-    # load the linear coefficient functions
-    n_lin = []
-    for path_to_model in path_to_models['lin']:
-        n_lin.append(coeff_function_nn(x, path_to_model, architecture, lin=True))
-    n_lin = np.array(n_lin)
-
-    if lin:
-        return 1 + np.dot(c, n_lin)
-
-    # for quadratic corrections
-    elif quad:
-        n_quad = []
-        for path_to_model in path_to_models['quad']:
-            n_quad.append(coeff_function_nn(x, path_to_model, architecture, quad=True))
-        n_quad = np.array(n_quad)
-
-        n_cross = []
-        for path_to_model in path_to_models['cross']:
-            n_cross.append(coeff_function_nn(x, path_to_model, architecture, cross=True))
-        n_cross = np.array(n_cross)
-
-        return 1 + np.dot(c, n_lin) + np.dot(c ** 2, n_quad) + np.prod(c) * n_cross
-
-
+# def likelihood_ratio_nn(x, c, path_to_models, architecture, mc_run, lin=False, quad=False):
+#     """
+#     Computes the reconstructed likelihood ratio r(x, c) using the NN models
+#
+#     Parameters
+#     ----------
+#     x : torch.tensor, shape=(M, N)
+#         Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+#         the invariant mass and the rapidity.
+#     c : numpy.ndarray, shape=(M,)
+#         EFT point in M dimensions, e.g c = (cHW, cHq3)
+#     path_to_models: dict
+#         Path to the nn model root directory
+#     mc_run: int
+#         Monte Carlo replica number
+#     lin: bool, optional
+#         Set to False by default. Turn on for linear corrections.
+#     quad: bool, optional
+#         Set to False by default. Turn on for quadratic corrections.
+#     cross: bool, optional
+#         Set to False by default. Turn on for cross term corrections
+#
+#     Returns
+#     -------
+#     ratio: numpy.ndarray, shape=(M,)
+#         Reconstructed likelihood ratio wrt the SM for the events ``x``
+#     """
+#
+#
+#     # load the linear coefficient functions
+#     n_lin = []
+#     for path_to_model in path_to_models['lin']:
+#         n_lin.append(coeff_function_nn(x, path_to_model, architecture, lin=True))
+#     n_lin = np.array(n_lin)
+#
+#     if lin:
+#         return 1 + np.dot(c, n_lin)
+#
+#     # for quadratic corrections
+#     elif quad:
+#         n_quad = []
+#         for path_to_model in path_to_models['quad']:
+#             n_quad.append(coeff_function_nn(x, path_to_model, architecture, quad=True))
+#         n_quad = np.array(n_quad)
+#
+#         n_cross = []
+#         for path_to_model in path_to_models['cross']:
+#             n_cross.append(coeff_function_nn(x, path_to_model, architecture, cross=True))
+#         n_cross = np.array(n_cross)
+#
+#         return 1 + np.dot(c, n_lin) + np.dot(c ** 2, n_quad) + np.prod(c) * n_cross
 
 def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False):
     """
@@ -314,36 +312,6 @@ def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cro
         #
         #     return np.array([n_cross_out], dtype=np.ndarray)
 
-
-def decision_function_nn(x, c, path_to_models, mc_run, lin=False, quad=False):
-    """
-    Computes the reconstructed decission function f(x, c)
-
-    Parameters
-    ----------
-    x : torch.tensor, shape=(M, N)
-        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    c : numpy.ndarray, shape=(M,)
-        EFT point in M dimensions, e.g c = (cHW, cHq3)
-    path_to_models: dict
-        Path to the nn model root directory
-    mc_run: int
-        Monte Carlo replica number
-    lin: bool, optional
-        Set to False by default. Turn on for linear corrections.
-    quad: bool, optional
-        Set to False by default. Turn on for quadratic corrections.
-
-    Returns
-    -------
-    f: numpy.ndarray, shape=(M,)
-        Reconstructed decission function f for the events ``x``
-    """
-
-    ratio = likelihood_ratio_nn(x, c, path_to_models, mc_run, lin, quad)
-    f = 1 / (1 + ratio)
-    return f
 
 def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
     """
@@ -766,7 +734,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
                 for i in range(mc_reps):
                     x_scaled = (x - means[i]) / std[i]
                     with torch.no_grad():
-                        n_gammas.append(loaded_models_cross[i].n_gamma(torch.tensor(x_scaled).float()).numpy().flatten())
+                        n_gammas.append(loaded_models_cross[i].n_gamma(x_scaled.float()).numpy().flatten())
                 n_gammas = np.array(n_gammas)
                 n_cross.append(n_gammas)
     n_lin = np.array(n_lin)
@@ -785,8 +753,54 @@ def make_predictions_1d(x, c, path_to_models, network_size, mc_reps=30, epoch=-1
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
     elif quad:
+        # TODO: c should have the same dimesnions as n_lin_trained
         r = 1 + np.einsum('i, ijk', c, n_lin_trained) + np.einsum('i, ijk', c ** 2, n_quad)
     return 1 / (1 + r)
+
+def likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1, lin=False, quad=False):
+
+    # nn models at the specified epoch
+
+    n_lin, n_quad, n_cross = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=epoch)
+
+    # trained nn models
+    n_lin_trained, n_quad_trained, n_cross_trained = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=-1)
+    if lin:
+        r = 1 + np.einsum('i, ijk', c, n_lin)
+    elif quad:
+        r = 1 + np.einsum('i, ijk', c, n_lin_trained) + np.einsum('i, ijk', c ** 2, n_quad)
+    return r
+
+
+def decision_function_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1, lin=False, quad=False):
+    """
+    Computes the reconstructed decission function f(x, c)
+
+    Parameters
+    ----------
+    x : torch.tensor, shape=(M, N)
+        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+        the invariant mass and the rapidity.
+    c : numpy.ndarray, shape=(M,)
+        EFT point in M dimensions, e.g c = (cHW, cHq3)
+    path_to_models: dict
+        Path to the nn model root directory
+    mc_reps: int
+        Monte Carlo replica number
+    lin: bool, optional
+        Set to False by default. Turn on for linear corrections.
+    quad: bool, optional
+        Set to False by default. Turn on for quadratic corrections.
+
+    Returns
+    -------
+    f: numpy.ndarray, shape=(M,)
+        Reconstructed decission function f for the events ``x``
+    """
+
+    ratio = likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps, epoch, lin=lin, quad=quad)
+    f = 1 / (1 + ratio)
+    return f
 
 
 def make_predictions_1d_old(x, network_path, network_size, cHW, cHq3, mean, std,
@@ -820,3 +834,4 @@ def make_predictions_1d_old(x, network_path, network_size, cHW, cHq3, mean, std,
     f_pred = f_pred.view(-1).detach().numpy()
 
     return f_pred
+

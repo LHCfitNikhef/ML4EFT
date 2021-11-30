@@ -80,22 +80,22 @@ class PredictorQuadratic(nn.Module):
         self.architecture = architecture
         self.n_beta = MLP(architecture)
 
-    def forward(self, x, c, path_lin):
+    def forward(self, x, c, path_lin, path_quad):
         n_beta_out = self.n_beta(x)
         n_lin = PredictorLinear(self.architecture)
         n_lin.load_state_dict(torch.load(path_lin))
 
         # undo quad rescaling
         dir_lin = os.path.dirname(path_lin)
-        dir_quad = dir_lin.replace('lin', 'quad')
-        mean, std = np.loadtxt(os.path.join(dir_quad, 'scaling.dat'))
+        #dir_quad = dir_lin.replace('lin', 'quad')
+        mean, std = np.loadtxt(os.path.join(path_quad, 'scaling.dat'))
         x_orig = (x * std) + mean
 
         # recale lin
         mean, std = np.loadtxt(os.path.join(dir_lin, 'scaling.dat'))
         x = (x_orig - mean) /std
-        #TODO: x does not have any meaning in the linear part: use its own rescaling transformation
-        r = 1 + c * n_lin.n_alpha(x) + c ** 2 * n_beta_out
+
+        r = 1 + c * n_lin.n_alpha(x.float()) + c ** 2 * n_beta_out
         return 1 / (1 + r)
 
 class PredictorCross(nn.Module):
@@ -108,7 +108,7 @@ class PredictorCross(nn.Module):
         self.architecture = architecture
         self.n_gamma = MLP(architecture)
 
-    def forward(self, x, c1, c2, path_lin_1, path_lin_2, path_quad_1, path_quad_2):
+    def forward(self, x, c1, c2, path_lin_1, path_lin_2, path_quad_1, path_quad_2, path_cross):
         n_gamma_out = self.n_gamma(x)
 
         n_lin_1 = PredictorLinear(self.architecture)
@@ -463,10 +463,10 @@ class Fitter:
                     if isinstance(self.model, PredictorLinear):
                         output = self.model(event.float(), self.c1 + self.c2)
                     if isinstance(self.model, PredictorQuadratic):
-                        output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1)
+                        output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1, self.path_dict['mc_path'])
                     if isinstance(self.model, PredictorCross):
                         output = model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
-                                       self.path_quad_2)
+                                       self.path_quad_2, self.path_dict['mc_path'])
                     loss = self.loss_fn(output, label, weight)
                     train_loss += loss
 
@@ -484,7 +484,7 @@ class Fitter:
                         if isinstance(self.model, PredictorLinear):
                             output = self.model(event.float(), self.c1 + self.c2)
                         if isinstance(self.model, PredictorQuadratic):
-                            output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1)
+                            output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1, self.path_dict['mc_path'])
                         if isinstance(self.model, PredictorCross):
                             output = self.model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
                                            self.path_quad_2)

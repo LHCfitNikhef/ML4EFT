@@ -52,7 +52,7 @@ class Animate:
         # make the first frame of the animation
 
         #f_preds_lin_init = analyse.make_predictions_1d(x, np.array([2]), path_to_models, architecture, epoch=1, lin=True)
-        f_preds_quad_init = analyse.make_predictions_1d(x, np.array([2]),
+        f_preds_quad_init = analyse.make_predictions_1d(x, np.array([5]),
                                                         self.path_to_models,
                                                         self.architecture,
                                                         epoch=1,
@@ -87,7 +87,7 @@ class Animate:
         # animation function.  This is called sequentially
         def animate(i):
             print(i)
-            f_preds_quad = analyse.make_predictions_1d(x, np.array([2]), self.path_to_models, self.architecture, epoch=i+1,
+            f_preds_quad = analyse.make_predictions_1d(x, np.array([5]), self.path_to_models, self.architecture, epoch=i+1,
                                                             lin=self.lin, quad=self.quad)
             for rep_nr, line in enumerate(lines):
                 line.set_data(x[:, 0], f_preds_quad[rep_nr, :])

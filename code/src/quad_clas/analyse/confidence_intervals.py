@@ -90,20 +90,27 @@ class Limits:
                     likelihood_scan_truth.append(likelihood_truth)
 
                 log_l_nn_reps = []
-                for rep in range(self.mc_reps):
 
-                    r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y), [c1, c2], self.path_to_models, self.architecture,
-                                                    mc_run=rep, lin=self.lin, quad=self.quad)
+                r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y), [c1, c2], self.path_to_models, self.architecture,
+                                                    mc_reps=30, lin=self.lin, quad=self.quad) # shape = (mc_reps, self.events_mv_y.shape, )
 
-                    #r_nn = get_nn_ratio(torch.tensor(events_mvh_y), c1, c2, rep).detach().numpy()
-                    log_r = np.log(r_nn)
+                log_r_nn = np.log(r_nn)
+                likelihood_scan_nn.append(-nu + np.sum(log_r_nn, axis=1))
 
-                    # TODO: what to do if xsec < 0 at large enough values of c?
-                    if np.isnan(log_r).any():
-                        log_l_nn_reps.append(np.nan)
-                    else:
-                        log_l_nn_reps.append(-nu + np.sum(log_r))
-                likelihood_scan_nn.append(log_l_nn_reps)
+                # for rep in range(self.mc_reps):
+                #
+                #     r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y), [c1, c2], self.path_to_models, self.architecture,
+                #                                     mc_run=rep, lin=self.lin, quad=self.quad)
+                #
+                #     #r_nn = get_nn_ratio(torch.tensor(events_mvh_y), c1, c2, rep).detach().numpy()
+                #     log_r = np.log(r_nn)
+                #
+                #     # TODO: what to do if xsec < 0 at large enough values of c?
+                #     if np.isnan(log_r).any():
+                #         log_l_nn_reps.append(np.nan)
+                #     else:
+                #         log_l_nn_reps.append(-nu + np.sum(log_r))
+                # likelihood_scan_nn.append(log_l_nn_reps)
 
         likelihood_scan_truth = np.array(likelihood_scan_truth, dtype='object')
         likelihood_scan_truth = np.reshape(likelihood_scan_truth, (len(c1_values), len(c2_values)))
@@ -167,7 +174,7 @@ class Limits:
         # binned contour
         for i, log_likelihood in enumerate(self.log_likelihood_binned):
             c = next(color)
-            contour = plt.contour(yy, xx, log_likelihood, np.array([np.max(log_likelihood) - 5.99]),
+            contour = plt.contour(yy, xx, log_likelihood, np.array([np.max(log_likelihood) - 5.99 / 2]),
                                   origin='lower', linestyles='dashed', linewidths=1.0, colors=[c])
 
             contour_handle, _ = contour.legend_elements()
