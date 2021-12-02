@@ -300,6 +300,7 @@ sphinx/_build/
 
 #pytorch files
 *.pt
+/models/quad/
 !/models/**/*.pt
 !/models/**/*.out
 !/models/**/*.log
@@ -315,6 +316,7 @@ sphinx/_build/
 
 # specific files
 /2d_data_fitter.ipynb
+
 
 
 
