@@ -1,0 +1,21 @@
+import model SMEFTsim_U35_MwScheme_UFO
+define p = p b b~
+generate p p > z > z h NP=2 NP^2=2
+output quad_cHWB
+launch quad_cHWB -i
+multi_run 50
+set mu 0
+set md 0
+set mc 0
+set ms 0
+set mb 0
+set nevents 100000
+set ebeam1 7000
+set ebeam2 7000
+set cHWB 10
+set pdlabel lhapdf
+set lhaid 315000
+set fixed_ren_scale True
+set fixed_fac_scale True
+set use_syst False
+print_results --path=./quad_cHWB/cs.txt --format=short
