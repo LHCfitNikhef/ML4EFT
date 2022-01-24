@@ -84,6 +84,61 @@ def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
                cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
 
+
+def dsigma_part_dpt_vh_down(hats, cHW, cHq3, lin, quad):
+
+    # minimum energy required to generate an event with transverse momentum ptv
+    s_min = mh ** 2 + mz ** 2 + 2 * (ptv ** 2 + np.sqrt((mh ** 2 + ptv ** 2) * (mz ** 2 + ptv ** 2)))
+
+    if hats < s_min:
+        return 0
+
+    sth2 = 1 - (mw / mz) ** 2
+    cth2 = 1 - sth2
+
+    S = hats
+
+    pi = np.sqrt(S) / 2
+    pf2 = (S ** 2 + mz ** 4 + mh ** 4 - 2 * S * mz ** 2 - 2 * S * mh ** 2 - 2 * mz ** 2 * mh ** 2) / (4 * S)
+
+    pf = np.sqrt(pf2)
+
+    theta = np.arcsin(ptv / pf)
+
+    U = mz ** 2 - 2 * pi * (np.sqrt(mz ** 2 + pf2) - pf * np.cos(theta))
+    T = mh ** 2 + mz ** 2 - S - U
+    me_sq_dd_sm = (2 * Gf ** 2 * mz ** 4 * (9 - 12 * sth2 + 8 * sth2 ** 2) * (mz ** 4 + mz ** 2 * (S - T - U) + T * U)) / (
+            27 * (mz ** 2 - S) ** 2)
+
+    me_sq_dd_cHW =
+
+    me_sq_dd_cHq3 =
+
+    me_sq_dd = me_sq_dd_sm + cHW * me_sq_dd_cHW + cHq3 * me_sq_dd_cHq3
+
+    dsigma_dpT_1 = 2 * np.pi * np.tan(theta) * me_sq_dd / (64 * np.pi ** 2 * S * pi)
+
+    ######
+
+    theta = np.pi - theta
+
+    T = mz ** 2 - 2 * pi * (np.sqrt(mz ** 2 + pf ** 2) - pf * np.cos(theta))
+    U = mh ** 2 + mz ** 2 - T - S
+
+    me_sq_dd_sm = (2 * Gf ** 2 * mz ** 4 * (9 - 12 * sth2 + 8 * sth2 ** 2) * (mz ** 4 + mz ** 2 * (S - T - U) + T * U)) / (
+            27 * (mz ** 2 - S) ** 2)
+
+    me_sq_dd_cHW =
+
+    me_sq_dd_cHq3 =
+
+    me_sq_dd = me_sq_dd_sm + cHW * me_sq_dd_cHW + cHq3 * me_sq_dd_cHq3
+
+    dsigma_dpT_2 = 2 * np.pi * np.abs(np.tan(theta)) * me_sq_dd / (64 * np.pi ** 2 * S * pi)
+
+    return (dsigma_dpT_1 + dsigma_dpT_2) * pb_convert
+
+
 def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     """
     """
@@ -99,10 +154,46 @@ def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     #     [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in
     #      flavor_down])
 
-
     weight_up = (sigma_part_vh_up(hats, cHW, cHq3, lin, quad)) * pdfs_up
     weight_down = (sigma_part_vh_down(hats, cHW, cHq3, lin, quad)) * pdfs_down
     return weight_down + weight_up
+
+
+def weight_pt(sqrts, pt, mu, x1, x2, cHW, cHq3, lin, quad):
+    """
+    """
+    hats = sqrts ** 2
+    flavor_up = [2, 4]
+    flavor_down = [1, 3, 5]
+
+    # pdfs_up = np.sum(
+    #     [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in flavor_up])
+    pdfs_up = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_up])
+    pdfs_down = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_down])
+    # pdfs_down = np.sum(
+    #     [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in
+    #      flavor_down])
+
+
+    weight_up = (dsigma_part_dpt_vh_up(hats, pt, cHW, cHq3, lin, quad)) * pdfs_up
+    weight_down = (dsigma_part_dpt_vh_down(hats, pt, cHW, cHq3, lin, quad)) * pdfs_down
+    return weight_down + weight_up
+
+
+def dsigma_dmvh_dy_dpt(y, mvh, pt, cHW, cHq3, lin, quad):
+    """
+    Compute the doubly differential cross section in mtt and y at any order NP
+    """
+
+    if mvh == mz + mh: return 0  # if at threshold return zero
+
+    if np.abs(y) < np.log(np.sqrt(s) / mvh):  # check whether x = {mtt, y} falls inside the physically allowed region
+        x1 = mvh / np.sqrt(s) * np.exp(y)
+        x2 = mvh / np.sqrt(s) * np.exp(-y)
+        dsigma_dmtt_dy = 2 * mvh / s * v_weight_pt(mvh, pt, 91.188, x1, x2, cHW, cHq3, lin, quad) / (x1 * x2)
+        return pb_convert * dsigma_dmtt_dy
+    else:
+        return 0
 
 
 def dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin, quad):
@@ -163,5 +254,6 @@ def nu_i(a, cHW, cHq3, luminosity, lin=False, quad=False):
     return nu
 
 v_weight = np.vectorize(weight, otypes=[np.float])
+v_weight_pt = np.vectorize(weight_pt, otypes=[np.float])
 dsigma_dmvh_dy_vec = np.vectorize(dsigma_dmvh_dy, otypes=[np.float])
 dsigma_dmvh_vec = np.vectorize(dsigma_dmvh, otypes=[np.float])

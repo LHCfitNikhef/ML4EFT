@@ -58,6 +58,9 @@ def likelihood_ratio_truth(x, c, lin=False, quad=False):
     elif n_kin == 2:
         dsigma_0 = [vh_prod.dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin=lin, quad=quad) for (mvh, y) in x]  # EFT
         dsigma_1 = [vh_prod.dsigma_dmvh_dy(y, mvh, 0, 0, lin=lin, quad=quad) for (mvh, y) in x]  # SM
+    elif n_kin == 3:
+        dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, cHW, cHq3, lin=lin, quad=quad) for (mvh, y, pt) in x]  # EFT
+        dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, 0, 0, lin=lin, quad=quad) for (mvh, y, pt) in x]  # SM
     else:
         raise NotImplementedError("No more than two features are currently supported")
 

@@ -190,9 +190,8 @@ class EventDataset(data.Dataset):
     def event_loader(self, path):
 
         data = np.load(path)
-        if self.n_features == 2:
+        if self.n_features > 1:
             events = data[1:self.n_dat + 1, :]
-            #events = np.append(events, np.log(events[:, 0]).reshape(-1, 1), axis=1)
         else:
             events = data[1:self.n_dat + 1, 0].reshape(-1, 1)
             np.append(events, np.log(events).reshape(-1, 1), axis=1)

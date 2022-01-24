@@ -8,6 +8,10 @@ path_to_lhe = sys.argv[1]
 save_loc = sys.argv[2]
 mc_rep = sys.argv[3]
 
+def get_pt(p):
+    pT = np.sqrt(getattr(p, 'px') ** 2 + getattr(p, 'py') ** 2)
+    return pT
+
 def invariant_mass(p1, p2):
     """
     Computes the invariant mass of an event
@@ -28,9 +32,10 @@ for e in pylhe.readLHE(path_to_lhe):
     if not found_weight:
         tot_xsec = e.eventinfo.weight
         found_weight = True
-        data_madgraph.append([tot_xsec, tot_xsec]) # quick and dirty
+        data_madgraph.append([tot_xsec, tot_xsec, tot_xsec]) # quick and dirty
     mvh = invariant_mass(e.particles[-1], e.particles[-2]) * 10 ** -3
     yvh = rapidity(e.particles[-1], e.particles[-2])
-    data_madgraph.append([mvh, yvh])
+    ptz = get_pt(e.particles[-2]) * 10 ** -3
+    data_madgraph.append([mvh, yvh, ptz])
 data_madgraph = np.array(data_madgraph)
 np.save(os.path.join(save_loc, "events_{}.npy".format(mc_rep)), data_madgraph)
