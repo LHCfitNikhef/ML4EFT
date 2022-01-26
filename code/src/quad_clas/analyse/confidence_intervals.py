@@ -1,5 +1,3 @@
-# same pseudo-dataset in all binnings
-#%%
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
@@ -18,7 +16,7 @@ mh = constants.mh
 class Limits:
 
     def __init__(self, luminosity, bins, scan_domain, path_to_models, mc_reps, data_sm, plot_path, architecture,
-                 lin=False, quad=False, plot_reps=False):
+                 lin=False, quad=False, plot_reps=False, save=False, save_path=None):
 
         self.luminosity = luminosity
         self.bins = bins
@@ -39,9 +37,11 @@ class Limits:
         self.events_mvh = None
         self.events_mvh_y = None
 
-        self.limit_setting(plot_reps)
+        self.limit_setting(plot_reps, save=save, save_path=save_path)
 
-    def limit_setting(self, plot_reps=False):
+    def limit_setting(self, plot_reps=False, save=False, save_path=None):
+
+        np.random.seed(0)
 
         # find expected number of events under the sm
         a_sm = vh_prod.findCoeff(np.array([mz + mh, 4]))
@@ -49,16 +49,22 @@ class Limits:
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         # draw a subset of events with size following a Poisson distribution with mean nu_tot
-        events_idx = np.random.choice(np.arange(0, len(self.data_sm)), int(nu_tot_sm), replace=False)
+        events_idx = np.random.choice(np.arange(0, len(self.data_sm)), int(n_tot_sm), replace=False)
         self.events_mvh = self.data_sm[events_idx, 0]
-        self.events_mvh_y = self.data_sm[events_idx, :]
+        self.events_mvh_y_dpt = self.data_sm[events_idx, :]
 
         # compute limits
         self.log_likelihood_binned = self.binned_limits()
-        self.q_c_truth, self.q_c_nn, self.q_c_nn_median = self.unbinned_limits()
+        #self.q_c_truth, self.q_c_nn, self.q_c_nn_median = self.unbinned_limits()
+        self.q_c_nn, self.q_c_nn_median = self.unbinned_limits()
+
+        if save and save_path is not None:
+            np.save(os.path.join(save_path, 'q_c_nn_median.npy'), self.q_c_nn_median)
+            #np.save(os.path.join(save_path, 'q_c_truth.npy'), self.q_c_truth)
+            np.save(os.path.join(save_path, 'q_c_nn.npy'), self.q_c_nn)
 
         fig = self.plot_contours(plot_reps)
-        fig.savefig(self.plot_path)
+        fig.savefig(os.path.join(self.plot_path, 'limits.pdf'))
 
     def unbinned_limits(self):
 
@@ -76,54 +82,49 @@ class Limits:
                 nu = vh_prod.nu_i(a, c1, c2, self.luminosity, lin=self.lin, quad=self.quad)
 
                 # differential info
-                dsigma_dx = np.array(
-                    [vh_prod.dsigma_dmvh_dy(y, mvh, c1, c2, lin=self.lin, quad=self.quad) for (mvh, y) in self.events_mvh_y])
+                # dsigma_dx = np.array(
+                #     [vh_prod.events_mvh_y_dpt(y, mvh, pt, c1, c2, lin=self.lin, quad=self.quad) for (mvh, y, pt) in self.events_mvh_y_dpt])
 
                 # perhaps useful for speed up:
                 # likelihood = -nu + events_mvh_y.shape[0] * np.sum(np.log(dsigma_dx))
 
                 # TODO: what to do if xsec < 0 at large enough values of c?
-                if np.isnan(np.log(dsigma_dx)).any():
-                    likelihood_scan_truth.append(np.nan)
-                else:
-                    likelihood_truth = -nu + np.sum(np.log(dsigma_dx))
-                    likelihood_scan_truth.append(likelihood_truth)
+                # if np.isnan(np.log(dsigma_dx)).any():
+                #     likelihood_scan_truth.append(np.nan)
+                # else:
+                #     likelihood_truth = -nu + np.sum(np.log(dsigma_dx))
+                #     likelihood_scan_truth.append(likelihood_truth)
 
                 log_l_nn_reps = []
 
-                r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y), [c1, c2], self.path_to_models, self.architecture,
-                                                    mc_reps=30, lin=self.lin, quad=self.quad) # shape = (mc_reps, self.events_mv_y.shape, )
+
+                r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y_dpt), [c1, c2], self.path_to_models, self.architecture, lin=self.lin, quad=self.quad)
+
+                #r_nn = get_nn_ratio(torch.tensor(events_mvh_y), c1, c2, rep).detach().numpy()
 
                 log_r_nn = np.log(r_nn)
                 likelihood_scan_nn.append(-nu + np.sum(log_r_nn, axis=1))
 
-                # for rep in range(self.mc_reps):
-                #
-                #     r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y), [c1, c2], self.path_to_models, self.architecture,
-                #                                     mc_run=rep, lin=self.lin, quad=self.quad)
-                #
-                #     #r_nn = get_nn_ratio(torch.tensor(events_mvh_y), c1, c2, rep).detach().numpy()
-                #     log_r = np.log(r_nn)
-                #
-                #     # TODO: what to do if xsec < 0 at large enough values of c?
-                #     if np.isnan(log_r).any():
-                #         log_l_nn_reps.append(np.nan)
-                #     else:
-                #         log_l_nn_reps.append(-nu + np.sum(log_r))
-                # likelihood_scan_nn.append(log_l_nn_reps)
+                # # TODO: what to do if xsec < 0 at large enough values of c?
+                # if np.isnan(log_r).any():
+                #     log_l_nn_reps.append(np.nan)
+                # else:
+                #     log_l_nn_reps.append(-nu + np.sum(log_r))
+                #likelihood_scan_nn.append(log_l_nn_reps)
 
-        likelihood_scan_truth = np.array(likelihood_scan_truth, dtype='object')
-        likelihood_scan_truth = np.reshape(likelihood_scan_truth, (len(c1_values), len(c2_values)))
+        # likelihood_scan_truth = np.array(likelihood_scan_truth, dtype='object')
+        # likelihood_scan_truth = np.reshape(likelihood_scan_truth, (len(c1_values), len(c2_values)))
 
         likelihood_scan_nn = np.array(likelihood_scan_nn, dtype='object')
         likelihood_scan_nn = np.reshape(likelihood_scan_nn, (len(c1_values), len(c2_values), self.mc_reps))
 
-        q_c_array_truth = 2 * (- likelihood_scan_truth + np.max(likelihood_scan_truth))
+        #q_c_array_truth = 2 * (- likelihood_scan_truth + np.max(likelihood_scan_truth))
         q_c_array_nn = 2 * (- likelihood_scan_nn + np.max(likelihood_scan_nn, axis=(0, 1)))
         q_c_array_nn_median = 2 * (
                 - np.median(likelihood_scan_nn, axis=2) + np.max(np.median(likelihood_scan_nn, axis=2), axis=(0, 1)))
 
-        return q_c_array_truth, q_c_array_nn, q_c_array_nn_median
+        #return q_c_array_truth, q_c_array_nn, q_c_array_nn_median
+        return q_c_array_nn, q_c_array_nn_median
 
     def binned_limits(self):
 
@@ -174,7 +175,7 @@ class Limits:
         # binned contour
         for i, log_likelihood in enumerate(self.log_likelihood_binned):
             c = next(color)
-            contour = plt.contour(yy, xx, log_likelihood, np.array([np.max(log_likelihood) - 5.99 / 2]),
+            contour = plt.contour(yy, xx, log_likelihood, np.array([np.max(log_likelihood) - 5.99]),
                                   origin='lower', linestyles='dashed', linewidths=1.0, colors=[c])
 
             contour_handle, _ = contour.legend_elements()
@@ -221,12 +222,12 @@ class Limits:
         labels.append(r'$\rm{NN\;\rm{(median)}}$')
 
         # truth ellipse
-        contour = plt.contour(yy, xx, self.q_c_truth, np.array([5.99]),
-                              origin='lower', linestyles='dashed', linewidths=1.5, colors='k')
-
-        contour_handle, _ = contour.legend_elements()
-        contours.append(contour_handle[0])
-        labels.append(r'$\rm{Unbinned\;\rm{(truth)}}$')
+        # contour = plt.contour(yy, xx, self.q_c_truth, np.array([5.99]),
+        #                       origin='lower', linestyles='dashed', linewidths=1.5, colors='k')
+        #
+        # contour_handle, _ = contour.legend_elements()
+        # contours.append(contour_handle[0])
+        # labels.append(r'$\rm{Unbinned\;\rm{(truth)}}$')
 
         plt.title(r'$95\%\rm{\;CL\;intervals}$')
         plt.xlabel(r'$\rm{cHq3}$')
@@ -240,9 +241,3 @@ class Limits:
         plt.tight_layout()
 
         return fig
-
-    # TODO: include gaussian binned limits
-    # @staticmethod
-    # def chi2_function(data, theory, error):
-    #     return np.sum(((data - theory) / error) ** 2)
-

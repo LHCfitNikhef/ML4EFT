@@ -458,7 +458,6 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
             loaded_model = quad_clas.PredictorQuadratic(architecture)
         else:
             loaded_model = quad_clas.PredictorCross(architecture)
-
         # load statistics of pretrained models
         if not os.path.exists(os.path.join(model_dir.format(mc_run=rep_nr))):
             continue
