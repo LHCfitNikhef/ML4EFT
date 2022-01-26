@@ -114,9 +114,9 @@ def dsigma_part_dpt_vh_up(hats, ptv, cHW, cHq3, lin, quad):
                    (-mz ** 6 + mh ** 4 * (mz ** 2 - T) + 3 * mz ** 4 * (-2 * S + U) + mh ** 2 * mz ** 2 * (-3 * T + U) -
                     S * T * (S + T + U) + mh ** 2 * T * (2 * S + T + U) + mz ** 2 * (- S ** 2 + (T - 2 * U) * (T + U) + S * (5 * T + U)))
 
-    me_sq_uu_cHq3 = - (2 * np.sqrt(2) * Gf * mz ** 4 * (-3 + 4 * sth2) * (mz ** 4 + mz ** 2 * (S - T - U) + T * U)) / (9 * (MZ ** 2 - S) ** 2)
+    me_sq_uu_cHq3 = - (2 * np.sqrt(2) * Gf * mz ** 4 * (-3 + 4 * sth2) * (mz ** 4 + mz ** 2 * (S - T - U) + T * U)) / (9 * (mz ** 2 - S) ** 2)
 
-    me_sq_uu = me_sq_dd_sm + cHW * me_sq_dd_cHW + cHq3 * me_sq_dd_cHq3
+    me_sq_uu = me_sq_uu_sm + cHW * me_sq_uu_cHW + cHq3 * me_sq_uu_cHq3
 
     dsigma_dpT_1 = 2 * np.pi * np.tan(theta) * me_sq_uu / (64 * np.pi ** 2 * S * pi)
 
@@ -137,9 +137,9 @@ def dsigma_part_dpt_vh_up(hats, ptv, cHW, cHq3, lin, quad):
                                 - S ** 2 + (T - 2 * U) * (T + U) + S * (5 * T + U)))
 
     me_sq_uu_cHq3 = - (2 * np.sqrt(2) * Gf * mz ** 4 * (-3 + 2 * sth2) * (mz ** 4 + mz ** 2 * (S - T - U) + T * U)) / (
-                9 * (MZ ** 2 - S) ** 2)
+                9 * (mz ** 2 - S) ** 2)
 
-    me_sq_uu = me_sq_dd_sm + cHW * me_sq_dd_cHW + cHq3 * me_sq_dd_cHq3
+    me_sq_uu = me_sq_uu_sm + cHW * me_sq_uu_cHW + cHq3 * me_sq_uu_cHq3
 
     dsigma_dpT_2 = 2 * np.pi * np.abs(np.tan(theta)) * me_sq_uu / (64 * np.pi ** 2 * S * pi)
 
@@ -175,7 +175,7 @@ def dsigma_part_dpt_vh_down(hats, ptv, cHW, cHq3, lin, quad):
                    (-mz ** 6 + mh ** 4 * (mz ** 2 - T) + 3 * mz ** 4 * (-2 * S + U) + mh ** 2 * mz ** 2 * (-3 * T + U) -
                     S * T * (S + T + U) + mh ** 2 * T * (2 * S + T + U) + mz ** 2 * (- S ** 2 + (T - 2 * U) * (T + U) + S * (5 * T + U)))
 
-    me_sq_dd_cHq3 = - (2 * np.sqrt(2) * Gf * mz ** 4 * (-3 + 2 * sth2) * (mz ** 4 + mz ** 2 * (S - T - U) + T * U)) / (9 * (MZ ** 2 - S) ** 2)
+    me_sq_dd_cHq3 = - (2 * np.sqrt(2) * Gf * mz ** 4 * (-3 + 2 * sth2) * (mz ** 4 + mz ** 2 * (S - T - U) + T * U)) / (9 * (mz ** 2 - S) ** 2)
 
     me_sq_dd = me_sq_dd_sm + cHW * me_sq_dd_cHW + cHq3 * me_sq_dd_cHq3
 
@@ -198,7 +198,7 @@ def dsigma_part_dpt_vh_down(hats, ptv, cHW, cHq3, lin, quad):
                                 - S ** 2 + (T - 2 * U) * (T + U) + S * (5 * T + U)))
 
     me_sq_dd_cHq3 = - (2 * np.sqrt(2) * Gf * mz ** 4 * (-3 + 2 * sth2) * (mz ** 4 + mz ** 2 * (S - T - U) + T * U)) / (
-                9 * (MZ ** 2 - S) ** 2)
+                9 * (mz ** 2 - S) ** 2)
 
     me_sq_dd = me_sq_dd_sm + cHW * me_sq_dd_cHW + cHq3 * me_sq_dd_cHq3
 
