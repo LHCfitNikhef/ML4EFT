@@ -522,7 +522,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
                 for i in range(len(loaded_models_lin)):
                     x_scaled = (x - means[i]) / std[i]
                     with torch.no_grad():
-                        n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(x_scaled).float()).numpy().flatten())
+                        n_alphas.append(loaded_models_lin[i].n_alpha(x_scaled.float()).numpy().flatten())
                 n_alphas = np.array(n_alphas)
                 n_lin.append(n_alphas)
 
@@ -581,12 +581,7 @@ def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=Tr
         Plot of the median only
     """
 
-    r_nn = []
-    for mc_run in range(mc_reps):
-        r_nn_rep = likelihood_ratio_nn(torch.Tensor(events), c, path_to_models, network_size, mc_run=mc_run,
-                                       lin=lin, quad=quad)
-        r_nn_rep = r_nn_rep.numpy().flatten()
-        r_nn.append(r_nn_rep)
+    r_nn = likelihood_ratio_nn(torch.Tensor(events), c, path_to_models, network_size, mc_reps=mc_reps, lin=lin, quad=quad)
     tau_nn = np.log(r_nn)
 
     r_truth = likelihood_ratio_truth(events, c, lin=lin, quad=quad)
