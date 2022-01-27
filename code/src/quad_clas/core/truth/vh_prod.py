@@ -144,7 +144,7 @@ def dsigma_part_dpt_vh_up(hats, ptv, cHW, cHq3, lin, quad):
 
     dsigma_dpT_2 = 2 * np.pi * np.abs(np.tan(theta)) * me_sq_uu / (64 * np.pi ** 2 * S * pi)
 
-    return (dsigma_dpT_1 + dsigma_dpT_2) * pb_convert
+    return dsigma_dpT_1 + dsigma_dpT_2
 
 def dsigma_part_dpt_vh_down(hats, ptv, cHW, cHq3, lin, quad):
 
@@ -202,7 +202,7 @@ def dsigma_part_dpt_vh_down(hats, ptv, cHW, cHq3, lin, quad):
 
     dsigma_dpT_2 = 2 * np.pi * np.abs(np.tan(theta)) * me_sq_dd / (64 * np.pi ** 2 * S * pi)
 
-    return (dsigma_dpT_1 + dsigma_dpT_2) * pb_convert
+    return dsigma_dpT_1 + dsigma_dpT_2
 
 def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     """
