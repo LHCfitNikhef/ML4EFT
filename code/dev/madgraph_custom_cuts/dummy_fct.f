@@ -19,7 +19,9 @@ c
       REAL*8 pt
       external pt
 
-      double precision r2min(nincoming+1:nexternal,nincoming+1:nexternal)
+      REAL*8 R2
+      external R2
+C       double precision r2(nincoming+1:nexternal,nincoming+1:nexternal)
 C
 C     ARGUMENTS
 C
@@ -41,20 +43,28 @@ c
 
       dummy_cuts=.true.
 
+C       if (pt(p(0,6)) .lt. 150d0) then
+C             dummy_cuts=.false.
+C       endif
+      
+C       if (dsqrt(r2(p(0,5),p(0,6))) .gt. 2d0) then
+C             dummy_cuts=.false.
+C       endif
+
       if (pt(p(0,3)) + pt(p(0,4)) .lt. 150.0d0) then
-            if (r2min(5,6) .gt. 3.0d0) then
+            if (dsqrt(r2(p(0,5),p(0,6))) .gt. 3.0d0) then
                   dummy_cuts=.false.
             endif
       endif
 
       if (pt(p(0,3)) + pt(p(0,4)) .lt. 200.0d0 .and. pt(p(0,3)) + pt(p(0,4)) .ge. 150.0d0) then
-            if (r2min(5,6) .gt. 1.8d0) then
+            if (dsqrt(r2(p(0,5),p(0,6))) .gt. 1.8d0) then
                   dummy_cuts=.false.
             endif
       end if
 
       if (pt(p(0,3)) + pt(p(0,4)) .ge. 200.0d0) then
-            if (r2min(5,6) .gt. 1.2d0) then
+            if (dsqrt(r2(p(0,5),p(0,6))) .gt. 1.2d0) then
                   dummy_cuts=.false.
             endif
       endif
