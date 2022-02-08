@@ -16,8 +16,9 @@ c
       include 'genps.inc'
       include 'nexternal.inc'
 
-      REAL*8 pt
-      external pt
+      REAL*8 pt, PtDot, rap
+      external pt, PtDot, rap
+
 
       REAL*8 R2
       external R2
@@ -43,6 +44,8 @@ c
 
       dummy_cuts=.true.
 
+C       debug
+
 C       if (pt(p(0,6)) .lt. 150d0) then
 C             dummy_cuts=.false.
 C       endif
@@ -51,19 +54,29 @@ C       if (dsqrt(r2(p(0,5),p(0,6))) .gt. 2d0) then
 C             dummy_cuts=.false.
 C       endif
 
-      if (pt(p(0,3)) + pt(p(0,4)) .lt. 150.0d0) then
+C       if (PtDot(p(0,3), p(0,4)) .gt. 250.0d0**2) then
+C             dummy_cuts=.false.
+C       endif
+
+C       if (dsqrt(r2(p(0,5),p(0,6))) .gt. 1.2d0) then
+C             dummy_cuts=.false.
+C       endif
+
+C       if (abs(rap(p(0,5))-rap(p(0,6))) .lt. 1.0d0) then 
+C             dummy_cuts=.false.
+C       endif
+
+C       ATLAS ZH -> bb conditional cuts
+
+      if (PtDot(p(0,3),p(0,4)) .lt. 150.0d0**2) then
             if (dsqrt(r2(p(0,5),p(0,6))) .gt. 3.0d0) then
                   dummy_cuts=.false.
             endif
-      endif
-
-      if (pt(p(0,3)) + pt(p(0,4)) .lt. 200.0d0 .and. pt(p(0,3)) + pt(p(0,4)) .ge. 150.0d0) then
+      else if (PtDot(p(0,3),p(0,4)) .lt. 200.0d0**2 .and. PtDot(p(0,3),p(0,4)) .ge. 150.0d0**2) then
             if (dsqrt(r2(p(0,5),p(0,6))) .gt. 1.8d0) then
                   dummy_cuts=.false.
             endif
-      end if
-
-      if (pt(p(0,3)) + pt(p(0,4)) .ge. 200.0d0) then
+      else
             if (dsqrt(r2(p(0,5),p(0,6))) .gt. 1.2d0) then
                   dummy_cuts=.false.
             endif
