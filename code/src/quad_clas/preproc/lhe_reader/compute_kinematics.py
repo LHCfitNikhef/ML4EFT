@@ -35,14 +35,6 @@ class Kinematics(pylhe.LHEParticle):
     def get_p(self):
         return np.sqrt(getattr(self, 'px') ** 2 + getattr(self, 'py') ** 2 + getattr(self, 'pz') ** 2)
 
-
-    # def add_p(p1, p2):
-    #     temp = copy.deepcopy(p1)
-    #     temp.px = p1.px + p2.px
-    #     temp.py = p1.py + p2.py
-    #     temp.pz = p1.pz + p2.pz
-    #     return temp
-
     def get_phi(self):
         p_x = getattr(self, 'px')
         p_y = getattr(self, 'py')
@@ -74,18 +66,9 @@ class Kinematics(pylhe.LHEParticle):
         return y
 
 
-    # def get_d_phi(p1, p2):
-    #     phi_1 = get_phi(p1)
-    #     phi_2 = get_phi(p2)
-    #     d_phi = np.abs(phi_2 - phi_1)
-    #     if d_phi > np.pi:
-    #         return 2 * np.pi - d_phi
-    #     else:
-    #         return d_phi
-    #
-    #
-    # def get_d_eta(p1, p2):
-    #     eta_1 = get_eta(p1)
-    #     eta_2 = get_eta(p2)
-    #     d_eta = np.abs(eta_2 - eta_1)
-    #     return d_eta
+def get_dphi(phi1, phi2):
+    dphi = np.abs(phi1-phi2)
+    return dphi if dphi <= np.pi else 2 * np.pi - dphi
+
+def get_deta(eta1, eta2):
+    return np.abs(eta1 - eta2)
