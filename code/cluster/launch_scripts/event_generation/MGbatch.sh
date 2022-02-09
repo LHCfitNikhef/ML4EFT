@@ -1,29 +1,61 @@
 #/bin/sh
 
+HOMEDIR=/data/theorie/jthoeve
 PY=/data/theorie/jthoeve/miniconda3/envs/ml4eft/bin/python
-MGbase=$HOME/mg5_parallel/MG5_aMC_v3_3_1
-Base=$HOME/MGjobs
-mkdir $Base
+#MGbase=$PWD/MG5_aMC_v3_3_1
+Base=$HOMEDIR/MGjobs
+mkdir -p $Base
 
-for (( i=1; i<=2; i++ ));
+#chdd=(0 10)
+
+for (( i=1; i<=1; i++ ));
 do
 
-jobBase=$Base/job$i
-cardBase=$jobBase/MG5_aMC_v3_3_1/bin/test_run0/Cards
+# $1 is given as input by the usr: the output name dir
+jobBase="$Base/$1/job$i"
 
-mkdir $jobBase
-cp -r $MGbase $jobBase
+mkdir -p $jobBase
+cp -r $Base/$1/$1/. $jobBase
 
 cd $jobBase
 
+# create the launch script
 echo "#/bin/sh" >> MGscript.sh
-echo "echo 'seed: $i'" >> MGscript.sh
-echo "printenv" >> MGscript.sh
-echo "$PY $jobBase/MG5_aMC_v3_3_1/bin/test_run0/bin/generate_events 0 run$i" >> MGscript.sh
+#echo "echo 'seed: $i'" >> MGscript.sh
+echo "$PY $jobBase/bin/madevent $jobBase/cmd" >> MGscript.sh
 
-sed -i "33s/.*/      $i       = iseed   ! rnd seed (0=assigned automatically=default))/" $jobBase/MG5_aMC_v3_3_1/bin/test_run0/Cards/run_card.dat
+# create the run file
+echo "launch" >> cmd
+echo "0" >> cmd
+echo "set pdlabel lhapdf" >> cmd
+echo "set lhaid 315000" >> cmd
+#echo "set ${op[]} ${chdd[i-1]}" >> cmd
+#echo "set cbhre 50" >> cmd
+echo "set nevents 100k" >> cmd
+echo "set ebeam1 7000" >> cmd
+echo "set ebeam2 7000" >> cmd
+echo "set use_syst False" >> cmd
+echo "set iseed $((1 + $RANDOM % 200))" >> cmd
+echo "set fixed_ren_scale True" >> cmd
+echo "set fixed_fac_scale True" >> cmd
+echo "set cut_decays True" >> cmd
+#echo "set scale 125" >> cmd
+#echo "set dsqrt_q2fact1 125" >> cmd
+#echo "set dsqrt_q2fact2 125" >> cmd
 
+# cuts
+echo "set pt_min_pdg {23: 75, 5: 45}" >> cmd
+#echo "set pt_max_pdg {23: 150}" >> cmd
+echo "set mmll 81" >> cmd
+echo "set mmllmax 101" >> cmd
+echo "set ptl1min 27" >> cmd
+echo "set ptl2min 7" >> cmd
+
+
+# add executable rights
 chmod +x MGscript.sh
+
+# submit to queue
 qsub -q smefit -W group_list=smefit MGscript.sh
 
 done
