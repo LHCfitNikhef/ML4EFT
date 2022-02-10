@@ -193,6 +193,7 @@ class EventDataset(data.Dataset):
 
         # load the pandas dataframe: the first row contains the cross section
         df_full = pd.read_pickle(path, compression="infer")
+
         df = df_full.iloc[1:,:].sample(self.n_dat)
 
         self.weights = df_full.iloc[0, 0] * torch.ones(self.n_dat).unsqueeze(-1)
@@ -359,7 +360,7 @@ class Fitter:
 
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
-        path_dict_sm[self.eft_value] = os.path.join(self.event_data_path, 'sm/events_{}.npy'.format(self.mc_run))
+        path_dict_sm[self.eft_value] = os.path.join(self.event_data_path, 'sm/events_{}.pkl.gz'.format(self.mc_run))
         path_dict_eft[self.eft_value] = os.path.join(self.event_data_path,
                                                 self.path_dict['eft_data_path'].format(eft_coeff=self.eft_op, mc_run=self.mc_run))
 
