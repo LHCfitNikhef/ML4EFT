@@ -30,12 +30,14 @@ function submit_job () {
 MCREPS=1
 
 # location of lhe event file to convert
-EVENT_DIR=/data/theorie/jthoeve/event_generation/lin_cHW/Events
+EVENT_DIR=/data/theorie/jthoeve/MGjobs/pp_zh_llbb_cbhre_lin
 
 # location where npy file must be stored
-SAVE_LOCATION=/data/theorie/jthoeve/event_generation/events_high_stats/pT/lin/cHW
+SAVE_LOCATION=/data/theorie/jthoeve/training_data/lin/cbhre
+mkdir -p $SAVE_LOCATION
 
 for ((i=0; i < $MCREPS; i++)); do
-  EVENT_FILE=$EVENT_DIR/run_01_$i
+  EVENT_FILE=$EVENT_DIR/job$i/Events/run_01
+  gunzip $EVENT_FILE/unweighted_events.lhe.gz
   submit_job $EVENT_FILE $SAVE_LOCATION $i
 done
