@@ -12,6 +12,7 @@ import datetime
 import json
 import os
 import time
+import pandas as pd
 # matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
 from matplotlib import rc
@@ -133,7 +134,7 @@ class PredictorCross(nn.Module):
 
 class EventDataset(data.Dataset):
 
-    def __init__(self, c, n_features, path_dict, n_dat, hypothesis=0):
+    def __init__(self, c, path_dict, n_dat, features, hypothesis=0):
         """
         Inputs:
             c - value of the Wilson coefficient
@@ -146,7 +147,8 @@ class EventDataset(data.Dataset):
         self.path_dict = path_dict
         self.hypothesis = hypothesis
         self.n_dat = n_dat
-        self.n_features = n_features
+        self.features = features
+        self.n_features = len(features)
 
         self.events = None
         self.weights = None
@@ -189,16 +191,12 @@ class EventDataset(data.Dataset):
 
     def event_loader(self, path):
 
-        data = np.load(path)
-        if self.n_features > 1:
-            events = data[1:self.n_dat + 1, :]
-        else:
-            events = data[1:self.n_dat + 1, 0].reshape(-1, 1)
-            np.append(events, np.log(events).reshape(-1, 1), axis=1)
-        weights = data[0, 0] * np.ones((events.shape[0], 1))
+        # load the pandas dataframe: the first row contains the cross section
+        df_full = pd.read_pickle(path, compression="infer")
+        df = df_full.iloc[1:,:].sample(self.n_dat)
 
-        self.events = torch.tensor(events)
-        self.weights = torch.tensor(weights)# / self.n_dat
+        self.weights = df_full.iloc[0, 0] * torch.ones(self.n_dat).unsqueeze(-1)
+        self.events = torch.tensor(df[self.features].values)
         self.labels = torch.ones(self.n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(self.n_dat).unsqueeze(-1)
 
         logging.info("Dataset loaded from {}".format(path))
@@ -278,6 +276,8 @@ class Fitter:
 
         self.mc_run = mc_run
 
+        self.features = self.run_options['features']
+
         model_path = os.path.join(output_dir, 'model_{}'.format(self.run))
         mc_path = os.path.join(model_path, 'mc_run_{}/'.format(self.mc_run))
         log_path = os.path.join(mc_path, 'logs')
@@ -325,13 +325,13 @@ class Fitter:
 
         # build the paths to the eft event data and initialize the right model
         if self.quadratic:
-            self.path_dict['eft_data_path'] = 'quad/{eft_coeff}/events_{mc_run}.npy'
+            self.path_dict['eft_data_path'] = 'quad/{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = PredictorQuadratic(self.network_size)
         elif self.cross_term:
-            self.path_dict['eft_data_path'] = 'cross_term/{eft_coeff}/events_{mc_run}.npy'
+            self.path_dict['eft_data_path'] = 'cross_term/{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = PredictorCross(self.network_size)
         else:
-            self.path_dict['eft_data_path'] = 'lin/{eft_coeff}/events_{mc_run}.npy'
+            self.path_dict['eft_data_path'] = 'lin/{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = PredictorLinear(self.network_size)
 
 
@@ -370,9 +370,9 @@ class Fitter:
         # as an input, the list seems redundant, but this functionality is kept in case one would like to train
         # on multiple EFT points.
 
-        data_eft = [EventDataset(c, self.network_size[0], path_dict=path_dict_eft, n_dat=self.n_dat, hypothesis=0) for c in
+        data_eft = [EventDataset(c, path_dict=path_dict_eft, n_dat=self.n_dat, features=self.features, hypothesis=0) for c in
                     c_values]
-        data_sm = [EventDataset(c, self.network_size[0], path_dict=path_dict_sm, n_dat=self.n_dat, hypothesis=1) for c in
+        data_sm = [EventDataset(c, path_dict=path_dict_sm, n_dat=self.n_dat, features=self.features, hypothesis=1) for c in
                    c_values]
         data_all = data_eft + data_sm
 
