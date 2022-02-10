@@ -18,16 +18,24 @@
   "animation": 0,
   "coeff": [
     {
-      "op": "cHW",
-      "value": 10.0
+      "op": "chdd",
+      "value": 50.0
     },
     {
       "op": "cHq3",
       "value": 0
     }
   ],
-  "event_data": "/data/theorie/jthoeve/event_generation/events_high_stats/pT",
-  "features": ["pt_z", "pt_bbar", "m_bb", "deltaR_bb", "deltaPhi_b_bb", "deltaEta_z_bb", "m_ll", "deltaPhi_l_b"],
+  "event_data": "/Users/jaco/Documents/ML4EFT/training_data/test",
+  "features": [
+    "pt_z",
+    "pt_bbar",
+    "m_bb",
+    "deltaR_bb",
+    "deltaPhi_b_bb",
+    "deltaEta_z_bb",
+    "m_ll",
+    "deltaPhi_l_b"],
   "training_report": 0
 }
 
