@@ -15,7 +15,7 @@ mh = constants.mh
 
 class Limits:
 
-    def __init__(self, luminosity, bins, scan_domain, path_to_models, mc_reps, data_sm, plot_path, architecture,
+    def __init__(self, luminosity, bins, scan_domain, path_to_models, mc_reps, data_sm, plot_path, architecture, row,
                  lin=False, quad=False, plot_reps=False, save=False, save_path=None, nn=True, truth=True, binned=True):
 
         self.luminosity = luminosity
@@ -28,6 +28,7 @@ class Limits:
         self.quad = quad
         self.plot_path = plot_path
         self.architecture = architecture
+        self.row = row
 
         self.q_c_truth = None
         self.q_c_nn = None
@@ -64,15 +65,15 @@ class Limits:
         self.q_c_truth, self.q_c_nn, self.q_c_nn_median = self.unbinned_limits()
 
         if save and save_path is not None:
-            np.save(os.path.join(save_path, 'scan_domain.npy'), self.scan_domain)
+            #np.save(os.path.join(save_path, 'scan_domain.npy'), self.scan_domain)
             if self.nn:
-                np.save(os.path.join(save_path, 'q_c_nn_median.npy'), self.q_c_nn_median)
-                np.save(os.path.join(save_path, 'q_c_nn.npy'), self.q_c_nn)
+                np.save(os.path.join(save_path, 'q_c_nn_median_row_{}.npy'.format(self.row)), self.q_c_nn_median)
+                np.save(os.path.join(save_path, 'q_c_nn_row_{}.npy'.format(self.row)), self.q_c_nn)
             if self.truth:
-                np.save(os.path.join(save_path, 'q_c_truth.npy'), self.q_c_truth)
+                np.save(os.path.join(save_path, 'q_c_truth_row_{}.npy'.format(self.row)), self.q_c_truth)
 
-        fig = self.plot_contours(plot_reps)
-        fig.savefig(os.path.join(self.plot_path, 'limits.pdf'))
+        #fig = self.plot_contours(plot_reps)
+        #fig.savefig(os.path.join(self.plot_path, 'limits.pdf'))
 
     def unbinned_limits(self):
 
