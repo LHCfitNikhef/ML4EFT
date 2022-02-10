@@ -12,6 +12,7 @@ mc_rep = sys.argv[3]
 
 def lhe_to_pandas(path_to_lhe):
     events = []
+    found_xsec = False
     for e in pylhe.readLHE(path_to_lhe):
 
         # create particle instances
@@ -35,6 +36,8 @@ def lhe_to_pandas(path_to_lhe):
         d_phi_b_bbar = lhe.get_dphi(b.get_phi(), bbar.get_phi())
         d_R_b_bbar = np.sqrt(d_eta_b_bbar ** 2 + d_phi_b_bbar ** 2)
 
+
+
         # append kinematics
         events.append([z.get_pt(),
                        b.get_pt(),
@@ -46,6 +49,11 @@ def lhe_to_pandas(path_to_lhe):
                        ll.get_inv_mass(),
                        d_phi_l_b
                        ])
+
+        if not found_xsec:
+            xsec = e.eventinfo.weight
+            found_xsec = True
+            events.insert(0, [xsec] * len(events[0]))
 
     df = pd.DataFrame(events, columns=['pt_z',
                                        'pt_b',
