@@ -1,4 +1,4 @@
-# Decays with quadratic constraaint
+# Decays with quadratic constraint
 
 * To reproduce the error
 
