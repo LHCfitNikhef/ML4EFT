@@ -13,14 +13,20 @@ mc_rep = sys.argv[3]
 def lhe_to_pandas(path_to_lhe):
     events = []
     found_xsec = False
+    cnt = 0
     for e in pylhe.readLHE(path_to_lhe):
-
         # create particle instances
-        l1 = lhe.Kinematics(e.particles[-4])
-        l2 = lhe.Kinematics(e.particles[-3])
-        z = lhe.Kinematics(e.particles[2])
-        b = lhe.Kinematics(e.particles[-1])
-        bbar = lhe.Kinematics(e.particles[-2])
+        for part in e.particles:
+            if part.id in [11, 13]: # e^- or \mu^-
+                l1 = lhe.Kinematics(part)
+            elif part.id in [-11, -13]: # e^+ or \mu^+
+                l2 = lhe.Kinematics(part)
+            elif part.id == 23: # z boson
+                z = lhe.Kinematics(part)
+            elif part.id == 5: # b
+                b = lhe.Kinematics(part)
+            elif part.id == -5: #bbar
+                bbar = lhe.Kinematics(part)
 
         # create particle systems
         bb = b + bbar
