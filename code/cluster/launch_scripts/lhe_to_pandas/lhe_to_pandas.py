@@ -2,7 +2,6 @@ import pylhe
 import pandas as pd
 import numpy as np
 import sys, os
-#import quad_clas.plotting.features as features
 import quad_clas.preproc.lhe_reader.compute_kinematics as lhe
 
 lhe_path = sys.argv[1]
@@ -11,9 +10,11 @@ mc_rep = sys.argv[3]
 
 
 def lhe_to_pandas(path_to_lhe):
+
+    lhe_init = pylhe.readLHEInit(path_to_lhe)
+    xsec = lhe_init['procInfo'][0]['xSection']
+
     events = []
-    found_xsec = False
-    cnt = 0
     for e in pylhe.readLHE(path_to_lhe):
         # create particle instances
         for part in e.particles:
@@ -42,8 +43,6 @@ def lhe_to_pandas(path_to_lhe):
         d_phi_b_bbar = lhe.get_dphi(b.get_phi(), bbar.get_phi())
         d_R_b_bbar = np.sqrt(d_eta_b_bbar ** 2 + d_phi_b_bbar ** 2)
 
-
-
         # append kinematics
         events.append([z.get_pt(),
                        b.get_pt(),
@@ -56,11 +55,7 @@ def lhe_to_pandas(path_to_lhe):
                        d_phi_l_b
                        ])
 
-        if not found_xsec:
-            xsec = e.eventinfo.weight
-            found_xsec = True
-            events.insert(0, [xsec] * len(events[0]))
-
+    events.insert(0, [xsec] * len(events[0]))
     df = pd.DataFrame(events, columns=['pt_z',
                                        'pt_b',
                                        'pt_bbar',
@@ -77,6 +72,3 @@ def lhe_to_pandas(path_to_lhe):
 df = lhe_to_pandas(lhe_path)
 df.to_pickle(os.path.join(save_loc, "events_{}.pkl.gz".format(mc_rep)), compression="infer")
 
-#
-# fig = features.plot_features(df)
-# fig.savefig('/Users/jaco/Documents/ML4EFT/plots/2022/09_02/features.pdf')
