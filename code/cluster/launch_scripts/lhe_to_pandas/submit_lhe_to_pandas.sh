@@ -24,20 +24,31 @@ function submit_job () {
 
 }
 
-# CONVERSION SETUP
+while getopts ":r:f:s:h" opt; do
+  case ${opt} in
+    r) echo "You chose 'r'=$OPTARG";MCREPS="$OPTARG";;
+    f) echo "You chose 'f'=$OPTARG";EVENT_DIR="$OPTARG";;
+    s) echo "You chose 's'=$OPTARG";SAVE_LOCATION="$OPTARG";;
+    h)
+      echo "Options:"
+      echo "    -h      display this help message."
+      echo "    -r      number of replicas to convert."
+      echo "    -f      path to lhe file"
+      echo "    -s      path to output directory"
+      exit 0
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG"
+      exit 1
+      ;;
+  esac
+done
+shift $((OPTIND -1))
 
-# number of lhe replicas
-MCREPS=1
-
-# location of lhe event file to convert
-EVENT_DIR=/data/theorie/jthoeve/MGjobs/pp_zh_llbb_cbhre_lin
-
-# location where npy file must be stored
-SAVE_LOCATION=/data/theorie/jthoeve/training_data/lin/cbhre
 mkdir -p $SAVE_LOCATION
 
 for ((i=0; i < $MCREPS; i++)); do
-  EVENT_FILE=$EVENT_DIR/job$i/Events/run_01
+  EVENT_FILE=$EVENT_DIR/job$(($i + 1))/Events/run_01
   gunzip $EVENT_FILE/unweighted_events.lhe.gz
   submit_job $EVENT_FILE $SAVE_LOCATION $i
 done
