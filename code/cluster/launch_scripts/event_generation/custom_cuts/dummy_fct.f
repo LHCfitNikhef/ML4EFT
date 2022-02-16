@@ -20,8 +20,8 @@ c
       external pt, PtDot, rap
 
 
-      REAL*8 R2
-      external R2
+      REAL*8 R2eta
+      external R2eta
 C       double precision r2(nincoming+1:nexternal,nincoming+1:nexternal)
 C
 C     ARGUMENTS
@@ -69,15 +69,15 @@ C       endif
 C       ATLAS ZH -> bb conditional cuts
 
       if (PtDot(p(0,3),p(0,4)) .lt. 150.0d0**2) then
-            if (dsqrt(r2(p(0,5),p(0,6))) .gt. 3.0d0) then
+            if (dsqrt(R2eta(p(0,5),p(0,6))) .gt. 3.0d0) then
                   dummy_cuts=.false.
             endif
       else if (PtDot(p(0,3),p(0,4)) .lt. 200.0d0**2 .and. PtDot(p(0,3),p(0,4)) .ge. 150.0d0**2) then
-            if (dsqrt(r2(p(0,5),p(0,6))) .gt. 1.8d0) then
+            if (dsqrt(R2eta(p(0,5),p(0,6))) .gt. 1.8d0) then
                   dummy_cuts=.false.
             endif
       else
-            if (dsqrt(r2(p(0,5),p(0,6))) .gt. 1.2d0) then
+            if (dsqrt(R2eta(p(0,5),p(0,6))) .gt. 1.2d0) then
                   dummy_cuts=.false.
             endif
       endif
