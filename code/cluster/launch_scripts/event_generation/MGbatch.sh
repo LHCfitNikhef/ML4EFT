@@ -8,7 +8,7 @@ mkdir -p $Base
 
 #chdd=(0 10)
 
-for (( i=1; i<=1; i++ ));
+for (( i=1; i<=50; i++ ));
 do
 
 # $1 is given as input by the usr: the output name dir
@@ -44,18 +44,23 @@ echo "set cut_decays True" >> cmd
 #echo "set dsqrt_q2fact2 125" >> cmd
 
 # cuts
-echo "set pt_min_pdg {23: 75, 5: 45}" >> cmd
+echo "set pt_min_pdg {5: 45}" >> cmd
+echo "set mxx_min_pdg {5: 115}" >> cmd
+echo "set ptllmin 75" >> cmd
 #echo "set pt_max_pdg {23: 150}" >> cmd
 echo "set mmll 81" >> cmd
 echo "set mmllmax 101" >> cmd
+echo "set mmjj 115" >> cmd
+echo "set mmjjmax 135" >> cmd
 echo "set ptl1min 27" >> cmd
 echo "set ptl2min 7" >> cmd
+#echo "set hard_process True" >> cmd
 
 
 # add executable rights
 chmod +x MGscript.sh
 
 # submit to queue
-qsub -q smefit -W group_list=smefit MGscript.sh
+qsub -q smefit -W group_list=smefit -l nodes=1:ppn=4 MGscript.sh
 
 done
