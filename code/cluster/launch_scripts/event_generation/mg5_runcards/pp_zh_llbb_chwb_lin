@@ -1,0 +1,5 @@
+set auto_convert_model T
+import model SMEFTsim_topU3l_MwScheme_UFO-chwb
+define p = p b b~
+generate p p > l+ l- b b~ /a QCD=0 NP^2=1
+output pp_zh_llbb_chwb_lin

@@ -1,8 +1,9 @@
 import model SMEFTsim_U35_MwScheme_UFO
 define p = p b b~
 generate p p > z > z h NP=2 NP^2==2
-output quad_only_cHq3
-launch quad_only_cHq3 -i
+add process p p > z > z h NP=0
+output quad_only_cHq3_v2
+launch quad_only_cHq3_v2 -i
 multi_run 1
 set mu 0
 set md 0
