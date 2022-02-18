@@ -8,13 +8,12 @@ lhe_path = sys.argv[1]
 save_loc = sys.argv[2]
 mc_rep = sys.argv[3]
 
-
 def lhe_to_pandas(path_to_lhe):
 
     lhe_init = pylhe.readLHEInit(path_to_lhe)
     xsec = lhe_init['procInfo'][0]['xSection']
-
     events = []
+
     for e in pylhe.readLHE(path_to_lhe):
         # create particle instances
         for part in e.particles:
@@ -38,7 +37,8 @@ def lhe_to_pandas(path_to_lhe):
 
         d_phi_b_bb = lhe.get_dphi(b.get_phi(), bb.get_phi())
         d_phi_l_b = lhe.get_dphi(l1.get_phi(), b.get_phi())
-        d_eta_z_bb = lhe.get_deta(z.get_rapdity(), bb.get_rapdity())
+        # d_eta_z_bb = lhe.get_deta(z.get_rapdity(), bb.get_rapdity())
+        d_eta_z_bb = lhe.get_deta(z.get_pseudorapidity(), bb.get_pseudorapidity())
 
         d_phi_b_bbar = lhe.get_dphi(b.get_phi(), bbar.get_phi())
         d_R_b_bbar = np.sqrt(d_eta_b_bbar ** 2 + d_phi_b_bbar ** 2)
