@@ -8,6 +8,7 @@ from ..core.classifier import PredictorCross, PredictorLinear, PredictorQuadrati
 from ..preproc import constants
 from ..analyse import analyse
 from ..core.truth import vh_prod
+from ..core.th_predictions import TheoryPred
 
 mz = constants.mz
 mh = constants.mh
@@ -15,7 +16,7 @@ mh = constants.mh
 
 class Limits:
 
-    def __init__(self, luminosity, bins, scan_domain, path_to_models, mc_reps, data_sm, plot_path, architecture, row,
+    def __init__(self, luminosity, bins, scan_domain, coeffs, path_to_models, event_path, mc_reps, data_sm, plot_path, architecture, row,
                  lin=False, quad=False, plot_reps=False, save=False, save_path=None, nn=True, truth=True, binned=True):
 
         self.luminosity = luminosity
@@ -30,6 +31,9 @@ class Limits:
         self.architecture = architecture
         self.row = row
 
+        self.coeffs = coeffs
+        self.event_path = event_path
+
         self.q_c_truth = None
         self.q_c_nn = None
         self.q_c_nn_median = None
@@ -37,6 +41,7 @@ class Limits:
 
         self.events_mvh = None
         self.events_mvh_y = None
+
 
         self.nn = nn
         self.truth = truth
@@ -48,15 +53,20 @@ class Limits:
 
         np.random.seed(0)
 
+
+        #TODO: plug in numbers from Maeve here
+
         # find expected number of events under the sm
-        a_sm = vh_prod.findCoeff(np.array([mz + mh, 4]))
-        nu_tot_sm = vh_prod.nu_i(a_sm, 0, 0, self.luminosity, lin=True, quad=False)
-        n_tot_sm = np.random.poisson(nu_tot_sm, 1)
+        # a_sm = vh_prod.findCoeff(np.array([mz + mh, 4]))
+        # nu_tot_sm = vh_prod.nu_i(a_sm, 0, 0, self.luminosity, lin=True, quad=False)
+        # n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         # draw a subset of events with size following a Poisson distribution with mean nu_tot
-        events_idx = np.random.choice(np.arange(0, len(self.data_sm)), int(n_tot_sm), replace=False)
-        self.events_mvh = self.data_sm[events_idx, 0]
-        self.events_mvh_y_dpt = self.data_sm[events_idx, :]
+        n_tot_sm = 100
+        self.events = self.data_sm.sample(int(n_tot_sm))
+        #events_idx = np.random.choice(np.arange(0, len(self.data_sm)), int(n_tot_sm), replace=False)
+        #self.events_mvh = self.data_sm[events_idx, 0]
+        #self.events_mvh_y_dpt = self.data_sm[events_idx, :]
 
         # compute limits
         if self.binned:
@@ -79,9 +89,12 @@ class Limits:
 
         c1_values, c2_values = self.scan_domain
 
+        theory_pred = TheoryPred(self.coeffs, self.bins, self.event_path, nreps=self.mc_reps)
+        theory_pred_total = theory_pred.df.sum(axis=1)
+
         likelihood_scan_truth = []
         likelihood_scan_nn = []
-        a = vh_prod.findCoeff(bins=np.array([mz + mh, 4]))
+        #a = vh_prod.findCoeff(bins=np.array([mz + mh, 4]))
 
         # perform a likelihood scan over domain
         q_c_array_truth = None
@@ -92,7 +105,9 @@ class Limits:
             for c2 in c2_values:
 
                 # inclusive info
-                nu = vh_prod.nu_i(a, c1, c2, self.luminosity, lin=self.lin, quad=self.quad)
+                #nu = vh_prod.nu_i(a, c1, c2, self.luminosity, lin=self.lin, quad=self.quad)
+                xsec = theory_pred_total['sm'] + c1 * theory_pred_total['chw'] + c2 * theory_pred_total['chwb']
+                nu = xsec * self.luminosity
 
                 # differential info
                 if self.truth:
@@ -110,7 +125,12 @@ class Limits:
                         likelihood_scan_truth.append(likelihood_truth)
 
                 if self.nn:
-                    r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y_dpt), [c1, c2], self.path_to_models, self.architecture, lin=self.lin, quad=self.quad)
+
+                    r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events.values), [c1, c2],
+                                                       self.path_to_models, self.architecture, lin=self.lin,
+                                                       quad=self.quad, mc_reps=self.mc_reps)
+
+                    #r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y_dpt), [c1, c2], self.path_to_models, self.architecture, lin=self.lin, quad=self.quad)
                     log_r_nn = np.log(r_nn)
 
                     likelihood_scan_nn.append(-nu + np.sum(log_r_nn, axis=1))
