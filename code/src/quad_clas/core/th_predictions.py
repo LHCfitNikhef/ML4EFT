@@ -25,7 +25,7 @@ class TheoryPred:
         self.bins = bins
         self.event_path = event_path
         self.nreps = nreps
-        self.df_theory_pred = None
+        self.df = None
 
         self.predictions()
 
@@ -98,4 +98,4 @@ class TheoryPred:
             predictions[coeff] = np.average(EFTpredictions, axis=0)
 
         bin_index = ['Bin ' + str(s + 1) for s in np.arange(nbins)]
-        self.df_theory_pred = pd.DataFrame(predictions, index=bin_index).T
+        self.df = pd.DataFrame(predictions, index=bin_index).T
