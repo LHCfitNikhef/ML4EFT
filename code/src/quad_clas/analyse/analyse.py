@@ -98,7 +98,7 @@ def decision_function_truth(x, c, lin=False, quad=False):
     return f
 
 #TODO: coeff_function_nn can be replaced entirely by load_coefficients_nn
-def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False):
+def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False, animate=False, epoch=None):
     """
     Computes the truth coefficient functions in the EFT expansion up to either linear or quadratic level
 
@@ -139,7 +139,12 @@ def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cro
         elif cross:
             nn = quad_clas.PredictorCross(architecture)
 
-        path_nn = os.path.join(path_to_model, 'trained_nn.pt')
+        if animate and epoch is not None:
+            path_nn = os.path.join(path_to_model, 'trained_nn_{epoch}.pt'.format(epoch=epoch))
+            if not os.path.exists(path_nn):
+                path_nn = os.path.join(path_to_model, 'trained_nn.pt')
+        else:
+            path_nn = os.path.join(path_to_model, 'trained_nn.pt')
         nn.load_state_dict(torch.load(path_nn))
         mean, std = np.loadtxt(os.path.join(path_to_model, 'scaling.dat'))
 
@@ -649,7 +654,7 @@ def likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1
 
     Returns
     -------
-    numpy.ndarray, shape=(M, mc_reps)
+    numpy.ndarray, shape=(mc_reps, M)
     """
     # nn models at the specified epoch
     n_lin, n_quad, n_cross = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=epoch)
