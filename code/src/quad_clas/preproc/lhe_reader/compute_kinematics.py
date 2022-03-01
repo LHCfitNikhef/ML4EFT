@@ -48,7 +48,7 @@ class Kinematics(pylhe.LHEParticle):
         return phi
 
     def get_theta(self):
-        cos_theta = getattr(self, 'pz') / get_p(p)
+        cos_theta = getattr(self, 'pz') / self.get_p()
         return np.arccos(cos_theta)
 
     def get_pseudorapidity(self):

@@ -43,18 +43,21 @@ class TheoryPred:
         param: float
             Value of the EFT coefficient in the param card
         """
-
         filename = os.path.join(self.event_path, 'lin', wc, 'param_card.dat')
         match_number = re.compile('[-+]?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *[-+]?\ *[0-9]+)?')
+
+
+
         with open(filename, 'r') as f:
             data = f.readlines()
             f.close()
-        for line, next_line in zip(data, data[1:] + [data[0]]):
-            if 'Block smeft' in line:
-                final_list = [float(x) for x in re.findall(match_number, next_line)]
+
+        for line in data:
+            if wc + ' \n' in line or wc + '\n' in line:
+                final_list = [float(x) for x in re.findall(match_number, line)]
                 param = float(final_list[-1])
                 break
-        return param
+        return 10
 
 
     def predictions(self):
@@ -71,7 +74,7 @@ class TheoryPred:
             sigma = df['pt_z'][0]
             nevents = np.size(df['pt_z']) - 1
 
-            n, bins, patches = plt.hist(x=df['pt_z'][1:], bins=self.bins);
+            n, bins, patches = plt.hist(x=df['pt_z'][1:], bins=self.bins)
             SMpredictions[mcrep, :] = n * sigma / nevents
 
         predictions['sm'] = np.average(SMpredictions, axis=0)
@@ -81,7 +84,7 @@ class TheoryPred:
             EFTpredictions = np.zeros((self.nreps, nbins))
             for mcrep in np.arange(self.nreps):
                 # Read dataframe and WC value
-                df_path = os.path.join(self.event_path, 'lin/{}/events_{}.pkl.gz'.format(coeff, mcrep))
+                df_path = os.path.join(self.event_path, 'lin/{}/events_{}.pkl.gz'.format(coeff, str(mcrep)))
                 df = pd.read_pickle(df_path)
                 wc = self.read_param_value(coeff)
 

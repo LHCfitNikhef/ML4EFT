@@ -53,48 +53,42 @@ class Limits:
 
         np.random.seed(0)
 
-
-        #TODO: plug in numbers from Maeve here
+        theory_pred = TheoryPred(self.coeffs, self.bins, self.event_path, nreps=self.mc_reps)
+        theory_pred_total = theory_pred.df.sum(axis=1)
 
         # find expected number of events under the sm
-        # a_sm = vh_prod.findCoeff(np.array([mz + mh, 4]))
-        # nu_tot_sm = vh_prod.nu_i(a_sm, 0, 0, self.luminosity, lin=True, quad=False)
-        # n_tot_sm = np.random.poisson(nu_tot_sm, 1)
+        xsec_sm = theory_pred_total['sm']
+        nu_tot_sm = xsec_sm * self.luminosity
+        n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         # draw a subset of events with size following a Poisson distribution with mean nu_tot
-        n_tot_sm = 100
         self.events = self.data_sm.sample(int(n_tot_sm))
-        #events_idx = np.random.choice(np.arange(0, len(self.data_sm)), int(n_tot_sm), replace=False)
-        #self.events_mvh = self.data_sm[events_idx, 0]
-        #self.events_mvh_y_dpt = self.data_sm[events_idx, :]
 
         # compute limits
         if self.binned:
-            self.log_likelihood_binned = self.binned_limits()
-
-        self.q_c_truth, self.q_c_nn, self.q_c_nn_median = self.unbinned_limits()
+            self.log_likelihood_binned = self.binned_limits(theory_pred)
+        if self.truth or self.nn:
+            self.q_c_truth, self.q_c_nn, self.q_c_nn_median = self.unbinned_limits(theory_pred)
 
         if save and save_path is not None:
-            #np.save(os.path.join(save_path, 'scan_domain.npy'), self.scan_domain)
             if self.nn:
                 np.save(os.path.join(save_path, 'q_c_nn_median_row_{}.npy'.format(self.row)), self.q_c_nn_median)
-                np.save(os.path.join(save_path, 'q_c_nn_row_{}.npy'.format(self.row)), self.q_c_nn)
+                #np.save(os.path.join(save_path, 'q_c_nn_row_{}.npy'.format(self.row)), self.q_c_nn)
             if self.truth:
                 np.save(os.path.join(save_path, 'q_c_truth_row_{}.npy'.format(self.row)), self.q_c_truth)
+            if self.binned:
+                np.save(os.path.join(save_path, 'q_c_binned_row_{}.npy'.format(self.row)), self.log_likelihood_binned)
 
-        #fig = self.plot_contours(plot_reps)
-        #fig.savefig(os.path.join(self.plot_path, 'limits.pdf'))
 
-    def unbinned_limits(self):
+    def unbinned_limits(self, theory_pred):
 
         c1_values, c2_values = self.scan_domain
 
-        theory_pred = TheoryPred(self.coeffs, self.bins, self.event_path, nreps=self.mc_reps)
         theory_pred_total = theory_pred.df.sum(axis=1)
 
         likelihood_scan_truth = []
         likelihood_scan_nn = []
-        #a = vh_prod.findCoeff(bins=np.array([mz + mh, 4]))
+        likelihood_scan_nn_med = []
 
         # perform a likelihood scan over domain
         q_c_array_truth = None
@@ -105,14 +99,16 @@ class Limits:
             for c2 in c2_values:
 
                 # inclusive info
-                #nu = vh_prod.nu_i(a, c1, c2, self.luminosity, lin=self.lin, quad=self.quad)
-                xsec = theory_pred_total['sm'] + c1 * theory_pred_total['chw'] + c2 * theory_pred_total['chwb']
+                xsec = theory_pred_total['sm'] + c1 * theory_pred_total['cHW'] + c2 * theory_pred_total['cHq3']
                 nu = xsec * self.luminosity
 
                 # differential info
                 if self.truth:
-                    dsigma_dx = np.array(
-                        [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, c1, c2, lin=self.lin, quad=self.quad) for (mvh, y, pt) in self.events_mvh_y_dpt])
+
+                    dsigma_dx = np.array([vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], c1, c2, lin=self.lin, quad=self.quad) for index, row in self.events.iterrows()])
+
+                    # dsigma_dx = np.array(
+                    #     [vh_prod.dsigma_dmvh_dy(self.events.loc[i, "y"], self.events.loc[i, "m_zh"], c1, c2, lin=self.lin, quad=self.quad) for i in range(len(self.events))]
 
                     # perhaps useful for speed up:
                     # likelihood = -nu + events_mvh_y.shape[0] * np.sum(np.log(dsigma_dx))
@@ -130,58 +126,75 @@ class Limits:
                                                        self.path_to_models, self.architecture, lin=self.lin,
                                                        quad=self.quad, mc_reps=self.mc_reps)
 
-                    #r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events_mvh_y_dpt), [c1, c2], self.path_to_models, self.architecture, lin=self.lin, quad=self.quad)
                     log_r_nn = np.log(r_nn)
-
                     likelihood_scan_nn.append(-nu + np.sum(log_r_nn, axis=1))
 
 
         if self.truth:
             likelihood_scan_truth = np.array(likelihood_scan_truth, dtype='object')
             likelihood_scan_truth = np.reshape(likelihood_scan_truth, (len(c1_values), len(c2_values)))
-            q_c_array_truth = 2 * (- likelihood_scan_truth + np.max(likelihood_scan_truth))
+            #q_c_array_truth = 2 * (- likelihood_scan_truth + np.max(likelihood_scan_truth))
 
         if self.nn:
             likelihood_scan_nn = np.array(likelihood_scan_nn, dtype='object')
             likelihood_scan_nn = np.reshape(likelihood_scan_nn, (len(c1_values), len(c2_values), self.mc_reps))
-            q_c_array_nn = 2 * (- likelihood_scan_nn + np.max(likelihood_scan_nn, axis=(0, 1)))
-            q_c_array_nn_median = 2 * (
-                    - np.median(likelihood_scan_nn, axis=2) + np.max(np.median(likelihood_scan_nn, axis=2),
-                                                                     axis=(0, 1)))
+            likelihood_scan_nn_med = np.median(likelihood_scan_nn, axis=2)
+            #q_c_array_nn = 2 * (- likelihood_scan_nn + np.max(likelihood_scan_nn, axis=(0, 1)))
+            # q_c_array_nn_median = 2 * (
+            #         - np.median(likelihood_scan_nn, axis=2) + np.max(np.median(likelihood_scan_nn, axis=2),
+            #                                                          axis=(0, 1)))
+        return likelihood_scan_truth, likelihood_scan_nn, likelihood_scan_nn_med
 
-        return q_c_array_truth, q_c_array_nn, q_c_array_nn_median
 
-
-    def binned_limits(self):
+    def binned_limits(self, theory_pred):
 
         c1_values, c2_values = self.scan_domain
-        log_likelihood_binned = np.zeros(len(self.bins), dtype=np.ndarray)
+        #log_likelihood_binned = np.zeros(len(self.bins), dtype=np.ndarray)
 
-        for i, n_bins in enumerate(self.bins):
+        n_i, _ = np.histogram(self.events['m_zh'].values, self.bins)
 
-            if n_bins == 1:
-                bins = np.array([mz + mh, 4.0])
-            else:
-                bins = np.linspace(mz + mh, 1.5, n_bins)
-                bins = np.append(bins, 4.0)
+        log_likelihood = []
+        for c1 in c1_values:
+            for c2 in c2_values:
+                # TODO: make more general
+                sigma_i = theory_pred.df.loc['sm'] + c1 * theory_pred.df.loc['cHW'] + c2 * theory_pred.df.loc['cHq3']
+                #sigma_i = theory_pred.df.loc['sm'] + c1 * theory_pred.df.loc['chw'] + c2 * theory_pred.df.loc['chwb']
+                nu_i = sigma_i * self.luminosity
+                log_l_i = n_i * np.log(nu_i.values) - nu_i.values
 
-            kappa = vh_prod.findCoeff(bins)
+                log_l_i[np.isnan(log_l_i)] = 0
+                log_likelihood.append(np.sum(log_l_i))
 
-            n_i, _ = np.histogram(self.events_mvh, bins)
+        log_likelihood = np.array(log_likelihood)
+        log_likelihood = np.reshape(log_likelihood, (len(c1_values), len(c2_values)))
+        return log_likelihood
+        #log_likelihood_binned[i] = np.reshape(log_likelihood, (len(c1_values), len(c2_values)))
 
-            log_likelihood = []
-            for c1 in c1_values:
-                for c2 in c2_values:
-                    nu_i = vh_prod.nu_i(kappa, c1, c2, self.luminosity, lin=True)
-                    log_l_i = n_i * np.log(nu_i) - nu_i
-
-                    log_l_i[np.isnan(log_l_i)] = 0
-                    log_likelihood.append(np.sum(log_l_i))
-
-            log_likelihood = np.array(log_likelihood)
-            log_likelihood_binned[i] = np.reshape(log_likelihood, (len(c1_values), len(c2_values)))
-
-        return log_likelihood_binned
+        # for i, n_bins in enumerate(self.bins):
+        #
+        #     if n_bins == 1:
+        #         bins = np.array([mz + mh, 4.0])
+        #     else:
+        #         bins = np.linspace(mz + mh, 1.5, n_bins)
+        #         bins = np.append(bins, 4.0)
+        #
+        #     kappa = vh_prod.findCoeff(bins)
+        #
+        #     n_i, _ = np.histogram(self.events_mvh, bins)
+        #
+        #     log_likelihood = []
+        #     for c1 in c1_values:
+        #         for c2 in c2_values:
+        #             nu_i = vh_prod.nu_i(kappa, c1, c2, self.luminosity, lin=True)
+        #             log_l_i = n_i * np.log(nu_i) - nu_i
+        #
+        #             log_l_i[np.isnan(log_l_i)] = 0
+        #             log_likelihood.append(np.sum(log_l_i))
+        #
+        #     log_likelihood = np.array(log_likelihood)
+        #     log_likelihood_binned[i] = np.reshape(log_likelihood, (len(c1_values), len(c2_values)))
+        #
+        #return log_likelihood_binned
 
     def plot_contours(self, plot_reps=False):
 

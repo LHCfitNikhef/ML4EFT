@@ -193,7 +193,6 @@ class EventDataset(data.Dataset):
 
         # load the pandas dataframe: the first row contains the cross section
         df_full = pd.read_pickle(path, compression="infer")
-
         df = df_full.iloc[1:,:].sample(self.n_dat)
 
         self.weights = df_full.iloc[0, 0] * torch.ones(self.n_dat).unsqueeze(-1)
