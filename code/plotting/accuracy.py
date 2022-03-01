@@ -1,5 +1,7 @@
 import quad_clas.analyse.analyse as analyse
 
+# script that plots the ratio NN/truth coefficient functions
+
 # individual replica
 # fig = analyse.coeff_comp_rep(path_to_model='/Users/jaco/Documents/ML4EFT/models/lin/cHW/mc_run_0',
 #                              network_size=[2, 30, 30, 30, 30, 30, 1],
