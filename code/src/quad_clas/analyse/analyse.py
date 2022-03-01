@@ -100,7 +100,7 @@ def decision_function_truth(x, c, lin=False, quad=False):
 #TODO: coeff_function_nn can be replaced entirely by load_coefficients_nn
 def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False, animate=False, epoch=None):
     """
-    Computes the truth coefficient functions in the EFT expansion up to either linear or quadratic level
+    Computes the nn coefficient functions in the EFT expansion up to either linear or quadratic level
 
     Parameters
     ----------
@@ -527,7 +527,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
                 for i in range(len(loaded_models_lin)):
                     x_scaled = (x - means[i]) / std[i]
                     with torch.no_grad():
-                        n_alphas.append(loaded_models_lin[i].n_alpha(x_scaled.float()).numpy().flatten())
+                        n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(x_scaled).float()).numpy().flatten())
                 n_alphas = np.array(n_alphas)
                 n_lin.append(n_alphas)
 

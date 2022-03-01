@@ -24,7 +24,7 @@ class Animate:
         self.mc_runs = mc_runs
         self.save_path = save_path
         self.frames = frames
-        self.make_animation()
+        #self.make_animation()
 
     def make_animation(self):
         cHW, cHq3 = self.c
