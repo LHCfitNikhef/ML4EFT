@@ -20,9 +20,10 @@ class TheoryPred:
         Number of replicas to use, 50 by default. The SMEFT predictions are averages over the replicas.
     """
 
-    def __init__(self, coeff, bins, event_path, nreps=50):
+    def __init__(self, coeff, bins, kinematic, event_path, nreps=50):
         self.coeff = coeff
         self.bins = bins
+        self.kinematic = kinematic
         self.event_path = event_path
         self.nreps = nreps
         self.df = None
@@ -43,21 +44,32 @@ class TheoryPred:
         param: float
             Value of the EFT coefficient in the param card
         """
-        filename = os.path.join(self.event_path, 'lin', wc, 'param_card.dat')
-        match_number = re.compile('[-+]?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *[-+]?\ *[0-9]+)?')
 
+        #TODO: regular expression does not select wilson coefficients that end with a number
 
+        # filename = os.path.join(self.event_path, 'lin', wc, 'param_card.dat')
+        # match_number = re.compile('[-+]?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *[-+]?\ *[0-9]+)?')
+        #
+        # with open(filename, 'r') as f:
+        #     data = f.readlines()
+        #     f.close()
+        #
+        # for line in data:
+        #     if wc + ' \n' in line or wc + '\n' in line:
+        #         final_list = [float(x) for x in re.findall(match_number, line)]
+        #         param = float(final_list[-1])
+        #         break
+        # return 10
 
         with open(filename, 'r') as f:
             data = f.readlines()
             f.close()
-
-        for line in data:
-            if wc + ' \n' in line or wc + '\n' in line:
-                final_list = [float(x) for x in re.findall(match_number, line)]
+        for line, next_line in zip(data, data[1:] + [data[0]]):
+            if 'Block smeft' in line:
+                final_list = [float(x) for x in re.findall(match_number, next_line)]
                 param = float(final_list[-1])
                 break
-        return 10
+        return param
 
 
     def predictions(self):
@@ -71,10 +83,10 @@ class TheoryPred:
             df_path = os.path.join(self.event_path, 'sm/events_{}.pkl.gz'.format(mcrep))
             df = pd.read_pickle(df_path)
 
-            sigma = df['pt_z'][0]
-            nevents = np.size(df['pt_z']) - 1
+            sigma = df[self.kinematic][0]
+            nevents = np.size(df[self.kinematic]) - 1
 
-            n, bins, patches = plt.hist(x=df['pt_z'][1:], bins=self.bins)
+            n, bins, patches = plt.hist(x=df[self.kinematic][1:], bins=self.bins)
             SMpredictions[mcrep, :] = n * sigma / nevents
 
         predictions['sm'] = np.average(SMpredictions, axis=0)
@@ -89,10 +101,10 @@ class TheoryPred:
                 wc = self.read_param_value(coeff)
 
                 # Get total cross section and number of generated events
-                sigma = df['pt_z'][0]
-                nevents = np.size(df['pt_z']) - 1
+                sigma = df[self.kinematic][0]
+                nevents = np.size(df[self.kinematic]) - 1
 
-                n, bins, patches = plt.hist(x=df['pt_z'][1:], bins=bins)
+                n, bins, patches = plt.hist(x=df[self.kinematic][1:], bins=bins)
                 sigma_EFT = n * sigma / nevents
 
                 sigma_1 = (1. / wc) * (sigma_EFT - predictions['sm'])
