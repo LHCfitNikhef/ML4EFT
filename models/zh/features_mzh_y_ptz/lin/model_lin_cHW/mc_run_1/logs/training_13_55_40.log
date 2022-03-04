@@ -1,0 +1,4 @@
+2022-03-03 13:55:40,099:INFO:All directories created, ready to load the data
+2022-03-03 13:55:40,192:INFO:Dataset loaded from /data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2/lin/cHW/events_1.pkl.gz
+2022-03-03 13:55:40,235:INFO:Dataset loaded from /data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2/sm/events_1.pkl.gz
+2022-03-03 13:55:43,552:INFO:Epoch 1, Training loss 129844.646484375, Validation loss 125911.099609375
