@@ -16,11 +16,12 @@ mh = constants.mh
 
 class Limits:
 
-    def __init__(self, luminosity, bins, scan_domain, coeffs, path_to_models, event_path, mc_reps, data_sm, plot_path, architecture, row,
+    def __init__(self, luminosity, bins, kinematic, scan_domain, coeffs, path_to_models, event_path, mc_reps, data_sm, plot_path, architecture, row,
                  lin=False, quad=False, plot_reps=False, save=False, save_path=None, nn=True, truth=True, binned=True):
 
         self.luminosity = luminosity
         self.bins = bins
+        self.kinematic = kinematic
         self.scan_domain = scan_domain
         self.path_to_models = path_to_models
         self.mc_reps = mc_reps
@@ -53,7 +54,7 @@ class Limits:
 
         np.random.seed(0)
 
-        theory_pred = TheoryPred(self.coeffs, self.bins, self.event_path, nreps=self.mc_reps)
+        theory_pred = TheoryPred(self.coeffs, self.bins, self.kinematic, self.event_path, nreps=self.mc_reps)
         theory_pred_total = theory_pred.df.sum(axis=1)
 
         # find expected number of events under the sm
@@ -62,7 +63,7 @@ class Limits:
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         # draw a subset of events with size following a Poisson distribution with mean nu_tot
-        self.events = self.data_sm.sample(int(n_tot_sm))
+        self.events = self.data_sm.sample(int(n_tot_sm), random_state=1)
 
         # compute limits
         if self.binned:
@@ -99,13 +100,21 @@ class Limits:
             for c2 in c2_values:
 
                 # inclusive info
-                xsec = theory_pred_total['sm'] + c1 * theory_pred_total['cHW'] + c2 * theory_pred_total['cHq3']
-                nu = xsec * self.luminosity
+                # TODO: automatise the keys
+                #xsec = theory_pred_total['sm'] + c1 * theory_pred_total['cHW'] + c2 * theory_pred_total['cHq3']
+                sigma = theory_pred_total['sm'] + c1 * theory_pred_total[self.coeffs[0]] + c2 * theory_pred_total[self.coeffs[1]]
+                nu = sigma * self.luminosity
 
                 # differential info
                 if self.truth:
 
-                    dsigma_dx = np.array([vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], c1, c2, lin=self.lin, quad=self.quad) for index, row in self.events.iterrows()])
+                    # 2 features
+                    # dsigma_dx = np.array([vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], c1, c2, lin=self.lin, quad=self.quad) for index, row in self.events.iterrows()])
+
+                    # 3 features
+                    dsigma_dx = np.array(
+                        [vh_prod.dsigma_dmvh_dy_dpt(row['y'], row['m_zh'], row['pt_z'], c1, c2, lin=self.lin, quad=self.quad) for
+                         index, row in self.events.iterrows()])
 
                     # dsigma_dx = np.array(
                     #     [vh_prod.dsigma_dmvh_dy(self.events.loc[i, "y"], self.events.loc[i, "m_zh"], c1, c2, lin=self.lin, quad=self.quad) for i in range(len(self.events))]
@@ -122,7 +131,7 @@ class Limits:
 
                 if self.nn:
 
-                    r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events.values), [c1, c2],
+                    r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events.values.reshape(-1, self.architecture[0])), [c1, c2],
                                                        self.path_to_models, self.architecture, lin=self.lin,
                                                        quad=self.quad, mc_reps=self.mc_reps)
 
@@ -151,14 +160,14 @@ class Limits:
         c1_values, c2_values = self.scan_domain
         #log_likelihood_binned = np.zeros(len(self.bins), dtype=np.ndarray)
 
-        n_i, _ = np.histogram(self.events['m_zh'].values, self.bins)
+        n_i, _ = np.histogram(self.events[self.kinematic].values, self.bins)
 
         log_likelihood = []
         for c1 in c1_values:
             for c2 in c2_values:
                 # TODO: make more general
-                sigma_i = theory_pred.df.loc['sm'] + c1 * theory_pred.df.loc['cHW'] + c2 * theory_pred.df.loc['cHq3']
-                #sigma_i = theory_pred.df.loc['sm'] + c1 * theory_pred.df.loc['chw'] + c2 * theory_pred.df.loc['chwb']
+                #sigma_i = theory_pred.df.loc['sm'] + c1 * theory_pred.df.loc['cHW'] + c2 * theory_pred.df.loc['cHq3']
+                sigma_i = theory_pred.df.loc['sm'] + c1 * theory_pred.df.loc[self.coeffs[0]] + c2 * theory_pred.df.loc[self.coeffs[1]]
                 nu_i = sigma_i * self.luminosity
                 log_l_i = n_i * np.log(nu_i.values) - nu_i.values
 
