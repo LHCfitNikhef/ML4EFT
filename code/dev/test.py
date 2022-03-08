@@ -120,20 +120,26 @@ fig = plot_contours(c_x, c_y, path_to_row_truth, path_to_row_truth_2, path_to_ro
 fig.savefig('/Users/jaco/Documents/ML4EFT/output/contours/zh/features_mzh_y_ptz/truth/truth.pdf')
 #%%
 
-c_x, c_y = np.load('/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/binned/binning_1/scan_domain.npy') #chw, chq3
+c_x, c_y = np.load('/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/nn/pt_only/scan_domain.npy') #chw, chq3
 
 label_legend = r'$\rm{binned}$'
 label_x = r'$\rm{cHW}$'
 label_y = r'$\rm{cHWB}$'
 
-path_to_row_truth=None
-path_to_row_nn='/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/nn/q_c_nn_median_row_{}.npy'
+
+
 bins = np.array([0, 75, 150, 250, 400, 1000])
 coeffs = ['chw', 'chwb']
-theory_pred = TheoryPred(coeffs, bins, '/Users/jaco/Documents/ML4EFT/training_data/zh_llbb', nreps=50)
+theory_pred = TheoryPred(coeffs, bins, 'pt_z', '/Users/jaco/Documents/ML4EFT/training_data/zh_llbb', nreps=50)
 xsec_df = theory_pred.df.sum(axis=1)
 
-fig = plot_contours(c_x, c_y, path_to_row_truth, path_to_row_nn, label_legend, label_x, label_y, xsec_df, binned=True,
-                    path_to_row_binned='/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/binned/binning_1/q_c_binned_row_{}.npy',
-                    path_to_row_binned_2='/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/binned/binning_2/q_c_binned_row_{}.npy')
-fig.savefig('/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/nn/nn.pdf')
+path_to_row_nn = [['/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/nn/pt_only/q_c_nn_median_row_{}.npy', r'$\rm{NN}$']]
+
+path_to_row_truth = []
+
+path_to_row_binned = [['/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/binned/binning_1/q_c_binned_row_{}.npy', r'$5\;\rm{bins}$'],
+                       ['/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/binned/binning_2/q_c_binned_row_{}.npy', r'$1\;\rm{bin}$'],
+                      ['/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/binned/binning_3/q_c_binned_row_{}.npy', r'$30\;\rm{bins}$']]
+
+fig = plot_contours(c_x, c_y, path_to_row_truth, path_to_row_nn, path_to_row_binned, label_legend, label_x, label_y, xsec_df)
+fig.savefig('/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/nn/pt_only/nn.pdf')
