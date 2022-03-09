@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 import torch
 import os
+import json
 
 from ..core.classifier import PredictorCross, PredictorLinear, PredictorQuadratic
 from ..preproc import constants
@@ -48,11 +49,18 @@ class Limits:
         self.truth = truth
         self.binned = binned
 
+
         self.limit_setting(plot_reps, save=save, save_path=save_path)
 
     def limit_setting(self, plot_reps=False, save=False, save_path=None):
 
         np.random.seed(0)
+
+        # TODO: generalise to quad
+        path_to_runcard = os.path.join(self.path_to_models['lin'][0].format(mc_run=0), 'run_card.json')
+        with open(path_to_runcard) as json_data:
+            self.run_card = json.load(json_data)
+        features = self.run_card['features']
 
         theory_pred = TheoryPred(self.coeffs, self.bins, self.kinematic, self.event_path, nreps=self.mc_reps)
         theory_pred_total = theory_pred.df.sum(axis=1)
@@ -63,7 +71,7 @@ class Limits:
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         # draw a subset of events with size following a Poisson distribution with mean nu_tot
-        self.events = self.data_sm.sample(int(n_tot_sm), random_state=1)
+        self.events = self.data_sm.sample(int(n_tot_sm), random_state=1)[features]
 
         # compute limits
         if self.binned:
