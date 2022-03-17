@@ -13,12 +13,15 @@ import json
 import os
 import time
 import pandas as pd
+from joblib import dump, load
 # matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
 from matplotlib import rc
 from torch import nn
+from sklearn.model_selection import train_test_split
 import shutil
 import quad_clas.analyse.analyse as analyse
+from sklearn.preprocessing import StandardScaler, RobustScaler
 
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
@@ -50,7 +53,7 @@ class MLP(nn.Module):
         layer_sizes = [input_size] + hidden_sizes
         for layer_index in range(1, len(layer_sizes)):
             layers += [nn.Linear(layer_sizes[layer_index - 1], layer_sizes[layer_index]), nn.ReLU()]
-        layers += [nn.Linear(layer_sizes[-1], output_size), nn.ReLU()]
+        layers += [nn.Linear(layer_sizes[-1], output_size)] # TODO because of the final relu we only get positive outputs!
         self.layers = nn.Sequential(
             *layers)  # nn.Sequential summarizes a list of modules into a single module, applying them in sequence
 
@@ -132,9 +135,58 @@ class PredictorCross(nn.Module):
 
         return 1 / (1 + r)
 
+class PreProcessing():
+
+    def __init__(self, n_dat, path):
+
+        self.n_dat = n_dat
+        self.path = path
+
+        self.load_data()
+
+    def load_data(self):
+
+        df_sm = pd.read_pickle(self.path['sm'], compression="infer")
+        self.xsec_sm = df_sm.iloc[0, 0]
+        self.df_sm = df_sm.iloc[1:,:].sample(self.n_dat)
+
+        df_eft = pd.read_pickle(self.path['eft'], compression="infer")
+        self.xsec_eft = df_eft.iloc[0, 0]
+        self.df_eft = df_eft.iloc[1:, :].sample(self.n_dat)
+
+    def feature_scaling(self, scaler_path):
+
+        # add log features for pT
+        self.df_sm['log_pt_z'] = np.log(self.df_sm['pt_z'])
+        self.df_sm['log_pt_b'] = np.log(self.df_sm['pt_b'])
+
+        self.df_eft['log_pt_z'] = np.log(self.df_eft['pt_z'])
+        self.df_eft['log_pt_b'] = np.log(self.df_eft['pt_b'])
+
+        df = pd.concat([self.df_sm, self.df_eft])
+
+        # initialise sklearn scalers
+        robsc = RobustScaler(quantile_range=(5, 95))
+
+        # fit a robust transformer to the eft and sm features
+        robsc.fit(df.values)
+
+        # rescale the sm and eft data
+        features_sm_scaled = robsc.transform(self.df_sm.values)
+        features_eft_scaled = robsc.transform(self.df_eft.values)
+
+        # convert transformed features to dataframe
+        df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=df.columns.values)
+        df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=df.columns.values)
+
+        # save the scaler
+        dump(robsc, open(scaler_path, 'wb'))
+
+        return df_sm_scaled, df_eft_scaled
+
 class EventDataset(data.Dataset):
 
-    def __init__(self, c, path_dict, n_dat, features, hypothesis=0):
+    def __init__(self, df, xsec, path, n_dat, features, hypothesis=0):
         """
         Inputs:
             c - value of the Wilson coefficient
@@ -142,101 +194,30 @@ class EventDataset(data.Dataset):
         """
         super().__init__()
 
-        self.event_data = []
-        self.c = c
-        self.path_dict = path_dict
+        self.df = df
+        self.xsec = xsec
         self.hypothesis = hypothesis
-        self.n_dat = n_dat
         self.features = features
-        self.n_features = len(features)
 
         self.events = None
         self.weights = None
         self.labels = None
 
-        self.standardized = False
-        self.mean = None
-        self.std = None
-        self.min_value = None
-        self.max_value = None
-
-        self.load_events()
-
-    def invariant_mass(self, p1, p2):
-        """
-        Computes the invariant mass of an event
-        """
-        return np.sqrt(
-            sum((1 if mu == 'e' else -1) * (getattr(p1, mu) + getattr(p2, mu)) ** 2 for mu in ['e', 'px', 'py', 'pz']))
-
-    def rapidity(self, p1, p2):
-        """
-        Computes the rapidity of an event
-        """
-        q0 = getattr(p1, 'e') + getattr(p2, 'e')  # energy of the top quark pair in the pp COM frame
-        q3 = getattr(p1, 'pz') + getattr(p2, 'pz')
-        y = 0.5 * np.log((q0 + q3) / (q0 - q3))
-        return y
-
-    def rescale(self, mean, std):
-        self.events = (self.events - mean) / std
-
-    def get_mean_std(self):
-        """
-        Find the mean and standard deviation of the data and save to disk
-        """
-        self.mean = torch.mean(self.events, dim=0)
-        self.std = torch.std(self.events, dim=0)
-        return self.mean, self.std
+        self.event_loader(path)
 
     def event_loader(self, path):
 
-        # load the pandas dataframe: the first row contains the cross section
-        df_full = pd.read_pickle(path, compression="infer")
-        df = df_full.iloc[1:,:].sample(self.n_dat)
+        n_dat = len(self.df)
 
-        self.weights = df_full.iloc[0, 0] * torch.ones(self.n_dat).unsqueeze(-1)
-        self.events = torch.tensor(df[self.features].values)
-        self.labels = torch.ones(self.n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(self.n_dat).unsqueeze(-1)
-
+        self.weights = self.xsec * torch.ones(n_dat).unsqueeze(-1)
+        self.events = torch.tensor(self.df[self.features].values)
+        self.labels = torch.ones(n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(n_dat).unsqueeze(-1)
+    
         logging.info("Dataset loaded from {}".format(path))
 
-    def load_events(self):
-        """
-        Load the datasets (eft and sm) from the les Houches event files.
-        """
-        path_to_sample = self.path_dict[self.c]
-        self.event_loader(path_to_sample)
-
-
-    def visualize(self):
-        f1 = plt.figure()
-        # f2 = plt.figure()
-        ax1 = f1.add_subplot(111)
-        #ax2 = f2.add_subplot(111)
-        mtt = self.data_eft_std[2.0, 2.0][0][:, 0].view(-1).numpy()
-        y = self.data_eft_std[2.0, 2.0][0][:, 1].view(-1).numpy()
-        ax1.scatter(mtt, y)
-        #ax2.hist(mtt, bins=1, range=(2000, 2500), label='sm', histtype='step')
-        # for c in [0.5, 1.0, 2.0]:
-        #     mtt = self.data_eft['{}'.format(c)][0][:, 0].view(-1).numpy()
-        #     y = self.data_eft['{}'.format(c)][0][:, 1].view(-1).numpy()
-        #     ax1.scatter(mtt, y, label='{}'.format(c))
-        #     ax2.hist(mtt, bins = 1, range=(2000, 2500), label='{}'.format(c),histtype='step')
-
-        ax1.set_xlabel(r'$m_{tt}$ (rescaled)')
-        ax1.set_ylabel('y (rescaled)')
-        #ax1.set_xlim(2000, 2500)
-
-
-        #ax2.set_yscale('log')
-
-        ax1.legend()
-        #ax2.legend()
-        plt.show()
-
     def __len__(self):
-        # Number of data points we have.
+
+        # Number of data points.
         return len(self.events)
 
     def __getitem__(self, idx):
@@ -247,7 +228,6 @@ class EventDataset(data.Dataset):
             - label tuple: label = 0 for the eft, label = 1 for the sm
             - weight tuple: weight per event
         """
-
         data_sample, weight_sample, label_sample = self.events[idx], self.weights[idx], self.labels[idx]
         return data_sample, weight_sample, label_sample
 
@@ -275,6 +255,7 @@ class Fitter:
         self.c2 = self.eft_dict[1]['value']
 
         self.mc_run = mc_run
+        self.lag_mult = self.run_options['lag_mult']
 
         self.features = self.run_options['features']
 
@@ -355,43 +336,40 @@ class Fitter:
 
     def load_data(self):
 
-        path_dict_eft, path_dict_sm = {}, {}
-
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
-        path_dict_sm[self.eft_value] = os.path.join(self.event_data_path, 'sm/events_{}.pkl.gz'.format(self.mc_run))
-        path_dict_eft[self.eft_value] = os.path.join(self.event_data_path,
-                                                self.path_dict['eft_data_path'].format(eft_coeff=self.eft_op, mc_run=self.mc_run))
+        path_sm = os.path.join(self.event_data_path, 'sm/events_{}.pkl.gz'.format(self.mc_run))
+        path_eft = os.path.join(self.event_data_path, self.path_dict['eft_data_path'].format(eft_coeff=self.eft_op, mc_run=self.mc_run))
 
-        c_values = path_dict_eft.keys()
+        path_dict = {'sm': path_sm, 'eft': path_eft}
+
+        # preprocessing of the data
+        preproc = PreProcessing(self.n_dat, path_dict)
+
+        # save the scaler
+        scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.pkl')
+        df_sm_scaled, df_eft_scaled = preproc.feature_scaling(scaler_path)
 
         # We construct an eft and a sm data set for each value of c in c_values and make a list out of it
         # As of the new version of the code where only the sm and any non-zero point in EFT space are needed
         # as an input, the list seems redundant, but this functionality is kept in case one would like to train
         # on multiple EFT points.
 
-        data_eft = [EventDataset(c, path_dict=path_dict_eft, n_dat=self.n_dat, features=self.features, hypothesis=0) for c in
-                    c_values]
-        data_sm = [EventDataset(c, path_dict=path_dict_sm, n_dat=self.n_dat, features=self.features, hypothesis=1) for c in
-                   c_values]
-        data_all = data_eft + data_sm
+        data_eft = EventDataset(df_eft_scaled,
+                                 xsec=preproc.xsec_eft,
+                                 path=path_eft,
+                                 n_dat=self.n_dat,
+                                 features=self.features,
+                                 hypothesis=0)
 
-        # uncomment below to plot the distribution of the training data
-        # fig = plot_data(data_eft, data_sm)  # plot the event data
-        # fig.savefig(os.path.join(path, 'plots/training_data.pdf'))
+        data_sm = EventDataset(df_sm_scaled,
+                                xsec=preproc.xsec_sm,
+                                path=path_sm,
+                                n_dat=self.n_dat,
+                                features=self.features,
+                                hypothesis=1)
 
-        # determine the mean and std of the feature(s) in our data set
-        mean_list = np.array([dataset.get_mean_std()[0].numpy() for dataset in data_all])
-        mean = np.mean(mean_list, axis=0)
-        std_list = np.array([dataset.get_mean_std()[1].numpy() for dataset in data_all])
-        std = np.mean(std_list, axis=0)
-
-        # we save the mean and std to avoid having to reload the data when making predictions
-        np.savetxt(self.path_dict['mc_path'] + 'scaling.dat', np.array([mean, std]))
-
-        # rescale the training data to increase the learning speed
-        for dataset in data_all:
-            dataset.rescale(mean, std)
+        data_all = [data_eft, data_sm]
 
         # split each data set in training (50%) and validation (50%).
         data_split = [data.random_split(dataset, [int(len(dataset) / 2), int(len(dataset) / 2)]) for dataset in
@@ -413,7 +391,6 @@ class Fitter:
         # we use PyTorche's dataloader object to allow for mini-batches. After each epoch, the minibatches reshuffle.
         # we create a dataloader object for each eft point + sm and put them all in one big list called train_data_loader
         # or val_data_loader
-
         train_data_loader = [
             data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__() / self.n_batches), shuffle=True) for
             dataset_train in data_train]
@@ -434,7 +411,7 @@ class Fitter:
         # by one whenever the the validation loss increases during an epoch
         loss_val_old = 0
         overfit_counter = 0
-        patience = 50
+        patience = 100
 
         # outer loop that runs over the number of epochs
         iterations = 0
@@ -455,10 +432,11 @@ class Fitter:
             # the * denotes the unpacking operator. It passes all the list elements
             # of train_loader as separate arguments to the zip function, e.g f(a[0], a[1]) = f(*a).
             # Here we have zip(DataLoader_1, DataLoader_2, ..) which enables looping over our mini-batches.
-            for minibatch in zip(*train_loader):
+            for j, minibatch in enumerate(zip(*train_loader)):
+
                 train_loss = torch.zeros(1)
                 # loop over all the datasets within the minibatch and compute their contribution to the loss
-                for i, [event, weight, label] in enumerate(minibatch):
+                for i, [event, weight, label] in enumerate(minibatch): # i=0: eft, i=1: sm
                     if isinstance(self.model, PredictorLinear):
                         output = self.model(event.float(), self.c1 + self.c2)
                     if isinstance(self.model, PredictorQuadratic):
@@ -466,7 +444,7 @@ class Fitter:
                     if isinstance(self.model, PredictorCross):
                         output = model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
                                        self.path_quad_2, self.path_dict['mc_path'])
-                    loss = self.loss_fn(output, label, weight)
+                    loss = self.loss_fn(output, label, weight, self.lag_mult)
                     train_loss += loss
 
                 # do gradient descent after each minibatch. Move to the next epoch when all minibatches are looped over.
@@ -487,7 +465,7 @@ class Fitter:
                         if isinstance(self.model, PredictorCross):
                             output = self.model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
                                            self.path_quad_2)
-                        loss = self.loss_fn(output, label, weight)
+                        loss = self.loss_fn(output, label, weight, self.lag_mult)
                         val_loss += loss
                     assert val_loss.requires_grad is False
 
@@ -519,6 +497,7 @@ class Fitter:
 
             if overfit_counter == patience:
                 stopping_point = epoch - patience
+                logging.info("Stopping point reached! Overfit counter = {}".format(overfit_counter))
                 shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
                 break
 
@@ -601,7 +580,7 @@ class Fitter:
         return fig
 
     @staticmethod
-    def loss_fn(outputs, labels, w_e):
+    def loss_fn(outputs, labels, w_e, lag_mult):
         #TODO: update documentation
         """
         :param outputs: outputs.shape = (batch_size, 1), output \in (0, 1)
@@ -610,11 +589,13 @@ class Fitter:
         :return: contribution to loss from a sample x ~ pdf(x|H_0,1)
         """
 
-        loss_CE = -(1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
-        # loss_QC = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
-
+        #loss_CE = -(1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
+        loss_QC = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
+        relu = nn.ReLU()
+        penalty = lag_mult * relu((outputs - 1) / outputs)
         # add up all the losses in the batch
-        return torch.sum(loss_CE, dim=0)
+        return torch.sum(loss_QC + penalty, dim=0)
+        #return torch.sum(loss_CE, dim=0)
 
 # def preprocessing(data_eft, data_sm):
 #
