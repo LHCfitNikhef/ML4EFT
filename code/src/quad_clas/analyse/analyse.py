@@ -12,6 +12,8 @@ import copy
 import matplotlib.gridspec as gridspec
 from matplotlib import animation
 import os, sys
+import pickle
+import joblib
 
 # import own pacakges
 from quad_clas.core import classifier as quad_clas
@@ -146,9 +148,11 @@ def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cro
         else:
             path_nn = os.path.join(path_to_model, 'trained_nn.pt')
         nn.load_state_dict(torch.load(path_nn))
-        mean, std = np.loadtxt(os.path.join(path_to_model, 'scaling.dat'))
 
-        x_scaled = (x - mean) / std
+        scaler_path = os.path.join(path_to_model, 'scaler.gz')
+        scaler = joblib.load(scaler_path)
+        x_scaled = scaler.transform(x)
+        x_scaled = torch.tensor(x_scaled)
 
         if lin:
             n_lin_out = nn.n_alpha(x_scaled.float()).numpy().flatten()
@@ -453,7 +457,7 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
     """
 
 
-    means, stds = [], []
+    #means, stds = [], []
     models = []
     for rep_nr in model_nrs:
 
@@ -466,8 +470,8 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
         # load statistics of pretrained models
         if not os.path.exists(os.path.join(model_dir.format(mc_run=rep_nr))):
             continue
-        mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
-        #loaded_model = quad_clas.PredictorLinear(architecture)
+        #mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
+
         if epoch != -1:
             path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(epoch))
             if os.path.exists(path):
@@ -480,10 +484,10 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
         # load all the parameters into the trained network and save
         loaded_model.load_state_dict(torch.load(network_path))
         models.append(loaded_model)
-        means.append(mean)
-        stds.append(std)
+        #means.append(mean)
+        #stds.append(std)
 
-    return models, means, stds
+    return models#, means, stds
 
 
 def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
@@ -522,10 +526,15 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
     for order, paths in path_to_models.items():
         if order == 'lin':
             for path in paths:
-                loaded_models_lin, means, std = load_models(architecture, path, range(mc_reps), epoch=epoch, lin=True)
+                loaded_models_lin = load_models(architecture, path, range(mc_reps), epoch=epoch, lin=True)
                 n_alphas = []
                 for i in range(len(loaded_models_lin)):
-                    x_scaled = (x - means[i]) / std[i]
+                    scaler_path = os.path.join(path.format(mc_run=i), 'scaler.gz')
+
+                    scaler = joblib.load(scaler_path)
+                    x_scaled = scaler.transform(x)
+
+
                     with torch.no_grad():
                         n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(x_scaled).float()).numpy().flatten())
                 n_alphas = np.array(n_alphas)
@@ -658,7 +667,6 @@ def likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1
     """
     # nn models at the specified epoch
     n_lin, n_quad, n_cross = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=epoch)
-
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
     elif quad:
@@ -706,3 +714,33 @@ def decision_function_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-
     ratio = likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps, epoch, lin=lin, quad=quad)
     f = 1 / (1 + ratio)
     return f
+
+def accuracy_1d(c, path_to_models, network_size, mc_reps, epoch, lin, quad):
+
+    fig, ax = plt.subplots(figsize=(10,6))
+
+    x = np.linspace(mh + mz + 1e-2, 2.5, 100)
+    x = np.stack((x, np.zeros(len(x))), axis=-1)
+
+    x_nn = np.stack((np.log(np.linspace(mh + mz + 1e-2, 2.5, 100)), np.zeros(len(x))), axis=-1)
+
+    f_ana_lin = decision_function_truth(x, c, lin=True)
+    f_preds_nn = decision_function_nn(x_nn, c, path_to_models, network_size, mc_reps, epoch, lin, quad)
+
+    f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
+    f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
+
+    ax.fill_between(x[:, 0], f_pred_down, f_pred_up, label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$', alpha=0.4)
+
+    ax.plot(x[:, 0], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
+
+    # single replica
+    #ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
+
+    plt.ylim((0, 1))
+    plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
+    plt.ylabel(r'$f\;(x, c)$')
+    plt.xlabel(r'$m_{ZH}\;[\mathrm{TeV}]$')
+    plt.legend()
+    plt.tight_layout()
+    return fig
