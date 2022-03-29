@@ -71,6 +71,7 @@ class Limits:
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         # draw a subset of events with size following a Poisson distribution with mean nu_tot
+        self.data_sm['log_pt_z'] = np.log(self.data_sm['pt_z'])
         self.events = self.data_sm.sample(int(n_tot_sm), random_state=1)[features]
 
         # compute limits
@@ -82,7 +83,7 @@ class Limits:
         if save and save_path is not None:
             if self.nn:
                 np.save(os.path.join(save_path, 'q_c_nn_median_row_{}.npy'.format(self.row)), self.q_c_nn_median)
-                #np.save(os.path.join(save_path, 'q_c_nn_row_{}.npy'.format(self.row)), self.q_c_nn)
+                np.save(os.path.join(save_path, 'q_c_nn_row_{}.npy'.format(self.row)), self.q_c_nn)
             if self.truth:
                 np.save(os.path.join(save_path, 'q_c_truth_row_{}.npy'.format(self.row)), self.q_c_truth)
             if self.binned:
@@ -142,7 +143,6 @@ class Limits:
                     r_nn = analyse.likelihood_ratio_nn(torch.tensor(self.events.values.reshape(-1, self.architecture[0])), [c1, c2],
                                                        self.path_to_models, self.architecture, lin=self.lin,
                                                        quad=self.quad, mc_reps=self.mc_reps)
-
                     log_r_nn = np.log(r_nn)
                     likelihood_scan_nn.append(-nu + np.sum(log_r_nn, axis=1))
 
@@ -154,7 +154,7 @@ class Limits:
 
         if self.nn:
             likelihood_scan_nn = np.array(likelihood_scan_nn, dtype='object')
-            likelihood_scan_nn = np.reshape(likelihood_scan_nn, (len(c1_values), len(c2_values), self.mc_reps))
+            likelihood_scan_nn = np.reshape(likelihood_scan_nn, (len(c1_values), len(c2_values), r_nn.shape[0]))
             likelihood_scan_nn_med = np.median(likelihood_scan_nn, axis=2)
             #q_c_array_nn = 2 * (- likelihood_scan_nn + np.max(likelihood_scan_nn, axis=(0, 1)))
             # q_c_array_nn_median = 2 * (

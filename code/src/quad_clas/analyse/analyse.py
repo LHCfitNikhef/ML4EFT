@@ -456,9 +456,8 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
         List of loaded models
     """
 
-
-    #means, stds = [], []
     models = []
+    losses = []
     for rep_nr in model_nrs:
 
         if lin:
@@ -467,10 +466,10 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
             loaded_model = quad_clas.PredictorQuadratic(architecture)
         else:
             loaded_model = quad_clas.PredictorCross(architecture)
+
         # load statistics of pretrained models
         if not os.path.exists(os.path.join(model_dir.format(mc_run=rep_nr))):
             continue
-        #mean, std = np.loadtxt(os.path.join(model_dir.format(mc_run=rep_nr), 'scaling.dat'))
 
         if epoch != -1:
             path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(epoch))
@@ -481,13 +480,29 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
         else:
             network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
 
+        # read the loss
+        path_to_loss = os.path.join(os.path.dirname(network_path), 'loss.out')
+        with open(path_to_loss) as file:
+            loss = [float(line.rstrip()) for line in file]
+
+        # store the final loss of each model
+        losses.append(loss[-1])
+
         # load all the parameters into the trained network and save
         loaded_model.load_state_dict(torch.load(network_path))
         models.append(loaded_model)
-        #means.append(mean)
-        #stds.append(std)
 
-    return models#, means, stds
+    losses = np.array(losses)
+    models = np.array(models)
+
+    # only keep models within 5 sigma
+    sigma_loss = (np.percentile(losses, 84) - np.percentile(losses, 16)) / 2
+    los_med = np.percentile(losses, 50)
+
+    model_idx = np.argwhere((los_med - 5 * sigma_loss < losses) & (losses < los_med + 5 * sigma_loss)).flatten()
+    models_good = models[model_idx]
+
+    return models_good, model_idx
 
 
 def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
@@ -526,14 +541,13 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
     for order, paths in path_to_models.items():
         if order == 'lin':
             for path in paths:
-                loaded_models_lin = load_models(architecture, path, range(mc_reps), epoch=epoch, lin=True)
+                loaded_models_lin, model_idx = load_models(architecture, path, range(mc_reps), epoch=epoch, lin=True)
                 n_alphas = []
                 for i in range(len(loaded_models_lin)):
-                    scaler_path = os.path.join(path.format(mc_run=i), 'scaler.gz')
 
+                    scaler_path = os.path.join(path.format(mc_run=model_idx[i]), 'scaler.gz')
                     scaler = joblib.load(scaler_path)
                     x_scaled = scaler.transform(x)
-
 
                     with torch.no_grad():
                         n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(x_scaled).float()).numpy().flatten())
@@ -667,6 +681,7 @@ def likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1
     """
     # nn models at the specified epoch
     n_lin, n_quad, n_cross = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=epoch)
+
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
     elif quad:
