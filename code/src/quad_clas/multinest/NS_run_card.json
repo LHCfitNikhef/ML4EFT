@@ -1,0 +1,8 @@
+{
+  "parameters": ["cHq3"],
+  "nlive": 1000,
+  "n_params": 1,
+  "results_path": "/data/theorie/jthoeve/multinest/demo/example/ns_run/truth",
+  "max_val": 6,
+  "min_val": 2
+}
