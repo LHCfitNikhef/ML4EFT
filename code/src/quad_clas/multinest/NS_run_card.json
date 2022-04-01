@@ -1,8 +1,8 @@
 {
-  "parameters": ["cHq3"],
-  "nlive": 1000,
-  "n_params": 1,
-  "results_path": "/data/theorie/jthoeve/multinest/demo/example/ns_run/truth",
-  "max_val": 6,
+  "parameters": ["chw", "chq3"],
+  "nlive": 5000,
+  "n_params": 2,
+  "results_path": "/data/theorie/jthoeve/ML4EFT_higgs/output/contours/ns",
+  "max_val": -2,
   "min_val": 2
 }

@@ -45,9 +45,20 @@ class Sampler:
 
         nu = sigma * self.luminosity
 
-        dsigma_dx = np.array(
-            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], cube[0], cube[1], lin=self.lin, quad=self.quad) for index, row in
+        # move outside of loglike, compute only once, then use for all the c's
+        dsigma_dx_sm = np.array(
+            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 0, lin=self.lin, quad=self.quad) for index, row in
              self.events.iterrows()])
+
+        dsigma_dx_c1 = np.array(
+            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 10, 0, lin=self.lin, quad=self.quad) for index, row in
+             self.events.iterrows()])
+
+        dsigma_dx_c2 = np.array(
+            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 10, lin=self.lin, quad=self.quad) for index, row in
+             self.events.iterrows()])
+
+        dsigma_dx = dsigma_dx_sm + cube[0] * (dsigma_dx_c1 - dsigma_dx_sm) / 10 + cube[1] * (dsigma_dx_c1 - dsigma_dx_sm) / 10
 
         log_likelihood = -nu + np.sum(np.log(dsigma_dx))
 

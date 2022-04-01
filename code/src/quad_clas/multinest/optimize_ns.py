@@ -5,6 +5,14 @@ import numpy as np
 import time
 import os
 
+import quad_clas.analyse.analyse as analyse
+from quad_clas.core.truth import vh_prod
+from quad_clas.preproc import constants
+
+mz = constants.mz
+mh = constants.mh
+
+
 class Optimize:
 
     """
@@ -14,7 +22,7 @@ class Optimize:
             configuration dictionary
     """
 
-    def __init__(self, config):
+    def __init__(self, config, data, lumi, theory_pred_total):
 
         with open(config) as json_data:
             self.config = json.load(json_data)
@@ -40,14 +48,23 @@ class Optimize:
             self.min_val = self.config["min_val"]
 
         # generate pseudo data
-        np.random.seed(4)
+        self.events = data
+        self.lumi = lumi
 
-        mu_true = 4
-        self.sigma_true = 0.5
-        n_dat = 40
+        # diff xsec
+        self.theory_pred_total = theory_pred_total
 
-        self.data_x = np.arange(n_dat)
-        self.data_y = np.random.normal(mu_true, self.sigma_true, n_dat)
+        self.dsigma_dx_sm = np.array(
+            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 0, lin=True, quad=False) for index, row in
+             self.events.iterrows()])
+
+        self.dsigma_dx_c1 = np.array(
+            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 10, 0, lin=True, quad=False) for index, row in
+             self.events.iterrows()])
+
+        self.dsigma_dx_c2 = np.array(
+            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 10, lin=True, quad=False) for index, row in
+             self.events.iterrows()])
 
     def my_prior(self, cube):
         for i in range(self.n_params):
@@ -55,11 +72,17 @@ class Optimize:
 
         return cube
 
-    def chi2(self, mu):
-        return np.sum(((self.data_y - mu) / self.sigma_true) ** 2)
-
     def my_log_like(self, cube):
-        return -0.5 * self.chi2(cube[0])
+
+        sigma = self.theory_pred_total['sm'] + cube[0] * self.theory_pred_total['chw'] + cube[1] * self.theory_pred_total['chq3']
+
+        dsigma_dx = self.dsigma_dx_sm + cube[0] * (self.dsigma_dx_c1 - self.dsigma_dx_sm) / 10 + cube[1] * (self.dsigma_dx_c2 - self.dsigma_dx_sm) / 10
+
+        nu = sigma * self.lumi
+
+        log_likelihood = -nu + np.sum(np.log(dsigma_dx))
+
+        return log_likelihood
 
     def run_sampling(self):
         """Run the minimisation with Nested Sampling"""
