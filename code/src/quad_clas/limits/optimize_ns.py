@@ -20,21 +20,25 @@ class Optimize:
     ----------
         config : dict
             configuration dictionary
+        observed_data: numpy.ndarray()
+            Observed events (i.e. under the SM)
+        theory_pred: TheoryPred
+            instance of TheoryPred that contains the theory predictions
     """
 
-    def __init__(self, config, data, lumi, theory_pred_total):
+    def __init__(self, config, observed_data, theory_pred):
 
-        with open(config) as json_data:
-            self.config = json.load(json_data)
+        self.config = config.copy()
 
-        self.parameters = self.config["parameters"]
-        if "n_params" in self.config.keys():
-            self.n_params = self.config["n_params"]
+        if "parameters" in self.config.keys():
+            self.parameters = self.config["parameters"]
+            self.n_params = len(self.parameters)
         else:
             print(
-                "Number of paramaters (n_params) not set in the input card. Aborting."
+                "Parameters names (parameters) not set in the input card. Aborting."
             )
             sys.exit()
+
         if "nlive" in self.config.keys():
             self.live_points = self.config["nlive"]
         else:
@@ -42,31 +46,40 @@ class Optimize:
                 "Number of live points (nlive) not set in the input card. Using default: 500"
             )
             self.live_points = 500
+
         if "max_val" in self.config.keys():
             self.max_val = self.config["max_val"]
         if "min_val" in self.config.keys():
             self.min_val = self.config["min_val"]
 
-        # generate pseudo data
-        self.events = data
-        self.lumi = lumi
+        if "lumi" in self.config.keys():
+            self.lumi = self.config["lumi"]
+        else:
+            print(
+                "Luminosity (lumi) not set in the input card. Using default: 5e3 pb^-1"
+            )
 
-        # diff xsec
-        self.theory_pred_total = theory_pred_total
+        self.observed_data = observed_data
 
-        self.dsigma_dx_sm = np.array(
-            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 0, lin=True, quad=False) for index, row in
-             self.events.iterrows()])
+        # likelihood building blocks
+        self.dsigma_dx_sm, self.dsigma_dx_eft = theory_pred.compute_diff_coefficients(self.observed_data)
+        self.theory_pred_total = theory_pred.df.sum(axis=1)
 
-        self.dsigma_dx_c1 = np.array(
-            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 10, 0, lin=True, quad=False) for index, row in
-             self.events.iterrows()])
-
-        self.dsigma_dx_c2 = np.array(
-            [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 10, lin=True, quad=False) for index, row in
-             self.events.iterrows()])
 
     def my_prior(self, cube):
+        """
+        Construct prior volume
+
+        Parameters
+        ----------
+        cube: numpy.ndarray, shape=(M,)
+            unit hypercube of dim M
+
+        Returns
+        -------
+        cube: numpy.ndarray
+            hypercube prior
+        """
         for i in range(self.n_params):
             cube[i] = cube[i] * (self.max_val - self.min_val) + self.min_val
 
@@ -76,7 +89,9 @@ class Optimize:
 
         sigma = self.theory_pred_total['sm'] + cube[0] * self.theory_pred_total['chw'] + cube[1] * self.theory_pred_total['chq3']
 
-        dsigma_dx = self.dsigma_dx_sm + cube[0] * (self.dsigma_dx_c1 - self.dsigma_dx_sm) / 10 + cube[1] * (self.dsigma_dx_c2 - self.dsigma_dx_sm) / 10
+        dsigma_dx = self.dsigma_dx_sm + self.dsigma_dx_eft['lin'].T @ cube
+
+        #dsigma_dx = self.dsigma_dx_sm + cube[0] * (self.dsigma_dx_c1 - self.dsigma_dx_sm) / 10 + cube[1] * (self.dsigma_dx_c2 - self.dsigma_dx_sm) / 10
 
         nu = sigma * self.lumi
 
@@ -90,7 +105,7 @@ class Optimize:
         # Prefix for results
         prefix = self.config["results_path"] + "/truth-"
 
-        t1 = time.time()
+        t1 = time.perf_counter()
 
         result = pymultinest.solve(LogLikelihood=self.my_log_like,
                                  Prior=self.my_prior,
@@ -103,11 +118,14 @@ class Optimize:
                                  importance_nested_sampling=True
                                  )
 
-        t2 = time.time()
+        t2 = time.perf_counter()
 
         print("Time = ", (t2 - t1) / 60.0)
 
+        # export the posterior samples to json
         self.save(result)
+
+        # remove ns raw output
         self.clean()
 
     def clean(self):
