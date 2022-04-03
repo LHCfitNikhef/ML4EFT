@@ -1,0 +1,14 @@
+{
+  "mode": "binned",
+  "parameters": ["chw", "chq3"],
+  "nlive": 5000,
+  "n_params": 2,
+  "results_path": "/data/theorie/jthoeve/ML4EFT_higgs/output/contours/ns_binned",
+  "max_val": -2,
+  "min_val": 2,
+  "lumi": 5e3,
+  "theory_pred_path": "/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2",
+  "observed_data_path": "/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2/sm/events_0.pkl.gz",
+  "bins": [0, 4],
+  "kinematic": "m_zh"
+}
