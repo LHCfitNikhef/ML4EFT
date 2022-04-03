@@ -32,6 +32,10 @@ class Optimize:
 
         self.config = config.copy()
 
+        # store input card as reference
+        with open(os.path.join(self.config['results_path'], 'input_card.json'), 'w') as json_data:
+            json.dump(self.config, json_data)
+
         if "mode" in self.config.keys():
             self.mode = self.config["mode"]
         else:
