@@ -1,33 +1,37 @@
 import numpy as np
 import quad_clas.analyse.analyse as analyse
 import os
+import pandas as pd
 
 # Network's architecture of the pretrained models
-architecture = [3, 30, 30, 30, 30, 30, 1]
+architecture = [2, 30, 30, 30, 30, 30, 1]
 
-path_to_models = {'lin': ['/data/theorie/jthoeve/ML4EFT_higgs/models/2022/24_01/model_lin_cHW_3_feat/mc_run_{mc_run}',
-                          '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/24_01/model_lin_cHq3_3_feat/mc_run_{mc_run}']}
+path_to_models = {'lin': ['/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_mzh_y_robust_scaler/model_chw_lin/',
+                          '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_mzh_y_robust_scaler/model_chq3_lin/']}
 
-sm_data_path = '/data/theorie/jthoeve/event_generation/events_high_stats/pT/sm/events_0.npy'
+sm_data_path = '/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2/sm/events_0.pkl.gz'
 
 n_dat = 5000
-events_sm = np.load(sm_data_path)[1:n_dat + 1, :]
+events_sm = pd.read_pickle(sm_data_path).iloc[1:, :].sample(int(n_dat), random_state=1)
+events_sm['log_m_zh'] = np.log(events_sm['m_zh'])
+#events_sm = events_sm.drop(['m_zh', 'pt_z'], axis=1)
 
-luminosity = 5000
+luminosity = 5e3
 
 # number of trained neural network replicas
 mc_reps = 30
 
 # location where to save the plot
-plot_save = '/data/theorie/jthoeve/ML4EFT_higgs/plots/2022/26_01/'
+plot_save = '/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/05_04'
 
-fig1, fig2 = analyse.point_by_point_comp(mc_reps=mc_reps,
-                                         events=events_sm,
-                                         c=np.array([10,0]),
-                                         path_to_models=path_to_models,
-                                         network_size=architecture,
-                                         lin=True,
-                                         quad=False)
+fig1, fig2 = analyse.point_by_point_comp(
+    events=events_sm,
+    c=np.array([0, 10]),
+    path_to_models=path_to_models,
+    network_size=architecture,
+    n_kin=2,
+    lin=True,
+    quad=False)
 
-fig1.savefig(os.path.join(plot_save, 'overview_comp_cHW.pdf'))
-fig2.savefig(os.path.join(plot_save, 'median_comp_cHW.pdf'))
+fig1.savefig(os.path.join(plot_save, 'overview_comp_chq3.pdf'))
+fig2.savefig(os.path.join(plot_save, 'median_comp_chq3.pdf'))

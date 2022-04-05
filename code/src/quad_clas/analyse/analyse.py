@@ -14,6 +14,8 @@ from matplotlib import animation
 import os, sys
 import pickle
 import joblib
+import json
+import pandas as pd
 
 # import own pacakges
 from quad_clas.core import classifier as quad_clas
@@ -29,13 +31,13 @@ rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
 
-def likelihood_ratio_truth(x, c, lin=False, quad=False):
+def likelihood_ratio_truth(events, c, n_kin, lin=False, quad=False):
     """
     Computes the analytic likelihood ratio r(x, c)
 
     Parameters
     ----------
-    x : numpy.ndarray, shape=(M, N)
+    events : numpy.ndarray, shape=(M, N)
         Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
         the invariant mass and the rapidity.
     c : numpy.ndarray, shape=(M,)
@@ -51,20 +53,23 @@ def likelihood_ratio_truth(x, c, lin=False, quad=False):
         Likelihood ratio wrt the SM for the events ``x``
     """
 
-    n_kin = x.shape[1]
     cHW, cHq3 = c
-
     if n_kin == 1:
-        dsigma_0 = [vh_prod.dsigma_dmvh(x_i, cHW, cHq3, lin=lin, quad=quad) for x_i in x]  # EFT
-        dsigma_1 = [vh_prod.dsigma_dmvh(x_i, 0, 0, lin=lin, quad=quad) for x_i in x]  # SM
+        dsigma_0 = [vh_prod.dsigma_dmvh(x['m_zh'], cHW, cHq3, lin=lin, quad=quad) for index, x in events.iterrows()]  # EFT
+        dsigma_1 = [vh_prod.dsigma_dmvh(x['m_zh'], 0, 0, lin=lin, quad=quad) for index, x in
+                    events.iterrows()]  # SM
     elif n_kin == 2:
-        dsigma_0 = [vh_prod.dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin=lin, quad=quad) for (mvh, y) in x]  # EFT
-        dsigma_1 = [vh_prod.dsigma_dmvh_dy(y, mvh, 0, 0, lin=lin, quad=quad) for (mvh, y) in x]  # SM
+        dsigma_0 = [vh_prod.dsigma_dmvh_dy(x['y'], x['m_zh'], cHW, cHq3, lin=lin, quad=quad) for index, x in
+                    events.iterrows()]  # EFT
+        dsigma_1 = [vh_prod.dsigma_dmvh_dy(x['y'], x['m_zh'], 0, 0, lin=lin, quad=quad) for index, x in
+                    events.iterrows()]  # SM
+        # dsigma_0 = [vh_prod.dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin=lin, quad=quad) for (mvh, y) in x]  # EFT
+        # dsigma_1 = [vh_prod.dsigma_dmvh_dy(y, mvh, 0, 0, lin=lin, quad=quad) for (mvh, y) in x]  # SM
     elif n_kin == 3:
         dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, cHW, cHq3, lin=lin, quad=quad) for (mvh, y, pt) in x]  # EFT
         dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, 0, 0, lin=lin, quad=quad) for (mvh, y, pt) in x]  # SM
     else:
-        raise NotImplementedError("No more than two features are currently supported")
+        raise NotImplementedError("No more than three features are currently supported")
 
     dsigma_0, dsigma_1 = np.array(dsigma_0), np.array(dsigma_1)
 
@@ -333,7 +338,7 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
     return fig
 
 
-def coeff_comp(mc_reps, path_to_model, network_size, c1, c2, lin=False, quad=False, cross=False, path_sm_data=None):
+def coeff_comp(path_to_models, network_size, c1, c2, lin=False, quad=False, cross=False, path_sm_data=None):
     """
     Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
@@ -370,32 +375,21 @@ def coeff_comp(mc_reps, path_to_model, network_size, c1, c2, lin=False, quad=Fal
 
     mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
     grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
-    grid_unscaled_tensor = torch.Tensor(grid)
+
+    df = pd.DataFrame({'log_m_zh': np.log(grid[:, 0]), 'y': grid[:, 1]})
 
     # truth
 
     coeff_truth = coeff_function_truth(grid, np.array([c1, c2]), lin, quad, cross).reshape(mvh_grid.shape)
 
-
     # models
 
-    coeff_nns = []
-    for rep_nr in range(0, mc_reps):
+    n_lin, n_quad, n_cross = load_coefficients_nn(df, network_size, path_to_models, epoch=-1)
 
-
-        coeff_nn = coeff_function_nn(x=grid_unscaled_tensor,
-                          path_to_model=path_to_model.format(mc_run=rep_nr),
-                          architecture=network_size,
-                          lin=lin,
-                          quad=quad,
-                          cross=cross).reshape(mvh_grid.shape)
-
-        coeff_nns.append(coeff_nn)
-
-    coeff_nns = np.array(coeff_nns)
-    coeff_nn_median = np.percentile(coeff_nns, 50, axis=0)
-    coeff_nn_high = np.percentile(coeff_nns, 84, axis=0)
-    coeff_nn_low = np.percentile(coeff_nns, 16, axis=0)
+    n_lin = n_lin[0,:, :].reshape((n_lin.shape[1], *mvh_grid.shape))
+    coeff_nn_median = np.percentile(n_lin, 50, axis=0)
+    coeff_nn_high = np.percentile(n_lin, 84, axis=0)
+    coeff_nn_low = np.percentile(n_lin, 16, axis=0)
     coeff_nn_unc = (coeff_nn_high - coeff_nn_low) / 2
 
     # visualise sm events
@@ -436,7 +430,7 @@ def coeff_comp(mc_reps, path_to_model, network_size, c1, c2, lin=False, quad=Fal
     return fig1, fig2
 
 
-def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=False, cross=False):
+def load_models(architecture, model_dir, epoch=-1, lin=False, quad=False, cross=False):
     """
     Load the pretrained models
 
@@ -458,7 +452,10 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
 
     models = []
     losses = []
-    for rep_nr in model_nrs:
+
+    model_dirs = [os.path.join(model_dir, mc_run) for mc_run in os.listdir(model_dir)]
+
+    for model_dir in model_dirs:
 
         if lin:
             loaded_model = quad_clas.PredictorLinear(architecture)
@@ -467,18 +464,10 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
         else:
             loaded_model = quad_clas.PredictorCross(architecture)
 
-        # load statistics of pretrained models
-        if not os.path.exists(os.path.join(model_dir.format(mc_run=rep_nr))):
-            continue
-
         if epoch != -1:
-            path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(epoch))
-            if os.path.exists(path):
-                network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn_{}.pt'.format(epoch))
-            else:
-                network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+            network_path = os.path.join(model_dir, 'trained_nn_{}.pt'.format(epoch))
         else:
-            network_path = os.path.join(model_dir.format(mc_run=rep_nr), 'trained_nn.pt')
+            network_path = os.path.join(model_dir, 'trained_nn.pt')
 
         # read the loss
         path_to_loss = os.path.join(os.path.dirname(network_path), 'loss.out')
@@ -505,14 +494,14 @@ def load_models(architecture, model_dir, model_nrs, epoch=-1, lin=False, quad=Fa
     return models_good, model_idx
 
 
-def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
+def load_coefficients_nn(df, architecture, path_to_models, epoch=-1):
     """
     Loads in the nn models at specified in ``path_to_models`` and returns a tuple of length 3
     with the linear, quadratic and cross term coefficient functions.
 
     Parameters
     ----------
-    x : torch.tensor, shape=(M, N)
+    x : pandas.DataFrame, shape=(M, N)
         Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
         the invariant mass and the rapidity.
     architecture: list
@@ -541,16 +530,22 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
     for order, paths in path_to_models.items():
         if order == 'lin':
             for path in paths:
-                loaded_models_lin, model_idx = load_models(architecture, path, range(mc_reps), epoch=epoch, lin=True)
+                loaded_models_lin, model_idx = load_models(architecture, path, epoch=epoch, lin=True)
                 n_alphas = []
-                for i in range(len(loaded_models_lin)):
 
-                    scaler_path = os.path.join(path.format(mc_run=model_idx[i]), 'scaler.gz')
+                for i in range(len(loaded_models_lin)):
+                    path_to_model = os.path.join(path, 'mc_run_{}'.format(i))
+                    with open(os.path.join(path_to_model, 'run_card.json')) as json_data:
+                        features = json.load(json_data)['features']
+
+                    scaler_path = os.path.join(path_to_model, 'scaler.gz')
                     scaler = joblib.load(scaler_path)
-                    x_scaled = scaler.transform(x)
+
+                    features_scaled = scaler.transform(df[features].values)
 
                     with torch.no_grad():
-                        n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(x_scaled).float()).numpy().flatten())
+                        n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(features_scaled).float()).numpy().flatten())
+
                 n_alphas = np.array(n_alphas)
                 n_lin.append(n_alphas)
 
@@ -582,7 +577,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
     return n_lin, n_quad, n_cross
 
 
-def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=True, quad=False):
+def point_by_point_comp(events, c, path_to_models, network_size, n_kin, lin=True, quad=False):
     """
     Make a point by point comparison between the truth and the models
 
@@ -590,7 +585,7 @@ def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=Tr
     ----------
     mc_reps: int
         Number of replicas to include
-    events: numpy.ndarray, shape=(M, N)
+    events: pandas.DataFrame, shape=(M, N)
         Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
         the invariant mass and the rapidity.
     c: numpy.ndarray, shape=(M,)
@@ -608,21 +603,21 @@ def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=Tr
     `matplotlib.figure.Figure`
         Plot of the median only
     """
-
-    r_nn = likelihood_ratio_nn(torch.Tensor(events), c, path_to_models, network_size, mc_reps=mc_reps, lin=lin, quad=quad)
+    r_nn = likelihood_ratio_nn(events, c, path_to_models, network_size, lin=lin, quad=quad)
     tau_nn = np.log(r_nn)
 
-    r_truth = likelihood_ratio_truth(events, c, lin=lin, quad=quad)
+    r_truth = likelihood_ratio_truth(events, c, lin=lin, quad=quad, n_kin=n_kin)
     tau_truth = np.log(r_truth)
 
     # overview plot for all replicas
     ncols = 5
+    mc_reps = r_nn.shape[0]
     nrows = int(np.ceil(mc_reps/ncols))
 
     fig1 = plt.figure(figsize=(ncols * 4, nrows * 4))
 
-    x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
-    for i in range(int(ncols * nrows)):
+    x = np.linspace(np.min(tau_truth) - 0.5, np.max(tau_truth) + 0.5, 100)
+    for i in range(mc_reps):
         plt.subplot(nrows, ncols, i + 1)
         plt.scatter(tau_truth, tau_nn[i, :], s=5, color='k')
         plt.plot(x, x, linestyle='dashed', color='grey')
@@ -645,7 +640,7 @@ def point_by_point_comp(mc_reps, events, c, path_to_models, network_size, lin=Tr
     return fig1, fig2
 
 
-def likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1, lin=False, quad=False):
+def likelihood_ratio_nn(df, c, path_to_models, network_size, epoch=-1, lin=False, quad=False):
     """
     Computes the likelihood ratio using the nn models
 
@@ -680,8 +675,7 @@ def likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1
     numpy.ndarray, shape=(mc_reps, M)
     """
     # nn models at the specified epoch
-    n_lin, n_quad, n_cross = load_coefficients_nn(x, network_size, path_to_models, mc_reps, epoch=epoch)
-
+    n_lin, n_quad, n_cross = load_coefficients_nn(df, network_size, path_to_models, epoch=epoch)
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
     elif quad:
