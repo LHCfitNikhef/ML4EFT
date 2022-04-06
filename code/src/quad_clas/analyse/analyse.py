@@ -221,7 +221,7 @@ def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
     return fig
 
 
-def coeff_function_truth(x, c, lin, quad, cross):
+def coeff_function_truth(x, c, n_kin, lin, quad, cross):
     """
     Computes the truth coefficient functions in the EFT expansion up to either linear or quadratic level
 
@@ -243,7 +243,7 @@ def coeff_function_truth(x, c, lin, quad, cross):
     """
 
     c1, c2 = c
-    ratio_truth_lin = likelihood_ratio_truth(x, c, lin=True)
+    ratio_truth_lin = likelihood_ratio_truth(x, c, n_kin, lin=True)
     # compute the mask once to select the physical region in phase space
     mask = ratio_truth_lin == 0
     coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / np.sum(c))
@@ -338,7 +338,7 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
     return fig
 
 
-def coeff_comp(path_to_models, network_size, c1, c2, lin=False, quad=False, cross=False, path_sm_data=None):
+def coeff_comp(path_to_models, network_size, c1, c2, n_kin, lin=False, quad=False, cross=False, path_sm_data=None):
     """
     Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
@@ -376,11 +376,11 @@ def coeff_comp(path_to_models, network_size, c1, c2, lin=False, quad=False, cros
     mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
     grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
 
-    df = pd.DataFrame({'log_m_zh': np.log(grid[:, 0]), 'y': grid[:, 1]})
+    df = pd.DataFrame({'m_zh': grid[:, 0], 'y': grid[:, 1]})
 
     # truth
 
-    coeff_truth = coeff_function_truth(grid, np.array([c1, c2]), lin, quad, cross).reshape(mvh_grid.shape)
+    coeff_truth = coeff_function_truth(df, np.array([c1, c2]), n_kin, lin, quad, cross).reshape(mvh_grid.shape)
 
     # models
 
@@ -454,7 +454,6 @@ def load_models(architecture, model_dir, epoch=-1, lin=False, quad=False, cross=
     losses = []
 
     model_dirs = [os.path.join(model_dir, mc_run) for mc_run in os.listdir(model_dir)]
-
     for model_dir in model_dirs:
 
         if lin:
@@ -485,13 +484,19 @@ def load_models(architecture, model_dir, epoch=-1, lin=False, quad=False, cross=
     models = np.array(models)
 
     # only keep models within 5 sigma
-    sigma_loss = (np.percentile(losses, 84) - np.percentile(losses, 16)) / 2
-    los_med = np.percentile(losses, 50)
+    sigma_loss = (np.nanpercentile(losses, 84) - np.nanpercentile(losses, 16)) / 2
+    los_med = np.nanpercentile(losses, 50)
 
     model_idx = np.argwhere((los_med - 5 * sigma_loss < losses) & (losses < los_med + 5 * sigma_loss)).flatten()
     models_good = models[model_idx]
 
-    return models_good, model_idx
+    # retrieve the rep numbers of the good models
+    models_good_idx = []
+    for idx in model_idx:
+        mc_idx = int(os.path.basename(model_dirs[idx]).split('mc_run_', 1)[1])
+        models_good_idx.append(mc_idx)
+
+    return models_good, models_good_idx
 
 
 def load_coefficients_nn(df, architecture, path_to_models, epoch=-1):
@@ -532,9 +537,8 @@ def load_coefficients_nn(df, architecture, path_to_models, epoch=-1):
             for path in paths:
                 loaded_models_lin, model_idx = load_models(architecture, path, epoch=epoch, lin=True)
                 n_alphas = []
-
-                for i in range(len(loaded_models_lin)):
-                    path_to_model = os.path.join(path, 'mc_run_{}'.format(i))
+                for i, loaded_model in enumerate(loaded_models_lin):
+                    path_to_model = os.path.join(path, 'mc_run_{}'.format(model_idx[i]))
                     with open(os.path.join(path_to_model, 'run_card.json')) as json_data:
                         features = json.load(json_data)['features']
 
@@ -544,7 +548,7 @@ def load_coefficients_nn(df, architecture, path_to_models, epoch=-1):
                     features_scaled = scaler.transform(df[features].values)
 
                     with torch.no_grad():
-                        n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(features_scaled).float()).numpy().flatten())
+                        n_alphas.append(loaded_model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten())
 
                 n_alphas = np.array(n_alphas)
                 n_lin.append(n_alphas)
@@ -574,7 +578,7 @@ def load_coefficients_nn(df, architecture, path_to_models, epoch=-1):
     n_quad = np.array(n_quad)
     n_cross = np.array(n_cross)
 
-    return n_lin, n_quad, n_cross
+    return [n_lin, model_idx], n_quad, n_cross
 
 
 def point_by_point_comp(events, c, path_to_models, network_size, n_kin, lin=True, quad=False):
@@ -603,11 +607,15 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, lin=True
     `matplotlib.figure.Figure`
         Plot of the median only
     """
-    r_nn = likelihood_ratio_nn(events, c, path_to_models, network_size, lin=lin, quad=quad)
+    r_nn, model_idx = likelihood_ratio_nn(events, c, path_to_models, network_size, lin=lin, quad=quad)
     tau_nn = np.log(r_nn)
 
     r_truth = likelihood_ratio_truth(events, c, lin=lin, quad=quad, n_kin=n_kin)
     tau_truth = np.log(r_truth)
+
+    mzh = events['m_zh'].values
+    mask = np.argwhere(mzh > 0.8).flatten()
+    mask_comp = np.setdiff1d(np.arange(len(events)), mask)
 
     # overview plot for all replicas
     ncols = 5
@@ -618,9 +626,13 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, lin=True
 
     x = np.linspace(np.min(tau_truth) - 0.5, np.max(tau_truth) + 0.5, 100)
     for i in range(mc_reps):
-        plt.subplot(nrows, ncols, i + 1)
-        plt.scatter(tau_truth, tau_nn[i, :], s=5, color='k')
+        ax = plt.subplot(nrows, ncols, i + 1)
+        plt.scatter(tau_truth[mask], tau_nn[i, mask], s=5, color='r')
+        plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=5, color='k')
         plt.plot(x, x, linestyle='dashed', color='grey')
+        plt.text(0.1, 0.9, 'rep {}'.format(model_idx[i]), horizontalalignment='left',
+                 verticalalignment='center',
+                 transform=ax.transAxes)
         plt.xlim((np.min(x), np.max(x)))
         plt.ylim((np.min(x), np.max(x)))
 
@@ -675,7 +687,7 @@ def likelihood_ratio_nn(df, c, path_to_models, network_size, epoch=-1, lin=False
     numpy.ndarray, shape=(mc_reps, M)
     """
     # nn models at the specified epoch
-    n_lin, n_quad, n_cross = load_coefficients_nn(df, network_size, path_to_models, epoch=epoch)
+    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, network_size, path_to_models, epoch=epoch)
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
     elif quad:
@@ -691,7 +703,7 @@ def likelihood_ratio_nn(df, c, path_to_models, network_size, epoch=-1, lin=False
         else:
             quadratic_cor = np.einsum('i, ijk', c ** 2, n_quad)
         r = 1 + lin_cor + quadratic_cor
-    return r
+    return r, model_idx
 
 
 def decision_function_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1, lin=False, quad=False):
