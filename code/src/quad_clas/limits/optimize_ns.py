@@ -5,6 +5,8 @@ import numpy as np
 import time
 import os
 import pandas as pd
+from pathlib import Path
+import shutil
 
 import quad_clas.analyse.analyse as analyse
 from quad_clas.core.truth import vh_prod
@@ -28,9 +30,14 @@ class Optimize:
             instance of TheoryPred that contains the theory predictions
     """
 
-    def __init__(self, config):
+    def __init__(self, config, rep=None):
 
         self.config = config.copy()
+        self.rep = rep
+
+        if self.rep is not None:
+            self.config["results_path"] = os.path.join(self.config["results_path"], "r_{}".format(self.rep))
+        Path(self.config["results_path"]).mkdir(parents=True, exist_ok=True)
 
         # store input card as reference
         with open(os.path.join(self.config['results_path'], 'input_card.json'), 'w') as json_data:
@@ -88,10 +95,28 @@ class Optimize:
                     "No bin variable (kinematic) specified. Please set in the in the input card. Aborting."
                 )
                 sys.exit()
-        else:  # unbinned case
-            self.bins = None,
-            self.kinematic = None
+        elif self.mode == "nn":
+            if "path_to_models" in self.config.keys():
+                self.path_to_models = self.config["path_to_models"]
+            else:
+                print(
+                    "No path tot model (path_to_models) specified. Please set in the in the input card. Aborting."
+                )
+                sys.exit()
+            if "architecture" in self.config.keys():
+                self.architecture = self.config["architecture"]
+            else:
+                print(
+                    "No architecture (architecture) specified. Please set in the in the input card. Aborting."
+                )
+                sys.exit()
 
+            self.bins = None
+            self.kinematic = None
+        else:  # unbinned case
+            self.bins = None
+            self.kinematic = None
+        
         event_path = self.config['theory_pred_path']
         theory_pred = TheoryPred(coeff=self.parameters,
                                  event_path=event_path,
@@ -104,16 +129,46 @@ class Optimize:
         sm_data = pd.read_pickle(sm_data_path).iloc[1:, :]
 
         # construct observed dataset
-
+        np.random.seed(0)
         theory_pred_total = theory_pred.df.sum(axis=1)
         xsec_sm = theory_pred_total['sm']
         nu_tot_sm = xsec_sm * config['lumi']
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         self.observed_data = sm_data.sample(int(n_tot_sm), random_state=1)
+        self.observed_data['log_m_zh'] = np.log(self.observed_data['m_zh'])
+
+        # check
+        # self.observed_data = self.observed_data[(self.observed_data['m_zh'] < 0.8) & (self.observed_data['m_zh'] > 0.5)]
+        #self.observed_data = self.observed_data[self.observed_data['m_zh'] < 0.8]
 
         # observed counts
-        if self.mode == "unbinned":
+        if self.mode == "nn":
+            [n_lin, model_idx], n_quad, n_cross = analyse.load_coefficients_nn(self.observed_data, self.architecture, self.path_to_models)
+
+            rep_tot = np.array([n_lin[i].shape[0] for i in range(len(n_lin))])
+            rep_ava = rep_tot.min() # max available replicas
+            #self.n_lin_chw = n_lin[0, 15, :]
+            #self.n_lin_chq3 = n_lin[1, -7, :]
+            if self.rep is None:
+                self.n_lin_chw = np.median(n_lin[0], axis=0)
+                self.n_lin_chq3 = np.median(n_lin[1], axis=0)
+            else:
+                if self.rep >= rep_ava:
+                    print(
+                        "The specified replica number is not available, please enter a smaller number. Aborting."
+                    )
+
+                    try:
+                        shutil.rmtree(self.config['results_path'])
+                    except OSError as e:
+                        print("Error: %s : %s" % (self.config['results_path'], e.strerror))
+
+                    sys.exit()
+                self.n_lin_chw = n_lin[0][self.rep, :]
+                self.n_lin_chq3 = n_lin[1][self.rep, :]
+
+        if self.mode == "truth":
             self.dsigma_dx_sm, self.dsigma_dx_eft = theory_pred.compute_diff_coefficients(self.observed_data)
         elif self.mode == "binned":
             self.n_i, _ = np.histogram(self.observed_data[self.kinematic].values, self.bins)
@@ -139,6 +194,22 @@ class Optimize:
             cube[i] = cube[i] * (self.max_val - self.min_val) + self.min_val
 
         return cube
+
+    def log_like_nn(self, cube):
+
+        theory_pred_total = self.theory_pred.sum(axis=1)
+
+        sigma = theory_pred_total['sm'] + cube[0] * theory_pred_total['chw'] + cube[1] * theory_pred_total['chq3']
+
+        nu = sigma * self.lumi
+
+        r_nn = 1 + cube[0] * self.n_lin_chw + cube[1] * self.n_lin_chq3
+
+        log_r_nn = np.log(r_nn)
+
+        log_likelihood = -nu + np.sum(log_r_nn)
+
+        return log_likelihood
 
     def log_like_truth(self, cube):
 
@@ -168,11 +239,17 @@ class Optimize:
         """Run the minimisation with Nested Sampling"""
 
         # Prefix for results
-        prefix = self.config["results_path"] + "/truth-"
+        if self.rep is not None:
+
+            prefix = os.path.join(self.config["results_path"], "1k-")
+        else:
+            prefix = os.path.join(self.config["results_path"], "1k-")
 
         t1 = time.perf_counter()
 
-        if self.mode == "unbinned":
+        if self.mode == "nn":
+            log_likelihood = self.log_like_nn
+        elif self.mode == "truth":
             log_likelihood = self.log_like_truth
         elif self.mode == "binned":
             log_likelihood = self.log_like_binned
@@ -202,7 +279,7 @@ class Optimize:
         """ Remove raw NS output if you want to keep raw output, don't call this method"""
 
         filelist = [
-            f for f in os.listdir(self.config["results_path"]) if f.startswith("truth-")
+            f for f in os.listdir(self.config["results_path"]) if f.startswith("1k-")
         ]
         for f in filelist:
             if f in os.listdir(self.config["results_path"]):
@@ -221,7 +298,7 @@ class Optimize:
         vals = {}
         for i, (c, samples) in enumerate(zip(self.parameters, result['samples'].T)):
             vals[c] = samples.tolist()
-        with open(f"{self.config['results_path']}/posterior.json", "w") as f:
+        with open(os.path.join(self.config['results_path'], 'posterior.json'), "w") as f:
             json.dump(vals, f)
 
 
