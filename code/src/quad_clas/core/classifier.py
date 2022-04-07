@@ -21,7 +21,8 @@ from torch import nn
 from sklearn.model_selection import train_test_split
 import shutil
 import quad_clas.analyse.analyse as analyse
-from sklearn.preprocessing import StandardScaler, RobustScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler, QuantileTransformer
+import joblib
 
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
@@ -53,7 +54,7 @@ class MLP(nn.Module):
         layer_sizes = [input_size] + hidden_sizes
         for layer_index in range(1, len(layer_sizes)):
             layers += [nn.Linear(layer_sizes[layer_index - 1], layer_sizes[layer_index]), nn.ReLU()]
-        layers += [nn.Linear(layer_sizes[-1], output_size)] # TODO because of the final relu we only get positive outputs!
+        layers += [nn.Linear(layer_sizes[-1], output_size)]
         self.layers = nn.Sequential(
             *layers)  # nn.Sequential summarizes a list of modules into a single module, applying them in sequence
 
@@ -137,11 +138,12 @@ class PredictorCross(nn.Module):
 
 class PreProcessing():
 
-    def __init__(self, n_dat, path):
+    def __init__(self, n_dat, path, features):
 
         self.n_dat = n_dat
         self.path = path
-
+        self.features = features
+        self.scaler = None
         self.load_data()
 
     def load_data(self):
@@ -158,35 +160,49 @@ class PreProcessing():
 
         # add log features for pT
         self.df_sm['log_pt_z'] = np.log(self.df_sm['pt_z'])
-        self.df_sm['log_pt_b'] = np.log(self.df_sm['pt_b'])
-
+        # self.df_sm['log_pt_b'] = np.log(self.df_sm['pt_b'])
+        #
         self.df_eft['log_pt_z'] = np.log(self.df_eft['pt_z'])
-        self.df_eft['log_pt_b'] = np.log(self.df_eft['pt_b'])
+        # self.df_eft['log_pt_b'] = np.log(self.df_eft['pt_b'])
+
+        self.df_sm['log_m_zh'] = np.log(self.df_sm['m_zh'])
+        self.df_eft['log_m_zh'] = np.log(self.df_eft['m_zh'])
 
         df = pd.concat([self.df_sm, self.df_eft])
 
         # initialise sklearn scalers
-        robsc = RobustScaler(quantile_range=(5, 95))
-
+        #self.scaler = RobustScaler(quantile_range=(5, 95))
+        self.scaler = StandardScaler()
+        #self.scaler = QuantileTransformer(n_quantiles=1000, output_distribution='normal')
         # fit a robust transformer to the eft and sm features
-        robsc.fit(df.values)
+        self.scaler.fit(df[self.features].values)
 
         # rescale the sm and eft data
-        features_sm_scaled = robsc.transform(self.df_sm.values)
-        features_eft_scaled = robsc.transform(self.df_eft.values)
+        features_sm_scaled = self.scaler.transform(self.df_sm[self.features].values)
+        features_eft_scaled = self.scaler.transform(self.df_eft[self.features].values)
 
         # convert transformed features to dataframe
-        df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=df.columns.values)
-        df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=df.columns.values)
+        df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=self.features)
+        df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=self.features)
+
+        # import matplotlib.pyplot as plt
+        # bins = np.concatenate([np.array([-2]), np.linspace(-1, 1, 20), np.array([2])])
+        # kwargs = dict(histtype='stepfilled', alpha=0.3, density=False, bins=bins, ec="k")
+        # plt.hist(df_sm_scaled['log_m_zh'].values, **kwargs, label=r'$\rm{SM}$')
+        #
+        # plt.xlim(-1.2, 1.2)
+        # plt.show()
+        # import pdb; pdb.set_trace()
 
         # save the scaler
-        dump(robsc, open(scaler_path, 'wb'))
+        joblib.dump(self.scaler, scaler_path)
+        #dump(robsc, open(scaler_path, 'wb'))
 
         return df_sm_scaled, df_eft_scaled
 
 class EventDataset(data.Dataset):
 
-    def __init__(self, df, xsec, path, n_dat, features, hypothesis=0):
+    def __init__(self, df, preproc, xsec, path, n_dat, features, hypothesis=0):
         """
         Inputs:
             c - value of the Wilson coefficient
@@ -198,6 +214,7 @@ class EventDataset(data.Dataset):
         self.xsec = xsec
         self.hypothesis = hypothesis
         self.features = features
+        self.preproc = preproc
 
         self.events = None
         self.weights = None
@@ -212,7 +229,12 @@ class EventDataset(data.Dataset):
         self.weights = self.xsec * torch.ones(n_dat).unsqueeze(-1)
         self.events = torch.tensor(self.df[self.features].values)
         self.labels = torch.ones(n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(n_dat).unsqueeze(-1)
-    
+
+        # reweight
+
+        # events_orig = self.preproc.scaler.inverse_transform(self.events)
+        # self.weights[events_orig[:, 0] > 0.8] *= 2
+
         logging.info("Dataset loaded from {}".format(path))
 
     def __len__(self):
@@ -238,6 +260,7 @@ class Fitter:
         with open(json_path) as json_data:
             self.run_options = json.load(json_data)
 
+        self.scaler = None
         self.run = self.run_options['name']
         self.training_report = self.run_options["training_report"]
         self.lr = self.run_options["lr"]
@@ -344,10 +367,10 @@ class Fitter:
         path_dict = {'sm': path_sm, 'eft': path_eft}
 
         # preprocessing of the data
-        preproc = PreProcessing(self.n_dat, path_dict)
+        preproc = PreProcessing(self.n_dat, path_dict, self.features)
 
         # save the scaler
-        scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.pkl')
+        scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
         df_sm_scaled, df_eft_scaled = preproc.feature_scaling(scaler_path)
 
         # We construct an eft and a sm data set for each value of c in c_values and make a list out of it
@@ -356,18 +379,20 @@ class Fitter:
         # on multiple EFT points.
 
         data_eft = EventDataset(df_eft_scaled,
-                                 xsec=preproc.xsec_eft,
-                                 path=path_eft,
-                                 n_dat=self.n_dat,
-                                 features=self.features,
-                                 hypothesis=0)
-
-        data_sm = EventDataset(df_sm_scaled,
-                                xsec=preproc.xsec_sm,
-                                path=path_sm,
+                                preproc,
+                                xsec=preproc.xsec_eft,
+                                path=path_eft,
                                 n_dat=self.n_dat,
                                 features=self.features,
-                                hypothesis=1)
+                                hypothesis=0)
+
+        data_sm = EventDataset(df_sm_scaled,
+                               preproc,
+                               xsec=preproc.xsec_sm,
+                               path=path_sm,
+                               n_dat=self.n_dat,
+                               features=self.features,
+                               hypothesis=1)
 
         data_all = [data_eft, data_sm]
 
