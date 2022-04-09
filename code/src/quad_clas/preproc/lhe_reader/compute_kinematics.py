@@ -56,7 +56,7 @@ class Kinematics(pylhe.LHEParticle):
         eta = - np.log(np.tan(theta/2))
         return eta
 
-    def get_rapdity(self):
+    def get_rapidity(self):
         """
         Computes the rapidity of an event
         """
