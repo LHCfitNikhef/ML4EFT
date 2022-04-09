@@ -18,12 +18,12 @@ bin_width = 10 * 10 ** -3
 
 #title = r'$\rm{t\bar{t}}\;\rm{production}\;\rm{benchmark,}\;\rm{LO+}\mathcal{O}\left(\Lambda^{0}\right)$'
 title = r'$t\bar{t}\;\rm{production}\;\rm{benchmark,}\;\rm{SM}$'
-event_path = "/data/theorie/jthoeve/training_data/tt/sm/events_0.pkl.gz"
+event_path = "/data/theorie/jthoeve/training_data/tt/lin/cug/events_0.pkl.gz"
 
 df = pd.read_pickle(event_path)
 
 
-def plot_benchmark(df, cHW, cHq3, title, lin=False, quad=False):
+def plot_benchmark(df, c1, c2, title, lin=False, quad=False):
 
     data_madgraph = df['m_tt'].iloc[1:].values
     bin_min = 2 * mt
@@ -31,8 +31,9 @@ def plot_benchmark(df, cHW, cHq3, title, lin=False, quad=False):
                                     density=True)
     hist_mg *= df['m_tt'].iloc[0]
 
+    #import pdb; pdb.set_trace()
     x = np.arange(2 * mt + bin_width / 2, 1.5, bin_width)
-    cross_section_sm = np.array([tt_prod.dsigma_dmtt(mtt, 0, 0) for mtt in x])
+    cross_section_sm = np.array([tt_prod.dsigma_dmtt(mtt, c1, 0) for mtt in x])
 
 
     fig = plt.figure(figsize=(8, 5))
@@ -53,6 +54,7 @@ def plot_benchmark(df, cHW, cHq3, title, lin=False, quad=False):
     plt.ylabel(r'$d\sigma/dm_{t\bar{t}}\;\mathrm{[pb\:TeV^{-1}]}$')
     plt.legend(frameon=False, loc='best')
 
+
     ax2 = fig.add_axes([0.15, 0.14, 0.75, 0.18], ylim=(0.9, 1.1))
 
     ax2.scatter(x, cross_section_sm / hist_mg[:len(x)], s=10)
@@ -65,5 +67,5 @@ def plot_benchmark(df, cHW, cHq3, title, lin=False, quad=False):
     return fig
 
 
-fig = plot_benchmark(df, 0, 0, title, lin=False, quad=True)
-fig.savefig("/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/09_04/tt_benchmark.pdf")
+fig = plot_benchmark(df, -10, 0, title, lin=False, quad=True)
+fig.savefig("/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/09_04/tt_benchmark_cug.pdf")
