@@ -9,13 +9,13 @@ row = sys.argv[1]
 architecture = [2, 30, 30, 30, 30, 30, 1]
 
 # mvh, y, pt (no decays)
-path_to_models = {'lin': ['/data/theorie/jthoeve/ML4EFT_higgs/models/final/zh/lin/cHW/mc_run_{mc_run}',
-                         '/data/theorie/jthoeve/ML4EFT_higgs/models/final/zh/lin/cHq3/mc_run_{mc_run}']}
+path_to_models = {'lin': ['/Users/jaco/Documents/ML4EFT/models/zh_mzh_y_robust_scaler/model_chw_lin/mc_run_{mc_run}',
+                         '/Users/jaco/Documents/ML4EFT/models/zh_mzh_y_robust_scaler/model_chq3_lin/mc_run_{mc_run}']}
 
-sm_data_path = '/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz/sm/events_0.pkl.gz'
+sm_data_path = '/Users/jaco/Documents/ML4EFT/training_data/zh/features_mzh_y_ptz/sm/events_0.pkl.gz'
 
 #drop pt_z
-events_sm = pd.read_pickle(sm_data_path).drop(columns='pt_z').iloc[1:, :]
+events_sm = pd.read_pickle(sm_data_path).iloc[1:, :]
 
 
 luminosity = 5E3
@@ -57,10 +57,11 @@ coeffs = ['cHW', 'cHq3']
 
 limits = conf_int.Limits(luminosity=luminosity,
                          bins=bins,
+                         kinematic='pt_z',
                          scan_domain=scan_domain,
                          coeffs=coeffs,
                          path_to_models=path_to_models,
-                         event_path='/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz',
+                         event_path='/Users/jaco/Documents/ML4EFT/training_data/zh/features_mzh_y_ptz',
                          mc_reps=mc_reps,
                          data_sm=events_sm,
                          lin=True,
@@ -69,8 +70,8 @@ limits = conf_int.Limits(luminosity=luminosity,
                          row=int(row),
                          save=True,
                          save_path=plot_save,
-                         nn = True,
+                         nn = False,
                          binned=False,
-                         truth=False)
+                         truth=True)
 
 #save_path='/data/theorie/jthoeve/ML4EFT_higgs/plots/2022/27_01/run_03/',

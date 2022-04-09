@@ -66,8 +66,13 @@ def likelihood_ratio_truth(events, c, n_kin, lin=False, quad=False):
         # dsigma_0 = [vh_prod.dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin=lin, quad=quad) for (mvh, y) in x]  # EFT
         # dsigma_1 = [vh_prod.dsigma_dmvh_dy(y, mvh, 0, 0, lin=lin, quad=quad) for (mvh, y) in x]  # SM
     elif n_kin == 3:
-        dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, cHW, cHq3, lin=lin, quad=quad) for (mvh, y, pt) in x]  # EFT
-        dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, 0, 0, lin=lin, quad=quad) for (mvh, y, pt) in x]  # SM
+        # dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, cHW, cHq3, lin=lin, quad=quad) for (mvh, y, pt) in x]  # EFT
+        # dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, 0, 0, lin=lin, quad=quad) for (mvh, y, pt) in x]  # SM
+
+        dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(x['y'], x['m_zh'], x['pt_z'], cHW, cHq3, lin=lin, quad=quad) for index, x in
+                    events.iterrows()]  # EFT
+        dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(x['y'], x['m_zh'], x['pt_z'], 0, 0, lin=lin, quad=quad) for index, x in
+                    events.iterrows()]  # SM
     else:
         raise NotImplementedError("No more than three features are currently supported")
 
