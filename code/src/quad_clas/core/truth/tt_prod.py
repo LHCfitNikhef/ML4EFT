@@ -35,7 +35,7 @@ class crossSectionSMEFT:
 
     """
 
-    def sigma_part_gg(self, hats, cuGRe, cuu):  # TODO: fix the gluon gluon contribution
+    def sigma_part_gg(self, hats, cuGRe, cuu, lin, quad):  # TODO: fix the gluon gluon contribution
         if np.sqrt(hats) == 2 * mt:
             return 0
 
@@ -51,9 +51,14 @@ class crossSectionSMEFT:
                         31 * np.sqrt(hats * (hats - 4 * mt ** 2)) + 16 * hats * np.log(1 - sqrt) - 16 * hats * np.log(
                     sqrt + 1)) + hats * (7 * np.sqrt(hats * (hats - 4 * mt ** 2)) + 4 * hats * np.log(
                 1 - sqrt) - 4 * hats * np.log(sqrt + 1)))
-        return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11
 
-    def sigma_part_qq(self, hats, cuGRe, cuu):
+        if lin:
+            return sm + cuGRe * kappa_1
+        if quad:
+            return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11
+        #return sm
+
+    def sigma_part_qq(self, hats, cuGRe, cuu, lin, quad):
         if np.sqrt(hats) == 2 * mt:
             return 0
 
@@ -63,22 +68,26 @@ class crossSectionSMEFT:
         kappa_22 = sqrt * (9 * hats * (hats - mt ** 2)) / (108 * np.pi * LambdaSMEFT ** 4 * hats)
         kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * yt * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
         sm = (8 * np.pi * asQCD ** 2 * (2 * mt ** 2 + hats) * sqrt) / (27 * hats ** 2)
-        return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
+        if lin:
+            return sm + cuGRe * kappa_1
+        if quad:
+            return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
+        #return sm + cuu * kappa_22
 
 xsec = crossSectionSMEFT()
 
-def weight(sqrts, mu, x1, x2, cuGRe, cuu):
+def weight(sqrts, mu, x1, x2, cuGRe, cuu, lin, quad):
     """
     NP parameter: order in the EFT
     order parameter: work at one specific order
     """
     hats = sqrts ** 2
-    w_ii = (xsec.sigma_part_gg(hats, cuGRe, cuu)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
-    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, 0)) * (
+    w_ii = (xsec.sigma_part_gg(hats, cuGRe, cuu, lin, quad)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
+    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, 0, lin, quad)) * (
                 p.xfxQ(1, x1, mu) * p.xfxQ(-1, x2, mu) + p.xfxQ(3, x1, mu) * p.xfxQ(-3, x2, mu) + p.xfxQ(5, x1,
                                                                                                          mu) * p.xfxQ(
             -5, x2, mu))
-    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, cuu)) * (
+    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, cuu, lin, quad)) * (
                 p.xfxQ(2, x1, mu) * p.xfxQ(-2, x2, mu) + p.xfxQ(4, x1, mu) * p.xfxQ(-4, x2, mu))
     # w_ii += 2*(xsec.sigma_part_qq(hats, cuGRe, cuu))*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
     return w_ii
@@ -117,7 +126,7 @@ def dsigma_dx(x, cug, cuu):
 v_weight = np.vectorize(weight, otypes=[np.float])
 
 
-def dsigma_dmtt_dy(y, mtt, cuGRe, cuu):
+def dsigma_dmtt_dy(y, mtt, cuGRe, cuu, lin, quad):
     """
     Compute the doubly differential cross section in mtt and y at any order NP
     """
@@ -126,7 +135,7 @@ def dsigma_dmtt_dy(y, mtt, cuGRe, cuu):
     if np.abs(y) < np.log(np.sqrt(s) / mtt):  # check whether x = {mtt, y} falls inside the physically allowed region
         x1 = mtt / np.sqrt(s) * np.exp(y)
         x2 = mtt / np.sqrt(s) * np.exp(-y)
-        dsigma_dmtt_dy = 2 * mtt / s * v_weight(mtt, 91.188, x1, x2, cuGRe, cuu) / (x1 * x2)
+        dsigma_dmtt_dy = 2 * mtt / s * v_weight(mtt, 91.188, x1, x2, cuGRe, cuu, lin, quad) / (x1 * x2)
         return pb_convert * dsigma_dmtt_dy
     else:
         return 0
@@ -135,9 +144,9 @@ def dsigma_dmtt_dy(y, mtt, cuGRe, cuu):
 dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float])
 
 
-def dsigma_dmtt(mtt, cuGRe, cuu):
+def dsigma_dmtt(mtt, cuGRe, cuu, lin, quad):
     y_min, y_max = -0.5 * np.log(s / mtt), 0.5 * np.log(s / mtt)
-    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, cuGRe, cuu), n=10)[0] #TODO: n=100 previously, does n= 10 also give good performances?
+    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, cuGRe, cuu, lin, quad), n=10)[0] #TODO: n=100 previously, does n= 10 also give good performances?
     return dsigma_dmtt
 
 #%%

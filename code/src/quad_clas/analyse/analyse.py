@@ -16,22 +16,24 @@ import pickle
 import joblib
 import json
 import pandas as pd
+from sklearn.cluster import KMeans
 
 # import own pacakges
 from quad_clas.core import classifier as quad_clas
 from quad_clas.core.truth import tt_prod as axs
-from quad_clas.core.truth import vh_prod
+from quad_clas.core.truth import vh_prod, tt_prod
 from ..preproc import constants
 
 mz = constants.mz # z boson mass [TeV]
 mh = constants.mh
+mt = constants.mt
 
 # matplotlib.use('PDF')
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
 
-def likelihood_ratio_truth(events, c, n_kin, lin=False, quad=False):
+def likelihood_ratio_truth(events, c, n_kin, process, lin=False, quad=False):
     """
     Computes the analytic likelihood ratio r(x, c)
 
@@ -52,29 +54,39 @@ def likelihood_ratio_truth(events, c, n_kin, lin=False, quad=False):
     ratio: numpy.ndarray, shape=(M,)
         Likelihood ratio wrt the SM for the events ``x``
     """
+    # uncomment for ZH
+    if process == 'ZH':
+        cHW, cHq3 = c
+        if n_kin == 1:
+            dsigma_0 = [vh_prod.dsigma_dmvh(x['m_zh'], cHW, cHq3, lin=lin, quad=quad) for index, x in events.iterrows()]  # EFT
+            dsigma_1 = [vh_prod.dsigma_dmvh(x['m_zh'], 0, 0, lin=lin, quad=quad) for index, x in
+                        events.iterrows()]  # SM
+        elif n_kin == 2:
+            dsigma_0 = [vh_prod.dsigma_dmvh_dy(x['y'], x['m_zh'], cHW, cHq3, lin=lin, quad=quad) for index, x in
+                        events.iterrows()]  # EFT
+            dsigma_1 = [vh_prod.dsigma_dmvh_dy(x['y'], x['m_zh'], 0, 0, lin=lin, quad=quad) for index, x in
+                        events.iterrows()]  # SM
+        elif n_kin == 3:
+            dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(x['y'], x['m_zh'], x['pt_z'], cHW, cHq3, lin=lin, quad=quad) for index, x in
+                        events.iterrows()]  # EFT
+            dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(x['y'], x['m_zh'], x['pt_z'], 0, 0, lin=lin, quad=quad) for index, x in
+                        events.iterrows()]  # SM
+        else:
+            raise NotImplementedError("No more than three features are currently supported")
 
-    cHW, cHq3 = c
-    if n_kin == 1:
-        dsigma_0 = [vh_prod.dsigma_dmvh(x['m_zh'], cHW, cHq3, lin=lin, quad=quad) for index, x in events.iterrows()]  # EFT
-        dsigma_1 = [vh_prod.dsigma_dmvh(x['m_zh'], 0, 0, lin=lin, quad=quad) for index, x in
-                    events.iterrows()]  # SM
-    elif n_kin == 2:
-        dsigma_0 = [vh_prod.dsigma_dmvh_dy(x['y'], x['m_zh'], cHW, cHq3, lin=lin, quad=quad) for index, x in
-                    events.iterrows()]  # EFT
-        dsigma_1 = [vh_prod.dsigma_dmvh_dy(x['y'], x['m_zh'], 0, 0, lin=lin, quad=quad) for index, x in
-                    events.iterrows()]  # SM
-        # dsigma_0 = [vh_prod.dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin=lin, quad=quad) for (mvh, y) in x]  # EFT
-        # dsigma_1 = [vh_prod.dsigma_dmvh_dy(y, mvh, 0, 0, lin=lin, quad=quad) for (mvh, y) in x]  # SM
-    elif n_kin == 3:
-        # dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, cHW, cHq3, lin=lin, quad=quad) for (mvh, y, pt) in x]  # EFT
-        # dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(y, mvh, pt, 0, 0, lin=lin, quad=quad) for (mvh, y, pt) in x]  # SM
+    if process == 'tt':
 
-        dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(x['y'], x['m_zh'], x['pt_z'], cHW, cHq3, lin=lin, quad=quad) for index, x in
-                    events.iterrows()]  # EFT
-        dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(x['y'], x['m_zh'], x['pt_z'], 0, 0, lin=lin, quad=quad) for index, x in
-                    events.iterrows()]  # SM
-    else:
-        raise NotImplementedError("No more than three features are currently supported")
+        c1, c2 = c
+        if n_kin == 1:
+            dsigma_0 = [tt_prod.dsigma_dmtt(x['m_tt'], c1, c2, lin, quad) for index, x in events.iterrows()]  # EFT
+            dsigma_1 = [tt_prod.dsigma_dmtt(x['m_tt'], 0, 0, lin, quad) for index, x in
+                        events.iterrows()]  # SM
+        else:
+
+            dsigma_0 = [tt_prod.dsigma_dmtt_dy(x['y'], x['m_tt'], c1, c2, lin, quad) for index, x in
+                        events.iterrows()]  # EFT
+            dsigma_1 = [tt_prod.dsigma_dmtt_dy(x['y'], x['m_tt'], 0, 0, lin, quad) for index, x in
+                        events.iterrows()]  # SM
 
     dsigma_0, dsigma_1 = np.array(dsigma_0), np.array(dsigma_1)
 
@@ -83,7 +95,7 @@ def likelihood_ratio_truth(events, c, n_kin, lin=False, quad=False):
     return ratio.flatten()
 
 
-def decision_function_truth(x, c, lin=False, quad=False):
+def decision_function_truth(x, c, n_kin, lin=False, quad=False):
     """
     Computes the analytic decission function f(x, c)
 
@@ -105,7 +117,7 @@ def decision_function_truth(x, c, lin=False, quad=False):
         Decission function f for the events ``x``
     """
 
-    ratio = likelihood_ratio_truth(x, c, lin, quad)
+    ratio = likelihood_ratio_truth(x, c, n_kin, lin, quad)
     f = 1 / (1 + ratio)
     return f
 
@@ -226,7 +238,7 @@ def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
     return fig
 
 
-def coeff_function_truth(x, c, n_kin, lin, quad, cross):
+def coeff_function_truth(x, c, n_kin, process, lin, quad, cross):
     """
     Computes the truth coefficient functions in the EFT expansion up to either linear or quadratic level
 
@@ -248,11 +260,10 @@ def coeff_function_truth(x, c, n_kin, lin, quad, cross):
     """
 
     c1, c2 = c
-    ratio_truth_lin = likelihood_ratio_truth(x, c, n_kin, lin=True)
+    ratio_truth_lin = likelihood_ratio_truth(x, c, n_kin, process, lin=True)
     # compute the mask once to select the physical region in phase space
     mask = ratio_truth_lin == 0
     coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / np.sum(c))
-
     if lin: # only one of the c elements can be nonzero
         return coeff_lin
     elif quad: # only one of the c elements can be nonzero
@@ -343,7 +354,7 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
     return fig
 
 
-def coeff_comp(path_to_models, network_size, c1, c2, n_kin, lin=False, quad=False, cross=False, path_sm_data=None):
+def coeff_comp(path_to_models, network_size, c1, c2, n_kin, process, lin=False, quad=False, cross=False, path_sm_data=None):
     """
     Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
@@ -371,31 +382,38 @@ def coeff_comp(path_to_models, network_size, c1, c2, n_kin, lin=False, quad=Fals
     """
     s = 14 ** 2
     epsilon = 1e-2
-    mvh_min, mvh_max = mz + mh + epsilon, 2
-    y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
+
+    if process == 'ZH':
+        mx_min, mx_max = mz + mh + epsilon, 2
+    elif process == 'tt':
+        mx_min, mx_max = 2 * mt + epsilon, 2
+
+    y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
 
     x_spacing, y_spacing = 1e-2, 0.01
-    mvh_span = np.arange(mvh_min, mvh_max, x_spacing)
+    mx_span = np.arange(mx_min, mx_max, x_spacing)
     y_span = np.arange(y_min, y_max, y_spacing)
 
-    mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
-    grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
+    mx_grid, y_grid = np.meshgrid(mx_span, y_span)
+    grid = np.c_[mx_grid.ravel(), y_grid.ravel()]
 
-    df = pd.DataFrame({'m_zh': grid[:, 0], 'y': grid[:, 1]})
+    if process == 'ZH':
+        df = pd.DataFrame({'m_zh': grid[:, 0], 'y': grid[:, 1]})
+    elif process == 'tt':
+        df = pd.DataFrame({'m_tt': grid[:, 0], 'y': grid[:, 1]})
 
     # truth
-
-    coeff_truth = coeff_function_truth(df, np.array([c1, c2]), n_kin, lin, quad, cross).reshape(mvh_grid.shape)
+    coeff_truth = coeff_function_truth(df, np.array([c1, c2]), n_kin, process, lin, quad, cross).reshape(mx_grid.shape)
 
     # models
 
-    n_lin, n_quad, n_cross = load_coefficients_nn(df, network_size, path_to_models, epoch=-1)
-
-    n_lin = n_lin[0,:, :].reshape((n_lin.shape[1], *mvh_grid.shape))
+    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, network_size, path_to_models, epoch=-1)
+    n_lin = n_lin[0,:, :].reshape((n_lin.shape[1], *mx_grid.shape))
     coeff_nn_median = np.percentile(n_lin, 50, axis=0)
     coeff_nn_high = np.percentile(n_lin, 84, axis=0)
     coeff_nn_low = np.percentile(n_lin, 16, axis=0)
     coeff_nn_unc = (coeff_nn_high - coeff_nn_low) / 2
+
 
     # visualise sm events
     if path_sm_data is not None:
@@ -413,13 +431,14 @@ def coeff_comp(path_to_models, network_size, c1, c2, n_kin, lin=False, quad=Fals
     median_ratio = coeff_truth / coeff_nn_median
     title= r'$\rm{Truth/NN\;(median)}$'
 
+
     fig1 = plot_heatmap(median_ratio,
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
                         ylabel=r'$\rm{Rapidity}$',
                         title=title,
-                        extent=[mvh_min, mvh_max, y_min, y_max],
+                        extent=[mx_min, mx_max, y_min, y_max],
                         cmap='seismic',
-                        bounds=[0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05])
+                        bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
 
     # pull
     pull = (coeff_truth - coeff_nn_median) / coeff_nn_unc
@@ -428,7 +447,7 @@ def coeff_comp(path_to_models, network_size, c1, c2, n_kin, lin=False, quad=Fals
                         xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
                         ylabel=r'$\rm{Rapidity}$',
                         title=r'$\rm{Pull}$',
-                        extent=[mvh_min, mvh_max, y_min, y_max],
+                        extent=[mx_min, mx_max, y_min, y_max],
                         cmap='seismic',
                         bounds=np.linspace(-1.5, 1.5, 10))
 
@@ -470,6 +489,8 @@ def load_models(architecture, model_dir, epoch=-1, lin=False, quad=False, cross=
 
         if epoch != -1:
             network_path = os.path.join(model_dir, 'trained_nn_{}.pt'.format(epoch))
+            if not os.path.isfile(network_path):
+                network_path = os.path.join(model_dir, 'trained_nn.pt')
         else:
             network_path = os.path.join(model_dir, 'trained_nn.pt')
 
@@ -488,12 +509,21 @@ def load_models(architecture, model_dir, epoch=-1, lin=False, quad=False, cross=
     losses = np.array(losses)
     models = np.array(models)
 
-    # only keep models within 5 sigma
-    sigma_loss = (np.nanpercentile(losses, 84) - np.nanpercentile(losses, 16)) / 2
-    los_med = np.nanpercentile(losses, 50)
+    kmeans = KMeans(n_clusters=2, random_state=0).fit(losses.reshape(-1,1))
+    cluster_labels = kmeans.labels_
+    cluster_nr_low_loss = np.argmin(kmeans.cluster_centers_)
 
-    model_idx = np.argwhere((los_med - 5 * sigma_loss < losses) & (losses < los_med + 5 * sigma_loss)).flatten()
+    model_idx = np.argwhere(cluster_labels == cluster_nr_low_loss).flatten()
     models_good = models[model_idx]
+
+
+
+    # only keep models within 5 sigma
+    # sigma_loss = (np.nanpercentile(losses, 75) - np.nanpercentile(losses, 25))
+    # los_med = np.nanpercentile(losses, 50)
+    #
+    # model_idx = np.argwhere((los_med - sigma_loss < losses) & (losses < los_med + sigma_loss)).flatten()
+    # models_good = models[model_idx]
 
     # retrieve the rep numbers of the good models
     models_good_idx = []
@@ -546,11 +576,10 @@ def load_coefficients_nn(df, architecture, path_to_models, epoch=-1):
                     path_to_model = os.path.join(path, 'mc_run_{}'.format(model_idx[i]))
                     with open(os.path.join(path_to_model, 'run_card.json')) as json_data:
                         features = json.load(json_data)['features']
-
                     scaler_path = os.path.join(path_to_model, 'scaler.gz')
                     scaler = joblib.load(scaler_path)
 
-                    features_scaled = scaler.transform(df[features].values)
+                    features_scaled = scaler.transform(df[features])
 
                     with torch.no_grad():
                         n_alphas.append(loaded_model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten())
@@ -586,7 +615,7 @@ def load_coefficients_nn(df, architecture, path_to_models, epoch=-1):
     return [n_lin, model_idx], n_quad, n_cross
 
 
-def point_by_point_comp(events, c, path_to_models, network_size, n_kin, lin=True, quad=False):
+def point_by_point_comp(events, c, path_to_models, network_size, n_kin, process, lin=True, quad=False):
     """
     Make a point by point comparison between the truth and the models
 
@@ -612,14 +641,14 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, lin=True
     `matplotlib.figure.Figure`
         Plot of the median only
     """
-    r_nn, model_idx = likelihood_ratio_nn(events, c, path_to_models, network_size, lin=lin, quad=quad)
+    r_nn, model_idx = likelihood_ratio_nn(events, c, path_to_models, network_size, lin=lin, quad=quad, epoch=-1)
     tau_nn = np.log(r_nn)
 
-    r_truth = likelihood_ratio_truth(events, c, lin=lin, quad=quad, n_kin=n_kin)
+    r_truth = likelihood_ratio_truth(events, c, process=process, lin=lin, quad=quad, n_kin=n_kin)
     tau_truth = np.log(r_truth)
 
     mzh = events['m_zh'].values
-    mask = np.argwhere(mzh > 0.8).flatten()
+    mask = np.argwhere(mzh > 1.0).flatten()
     mask_comp = np.setdiff1d(np.arange(len(events)), mask)
 
     # overview plot for all replicas
@@ -629,15 +658,18 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, lin=True
 
     fig1 = plt.figure(figsize=(ncols * 4, nrows * 4))
 
-    x = np.linspace(np.min(tau_truth) - 0.5, np.max(tau_truth) + 0.5, 100)
+    x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
     for i in range(mc_reps):
         ax = plt.subplot(nrows, ncols, i + 1)
-        plt.scatter(tau_truth[mask], tau_nn[i, mask], s=5, color='r')
-        plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=5, color='k')
+        plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
+        plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='r')
+        #plt.scatter(tau_truth, tau_nn[i,:], s=2)
         plt.plot(x, x, linestyle='dashed', color='grey')
         plt.text(0.1, 0.9, 'rep {}'.format(model_idx[i]), horizontalalignment='left',
                  verticalalignment='center',
                  transform=ax.transAxes)
+        # plt.xlim((0, 6))
+        # plt.ylim((0, 6))
         plt.xlim((np.min(x), np.max(x)))
         plt.ylim((np.min(x), np.max(x)))
 
@@ -646,14 +678,17 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, lin=True
     # median
     fig2, ax = plt.subplots(figsize=(8, 8))
     x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
-    plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=5, color='k')
+    #x= np.linspace(0, 6, 100)
+    plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='r')
+    plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
     plt.plot(x, x, linestyle='dashed', color='grey')
     plt.xlabel(r'$\tau(x, c)^{\rm{truth}}$')
     plt.ylabel(r'$\tau(x, c)^{\rm{NN}}$')
     plt.xlim((np.min(x), np.max(x)))
     plt.ylim((np.min(x), np.max(x)))
     plt.tight_layout()
-
+    # plt.xlim((0, 6))
+    # plt.ylim((0, 6))
     return fig1, fig2
 
 
@@ -693,6 +728,7 @@ def likelihood_ratio_nn(df, c, path_to_models, network_size, epoch=-1, lin=False
     """
     # nn models at the specified epoch
     [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, network_size, path_to_models, epoch=epoch)
+
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
     elif quad:
@@ -711,7 +747,7 @@ def likelihood_ratio_nn(df, c, path_to_models, network_size, epoch=-1, lin=False
     return r, model_idx
 
 
-def decision_function_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-1, lin=False, quad=False):
+def decision_function_nn(df, c, path_to_models, network_size, epoch=-1, lin=False, quad=False):
     """
     Computes the reconstructed decission function f(x, c)
 
@@ -737,7 +773,7 @@ def decision_function_nn(x, c, path_to_models, network_size, mc_reps=30, epoch=-
         Reconstructed decission function f for the events ``x``
     """
 
-    ratio = likelihood_ratio_nn(x, c, path_to_models, network_size, mc_reps, epoch, lin=lin, quad=quad)
+    ratio, model_idx = likelihood_ratio_nn(df, c, path_to_models, network_size, epoch, lin=lin, quad=quad)
     f = 1 / (1 + ratio)
     return f
 

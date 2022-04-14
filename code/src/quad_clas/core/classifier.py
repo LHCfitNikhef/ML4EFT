@@ -159,27 +159,29 @@ class PreProcessing():
     def feature_scaling(self, scaler_path):
 
         # add log features for pT
-        self.df_sm['log_pt_z'] = np.log(self.df_sm['pt_z'])
-        # self.df_sm['log_pt_b'] = np.log(self.df_sm['pt_b'])
+        # self.df_sm['log_pt_z'] = np.log(self.df_sm['pt_z'])
+        # # self.df_sm['log_pt_b'] = np.log(self.df_sm['pt_b'])
+        # #
+        # self.df_eft['log_pt_z'] = np.log(self.df_eft['pt_z'])
+        # # self.df_eft['log_pt_b'] = np.log(self.df_eft['pt_b'])
         #
-        self.df_eft['log_pt_z'] = np.log(self.df_eft['pt_z'])
-        # self.df_eft['log_pt_b'] = np.log(self.df_eft['pt_b'])
-
-        self.df_sm['log_m_zh'] = np.log(self.df_sm['m_zh'])
-        self.df_eft['log_m_zh'] = np.log(self.df_eft['m_zh'])
+        # self.df_sm['log_m_zh'] = np.log(self.df_sm['m_zh'])
+        # self.df_eft['log_m_zh'] = np.log(self.df_eft['m_zh'])
+        # self.df_sm['log_m_tt'] = np.log(self.df_sm['m_tt'])
+        # self.df_eft['log_m_tt'] = np.log(self.df_eft['m_tt'])
 
         df = pd.concat([self.df_sm, self.df_eft])
 
         # initialise sklearn scalers
-        #self.scaler = RobustScaler(quantile_range=(5, 95))
-        self.scaler = StandardScaler()
+        self.scaler = RobustScaler(quantile_range=(5, 95))
+        #self.scaler = StandardScaler()
         #self.scaler = QuantileTransformer(n_quantiles=1000, output_distribution='normal')
         # fit a robust transformer to the eft and sm features
-        self.scaler.fit(df[self.features].values)
+        self.scaler.fit(df[self.features])
 
         # rescale the sm and eft data
-        features_sm_scaled = self.scaler.transform(self.df_sm[self.features].values)
-        features_eft_scaled = self.scaler.transform(self.df_eft[self.features].values)
+        features_sm_scaled = self.scaler.transform(self.df_sm[self.features])
+        features_eft_scaled = self.scaler.transform(self.df_eft[self.features])
 
         # convert transformed features to dataframe
         df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=self.features)
@@ -524,6 +526,7 @@ class Fitter:
                 stopping_point = epoch - patience
                 logging.info("Stopping point reached! Overfit counter = {}".format(overfit_counter))
                 shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
+                logging.info("Backwards stopping done")
                 break
 
             loss_val_old = loss_val

@@ -43,6 +43,11 @@ class Optimize:
         with open(os.path.join(self.config['results_path'], 'input_card.json'), 'w') as json_data:
             json.dump(self.config, json_data)
 
+        if "HOcorrections" in self.config.keys():
+            self.HOcorrections = self.config["HOcorrections"]
+
+        if "process" in self.config.keys():
+            self.process = self.config["process"]
         if "mode" in self.config.keys():
             self.mode = self.config["mode"]
         else:
@@ -120,9 +125,9 @@ class Optimize:
         event_path = self.config['theory_pred_path']
         theory_pred = TheoryPred(coeff=self.parameters,
                                  event_path=event_path,
-                                 nreps=30,
                                  bins=self.bins,
                                  kinematic=self.kinematic)
+
 
         # load dataset (pseudo data)
         sm_data_path = self.config['observed_data_path']
@@ -136,7 +141,7 @@ class Optimize:
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         self.observed_data = sm_data.sample(int(n_tot_sm), random_state=1)
-        self.observed_data['log_m_zh'] = np.log(self.observed_data['m_zh'])
+        #self.observed_data['log_m_zh'] = np.log(self.observed_data['m_zh'])
 
         # check
         # self.observed_data = self.observed_data[(self.observed_data['m_zh'] < 0.8) & (self.observed_data['m_zh'] > 0.5)]
@@ -169,7 +174,7 @@ class Optimize:
                 self.n_lin_chq3 = n_lin[1][self.rep, :]
 
         if self.mode == "truth":
-            self.dsigma_dx_sm, self.dsigma_dx_eft = theory_pred.compute_diff_coefficients(self.observed_data)
+            self.dsigma_dx_sm, self.dsigma_dx_eft = theory_pred.compute_diff_coefficients(self.observed_data, self.process)
         elif self.mode == "binned":
             self.n_i, _ = np.histogram(self.observed_data[self.kinematic].values, self.bins)
 
@@ -215,9 +220,15 @@ class Optimize:
 
         theory_pred_total = self.theory_pred.sum(axis=1)
 
-        sigma = theory_pred_total['sm'] + cube[0] * theory_pred_total['chw'] + cube[1] * theory_pred_total['chq3']
+        quad_idx = [i for i, (index, _) in enumerate(theory_pred_total.items()) if '*' in index]
 
-        dsigma_dx = self.dsigma_dx_sm + self.dsigma_dx_eft['lin'].T @ cube
+        if self.HOcorrections:
+            sigma = theory_pred_total['sm'] + theory_pred_total[self.parameters] @ cube + theory_pred_total.iloc[quad_idx] @ (cube ** 2)
+            dsigma_dx = self.dsigma_dx_sm + self.dsigma_dx_eft['lin'].T @ cube + self.dsigma_dx_eft['quad'].T @ (
+                        cube ** 2)
+        else:
+            sigma = theory_pred_total['sm'] + theory_pred_total[self.parameters] @ cube
+            dsigma_dx = self.dsigma_dx_sm + self.dsigma_dx_eft['lin'].T @ cube
 
         nu = sigma * self.lumi
 
@@ -226,12 +237,14 @@ class Optimize:
         return log_likelihood
 
     def log_like_binned(self, cube):
-        
-        sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.iloc[1:, :].T @ cube
+
+        quad_idx = [i for i, (index, _) in enumerate(self.theory_pred.iterrows()) if '*' in index]
+
+        sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.loc[self.parameters].T @ cube + self.theory_pred.iloc[quad_idx].T @ cube
+
         nu_i = sigma_i * self.lumi
         log_l_i = self.n_i * np.log(nu_i) - nu_i
 
-        #log_l_i[np.isnan(log_l_i)] = 0
         return log_l_i.sum()
 
 
