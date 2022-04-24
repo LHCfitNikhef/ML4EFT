@@ -62,18 +62,47 @@ class MLP(nn.Module):
         out = self.layers(x)
         return out
 
+
+class CustomActivationFunction(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+        self.name = self.__class__.__name__
+        self.config = {"name": self.name}
+
+
+class ConstraintActivation(CustomActivationFunction):
+
+    def __init__(self, c):
+        super().__init__()
+        self.c = c
+
+    def forward(self, x):
+        if self.c > 0:
+            return torch.relu(x) - 1 / self.c
+        else:
+            return - torch.relu(x) - 1 / self.c
+
+
 class PredictorLinear(nn.Module):
     """
     Returns the function f(x,c) from the paper (Wulzer et al.) in the linear case
     """
 
-    def __init__(self, architecture):
+    def __init__(self, architecture, c):
         super().__init__()
+        self.c = c
         self.n_alpha = MLP(architecture)
+        self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
 
-    def forward(self, x, c):
+    def forward(self, x):
+
+        # add final activation function to enforce positive r
+
         n_alpha_out = self.n_alpha(x)
-        return 1 / (1 + (1 + c * n_alpha_out))
+
+        return 1 / (1 + (1 + self.c * n_alpha_out))
+
 
 class PredictorQuadratic(nn.Module):
     """
@@ -155,6 +184,7 @@ class PreProcessing():
         df_eft = pd.read_pickle(self.path['eft'], compression="infer")
         self.xsec_eft = df_eft.iloc[0, 0]
         self.df_eft = df_eft.iloc[1:, :].sample(self.n_dat)
+
 
     def feature_scaling(self, scaler_path):
 
@@ -338,8 +368,7 @@ class Fitter:
             self.model = PredictorCross(self.network_size)
         else:
             self.path_dict['eft_data_path'] = 'lin/{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorLinear(self.network_size)
-
+            self.model = PredictorLinear(self.network_size, self.eft_value)
 
         # create log file with timestamp
         t = time.localtime()
@@ -460,12 +489,13 @@ class Fitter:
             # of train_loader as separate arguments to the zip function, e.g f(a[0], a[1]) = f(*a).
             # Here we have zip(DataLoader_1, DataLoader_2, ..) which enables looping over our mini-batches.
             for j, minibatch in enumerate(zip(*train_loader)):
-
                 train_loss = torch.zeros(1)
                 # loop over all the datasets within the minibatch and compute their contribution to the loss
                 for i, [event, weight, label] in enumerate(minibatch): # i=0: eft, i=1: sm
                     if isinstance(self.model, PredictorLinear):
-                        output = self.model(event.float(), self.c1 + self.c2)
+                        output = self.model(event.float())
+                        # import pdb;
+                        # pdb.set_trace()
                     if isinstance(self.model, PredictorQuadratic):
                         output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1, self.path_dict['mc_path'])
                     if isinstance(self.model, PredictorCross):
@@ -486,7 +516,7 @@ class Fitter:
                     val_loss = torch.zeros(1)
                     for i, [event, weight, label] in enumerate(minibatch):
                         if isinstance(self.model, PredictorLinear):
-                            output = self.model(event.float(), self.c1 + self.c2)
+                            output = self.model(event.float())
                         if isinstance(self.model, PredictorQuadratic):
                             output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1, self.path_dict['mc_path'])
                         if isinstance(self.model, PredictorCross):
@@ -501,8 +531,8 @@ class Fitter:
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
 
-            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val)
+            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}. Sign = {f_sign}". \
+                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, f_sign=np.sign(output[0]))
             logging.info(training_status)
 
             np.savetxt(path + 'loss.out', loss_list_train)
