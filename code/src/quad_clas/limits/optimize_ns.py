@@ -123,11 +123,11 @@ class Optimize:
             self.kinematic = None
         
         event_path = self.config['theory_pred_path']
-        theory_pred = TheoryPred(coeff=self.parameters,
+        theory_pred = TheoryPred(coeff=self.parameters.keys(),
                                  event_path=event_path,
+                                 HOcorrections = self.HOcorrections,
                                  bins=self.bins,
                                  kinematic=self.kinematic)
-
 
         # load dataset (pseudo data)
         sm_data_path = self.config['observed_data_path']
@@ -136,25 +136,25 @@ class Optimize:
         # construct observed dataset
         np.random.seed(0)
         theory_pred_total = theory_pred.df.sum(axis=1)
-        xsec_sm = theory_pred_total['sm']
+        xsec_sm = theory_pred_total['sm'] # TODO: take xsec from df directly?
         nu_tot_sm = xsec_sm * config['lumi']
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         self.observed_data = sm_data.sample(int(n_tot_sm), random_state=1)
+
         #self.observed_data['log_m_zh'] = np.log(self.observed_data['m_zh'])
 
         # check
-        # self.observed_data = self.observed_data[(self.observed_data['m_zh'] < 0.8) & (self.observed_data['m_zh'] > 0.5)]
-        #self.observed_data = self.observed_data[self.observed_data['m_zh'] < 0.8]
+        #self.observed_data = self.observed_data[(self.observed_data['m_zh'] < 0.8) & (self.observed_data['m_zh'] > 0.5)]
+        #self.observed_data = self.observed_data[self.observed_data['m_zh'] < 1.0]
 
         # observed counts
         if self.mode == "nn":
-            [n_lin, model_idx], n_quad, n_cross = analyse.load_coefficients_nn(self.observed_data, self.architecture, self.path_to_models)
 
+            [n_lin, model_idx], n_quad, n_cross = analyse.load_coefficients_nn(self.observed_data, self.parameters, self.architecture, self.path_to_models)
             rep_tot = np.array([n_lin[i].shape[0] for i in range(len(n_lin))])
             rep_ava = rep_tot.min() # max available replicas
-            #self.n_lin_chw = n_lin[0, 15, :]
-            #self.n_lin_chq3 = n_lin[1, -7, :]
+
             if self.rep is None:
                 self.n_lin_chw = np.median(n_lin[0], axis=0)
                 self.n_lin_chq3 = np.median(n_lin[1], axis=0)
@@ -204,14 +204,13 @@ class Optimize:
 
         theory_pred_total = self.theory_pred.sum(axis=1)
 
-        sigma = theory_pred_total['sm'] + cube[0] * theory_pred_total['chw'] + cube[1] * theory_pred_total['chq3']
+        sigma = theory_pred_total['sm'] + theory_pred_total[self.parameters] @ cube
 
         nu = sigma * self.lumi
 
         r_nn = 1 + cube[0] * self.n_lin_chw + cube[1] * self.n_lin_chq3
 
         log_r_nn = np.log(r_nn)
-
         log_likelihood = -nu + np.sum(log_r_nn)
 
         return log_likelihood
@@ -240,7 +239,10 @@ class Optimize:
 
         quad_idx = [i for i, (index, _) in enumerate(self.theory_pred.iterrows()) if '*' in index]
 
-        sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.loc[self.parameters].T @ cube + self.theory_pred.iloc[quad_idx].T @ cube
+        if self.HOcorrections:
+            sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.loc[self.parameters].T @ cube + self.theory_pred.iloc[quad_idx].T @ (cube ** 2)
+        else:
+            sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.loc[self.parameters].T @ cube
 
         nu_i = sigma_i * self.lumi
         log_l_i = self.n_i * np.log(nu_i) - nu_i
@@ -309,7 +311,7 @@ class Optimize:
         """
 
         vals = {}
-        for i, (c, samples) in enumerate(zip(self.parameters, result['samples'].T)):
+        for i, (c, samples) in enumerate(zip(self.parameters.keys(), result['samples'].T)):
             vals[c] = samples.tolist()
         with open(os.path.join(self.config['results_path'], 'posterior.json'), "w") as f:
             json.dump(vals, f)
