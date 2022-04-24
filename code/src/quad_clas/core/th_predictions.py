@@ -21,11 +21,12 @@ class TheoryPred:
         Number of replicas to use, 50 by default. The SMEFT predictions are averages over the replicas.
     """
 
-    def __init__(self, coeff, event_path, bins=None, kinematic=None):
+    def __init__(self, coeff, event_path, HOcorrections, bins=None, kinematic=None):
 
         self.coeff = coeff
         if bins is None:
-            self.bins = [0, 4]
+            #self.bins = [0, 4]
+            self.bins = [0, 4000]
         else:
             self.bins = bins
 
@@ -33,6 +34,8 @@ class TheoryPred:
 
         self.event_path = event_path
         self.df = None
+        self.HOcorrections = HOcorrections
+
 
         self.predictions()
 
@@ -52,7 +55,7 @@ class TheoryPred:
         """
 
         #TODO: regular expression does not select wilson coefficients that end with a number
-
+        #return 10
         filename = os.path.join(self.event_path, 'lin', wc, 'param_card.dat')
         match_number = re.compile('[-+]?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *[-+]?\ *[0-9]+)?')
 
@@ -68,17 +71,6 @@ class TheoryPred:
 
         return param
 
-        #return 10
-        #
-        # with open(filename, 'r') as f:
-        #     data = f.readlines()
-        #     f.close()
-        # for line, next_line in zip(data, data[1:] + [data[0]]):
-        #     if 'Block smeft' in line:
-        #         final_list = [float(x) for x in re.findall(match_number, next_line)]
-        #         param = float(final_list[-1])
-        #         break
-        # return param
 
     def predictions(self):
         nbins = np.size(self.bins) - 1
@@ -102,7 +94,6 @@ class TheoryPred:
             events = df.iloc[1:, :]
             n_events = len(events)
             n, _ = np.histogram(events[self.kinematic], bins=self.bins)
-
             SMpredictions.append(n * sigma / n_events)
 
         predictions['sm'] = np.average(SMpredictions, axis=0)
@@ -136,36 +127,36 @@ class TheoryPred:
 
             predictions[coeff] = np.average(EFTpredictions, axis=0)
 
-        predictions['cuu'] = 0
+        #predictions['cuu'] = 0
 
         # quadratic predictions
+        if self.HOcorrections:
+            for coeff in self.coeff:
+                base_dir = os.path.join(self.event_path, 'quad', coeff)
 
-        for coeff in self.coeff:
-            base_dir = os.path.join(self.event_path, 'quad', coeff)
+                EFTpredictions = []
+                for df_path_rep in os.listdir(base_dir):
+                    if not df_path_rep.startswith('events'):
+                        continue
 
-            EFTpredictions = []
-            for df_path_rep in os.listdir(base_dir):
-                if not df_path_rep.startswith('events'):
-                    continue
+                    df = pd.read_pickle(os.path.join(base_dir, df_path_rep))
 
-                df = pd.read_pickle(os.path.join(base_dir, df_path_rep))
+                    sigma = df.iloc[0,0]
+                    events = df.iloc[1:, :]
 
-                sigma = df.iloc[0,0]
-                events = df.iloc[1:, :]
+                    wc = self.read_param_value(coeff)
 
-                wc = self.read_param_value(coeff)
+                    n_events = len(events)
 
-                n_events = len(events)
+                    n, _ = np.histogram(events[self.kinematic], bins=self.bins)
 
-                n, _ = np.histogram(events[self.kinematic], bins=self.bins)
+                    sigma_EFT = n * sigma / n_events
 
-                sigma_EFT = n * sigma / n_events
+                    sigma_quad = (1. / wc ** 2) * (sigma_EFT - predictions['sm'] - wc * predictions[coeff])
 
-                sigma_quad = (1. / wc ** 2) * (sigma_EFT - predictions['sm'] - wc * predictions[coeff])
+                    EFTpredictions.append(sigma_quad)
 
-                EFTpredictions.append(sigma_quad)
-
-            predictions[coeff + '*' + coeff] = np.average(EFTpredictions, axis=0)
+                predictions[coeff + '*' + coeff] = np.average(EFTpredictions, axis=0)
 
 
         bin_index = ['Bin ' + str(s + 1) for s in np.arange(nbins)]
@@ -180,7 +171,7 @@ class TheoryPred:
         if process == 'ZH':
 
             dsigma_dx_sm = np.array(
-                [vh_prod.dsigma_dmvh_dy_dpt(row['y'], row['m_zh'], row['pt_z'], 0, 0, lin=True, quad=False) for index, row in
+                [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 0, lin=True, quad=False) for index, row in
                  observed_data.iterrows()])
 
             # dsigma_dx_sm = np.array(
@@ -189,7 +180,7 @@ class TheoryPred:
             #      observed_data.iterrows()])
 
             dsigma_dx_c1 = np.array(
-                [vh_prod.dsigma_dmvh_dy_dpt(row['y'], row['m_zh'], row['pt_z'], 10, 0, lin=True, quad=False) for index, row in
+                [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 10, 0, lin=True, quad=False) for index, row in
                  observed_data.iterrows()])
 
             dsigma_dx_c1_lin_coef = (dsigma_dx_c1 - dsigma_dx_sm) / 10
@@ -200,7 +191,7 @@ class TheoryPred:
             #      observed_data.iterrows()])
 
             dsigma_dx_c2 = np.array(
-                [vh_prod.dsigma_dmvh_dy_dpt(row['y'], row['m_zh'], row['pt_z'], 0, 10, lin=True, quad=False) for index, row in
+                [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 10, lin=True, quad=False) for index, row in
                  observed_data.iterrows()])
 
             # dsigma_dx_c2 = np.array(
