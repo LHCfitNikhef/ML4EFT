@@ -444,6 +444,9 @@ class Fitter:
         # define the optimizer
         optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
 
+        decay_rate = 0.96
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer)
+
         # we use PyTorche's dataloader object to allow for mini-batches. After each epoch, the minibatches reshuffle.
         # we create a dataloader object for each eft point + sm and put them all in one big list called train_data_loader
         # or val_data_loader
@@ -455,9 +458,9 @@ class Fitter:
             dataset_val in data_val]
 
         # call the training loop
-        self.training_loop(optimizer=optimizer, train_loader=train_data_loader, val_loader=val_data_loader)
+        self.training_loop(optimizer=optimizer, train_loader=train_data_loader, val_loader=val_data_loader, scheduler=scheduler)
 
-    def training_loop(self, optimizer, train_loader, val_loader):
+    def training_loop(self, optimizer, train_loader, val_loader, scheduler):
 
         path = self.path_dict['mc_path']
 
@@ -510,6 +513,8 @@ class Fitter:
                 optimizer.step()
 
                 loss_train += train_loss.item()
+
+            scheduler.step(train_loss)
 
             with torch.no_grad():
                 for minibatch in zip(*val_loader):
