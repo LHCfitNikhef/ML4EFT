@@ -1,3 +1,0 @@
-2022-03-03 13:58:55,079:INFO:All directories created, ready to load the data
-2022-03-03 13:58:55,115:INFO:Dataset loaded from /data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2/lin/cHW/events_1.pkl.gz
-2022-03-03 13:58:55,148:INFO:Dataset loaded from /data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2/sm/events_1.pkl.gz

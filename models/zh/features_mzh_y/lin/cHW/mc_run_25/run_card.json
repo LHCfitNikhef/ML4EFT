@@ -1,1 +1,0 @@
-{"name": "final_lin_cHW", "epochs": 400, "lr": 0.001, "n_batches": 5, "input_size": 2, "output_size": 1, "hidden_sizes": [30, 30, 30, 30, 30], "n_dat": 100000, "quadratic": 0, "cross_term": 0, "animation": 0, "coeff": [{"op": "cHW", "value": 10.0}, {"op": "cHq3", "value": 0}], "event_data": "/data/theorie/jthoeve/event_generation/events_high_stats", "training_report": 1}
