@@ -299,6 +299,10 @@ sphinx/_build/
 /models/**/*.pdf
 /training_data/events_high_stats/
 /training_data/pt_sm/
+/paper/ML4EFT_paper.pdf
+/madgraph_debug/
+/output/contours/
+/models/
 
 #pytorch files
 *.pt
@@ -321,18 +325,3 @@ sphinx/_build/
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-/models/quad_only/
-/models/test/
-/paper/ML4EFT_paper.pdf
-/madgraph_debug/
