@@ -95,7 +95,7 @@ def likelihood_ratio_truth(events, c, n_kin, process, lin=False, quad=False):
     return ratio.flatten()
 
 
-def decision_function_truth(x, c, n_kin, lin=False, quad=False):
+def decision_function_truth(x, c, n_kin, process, lin=False, quad=False):
     """
     Computes the analytic decission function f(x, c)
 
@@ -117,7 +117,7 @@ def decision_function_truth(x, c, n_kin, lin=False, quad=False):
         Decission function f for the events ``x``
     """
 
-    ratio = likelihood_ratio_truth(x, c, n_kin, lin, quad)
+    ratio = likelihood_ratio_truth(x, c,  n_kin, process, lin, quad)
     f = 1 / (1 + ratio)
     return f
 
@@ -354,7 +354,7 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
     return fig
 
 
-def coeff_comp(path_to_models, network_size, c1, c2, n_kin, process, lin=False, quad=False, cross=False, path_sm_data=None):
+def coeff_comp(path_to_models, network_size, c1, c2, c_train, n_kin, process, lin=False, quad=False, cross=False, path_sm_data=None):
     """
     Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
@@ -407,7 +407,7 @@ def coeff_comp(path_to_models, network_size, c1, c2, n_kin, process, lin=False, 
 
     # models
 
-    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, network_size, path_to_models, epoch=-1)
+    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, c_train, network_size, path_to_models, epoch=-1)
     n_lin = n_lin[0,:, :].reshape((n_lin.shape[1], *mx_grid.shape))
     coeff_nn_median = np.percentile(n_lin, 50, axis=0)
     coeff_nn_high = np.percentile(n_lin, 84, axis=0)
@@ -569,6 +569,7 @@ def load_coefficients_nn(df, c_train, architecture, path_to_models, epoch=-1):
     n_lin = []
     n_quad = []
     n_cross = []
+
     for order, paths in path_to_models.items():
         if order == 'lin':
             for coeff, path in paths.items():
@@ -693,7 +694,7 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, process,
     return fig1, fig2
 
 
-def likelihood_ratio_nn(df, c, c_train, path_to_models, network_size, epoch=-1, lin=False, quad=False):
+def likelihood_ratio_nn(df, c, train_parameters, path_to_models, network_size, epoch=-1, lin=False, quad=False):
     """
     Computes the likelihood ratio using the nn models
 
@@ -728,7 +729,7 @@ def likelihood_ratio_nn(df, c, c_train, path_to_models, network_size, epoch=-1, 
     numpy.ndarray, shape=(mc_reps, M)
     """
     # nn models at the specified epoch
-    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, c_train, network_size, path_to_models, epoch=epoch)
+    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, train_parameters, network_size, path_to_models, epoch=epoch)
 
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin)
@@ -748,7 +749,7 @@ def likelihood_ratio_nn(df, c, c_train, path_to_models, network_size, epoch=-1, 
     return r, model_idx
 
 
-def decision_function_nn(df, c, path_to_models, network_size, epoch=-1, lin=False, quad=False):
+def decision_function_nn(df, c, train_parameters, path_to_models, network_size, epoch=-1, lin=False, quad=False):
     """
     Computes the reconstructed decission function f(x, c)
 
@@ -773,8 +774,7 @@ def decision_function_nn(df, c, path_to_models, network_size, epoch=-1, lin=Fals
     f: numpy.ndarray, shape=(M,)
         Reconstructed decission function f for the events ``x``
     """
-
-    ratio, model_idx = likelihood_ratio_nn(df, c, path_to_models, network_size, epoch, lin=lin, quad=quad)
+    ratio, model_idx = likelihood_ratio_nn(df, c, train_parameters, path_to_models, network_size, epoch, lin=lin, quad=quad)
     f = 1 / (1 + ratio)
     return f
 

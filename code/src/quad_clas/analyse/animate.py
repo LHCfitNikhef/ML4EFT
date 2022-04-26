@@ -16,7 +16,7 @@ mt = constants.mt
 
 class Animate:
 
-    def __init__(self, architecture, c, path_to_models, save_path, frames, lin=False, quad=False):
+    def __init__(self, architecture, c, c_train, path_to_models, save_path, frames, lin=False, quad=False):
 
         self.architecture = architecture
         self.c = c
@@ -25,6 +25,7 @@ class Animate:
         self.quad = quad
         self.save_path = save_path
         self.frames = frames
+        self.c_train = c_train
         #self.make_animation()
 
     def make_animation(self):
@@ -33,12 +34,11 @@ class Animate:
         # analytical decision function
         #x = np.linspace(mh + mz + 1e-2, 2.5, 100)
         x = np.linspace(2 * mt + 1e-2, 3.0, 200)
-        # x = np.stack((x, np.zeros(len(x))), axis=-1)
-        x = np.stack((x, 2* np.ones(len(x))), axis=-1)
+        x = np.stack((x, np.zeros(len(x))), axis=-1)
+        #x = np.stack((x, 2* np.ones(len(x))), axis=-1)
 
         df = pd.DataFrame(x, columns=['m_tt', 'y'])
-
-        f_ana_lin = analyse.decision_function_truth(df, self.c, n_kin=1, lin=True)
+        f_ana_lin = analyse.decision_function_truth(df, self.c, n_kin=2, process='tt', quad=True)
         #f_ana_quad = analyse.decision_function_truth(df, self.c, quad=True)
 
         fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
@@ -47,7 +47,7 @@ class Animate:
 
         #f_preds_lin_init = analyse.likelihood_ratio_nn(x, np.array([2]), path_to_models, architecture, epoch=1, lin=True)
 
-        f_preds_lin_init = analyse.decision_function_nn(df, self.c,
+        f_preds_lin_init = analyse.decision_function_nn(df, self.c, self.c_train,
                                                         self.path_to_models,
                                                         self.architecture,
                                                         epoch=1,
@@ -97,7 +97,7 @@ class Animate:
         # animation function.  This is called sequentially
         def animate(i):
             print(i)
-            f_preds_nn = analyse.decision_function_nn(df, self.c, self.path_to_models, self.architecture, epoch=i + 1,
+            f_preds_nn = analyse.decision_function_nn(df, self.c, self.c_train, self.path_to_models, self.architecture, epoch=i + 1,
                                                        lin=self.lin, quad=self.quad)
             for rep_nr, line in enumerate(lines):
                 line.set_data(x[:, 0], f_preds_nn[rep_nr, :])

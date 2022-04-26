@@ -12,23 +12,35 @@ import quad_clas.analyse.analyse as analyse
 #
 #
 # median and pull
-path_to_models = {'lin': ['/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_mzh_y_standard_scaler/model_chw_lin_no_batch',
-                          '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_mzh_y_standard_scaler/model_chw_lin_no_batch']}
+# path_to_models = {'lin': ['/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_mzh_y_standard_scaler/model_chw_lin_no_batch',
+#                           '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_mzh_y_standard_scaler/model_chw_lin_no_batch']}
+
+# path_to_models = {'lin': ['/data/theorie/jthoeve/ML4EFT_higgs/models/2022/test_zh/model_chq3_lin_robust',
+#                          '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/test_zh/model_chq3_lin_robust']}
+
+path_to_models = {'lin': {
+    'cuu_quad': '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_llbb/ltd/model_cuu_quad_v3',
+    'cuu_quad': '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_llbb/ltd/model_cuu_quad_v3'}}
 
 fig_median, fig_pull = analyse.coeff_comp(
     path_to_models=path_to_models,
-    network_size=[2, 30, 30, 30, 30, 30, 1],
-    c1=10,
-    c2=0,
+    network_size=[2, 100, 100, 100, 1],
+    c1=0,
+    c2=10,
+    c_train={
+        "cuu_quad": 100.0,
+        "cuu_quad": 100.0
+    },
     n_kin=2,
+    process='tt',
     lin=True,
     quad=False,
     cross=False,
     path_sm_data=None)
 
 #fig.savefig('/Users/jaco/Documents/ML4EFT/plots/2022/talk_juan/chw_perf.pdf')
-fig_median.savefig('/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/05_04/chw_perf_median_stand_no_batch.pdf')
-fig_pull.savefig('/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/05_04/chw_perf_pull_stand_no_batch.pdf')
+fig_median.savefig('/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/26_04/cuu_quad_perf_median_robust.pdf')
+fig_pull.savefig('/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/26_04/cuu_quad_perf_pull_robust.pdf')
 #%%
 # from matplotlib import rc
 # rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
