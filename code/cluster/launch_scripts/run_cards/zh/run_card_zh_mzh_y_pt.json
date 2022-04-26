@@ -1,5 +1,5 @@
 {
-  "name": "lin_cHq3",
+  "name": "chq3_lin",
   "epochs": 1000,
   "lr": 0.001,
   "n_batches": 5,
@@ -18,18 +18,20 @@
   "animation": 0,
   "coeff": [
     {
-      "op": "cHW",
-      "value": 0.0
+      "op": "chq3",
+      "value": 10.0
     },
     {
-      "op": "cHq3",
-      "value": 10.0
+      "op": "0",
+      "value": 0.0
     }
   ],
   "event_data": "/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2",
+  "training_report": 0,
   "features": [
-    "pt_z",
+    "m_zh",
     "y",
-    "m_zh"],
-  "training_report": 0
+    "pt_z"
+  ],
+  "lag_mult": 100
 }

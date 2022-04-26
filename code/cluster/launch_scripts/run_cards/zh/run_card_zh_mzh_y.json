@@ -1,9 +1,9 @@
 {
-  "name": "lin_cHq3",
-  "epochs": 1000,
+  "name": "chq3_lin_robust",
+  "epochs": 600,
   "lr": 0.001,
   "n_batches": 5,
-  "input_size": 3,
+  "input_size": 2,
   "output_size": 1,
   "hidden_sizes": [
     30,
@@ -18,18 +18,19 @@
   "animation": 0,
   "coeff": [
     {
-      "op": "cHW",
-      "value": 0.0
+      "op": "chq3",
+      "value": 10.0
     },
     {
-      "op": "cHq3",
-      "value": 10.0
+      "op": "chq3",
+      "value": 0.0
     }
   ],
   "event_data": "/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2",
+  "training_report": 0,
   "features": [
-    "pt_z",
-    "y",
-    "m_zh"],
-  "training_report": 0
+    "m_zh",
+    "y"
+  ],
+  "lag_mult": 100
 }

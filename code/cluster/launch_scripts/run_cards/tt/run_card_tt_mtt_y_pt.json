@@ -1,0 +1,35 @@
+{
+  "name": "cugre_lin",
+  "epochs": 300,
+  "lr": 0.001,
+  "n_batches": 5,
+  "input_size": 1,
+  "output_size": 1,
+  "hidden_sizes": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "n_dat": 100000,
+  "quadratic": 0,
+  "cross_term": 0,
+  "animation": 0,
+  "coeff": [
+    {
+      "op": "cugre",
+      "value": -10
+    },
+    {
+      "op": "0",
+      "value": 0.0
+    }
+  ],
+  "event_data": "/data/theorie/jthoeve/training_data/tt/U35",
+  "training_report": 0,
+  "features": [
+    "m_tt"
+  ],
+  "lag_mult": 100
+}

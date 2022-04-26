@@ -1,9 +1,9 @@
 {
-  "name": "chq3_lin",
-  "epochs": 150,
+  "name": "cbhre_lin",
+  "epochs": 400,
   "lr": 0.001,
   "n_batches": 5,
-  "input_size": 2,
+  "input_size": 1,
   "output_size": 1,
   "hidden_sizes": [
     30,
@@ -18,19 +18,18 @@
   "animation": 0,
   "coeff": [
     {
-      "op": "chw",
-      "value": 0.0
+      "op": "cbhre",
+      "value": -20.0
     },
     {
       "op": "chq3",
-      "value": 10.0
+      "value": 0.0
     }
   ],
-  "event_data": "/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2",
+  "event_data": "/data/theorie/jthoeve/training_data/zh_llbb",
+  "training_report": 0,
   "features": [
-    "log_m_zh",
-    "y"],
-  "lag_mult": 100,
-  "training_report": 0
+    "log_pt_z"
+  ],
+  "lag_mult": 100
 }
-

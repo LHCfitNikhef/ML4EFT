@@ -1,9 +1,9 @@
 {
-  "name": "example_lin",
-  "epochs": 400,
+  "name": "chw",
+  "epochs": 4000,
   "lr": 0.001,
   "n_batches": 5,
-  "input_size": 3,
+  "input_size": 8,
   "output_size": 1,
   "hidden_sizes": [
     30,
@@ -18,15 +18,15 @@
   "animation": 0,
   "coeff": [
     {
-      "op": "chdd",
-      "value": 50.0
+      "op": "chwb",
+      "value": 20.0
     },
     {
       "op": "cHq3",
       "value": 0
     }
   ],
-  "event_data": "/Users/jaco/Documents/ML4EFT/training_data/test",
+  "event_data": "/data/theorie/jthoeve/training_data",
   "features": [
     "pt_z",
     "pt_bbar",
