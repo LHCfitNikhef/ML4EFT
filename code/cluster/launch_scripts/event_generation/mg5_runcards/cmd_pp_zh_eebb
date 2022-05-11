@@ -1,4 +1,0 @@
-import model SMEFTsim_topU3l_MwScheme_UFO
-define p = p b b~
-generate p p > z > z h, z > e+ e-, h > b b~  NP<=1
-output pp_zh_eebb
