@@ -3,11 +3,12 @@
 HOMEDIR=/data/theorie/jthoeve
 PY=/data/theorie/jthoeve/miniconda3/envs/ml4eft/bin/python
 Base=$HOMEDIR/MGjobs
+NDATASETS=50
 mkdir -p $Base
 
 #cbhre=(0 10)
 
-for (( i=1; i<=1; i++ ));
+for (( i=1; i<=$NDATASETS; i++ ));
 do
 
 # $1 is given as input by the usr: the output name dir

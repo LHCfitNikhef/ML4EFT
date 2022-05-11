@@ -4,11 +4,13 @@ HOMEDIR=/data/theorie/jthoeve
 PY=/data/theorie/jthoeve/miniconda3/envs/mg5/bin/python
 #MGbase=$PWD/MG5_aMC_v3_3_2
 Base=$HOMEDIR/MGjobs
+NDATASETS=50
+
 mkdir -p $Base
 
 #chdd=(0 10)
 
-for (( i=1; i<=50; i++ ));
+for (( i=1; i<=$NDATASETS; i++ ));
 do
 
 # $1 is given as input by the usr: the output name dir

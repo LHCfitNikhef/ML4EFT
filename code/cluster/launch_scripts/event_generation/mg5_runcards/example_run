@@ -1,0 +1,5 @@
+set auto_convert_model T
+import model SMEFTsim_topU3l_MwScheme_UFO
+define p = p b b~
+generate p p > t t~ /a z h h1 w+ w- w1+ w1- z1 t1
+output pp_tt_sm
