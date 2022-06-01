@@ -69,7 +69,7 @@ class crossSectionSMEFT:
         kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * yt * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
         sm = (8 * np.pi * asQCD ** 2 * (2 * mt ** 2 + hats) * sqrt) / (27 * hats ** 2)
         if lin:
-            return sm + cuGRe * kappa_1
+            return sm + cuGRe * kappa_1# + cuu * kappa_22
         if quad:
             return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
         #return sm + cuu * kappa_22
@@ -131,7 +131,6 @@ def dsigma_dmtt_dy(y, mtt, cuGRe, cuu, lin, quad):
     Compute the doubly differential cross section in mtt and y at any order NP
     """
     if mtt == 2 * mt: return 0  # if at threshold return zero
-
     if np.abs(y) < np.log(np.sqrt(s) / mtt):  # check whether x = {mtt, y} falls inside the physically allowed region
         x1 = mtt / np.sqrt(s) * np.exp(y)
         x2 = mtt / np.sqrt(s) * np.exp(-y)

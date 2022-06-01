@@ -1,24 +1,18 @@
 {
-  "name": "chq3_lin_robust",
-  "epochs": 600,
-  "lr": 0.001,
-  "n_batches": 5,
+  "name": "chw_lin_v4",
+  "epochs": 1000,
+  "lr": 0.0001,
+  "n_batches": 50,
   "input_size": 2,
   "output_size": 1,
-  "hidden_sizes": [
-    30,
-    30,
-    30,
-    30,
-    30
-  ],
+  "hidden_sizes": [100, 100, 100],
   "n_dat": 100000,
   "quadratic": 0,
   "cross_term": 0,
   "animation": 0,
   "coeff": [
     {
-      "op": "chq3",
+      "op": "chw",
       "value": 10.0
     },
     {

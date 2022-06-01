@@ -32,7 +32,8 @@ q_c_truth_mzh_y_ptz = combine_qc(c_x, c_y, '/data/theorie/jthoeve/ML4EFT_higgs/o
 q_c_truth_mzh_y = combine_qc(c_x, c_y, '/data/theorie/jthoeve/ML4EFT_higgs/output/contours/zh/truth/grid/mzh_y/q_c_truth_row_{}.npy')
 
 # load posterior samples
-path_to_nn = '/data/theorie/jthoeve/ML4EFT_higgs/output/contours/zh/nn/ns/mzh_y_ptz_v2/posterior.json'
+path_to_nn_3_feat = '/data/theorie/jthoeve/ML4EFT_higgs/output/contours/zh/nn/ns/mzh_y_ptz_v2/posterior.json'
+path_to_nn_2_feat = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/contours/zh/nn/mzh_y_v2/posterior.json'
 paths_to_binned = ['/data/theorie/jthoeve/ML4EFT_higgs/output/contours/zh/binned/ns/pt_z/bin_0/posterior.json',
                    '/data/theorie/jthoeve/ML4EFT_higgs/output/contours/zh/binned/ns/pt_z/bin_1/posterior.json',
                    '/data/theorie/jthoeve/ML4EFT_higgs/output/contours/zh/binned/ns/pt_z/bin_2/posterior.json']
@@ -56,7 +57,8 @@ def sample_loader(path):
 
 df_truth_mzh_y = sample_loader(path_to_truth_mzh_y)
 df_truth_mzh_y_ptz = sample_loader(path_to_truth_mzh_y_ptz)
-df_nn = sample_loader(path_to_nn)
+df_nn_3_feat = sample_loader(path_to_nn_3_feat)
+df_nn_2_feat = sample_loader(path_to_nn_2_feat)
 
 df_binned = [sample_loader(path_to_binned) for path_to_binned in paths_to_binned]
 
@@ -139,35 +141,28 @@ handles.append(mpatches.Patch(ec='C1', fc=None, fill=False, label=r"$\rm{Truth}\
 # ax.plot(cHW, pc[1,0]/pc[0,0] * cHW, linestyle='dotted', linewidth=0.4, color='k')
 # ax.plot(cHW, pc[1,1]/pc[0,1] * cHW, linestyle='dotted', linewidth=0.4, color='k')
 
-sns.kdeplot(x=df_nn["chw"], y=df_nn["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C2')
-#sns.kdeplot(x=post_samples_all["chw"], y=post_samples_all["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C2')
-
-handles.append(mpatches.Patch(ec='C2', fc=None, fill=False, label=r"$\rm{NN\;median}\;\rm{(3\;feat)}$"))
-# handles.append(mpatches.Patch(ec='C0', fc=None, fill=False, label="NN replicas (3 feat, NS)", linewidth=0.1))
-# handles.append(mpatches.Patch(ec='C2', fc=None, fill=False, label="NN combined (3 feat, NS)"))
+handles.append(mpatches.Patch(ec='C0', fc=None, fill=False, label=r"$\rm{NN\;median}\;\rm{(3\;feat)}$", linestyle='dashdot'))
+sns.kdeplot(x=df_nn_3_feat["chw"], y=df_nn_3_feat["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C0', linestyles='dashdot')
 
 
-sns.kdeplot(x=df_binned[1]["chw"], y=df_binned[1]["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C3', linestyles='dashed')
-handles.append(mpatches.Patch(ec='C3', fc=None, fill=False, label=r"$\rm{Binning\;1}$", linestyle='dashed'))
-
-sns.kdeplot(x=df_binned[0]["chw"], y=df_binned[0]["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C4', linestyles='dashed')
-handles.append(mpatches.Patch(ec='C4', fc=None, fill=False, label=r"$\rm{Binning\;2}$", linestyle='dashed'))
-
-sns.kdeplot(x=df_binned[2]["chw"], y=df_binned[2]["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C5', linestyles='dashed')
-handles.append(mpatches.Patch(ec='C5', fc=None, fill=False, label=r"$\rm{Binning\;3}$", linestyle='dashed'))
+handles.append(mpatches.Patch(ec='C1', fc=None, fill=False, label=r"$\rm{NN\;median}\;\rm{(2\;feat)}$", linestyle='dashdot'))
+sns.kdeplot(x=df_nn_2_feat["chw"], y=df_nn_2_feat["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C1', linestyles='dashdot')
 
 
-# for i in range(3):
-#     with open(path_to_binned.format(i+1)) as json_data:
-#         samples_json = json.load(json_data)
-#     df_binned = pd.DataFrame(samples_json)
-#     sns.kdeplot(x=df_binned["chw"], y=df_binned["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color=colors[i])
-#     handles.append(mpatches.Patch(ec=colors[i], fc=None, fill=False, label=labels[i]))
+# sns.kdeplot(x=df_binned[1]["chw"], y=df_binned[1]["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C3', linestyles='dashed')
+# handles.append(mpatches.Patch(ec='C3', fc=None, fill=False, label=r"$\rm{Binning\;1}$", linestyle='dashed'))
+#
+# sns.kdeplot(x=df_binned[0]["chw"], y=df_binned[0]["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C4', linestyles='dashed')
+# handles.append(mpatches.Patch(ec='C4', fc=None, fill=False, label=r"$\rm{Binning\;2}$", linestyle='dashed'))
+#
+# sns.kdeplot(x=df_binned[2]["chw"], y=df_binned[2]["chq3"], levels=[0.05], bw_adjust=1.2, ax=ax, color='C5', linestyles='dashed')
+# handles.append(mpatches.Patch(ec='C5', fc=None, fill=False, label=r"$\rm{Binning\;3}$", linestyle='dashed'))
+
 
 plt.legend(handles=handles)
 plt.xlabel(r'$\rm{cHW}$')
 plt.ylabel(r'$\rm{cHq3}$')
-plt.xlim((-1, 0.6))
-plt.ylim((-2, 4.2))
+plt.xlim((-0.5, 0.35))
+plt.ylim((-1.5, 2))
 
-fig.savefig('/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/05_04/samples_truth_nn_binned_test_v2.pdf')
+fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/zh_nn_truth_v2.pdf')

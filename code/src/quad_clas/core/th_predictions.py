@@ -55,21 +55,21 @@ class TheoryPred:
         """
 
         #TODO: regular expression does not select wilson coefficients that end with a number
-        #return 10
-        filename = os.path.join(self.event_path, 'lin', wc, 'param_card.dat')
-        match_number = re.compile('[-+]?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *[-+]?\ *[0-9]+)?')
-
-        with open(filename, 'r') as f:
-            data = f.readlines()
-            f.close()
-
-        for line in data:
-            if wc + ' \n' in line or wc + '\n' in line:
-                final_list = [float(x) for x in re.findall(match_number, line)]
-                param = float(final_list[-1])
-                break
-
-        return param
+        return 10
+        # filename = os.path.join(self.event_path, 'lin', wc, 'param_card.dat')
+        # match_number = re.compile('[-+]?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *[-+]?\ *[0-9]+)?')
+        #
+        # with open(filename, 'r') as f:
+        #     data = f.readlines()
+        #     f.close()
+        #
+        # for line in data:
+        #     if wc + ' \n' in line or wc + '\n' in line:
+        #         final_list = [float(x) for x in re.findall(match_number, line)]
+        #         param = float(final_list[-1])
+        #         break
+        #
+        # return param
 
 
     def predictions(self):

@@ -488,6 +488,25 @@ class Fitter:
             # We save the model parameters at the start of each epoch
             torch.save(self.model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
 
+            # compute validation loss
+            with torch.no_grad():
+                for minibatch in zip(*val_loader):
+                    val_loss = torch.zeros(1)
+                    for i, [event, weight, label] in enumerate(minibatch):
+                        if isinstance(self.model, PredictorLinear):
+                            output = self.model(event.float())
+                        if isinstance(self.model, PredictorQuadratic):
+                            output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1, self.path_dict['mc_path'])
+                        if isinstance(self.model, PredictorCross):
+                            output = self.model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
+                                           self.path_quad_2)
+                        loss = self.loss_fn(output, label, weight, self.lag_mult)
+                        val_loss += loss
+                    assert val_loss.requires_grad is False
+
+                    loss_val += val_loss.item()
+
+
             # the * denotes the unpacking operator. It passes all the list elements
             # of train_loader as separate arguments to the zip function, e.g f(a[0], a[1]) = f(*a).
             # Here we have zip(DataLoader_1, DataLoader_2, ..) which enables looping over our mini-batches.
@@ -516,23 +535,6 @@ class Fitter:
 
             scheduler.step(train_loss)
 
-            with torch.no_grad():
-                for minibatch in zip(*val_loader):
-                    val_loss = torch.zeros(1)
-                    for i, [event, weight, label] in enumerate(minibatch):
-                        if isinstance(self.model, PredictorLinear):
-                            output = self.model(event.float())
-                        if isinstance(self.model, PredictorQuadratic):
-                            output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1, self.path_dict['mc_path'])
-                        if isinstance(self.model, PredictorCross):
-                            output = self.model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
-                                           self.path_quad_2)
-                        loss = self.loss_fn(output, label, weight, self.lag_mult)
-                        val_loss += loss
-                    assert val_loss.requires_grad is False
-
-                    loss_val += val_loss.item()
-
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
 
@@ -558,7 +560,7 @@ class Fitter:
                 overfit_counter = 0
 
             if overfit_counter == patience:
-                stopping_point = epoch - patience
+                stopping_point = epoch - patience # TODO subtract an addition 0ne
                 logging.info("Stopping point reached! Overfit counter = {}".format(overfit_counter))
                 shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
                 logging.info("Backwards stopping done")

@@ -108,13 +108,13 @@ class Optimize:
                     "No path tot model (path_to_models) specified. Please set in the in the input card. Aborting."
                 )
                 sys.exit()
-            if "architecture" in self.config.keys():
-                self.architecture = self.config["architecture"]
-            else:
-                print(
-                    "No architecture (architecture) specified. Please set in the in the input card. Aborting."
-                )
-                sys.exit()
+            # if "architecture" in self.config.keys():
+            #     self.architecture = self.config["architecture"]
+            # else:
+            #     print(
+            #         "No architecture (architecture) specified. Please set in the in the input card. Aborting."
+            #     )
+            #     sys.exit()
 
             self.bins = None
             self.kinematic = None
@@ -151,7 +151,7 @@ class Optimize:
         # observed counts
         if self.mode == "nn":
 
-            [n_lin, model_idx], n_quad, n_cross = analyse.load_coefficients_nn(self.observed_data, self.parameters, self.architecture, self.path_to_models)
+            [n_lin, model_idx], n_quad, n_cross = analyse.load_coefficients_nn(self.observed_data, self.parameters, self.path_to_models)
             rep_tot = np.array([n_lin[i].shape[0] for i in range(len(n_lin))])
             rep_ava = rep_tot.min() # max available replicas
 

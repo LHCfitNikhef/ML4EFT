@@ -1,16 +1,14 @@
 {
-  "name": "cugre_lin",
-  "epochs": 300,
+  "name": "cuu_quad",
+  "epochs": 100,
   "lr": 0.001,
-  "n_batches": 5,
-  "input_size": 1,
+  "n_batches": 50,
+  "input_size": 2,
   "output_size": 1,
   "hidden_sizes": [
-    30,
-    30,
-    30,
-    30,
-    30
+    100,
+    100,
+    100
   ],
   "n_dat": 100000,
   "quadratic": 0,
@@ -18,18 +16,19 @@
   "animation": 0,
   "coeff": [
     {
-      "op": "cugre",
-      "value": -10
+      "op": "cuu_quad",
+      "value": 100
     },
     {
-      "op": "0",
+      "op": "c",
       "value": 0.0
     }
   ],
   "event_data": "/data/theorie/jthoeve/training_data/tt/U35",
   "training_report": 0,
   "features": [
-    "m_tt"
+    "m_tt",
+    "y"
   ],
   "lag_mult": 100
 }

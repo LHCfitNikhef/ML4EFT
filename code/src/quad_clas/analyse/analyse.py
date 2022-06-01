@@ -82,7 +82,6 @@ def likelihood_ratio_truth(events, c, n_kin, process, lin=False, quad=False):
             dsigma_1 = [tt_prod.dsigma_dmtt(x['m_tt'], 0, 0, lin, quad) for index, x in
                         events.iterrows()]  # SM
         else:
-
             dsigma_0 = [tt_prod.dsigma_dmtt_dy(x['y'], x['m_tt'], c1, c2, lin, quad) for index, x in
                         events.iterrows()]  # EFT
             dsigma_1 = [tt_prod.dsigma_dmtt_dy(x['y'], x['m_tt'], 0, 0, lin, quad) for index, x in
@@ -120,6 +119,7 @@ def decision_function_truth(x, c, n_kin, process, lin=False, quad=False):
     ratio = likelihood_ratio_truth(x, c,  n_kin, process, lin, quad)
     f = 1 / (1 + ratio)
     return f
+
 
 #TODO: coeff_function_nn can be replaced entirely by load_coefficients_nn
 def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False, animate=False, epoch=None):
@@ -454,7 +454,7 @@ def coeff_comp(path_to_models, network_size, c1, c2, c_train, n_kin, process, li
     return fig1, fig2
 
 
-def load_models(architecture, c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False):
+def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False):
     """
     Load the pretrained models
 
@@ -478,8 +478,11 @@ def load_models(architecture, c_train, model_dir, epoch=-1, lin=False, quad=Fals
     losses = []
 
     model_dirs = [os.path.join(model_dir, mc_run) for mc_run in os.listdir(model_dir)]
-    for model_dir in model_dirs:
+    for dir in model_dirs:
         if lin:
+            with open(os.path.join(dir, 'run_card.json')) as json_data:
+                run_card = json.load(json_data)
+                architecture = [run_card['input_size']] + run_card['hidden_sizes'] + [run_card['output_size']]
             loaded_model = quad_clas.PredictorLinear(architecture, c_train)
         elif quad:
             loaded_model = quad_clas.PredictorQuadratic(architecture)
@@ -487,11 +490,11 @@ def load_models(architecture, c_train, model_dir, epoch=-1, lin=False, quad=Fals
             loaded_model = quad_clas.PredictorCross(architecture)
 
         if epoch != -1:
-            network_path = os.path.join(model_dir, 'trained_nn_{}.pt'.format(epoch))
+            network_path = os.path.join(dir, 'trained_nn_{}.pt'.format(epoch))
             if not os.path.isfile(network_path):
-                network_path = os.path.join(model_dir, 'trained_nn.pt')
+                network_path = os.path.join(dir, 'trained_nn.pt')
         else:
-            network_path = os.path.join(model_dir, 'trained_nn.pt')
+            network_path = os.path.join(dir, 'trained_nn.pt')
 
         # read the loss
         path_to_loss = os.path.join(os.path.dirname(network_path), 'loss.out')
@@ -536,7 +539,7 @@ def load_models(architecture, c_train, model_dir, epoch=-1, lin=False, quad=Fals
     return models_good, models_good_idx
 
 
-def load_coefficients_nn(df, c_train, architecture, path_to_models, epoch=-1):
+def load_coefficients_nn(df, c_train, path_to_models, epoch=-1):
     """
     Loads in the nn models at specified in ``path_to_models`` and returns a tuple of length 3
     with the linear, quadratic and cross term coefficient functions.
@@ -573,7 +576,7 @@ def load_coefficients_nn(df, c_train, architecture, path_to_models, epoch=-1):
     for order, paths in path_to_models.items():
         if order == 'lin':
             for coeff, path in paths.items():
-                loaded_models_lin, model_idx = load_models(architecture, c_train[coeff], path, epoch=epoch, lin=True)
+                loaded_models_lin, model_idx = load_models(c_train[coeff], path, epoch=epoch, lin=True)
                 n_alphas = []
                 for i, loaded_model in enumerate(loaded_models_lin):
                     path_to_model = os.path.join(path, 'mc_run_{}'.format(model_idx[i]))
@@ -610,14 +613,22 @@ def load_coefficients_nn(df, c_train, architecture, path_to_models, epoch=-1):
                         n_gammas.append(loaded_models_cross[i].n_gamma(x_scaled.float()).numpy().flatten())
                 n_gammas = np.array(n_gammas)
                 n_cross.append(n_gammas)
-    n_lin = np.array(n_lin)
+
+    n_rep_min = min([n_lin_i.shape[0] for n_lin_i in n_lin])
+
+    n_lin_matched = np.zeros((len(n_lin), n_rep_min, len(df)))
+    for i, n_lin_i in enumerate(n_lin):
+        rnd_idx = np.random.choice(np.arange(n_lin_i.shape[0]), n_rep_min, replace=False)
+        n_lin_matched[i] = n_lin[i][rnd_idx, :]
+
+    #n_lin = np.array(n_lin)
     n_quad = np.array(n_quad)
     n_cross = np.array(n_cross)
 
-    return [n_lin, model_idx], n_quad, n_cross
+    return [n_lin_matched, model_idx], n_quad, n_cross
 
 
-def point_by_point_comp(events, c, path_to_models, network_size, n_kin, process, lin=True, quad=False):
+def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=True, quad=False, epoch=-1):
     """
     Make a point by point comparison between the truth and the models
 
@@ -643,15 +654,15 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, process,
     `matplotlib.figure.Figure`
         Plot of the median only
     """
-    r_nn, model_idx = likelihood_ratio_nn(events, c, path_to_models, network_size, lin=lin, quad=quad, epoch=-1)
+    r_nn, model_idx = likelihood_ratio_nn(events, c, c_train, path_to_models, lin=lin, quad=quad, epoch=epoch)
     tau_nn = np.log(r_nn)
 
     r_truth = likelihood_ratio_truth(events, c, process=process, lin=lin, quad=quad, n_kin=n_kin)
     tau_truth = np.log(r_truth)
 
-    mzh = events['m_zh'].values
-    mask = np.argwhere(mzh > 1.0).flatten()
-    mask_comp = np.setdiff1d(np.arange(len(events)), mask)
+    # mzh = events['m_zh'].values
+    # mask = np.argwhere(mzh > 1.0).flatten()
+    # mask_comp = np.setdiff1d(np.arange(len(events)), mask)
 
     # overview plot for all replicas
     ncols = 5
@@ -663,9 +674,9 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, process,
     x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
     for i in range(mc_reps):
         ax = plt.subplot(nrows, ncols, i + 1)
-        plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
-        plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='k')
-        #plt.scatter(tau_truth, tau_nn[i,:], s=2)
+        #plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
+        #plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='k')
+        plt.scatter(tau_truth, tau_nn[i,:], s=2)
         plt.plot(x, x, linestyle='dashed', color='grey')
         plt.text(0.1, 0.9, 'rep {}'.format(model_idx[i]), horizontalalignment='left',
                  verticalalignment='center',
@@ -681,8 +692,9 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, process,
     fig2, ax = plt.subplots(figsize=(8, 8))
     x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
     #x= np.linspace(0, 6, 100)
-    plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='k')
-    plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
+    # plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='k')
+    # plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
+    plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
     plt.plot(x, x, linestyle='dashed', color='grey')
     plt.xlabel(r'$\tau(x, c)^{\rm{truth}}$')
     plt.ylabel(r'$\tau(x, c)^{\rm{NN}}$')
@@ -694,7 +706,7 @@ def point_by_point_comp(events, c, path_to_models, network_size, n_kin, process,
     return fig1, fig2
 
 
-def likelihood_ratio_nn(df, c, train_parameters, path_to_models, network_size, epoch=-1, lin=False, quad=False):
+def likelihood_ratio_nn(df, c, train_parameters, path_to_models, epoch=-1, lin=False, quad=False):
     """
     Computes the likelihood ratio using the nn models
 
@@ -729,10 +741,10 @@ def likelihood_ratio_nn(df, c, train_parameters, path_to_models, network_size, e
     numpy.ndarray, shape=(mc_reps, M)
     """
     # nn models at the specified epoch
-    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, train_parameters, network_size, path_to_models, epoch=epoch)
+    [n_lin_matched, model_idx], n_quad, n_cross = load_coefficients_nn(df, train_parameters, path_to_models, epoch=epoch)
 
     if lin:
-        r = 1 + np.einsum('i, ijk', c, n_lin)
+        r = 1 + np.einsum('i, ijk', c, n_lin_matched)
     elif quad:
 
         # TODO: c should have the same dimesnions as n_lin_trained

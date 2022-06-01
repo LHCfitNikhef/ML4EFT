@@ -39,8 +39,8 @@ fig_median, fig_pull = analyse.coeff_comp(
     path_sm_data=None)
 
 #fig.savefig('/Users/jaco/Documents/ML4EFT/plots/2022/talk_juan/chw_perf.pdf')
-fig_median.savefig('/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/26_04/cuu_quad_perf_median_robust.pdf')
-fig_pull.savefig('/data/theorie/jthoeve/ML4EFT_higgs/output/plots/2022/26_04/cuu_quad_perf_pull_robust.pdf')
+fig_median.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/cuu_quad_perf_median_robust.pdf')
+fig_pull.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/cuu_quad_perf_pull_robust.pdf')
 #%%
 # from matplotlib import rc
 # rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
