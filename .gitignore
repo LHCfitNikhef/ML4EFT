@@ -304,6 +304,9 @@ sphinx/_build/
 /output/contours/
 /models/
 
+#madgraph runcards
+code/cluster/launch_scripts/event_generation/mg5_runcards
+
 #pytorch files
 *.pt
 /models/quad/
