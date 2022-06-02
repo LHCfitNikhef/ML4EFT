@@ -17,7 +17,7 @@ bin_width = 10 * 10 ** -3
 
 title = r'$\rm{t\bar{t}}\;\rm{production}\;\rm{benchmark,}\;\rm{LO+}\mathcal{O}\left(\Lambda^{-4}\right)$'#title = r'$t\bar{t}\;\rm{production}\;\rm{benchmark,}\;\rm{sm}$'
 
-event_path = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/quad/ctu1/events_1.pkl.gz"
+event_path = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/quad/ctgre/events_0.pkl.gz"
 #event_path = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/U35/quad/cuu/events_0.pkl.gz"
 df = pd.read_pickle(event_path)
 
@@ -66,6 +66,6 @@ def plot_benchmark(df, c1, c2, title, lin=False, quad=False):
     return fig
 
 
-fig = plot_benchmark(df, 0, 10, title, lin=False, quad=True)
+fig = plot_benchmark(df, -10, 0, title, lin=False, quad=True)
 
-fig.savefig("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/01_06/tt_benchmark_ctu1_quad.pdf")
+fig.savefig("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/01_06/tt_benchmark_ctgre_quad.pdf")
