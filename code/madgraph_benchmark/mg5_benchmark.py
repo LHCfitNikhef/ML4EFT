@@ -16,10 +16,9 @@ mt = constants.mt
 bin_width = 10 * 10 ** -3
 
 title = r'$\rm{t\bar{t}}\;\rm{production}\;\rm{benchmark,}\;\rm{LO+}\mathcal{O}\left(\Lambda^{-4}\right)$'#title = r'$t\bar{t}\;\rm{production}\;\rm{benchmark,}\;\rm{sm}$'
-event_path_cuu_quad = "/data/theorie/jthoeve/training_data/tt/U35/quad/cuu/events_0.pkl.gz"
-event_path_sm = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/sm/events_0.pkl.gz"
-event_path = "/data/theorie/jthoeve/training_data/tt/U35/sm/events_0.pkl.gz"
 
+event_path = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/quad/ctu1/events_1.pkl.gz"
+#event_path = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/U35/quad/cuu/events_0.pkl.gz"
 df = pd.read_pickle(event_path)
 
 
@@ -67,6 +66,6 @@ def plot_benchmark(df, c1, c2, title, lin=False, quad=False):
     return fig
 
 
-fig = plot_benchmark(df, 0, 0, title, lin=True, quad=False)
+fig = plot_benchmark(df, 0, 10, title, lin=False, quad=True)
 
-fig.savefig("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/01_06/tt_benchmark_sm.pdf")
+fig.savefig("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/01_06/tt_benchmark_ctu1_quad.pdf")

@@ -65,7 +65,8 @@ class crossSectionSMEFT:
         sqrt = np.sqrt(1 - 4 * mt ** 2 / hats)
         kappa_11 = sqrt * (8 * np.pi * v ** 2 * yt ** 2 * asQCD * (8 * mt ** 2 + hats)) / (
                     108 * np.pi * LambdaSMEFT ** 4 * hats)
-        kappa_22 = sqrt * (9 * hats * (hats - mt ** 2)) / (108 * np.pi * LambdaSMEFT ** 4 * hats)
+        #kappa_22 = sqrt * (9 * hats * (hats - mt ** 2)) / (108 * np.pi * LambdaSMEFT ** 4 * hats)
+        kappa_22 = sqrt * ((hats - mt ** 2)) / (48 * np.pi * LambdaSMEFT ** 4 )
         kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * yt * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
         sm = (8 * np.pi * asQCD ** 2 * (2 * mt ** 2 + hats) * sqrt) / (27 * hats ** 2)
         if lin:

@@ -2,9 +2,9 @@
 
 HOMEDIR=/data/theorie/jthoeve
 PY=/data/theorie/jthoeve/miniconda3/envs/mg5/bin/python
-#MGbase=$PWD/MG5_aMC_v3_3_2
+
 Base=$HOMEDIR/MGjobs
-NDATASETS=50
+NDATASETS=1
 
 mkdir -p $Base
 
@@ -23,7 +23,6 @@ cd $jobBase
 
 # create the launch script
 echo "#/bin/sh" >> MGscript.sh
-#echo "echo 'seed: $i'" >> MGscript.sh
 echo "$PY $jobBase/bin/madevent $jobBase/cmd" >> MGscript.sh
 
 # create the run file
@@ -31,8 +30,13 @@ echo "launch" >> cmd
 echo "0" >> cmd
 echo "set pdlabel lhapdf" >> cmd
 echo "set lhaid 315000" >> cmd
-#echo "set ${op[]} ${chdd[i-1]}" >> cmd
-echo "set cugre -2" >> cmd
+
+#echo "set cugre -2" >> cmd
+echo "set mu 0" >> cmd
+echo "set md 0" >> cmd
+echo "set mc 0" >> cmd
+echo "set ms 0" >> cmd
+echo "set mb 0" >> cmd
 echo "set nevents 100k" >> cmd
 echo "set ebeam1 7000" >> cmd
 echo "set ebeam2 7000" >> cmd

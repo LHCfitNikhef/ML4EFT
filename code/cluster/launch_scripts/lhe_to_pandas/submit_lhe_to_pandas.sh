@@ -12,7 +12,7 @@ function submit_job () {
   COMMAND=$PWD'/lhe_to_pandas.sh'
 
   # write launch command
-  LAUNCH=$PY' '$PWD'/lhe_to_pandas.py'' '$EVENT_FILE'/unweighted_events.lhe '$SAVE_LOCATION' '$REP
+  LAUNCH=$PY' '$PWD'/lhe_to_pandas_tt.py'' '$EVENT_FILE'/unweighted_events.lhe '$SAVE_LOCATION' '$REP
 
   echo $LAUNCH >> $COMMAND
   chmod +x $COMMAND
