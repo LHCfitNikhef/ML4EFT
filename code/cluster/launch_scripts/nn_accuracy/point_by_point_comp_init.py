@@ -14,17 +14,23 @@ architecture = [2, 100, 100, 100, 1]
 #     'chq3': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/model_chq3_lin_deep_v7'}}
 
 # best models for chw
+# path_to_models = {'lin': {
+#     'chw': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/model_chw_lin',
+#     'chq3': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/model_chq3_lin_deep_v7'}}
+
+# tt
+
 path_to_models = {'lin': {
-    'chw': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/model_chw_lin',
-    'chq3': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/model_chq3_lin_deep_v7'}}
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/model_ctgre_lin',
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/model_ctgre_lin'}}
 
 
-sm_data_path = '/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2/sm/events_0.pkl.gz'
+#sm_data_path = '/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2/sm/events_0.pkl.gz'
 #sm_data_path = '/data/theorie/jthoeve/event_generation/events_high_stats/pT/sm/events_0.npy'
 
 # ttbar
 
-#sm_data_path = '/data/theorie/jthoeve/training_data/tt/U35/sm/events_0.pkl.gz'
+sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
 
 
 n_dat = 5000
@@ -49,7 +55,7 @@ luminosity = 5e3
 mc_reps = 1
 
 # location where to save the plot
-plot_save = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/'
+plot_save = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/03_06'
 
 # fig1, fig2 = analyse.point_by_point_comp(
 #     events=events_sm,
@@ -67,17 +73,17 @@ plot_save = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/'
 
 fig1, fig2 = analyse.point_by_point_comp(
     events=events_sm,
-    c=np.array([0, 5]),
+    c=np.array([-5, 0]),
     path_to_models=path_to_models,
     c_train={
-        "chw": 10.0,
-        "chq3": 10.0
+        "ctgre": -10.0,
+        "cuu": 0
     },
     n_kin=2,
-    process='ZH',
+    process='tt',
     lin=True,
     quad=False,
-    epoch=-1)
+    epoch=100)
 
-fig1.savefig(os.path.join(plot_save, 'overview_comp_chq3_v8.pdf'))
-fig2.savefig(os.path.join(plot_save, 'median_comp_chq3_v8.pdf'))
+fig1.savefig(os.path.join(plot_save, 'overview_comp_ctgre_lin_epoch_100.pdf'))
+fig2.savefig(os.path.join(plot_save, 'median_comp_ctgre_lin_epoch_100.pdf'))

@@ -23,7 +23,7 @@ function submit_job () {
 }
 
 # SETUP
-MCREPS=30
+MCREPS=50
 
 for ((rep=0; rep < $MCREPS; rep++)); do
   submit_job $rep

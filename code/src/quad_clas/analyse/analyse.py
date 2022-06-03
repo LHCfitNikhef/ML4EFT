@@ -407,7 +407,7 @@ def coeff_comp(path_to_models, network_size, c1, c2, c_train, n_kin, process, li
 
     # models
 
-    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, c_train, network_size, path_to_models, epoch=-1)
+    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, c_train, path_to_models, epoch=-1)
     n_lin = n_lin[0,:, :].reshape((n_lin.shape[1], *mx_grid.shape))
     coeff_nn_median = np.percentile(n_lin, 50, axis=0)
     coeff_nn_high = np.percentile(n_lin, 84, axis=0)

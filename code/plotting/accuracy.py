@@ -19,16 +19,16 @@ import quad_clas.analyse.analyse as analyse
 #                          '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/test_zh/model_chq3_lin_robust']}
 
 path_to_models = {'lin': {
-    'cuu_quad': '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_llbb/ltd/model_cuu_quad_v3',
-    'cuu_quad': '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_llbb/ltd/model_cuu_quad_v3'}}
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/model_ctgre_lin',
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/model_ctgre_lin'}}
 
 fig_median, fig_pull = analyse.coeff_comp(
     path_to_models=path_to_models,
     network_size=[2, 100, 100, 100, 1],
-    c1=0,
-    c2=10,
+    c1=-10,
+    c2=0,
     c_train={
-        "cuu_quad": 100.0,
+        "ctgre": -10,
         "cuu_quad": 100.0
     },
     n_kin=2,
@@ -39,8 +39,8 @@ fig_median, fig_pull = analyse.coeff_comp(
     path_sm_data=None)
 
 #fig.savefig('/Users/jaco/Documents/ML4EFT/plots/2022/talk_juan/chw_perf.pdf')
-fig_median.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/cuu_quad_perf_median_robust.pdf')
-fig_pull.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/cuu_quad_perf_pull_robust.pdf')
+fig_median.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/03_06/ctgre_lin_perf.pdf')
+fig_pull.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/03_06/ctgre_lin_perf_pull.pdf')
 #%%
 # from matplotlib import rc
 # rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})

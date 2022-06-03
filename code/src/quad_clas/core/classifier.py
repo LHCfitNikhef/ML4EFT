@@ -314,6 +314,10 @@ class Fitter:
 
         self.features = self.run_options['features']
 
+
+        output_dir = os.path.join(output_dir, time.strftime("%Y/%m/%d"))
+        os.makedirs(output_dir, exist_ok=True)
+
         model_path = os.path.join(output_dir, 'model_{}'.format(self.run))
         mc_path = os.path.join(model_path, 'mc_run_{}/'.format(self.mc_run))
         log_path = os.path.join(mc_path, 'logs')
@@ -538,8 +542,8 @@ class Fitter:
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
 
-            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}. Sign = {f_sign}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, f_sign=np.sign(output[0]))
+            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}. sign = {sign}". \
+                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, sign=output[0])
             logging.info(training_status)
 
             np.savetxt(path + 'loss.out', loss_list_train)
@@ -662,58 +666,6 @@ class Fitter:
         return torch.sum(loss_QC + penalty, dim=0)
         #return torch.sum(loss_CE, dim=0)
 
-# def preprocessing(data_eft, data_sm):
-#
-#     from statsmodels.distributions.empirical_distribution import ECDF
-#
-#     mvh_data = data_eft[0].events[:, 0].numpy()
-#
-#     median_mvh = np.percentile(mvh_data, 50)
-#     spread_mvh = max(np.abs(median_mvh - np.percentile(mvh_data, 84)), np.abs(median_mvh - np.percentile(mvh_data, 16)))
-#     mvh_data_rescaled = (mvh_data - median_mvh)/ spread_mvh
-#
-#     log_mvh_data = np.log(mvh_data)
-#     median_log_mvh = np.percentile(log_mvh_data, 50)
-#     spread_log_mvh = max(np.abs(median_log_mvh - np.percentile(log_mvh_data, 84)), np.abs(median_log_mvh - np.percentile(log_mvh_data, 16)))
-#     log_mvh_data_rescaled = (log_mvh_data - median_log_mvh) / spread_log_mvh
-#
-#     # overview plots
-#     nrows = 3
-#     ncols = 2
-#     fig = plt.figure(figsize=(ncols * 8, nrows * 6))
-#
-#     ax = plt.subplot(nrows, ncols, 1)
-#
-#     mvh_min = np.min(mvh_data) - 0.1
-#     mvh_max = np.percentile(mvh_data, 84)
-#     ax.hist(mvh_data, bins=np.linspace(mvh_min, 2 * mvh_max, 20), density=False)
-#     #ax.set_xlim(mvh_min, 5 * mvh_max)
-#     ax.set_xlabel(r'$m_{VH}$')
-#
-#     ax = plt.subplot(nrows, ncols, 2)
-#     mvh_min_resc = np.min(mvh_data_rescaled) - 0.1
-#     mvh_max_resc = np.percentile(mvh_data_rescaled, 84)
-#     ax.hist(mvh_data_rescaled, bins=np.linspace(mvh_min_resc, 2 * mvh_max_resc, 20), density=False)
-#     # ax.set_xlim(mvh_min, 5 * mvh_max)
-#     ax.set_xlabel(r'$m_{VH}\;(\rm{rescaled})$')
-#
-#     ax = plt.subplot(nrows, ncols, 3)
-#     ax.hist(np.log(mvh_data), bins=40, density=False)
-#     ax.set_xlabel(r'$\log m_{VH}$')
-#
-#     ax = plt.subplot(nrows, ncols, 4)
-#     ax.hist(log_mvh_data_rescaled, bins=40, density=False)
-#     ax.set_xlabel(r'$\log m_{VH}\;(\rm{rescaled})$')
-#
-#     ax = plt.subplot(nrows, ncols, 5)
-#     ecdf = ECDF(mvh_data)
-#     ax.hist(ecdf.y, bins=50, density=False)
-#     ax.set_xlabel(r'$\rm{eCDF}(x)$')
-#
-#     ax = plt.subplot(nrows, ncols, 6)
-#     ecdf = ECDF(mvh_data)
-#     ax.hist((ecdf.y - np.mean(ecdf.y))/np.std(ecdf.y), bins=50, density=False)
-#     ax.set_xlabel(r'$\rm{eCDF}(x)\;(\rm{rescaled})$')
-#     return fig
+
 
 

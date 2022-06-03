@@ -1,6 +1,6 @@
 {
-  "name": "cuu_quad",
-  "epochs": 100,
+  "name": "ctgre_lin_v2",
+  "epochs": 400,
   "lr": 0.001,
   "n_batches": 50,
   "input_size": 2,
@@ -16,15 +16,15 @@
   "animation": 0,
   "coeff": [
     {
-      "op": "cuu_quad",
-      "value": 100
+      "op": "ctgre",
+      "value": -10
     },
     {
       "op": "c",
       "value": 0.0
     }
   ],
-  "event_data": "/data/theorie/jthoeve/training_data/tt/U35",
+  "event_data": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l",
   "training_report": 0,
   "features": [
     "m_tt",
