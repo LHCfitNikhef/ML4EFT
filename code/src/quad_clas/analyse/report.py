@@ -11,8 +11,8 @@ import subprocess
 import PyPDF2
 
 path_to_models = {'lin': {
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_baseline',
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_baseline'}}
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_m_tt_05',
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_m_tt_05'}}
 
 path_to_runcard = os.path.join(path_to_models['lin']['ctgre'], 'mc_run_0/run_card.json')
 report_path = os.path.join(path_to_models['lin']['ctgre'], 'report')

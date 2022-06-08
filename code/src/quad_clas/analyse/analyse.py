@@ -817,8 +817,8 @@ def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad):
     #ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
 
     plt.ylim((0, 1))
-    plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
-    #plt.xlim(np.min(x[:, 0]), 0.5)
+    #plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
+    plt.xlim(np.min(x[:, 0]), 0.5)
     plt.ylabel(r'$f\;(x, c)$')
     xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
     plt.xlabel(xlabel)
