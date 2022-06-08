@@ -818,7 +818,8 @@ def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad):
 
     plt.ylim((0, 1))
     #plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
-    plt.xlim(np.min(x[:, 0]), 0.5)
+    #plt.xlim(np.min(x[:, 0]), 0.5)
+    plt.xlim(0.5, np.max(x[:, 0]))
     plt.ylabel(r'$f\;(x, c)$')
     xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
     plt.xlabel(xlabel)

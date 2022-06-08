@@ -1,5 +1,5 @@
 {
-  "name": "ctgre_lin_m_tt_05",
+  "name": "ctgre_lin_m_tt_gt_05",
   "epochs": 1000,
   "lr": 0.001,
   "n_batches": 1,
@@ -10,7 +10,7 @@
     100,
     100
   ],
-  "n_dat": 40000,
+  "n_dat": 10000,
   "quadratic": 0,
   "cross_term": 0,
   "coeff": [

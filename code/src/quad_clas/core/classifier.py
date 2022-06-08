@@ -186,7 +186,7 @@ class PreProcessing():
         df_sm = pd.read_pickle(self.path['sm'], compression="infer")
         self.xsec_sm = df_sm.iloc[0, 0]
         # test
-        df_sm = df_sm[(df_sm['m_tt'] < 0.5)]
+        df_sm = df_sm[(df_sm['m_tt'] > 0.5)]
 
 
         #self.df_sm = df_sm.iloc[1:,:].sample(self.n_dat)
@@ -196,7 +196,7 @@ class PreProcessing():
 
         # test
         self.xsec_eft = df_eft.iloc[0, 0]
-        df_eft = df_eft[(df_eft['m_tt'] < 0.5)]
+        df_eft = df_eft[(df_eft['m_tt'] > 0.5)]
 
         #self.df_eft = df_eft.iloc[1:, :].sample(self.n_dat)
         self.df_eft = df_eft.sample(self.n_dat)
