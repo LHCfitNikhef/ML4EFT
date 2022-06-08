@@ -1,6 +1,6 @@
 {
-  "name": "ctgre_lin_v0",
-  "epochs": 500,
+  "name": "ctgre_lin_v1",
+  "epochs": 100,
   "lr": 0.001,
   "n_batches": 1,
   "input_size": 2,
@@ -13,7 +13,6 @@
   "n_dat": 40000,
   "quadratic": 0,
   "cross_term": 0,
-  "animation": 0,
   "coeff": [
     {
       "op": "ctgre",
@@ -25,12 +24,12 @@
     }
   ],
   "event_data": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l",
-  "training_report": 0,
   "features": [
     "m_tt",
     "y"
   ],
-  "lag_mult": 100,
+  "lag_mult": 0,
   "loss_type": "CE",
-  "scaler_type": "robust"
+  "scaler_type": "robust",
+  "patience": 50
 }

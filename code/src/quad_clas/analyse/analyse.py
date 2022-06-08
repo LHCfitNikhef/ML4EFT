@@ -354,7 +354,7 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
     return fig
 
 
-def coeff_comp(path_to_models, network_size, c1, c2, c_train, n_kin, process, lin=False, quad=False, cross=False, path_sm_data=None):
+def coeff_comp(path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=False, cross=False, path_sm_data=None):
     """
     Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 

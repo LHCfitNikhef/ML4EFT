@@ -11,8 +11,8 @@ import subprocess
 import PyPDF2
 
 path_to_models = {'lin': {
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/07/model_ctgre_lin_v10',
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/07/model_ctgre_lin_v10'}}
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_v1',
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_v1'}}
 
 path_to_runcard = os.path.join(path_to_models['lin']['ctgre'], 'mc_run_0/run_card.json')
 report_path = os.path.join(path_to_models['lin']['ctgre'], 'report')
@@ -58,6 +58,26 @@ fig_accuracy_1d = analyse.accuracy_1d(c=[-5,0],
                                       quad=False)
 
 fig_accuracy_1d.savefig(os.path.join(report_path, 'decision_fct_1d.pdf'))
+
+# performance heatmaps (2d)
+
+heatmap_median, heatmap_pull = analyse.coeff_comp(
+    path_to_models=path_to_models,
+    c1=-10,
+    c2=0,
+    c_train={
+        "ctgre": -10,
+        "cuu_quad": 100.0
+    },
+    n_kin=2,
+    process='tt',
+    lin=True,
+    quad=False,
+    cross=False,
+    path_sm_data=None)
+
+heatmap_median.savefig(os.path.join(report_path, 'heatmap_med.pdf'))
+heatmap_pull.savefig(os.path.join(report_path, 'heatmap_pull.pdf'))
 
 
 L = [
@@ -134,11 +154,11 @@ def PDFmerge(pdfs, output):
 
 def main():
     # pdf files to merge
-    pdfs = ['my_report.pdf', 'median_comp_ctgre_lin_v9.pdf', 'overview_comp_ctgre_lin_v9.pdf', 'decision_fct_1d.pdf']
+    pdfs = ['my_report.pdf', 'median_pbp.pdf', 'reps_pbp.pdf', 'decision_fct_1d.pdf', 'heatmap_med.pdf', 'heatmap_pull.pdf']
     pdfs = [os.path.join(report_path, pdf_i) for pdf_i in pdfs]
 
     # output pdf file name
-    output = os.path.join(report_path, 'combined_example.pdf')
+    output = os.path.join(report_path, 'training_report.pdf')
 
     # calling pdf merge function
     PDFmerge(pdfs=pdfs, output=output)

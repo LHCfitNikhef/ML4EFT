@@ -79,9 +79,9 @@ class ConstraintActivation(CustomActivationFunction):
 
     def forward(self, x):
         if self.c > 0:
-            return torch.relu(x) - 1 / self.c
+            return torch.relu(x) - 1 / self.c + 1e-6
         else:
-            return - torch.relu(x) - 1 / self.c
+            return - torch.relu(x) - 1 / self.c - 1e-6
 
 
 class PredictorLinear(nn.Module):
@@ -100,7 +100,6 @@ class PredictorLinear(nn.Module):
         # add final activation function to enforce positive r
 
         n_alpha_out = self.n_alpha(x)
-
         return 1 / (1 + (1 + self.c * n_alpha_out))
 
 
@@ -307,13 +306,13 @@ class Fitter:
             self.run_options = json.load(json_data)
 
         self.run = self.run_options['name']
-        self.training_report = self.run_options["training_report"]
         self.lr = self.run_options["lr"]
         self.n_batches = self.run_options["n_batches"]
         self.quadratic = self.run_options['quadratic']
         self.cross_term = self.run_options['cross_term']
         self.loss_type = self.run_options['loss_type']
         self.scaler_type = self.run_options['scaler_type']
+        self.patience = self.run_options['patience']
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
         self.network_size = [self.run_options['input_size']] + self.run_options['hidden_sizes'] + [
@@ -486,9 +485,8 @@ class Fitter:
 
         # we want to be able to keep track of potential over-fitting, so introduce a counter that gets increased
         # by one whenever the the validation loss increases during an epoch
-        loss_val_old = 0
+
         overfit_counter = 0
-        patience = 50
 
         # outer loop that runs over the number of epochs
         iterations = 0
@@ -518,7 +516,7 @@ class Fitter:
                         if isinstance(self.model, PredictorCross):
                             output = self.model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
                                            self.path_quad_2)
-                        loss = self.loss_fn(output, label, weight, self.lag_mult)
+                        loss = self.loss_fn(output, label, weight)
                         val_loss += loss
                     assert val_loss.requires_grad is False
 
@@ -534,14 +532,13 @@ class Fitter:
                 for i, [event, weight, label] in enumerate(minibatch): # i=0: eft, i=1: sm
                     if isinstance(self.model, PredictorLinear):
                         output = self.model(event.float())
-                        # import pdb;
-                        # pdb.set_trace()
+
                     if isinstance(self.model, PredictorQuadratic):
                         output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1, self.path_dict['mc_path'])
                     if isinstance(self.model, PredictorCross):
                         output = model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
                                        self.path_quad_2, self.path_dict['mc_path'])
-                    loss = self.loss_fn(output, label, weight, self.lag_mult)
+                    loss = self.loss_fn(output, label, weight)
                     train_loss += loss
 
                 # do gradient descent after each minibatch. Move to the next epoch when all minibatches are looped over.
@@ -577,8 +574,8 @@ class Fitter:
             else:
                 overfit_counter = 0
 
-            if overfit_counter == patience:
-                stopping_point = epoch - patience # TODO subtract an addition 0ne
+            if overfit_counter == self.patience:
+                stopping_point = epoch - self.patience # TODO subtract an addition 0ne
                 logging.info("Stopping point reached! Overfit counter = {}".format(overfit_counter))
                 shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
                 logging.info("Backwards stopping done")
@@ -587,41 +584,7 @@ class Fitter:
             loss_val_old = loss_val
             iterations += 1
 
-        # produce training report
-        if self.training_report:
-            logging.info("Finished training, producing training report at {}".format(path + 'plots/training_report/'))
-            self.make_training_report(loss_list_train, loss_list_val)
-        else:
-            logging.info("Finished training")
-
-    def make_training_report(self, train_loss, val_loss):
-        """
-        Produce a training report
-
-        Parameters
-        ----------
-        train_loss: numpy.ndarray, shape=(M,)
-            Training loss of length M
-        val_loss: numpy.ndarray, shape=(M,)
-            Validation loss of length M
-        """
-
-        training_report_path = self.path_dict['mc_path'] + 'plots/training_report/'
-        if not os.path.exists(training_report_path):
-            os.makedirs(training_report_path)
-
-        # loss plot
-        fig = self.plot_loss(train_loss, val_loss)
-        fig.savefig(training_report_path + 'loss.pdf')
-
-        # f accuracy plot
-        fig = analyse.coeff_comp_rep(self.path_dict['mc_path'],
-                                     self.network_size,
-                                     self.c1,
-                                     self.c2,
-                                     self.quadratic,
-                                     self.cross_term)
-        fig.savefig(training_report_path + 'performance.pdf')
+        logging.info("Finished training")
 
     def weight_reset(self, m):
         """
@@ -672,6 +635,10 @@ class Fitter:
         """
 
         if self.loss_type == 'CE':
+
+            # if any(outputs >= 1) or any(outputs <= 0):
+            #     import pdb;
+            #     pdb.set_trace()
             loss = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
         elif self.loss_type == 'QC':
             loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
