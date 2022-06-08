@@ -587,6 +587,7 @@ def load_coefficients_nn(df, c_train, path_to_models, epoch=-1):
                     scaler = joblib.load(scaler_path)
                     features_scaled = scaler.transform(df[features])
 
+
                     with torch.no_grad():
                         n_alphas.append(loaded_model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten())
 
@@ -661,9 +662,9 @@ def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=
     r_truth = likelihood_ratio_truth(events, c, process=process, lin=lin, quad=quad, n_kin=n_kin)
     tau_truth = np.log(r_truth)
 
-    mzh = events['m_tt'].values
-    mask = np.argwhere(mzh < 0.5).flatten()
-    mask_comp = np.setdiff1d(np.arange(len(events)), mask)
+    # mzh = events['m_tt'].values
+    # mask = np.argwhere(mzh < 0.5).flatten()
+    # mask_comp = np.setdiff1d(np.arange(len(events)), mask)
 
     # overview plot for all replicas
     ncols = 5
@@ -675,9 +676,9 @@ def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=
     x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
     for i in range(mc_reps):
         ax = plt.subplot(nrows, ncols, i + 1)
-        plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
-        plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='red')
-        #plt.scatter(tau_truth, tau_nn[i,:], s=2)
+        # plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
+        # plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='red')
+        plt.scatter(tau_truth, tau_nn[i,:], s=2, color='k')
         plt.plot(x, x, linestyle='dashed', color='grey')
         plt.text(0.1, 0.9, 'rep {}'.format(model_idx[i]), horizontalalignment='left',
                  verticalalignment='center',
@@ -694,9 +695,9 @@ def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=
     x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
     #x= np.linspace(0, 6, 100)
 
-    plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
-    plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='red')
-    #plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
+    # plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
+    # plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='red')
+    plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
     plt.plot(x, x, linestyle='dashed', color='grey')
     plt.xlabel(r'$\tau(x, c)^{\rm{truth}}$')
     plt.ylabel(r'$\tau(x, c)^{\rm{NN}}$')
@@ -799,8 +800,9 @@ def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad):
     x = np.linspace(2 * mt + 1e-2, 3.0, 200)
     x = np.stack((x, np.zeros(len(x))), axis=-1)
 
-    df = pd.DataFrame(x, columns=['m_tt', 'y'])
-    f_ana_lin = decision_function_truth(df, c, n_kin=2, process='tt', lin=True, quad=False)
+    #df = pd.DataFrame(x, columns=['m_tt', 'y'])
+    df = pd.DataFrame(x, columns=['m_zh', 'y'])
+    f_ana_lin = decision_function_truth(df, c, n_kin=2, process=process, lin=True, quad=False)
 
     f_preds_nn = decision_function_nn(df, c, c_train,
                                  path_to_models,

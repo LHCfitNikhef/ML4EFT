@@ -10,12 +10,17 @@ import re
 import subprocess
 import PyPDF2
 
-path_to_models = {'lin': {
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_m_tt_gt_05',
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_m_tt_gt_05'}}
+# path_to_models = {'lin': {
+#     'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_m_tt_gt_05',
+#     'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_m_tt_gt_05'}}
 
-path_to_runcard = os.path.join(path_to_models['lin']['ctgre'], 'mc_run_0/run_card.json')
-report_path = os.path.join(path_to_models['lin']['ctgre'], 'report')
+path_to_models = {'lin': {
+    'cHW': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/2022/06/08/model_chw_lin_baseline',
+    'cHW': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/2022/06/08/model_chw_lin_baseline'}}
+
+
+path_to_runcard = os.path.join(path_to_models['lin']['cHW'], 'mc_run_0/run_card.json')
+report_path = os.path.join(path_to_models['lin']['cHW'], 'report')
 if not os.path.exists(report_path):
     os.makedirs(report_path)
 
@@ -23,7 +28,10 @@ if not os.path.exists(report_path):
 
 # ttbar
 
-sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
+
+#sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
+sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh/features_mzh_y_ptz/sm/events_0.pkl.gz'
+
 
 n_dat = 5000
 events_sm = pd.read_pickle(sm_data_path).iloc[1:, :].sample(int(n_dat), random_state=1)
@@ -32,14 +40,14 @@ luminosity = 5e3
 
 fig_reps, fig_median = analyse.point_by_point_comp(
     events=events_sm,
-    c=np.array([-2, 0]),
+    c=np.array([2, 0]),
     path_to_models=path_to_models,
     c_train={
-        "ctgre": -10.0,
+        "cHW": 10.0,
         "cuu": 0
     },
     n_kin=2,
-    process='tt',
+    process='ZH',
     lin=True,
     quad=False,
     epoch=-1)
@@ -50,11 +58,11 @@ fig_median.savefig(os.path.join(report_path, 'median_pbp.pdf'))
 
 # decision function (1d)
 
-fig_accuracy_1d = analyse.accuracy_1d(c=[-5, 0],
+fig_accuracy_1d = analyse.accuracy_1d(c=[2, 0],
                                       path_to_models=path_to_models,
-                                      c_train={"ctgre": -10, "cuu_quad": 100.0},
+                                      c_train={"cHW": 10, "cuu_quad": 100.0},
                                       epoch=-1,
-                                      process='tt',
+                                      process='ZH',
                                       lin=True,
                                       quad=False)
 
@@ -64,14 +72,14 @@ fig_accuracy_1d.savefig(os.path.join(report_path, 'decision_fct_1d.pdf'))
 
 heatmap_median, heatmap_pull = analyse.coeff_comp(
     path_to_models=path_to_models,
-    c1=-10,
+    c1=10,
     c2=0,
     c_train={
-        "ctgre": -10,
+        "cHW": 10,
         "cuu_quad": 100.0
     },
     n_kin=2,
-    process='tt',
+    process='ZH',
     lin=True,
     quad=False,
     cross=False,
