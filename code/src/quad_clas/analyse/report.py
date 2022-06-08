@@ -11,8 +11,8 @@ import subprocess
 import PyPDF2
 
 path_to_models = {'lin': {
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_v1',
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_v1'}}
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_baseline',
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_baseline'}}
 
 path_to_runcard = os.path.join(path_to_models['lin']['ctgre'], 'mc_run_0/run_card.json')
 report_path = os.path.join(path_to_models['lin']['ctgre'], 'report')
@@ -50,10 +50,11 @@ fig_median.savefig(os.path.join(report_path, 'median_pbp.pdf'))
 
 # decision function (1d)
 
-fig_accuracy_1d = analyse.accuracy_1d(c=[-5,0],
+fig_accuracy_1d = analyse.accuracy_1d(c=[-5, 0],
                                       path_to_models=path_to_models,
-                                      c_train={"ctgre": -10,"cuu_quad": 100.0},
+                                      c_train={"ctgre": -10, "cuu_quad": 100.0},
                                       epoch=-1,
+                                      process='tt',
                                       lin=True,
                                       quad=False)
 

@@ -431,9 +431,9 @@ def coeff_comp(path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=
     median_ratio = coeff_truth / coeff_nn_median
     title= r'$\rm{Truth/NN\;(median)}$'
 
-
+    xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
     fig1 = plot_heatmap(median_ratio,
-                        xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
+                        xlabel=xlabel,
                         ylabel=r'$\rm{Rapidity}$',
                         title=title,
                         extent=[mx_min, mx_max, y_min, y_max],
@@ -444,7 +444,7 @@ def coeff_comp(path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=
     pull = (coeff_truth - coeff_nn_median) / coeff_nn_unc
 
     fig2 = plot_heatmap(pull,
-                        xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
+                        xlabel=xlabel,
                         ylabel=r'$\rm{Rapidity}$',
                         title=r'$\rm{Pull}$',
                         extent=[mx_min, mx_max, y_min, y_max],
@@ -792,7 +792,7 @@ def decision_function_nn(df, c, train_parameters, path_to_models, epoch=-1, lin=
     f = 1 / (1 + ratio)
     return f
 
-def accuracy_1d(c, path_to_models, c_train, epoch, lin, quad):
+def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad):
 
     fig, ax = plt.subplots(figsize=(10,6))
 
@@ -817,10 +817,11 @@ def accuracy_1d(c, path_to_models, c_train, epoch, lin, quad):
     #ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
 
     plt.ylim((0, 1))
-    #plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
-    plt.xlim(np.min(x[:, 0]), 0.5)
+    plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
+    #plt.xlim(np.min(x[:, 0]), 0.5)
     plt.ylabel(r'$f\;(x, c)$')
-    plt.xlabel(r'$m_{ZH}\;[\mathrm{TeV}]$')
+    xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
+    plt.xlabel(xlabel)
     plt.legend()
     plt.tight_layout()
     return fig

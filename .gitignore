@@ -284,6 +284,7 @@ TSWLatexianTemp*
 
 #Directories
 code/output/models/
+
 code/quad_clas/lhapdf_install_folder/
 code/quad_clas/qc_results/trained_nn/
 code/quad_clas/temp/
@@ -299,23 +300,25 @@ sphinx/_build/
 **/ML4EFT.egg-info/
 /code/output/
 /plots/
-/models/**/*.pdf
+#/models/**/*.pdf
 /training_data/events_high_stats/
 /training_data/pt_sm/
 /paper/ML4EFT_paper.pdf
 /madgraph_debug/
 /output/contours/
-/models/
+
+/models/*
+
 
 #madgraph runcards
 code/cluster/launch_scripts/event_generation/mg5_runcards
 
 #pytorch files
 *.pt
-/models/quad/
-!/models/**/*.pt
-!/models/**/*.out
-!/models/**/*.log
+#/models/quad/
+#!/models/**/*.pt
+#!/models/**/*.out
+#!/models/**/*.log
 
 #Cluster output files
 *.pbs.*

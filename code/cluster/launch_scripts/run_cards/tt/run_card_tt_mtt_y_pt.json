@@ -1,6 +1,6 @@
 {
-  "name": "ctgre_lin_v1",
-  "epochs": 100,
+  "name": "ctgre_lin_m_tt_05",
+  "epochs": 1000,
   "lr": 0.001,
   "n_batches": 1,
   "input_size": 2,
