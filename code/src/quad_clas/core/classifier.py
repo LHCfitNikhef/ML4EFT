@@ -167,23 +167,40 @@ class PredictorCross(nn.Module):
 
 class PreProcessing():
 
-    def __init__(self, n_dat, path, features):
+    def __init__(self, n_dat, path, features, scaler_type):
 
         self.n_dat = n_dat
         self.path = path
         self.features = features
-        self.scaler = None
+
+        if scaler_type == 'robust':
+            self.scaler = RobustScaler(quantile_range=(5, 95))
+        elif scaler_type == 'standardise':
+            self.scaler = StandardScaler()
+        else:
+            self.scaler = QuantileTransformer(n_quantiles=1000, output_distribution='normal')
+
         self.load_data()
 
     def load_data(self):
 
         df_sm = pd.read_pickle(self.path['sm'], compression="infer")
         self.xsec_sm = df_sm.iloc[0, 0]
-        self.df_sm = df_sm.iloc[1:,:].sample(self.n_dat)
+        # test
+        df_sm = df_sm[(df_sm['m_tt'] < 0.5) & (df_sm['m_tt'] > 0.36)]
+
+
+        #self.df_sm = df_sm.iloc[1:,:].sample(self.n_dat)
+        self.df_sm = df_sm.sample(self.n_dat)
 
         df_eft = pd.read_pickle(self.path['eft'], compression="infer")
+
+        # test
         self.xsec_eft = df_eft.iloc[0, 0]
-        self.df_eft = df_eft.iloc[1:, :].sample(self.n_dat)
+        df_eft = df_eft[(df_eft['m_tt'] < 0.5) & (df_eft['m_tt'] > 0.36)]
+
+        #self.df_eft = df_eft.iloc[1:, :].sample(self.n_dat)
+        self.df_eft = df_eft.sample(self.n_dat)
 
 
     def feature_scaling(self, scaler_path):
@@ -202,11 +219,7 @@ class PreProcessing():
 
         df = pd.concat([self.df_sm, self.df_eft])
 
-        # initialise sklearn scalers
-        self.scaler = RobustScaler(quantile_range=(5, 95))
-        #self.scaler = StandardScaler()
-        #self.scaler = QuantileTransformer(n_quantiles=1000, output_distribution='normal')
-        # fit a robust transformer to the eft and sm features
+        # fit the scaler transformer to the eft and sm features
         self.scaler.fit(df[self.features])
 
         # rescale the sm and eft data
@@ -220,10 +233,11 @@ class PreProcessing():
         # import matplotlib.pyplot as plt
         # bins = np.concatenate([np.array([-2]), np.linspace(-1, 1, 20), np.array([2])])
         # kwargs = dict(histtype='stepfilled', alpha=0.3, density=False, bins=bins, ec="k")
-        # plt.hist(df_sm_scaled['log_m_zh'].values, **kwargs, label=r'$\rm{SM}$')
+        # plt.hist(df_sm_scaled['m_tt'].values, **kwargs, label=r'$\rm{SM}$')
         #
         # plt.xlim(-1.2, 1.2)
-        # plt.show()
+        # plt.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/07_06/feature_scaling_tt_v2.pdf')
+        # # plt.show()
         # import pdb; pdb.set_trace()
 
         # save the scaler
@@ -292,13 +306,14 @@ class Fitter:
         with open(json_path) as json_data:
             self.run_options = json.load(json_data)
 
-        self.scaler = None
         self.run = self.run_options['name']
         self.training_report = self.run_options["training_report"]
         self.lr = self.run_options["lr"]
         self.n_batches = self.run_options["n_batches"]
         self.quadratic = self.run_options['quadratic']
         self.cross_term = self.run_options['cross_term']
+        self.loss_type = self.run_options['loss_type']
+        self.scaler_type = self.run_options['scaler_type']
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
         self.network_size = [self.run_options['input_size']] + self.run_options['hidden_sizes'] + [
@@ -313,7 +328,6 @@ class Fitter:
         self.lag_mult = self.run_options['lag_mult']
 
         self.features = self.run_options['features']
-
 
         output_dir = os.path.join(output_dir, time.strftime("%Y/%m/%d"))
         os.makedirs(output_dir, exist_ok=True)
@@ -402,7 +416,7 @@ class Fitter:
         path_dict = {'sm': path_sm, 'eft': path_eft}
 
         # preprocessing of the data
-        preproc = PreProcessing(self.n_dat, path_dict, self.features)
+        preproc = PreProcessing(self.n_dat, path_dict, self.features, self.scaler_type)
 
         # save the scaler
         scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
@@ -448,8 +462,8 @@ class Fitter:
         # define the optimizer
         optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
 
-        decay_rate = 0.96
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer)
+        #decay_rate = 0.96
+        #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer)
 
         # we use PyTorche's dataloader object to allow for mini-batches. After each epoch, the minibatches reshuffle.
         # we create a dataloader object for each eft point + sm and put them all in one big list called train_data_loader
@@ -462,7 +476,7 @@ class Fitter:
             dataset_val in data_val]
 
         # call the training loop
-        self.training_loop(optimizer=optimizer, train_loader=train_data_loader, val_loader=val_data_loader, scheduler=scheduler)
+        self.training_loop(optimizer=optimizer, train_loader=train_data_loader, val_loader=val_data_loader, scheduler=None)
 
     def training_loop(self, optimizer, train_loader, val_loader, scheduler):
 
@@ -474,7 +488,7 @@ class Fitter:
         # by one whenever the the validation loss increases during an epoch
         loss_val_old = 0
         overfit_counter = 0
-        patience = 100
+        patience = 50
 
         # outer loop that runs over the number of epochs
         iterations = 0
@@ -537,7 +551,7 @@ class Fitter:
 
                 loss_train += train_loss.item()
 
-            scheduler.step(train_loss)
+            #scheduler.step(train_loss)
 
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
@@ -648,9 +662,8 @@ class Fitter:
         plt.tight_layout()
         return fig
 
-    @staticmethod
-    def loss_fn(outputs, labels, w_e, lag_mult):
-        #TODO: update documentation
+    def loss_fn(self, outputs, labels, w_e):
+
         """
         :param outputs: outputs.shape = (batch_size, 1), output \in (0, 1)
         :param labels: labels.shape = (batch_size, 1), labels \in {0, 1}
@@ -658,13 +671,20 @@ class Fitter:
         :return: contribution to loss from a sample x ~ pdf(x|H_0,1)
         """
 
-        #loss_CE = -(1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
-        loss_QC = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
-        relu = nn.ReLU()
-        penalty = lag_mult * relu((outputs - 1) / outputs)
+        if self.loss_type == 'CE':
+            loss = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
+        elif self.loss_type == 'QC':
+            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
+
+        if self.lag_mult != 0:
+            relu = nn.ReLU()
+            penalty = lag_mult * relu((outputs - 1) / outputs) # r = (1 - f) / f, give penalty if r < 0
+        else:
+            penalty = 0
+
         # add up all the losses in the batch
-        return torch.sum(loss_QC + penalty, dim=0)
-        #return torch.sum(loss_CE, dim=0)
+        return torch.sum(loss + penalty, dim=0)
+
 
 
 

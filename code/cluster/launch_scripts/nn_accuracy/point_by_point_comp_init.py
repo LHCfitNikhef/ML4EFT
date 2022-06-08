@@ -21,8 +21,8 @@ architecture = [2, 100, 100, 100, 1]
 # tt
 
 path_to_models = {'lin': {
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/model_ctgre_lin',
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/model_ctgre_lin'}}
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/07/model_ctgre_lin_v9',
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/07/model_ctgre_lin_v9'}}
 
 
 #sm_data_path = '/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2/sm/events_0.pkl.gz'
@@ -36,6 +36,7 @@ sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/
 n_dat = 5000
 events_sm = pd.read_pickle(sm_data_path).iloc[1:, :].sample(int(n_dat), random_state=1)
 
+events_sm = events_sm[(events_sm['m_tt'] < 0.5)]
 #events_sm = events_sm.drop(columns='pt_t')
 #events_sm['y'] = 0
 
@@ -55,7 +56,7 @@ luminosity = 5e3
 mc_reps = 1
 
 # location where to save the plot
-plot_save = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/03_06'
+plot_save = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/07_06'
 
 # fig1, fig2 = analyse.point_by_point_comp(
 #     events=events_sm,
@@ -70,10 +71,10 @@ plot_save = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/03_06'
 #     process='tt',
 #     lin=True,
 #     quad=False)
-
+#events_sm['y'] = 0
 fig1, fig2 = analyse.point_by_point_comp(
     events=events_sm,
-    c=np.array([-5, 0]),
+    c=np.array([-2, 0]),
     path_to_models=path_to_models,
     c_train={
         "ctgre": -10.0,
@@ -83,7 +84,7 @@ fig1, fig2 = analyse.point_by_point_comp(
     process='tt',
     lin=True,
     quad=False,
-    epoch=100)
+    epoch=300)
 
-fig1.savefig(os.path.join(plot_save, 'overview_comp_ctgre_lin_epoch_100.pdf'))
-fig2.savefig(os.path.join(plot_save, 'median_comp_ctgre_lin_epoch_100.pdf'))
+fig1.savefig(os.path.join(plot_save, 'overview_comp_ctgre_lin_v9.pdf'))
+fig2.savefig(os.path.join(plot_save, 'median_comp_ctgre_lin_v9.pdf'))

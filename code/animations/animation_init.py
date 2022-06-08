@@ -4,20 +4,28 @@ from quad_clas.analyse.animate import Animate
 #%%
 # 1D
 
+# zh llbb
+
+# path_to_models = {'lin': {
+#     'cuu_quad': '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_llbb/ltd/model_cuu_quad_v3',
+#     'cuu_quad': '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_llbb/ltd/model_cuu_quad_v3'}}
+
+# tt
+
 path_to_models = {'lin': {
-    'cuu_quad': '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_llbb/ltd/model_cuu_quad_v3',
-    'cuu_quad': '/data/theorie/jthoeve/ML4EFT_higgs/models/2022/zh_llbb/ltd/model_cuu_quad_v3'}}
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/07/model_ctgre_lin_v2',
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/07/model_ctgre_lin_v2'}}
 
 #%%
 animation1D = Animate(architecture=[2,100, 100, 100, 1],
-                      c=[0, 9],
+                      c=[-10, 0],
                       c_train={
-                          "cuu_quad": 100.0,
+                          "ctgre": -10.0,
                           "cuu_quad": 100.0
                       },
                       path_to_models=path_to_models,
-                      save_path='/data/theorie/jthoeve/ML4EFT_higgs/output/animations/26_04/cuu_quad.gif',
-                      frames=50,
+                      save_path='/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/07_06/ctgre_lin_anim_200_epochs.gif',
+                      frames=100,
                       lin=True,
                       quad=False)
 animation1D.make_animation()

@@ -477,7 +477,8 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
     models = []
     losses = []
 
-    model_dirs = [os.path.join(model_dir, mc_run) for mc_run in os.listdir(model_dir)]
+    model_dirs = [os.path.join(model_dir, mc_run) for mc_run in os.listdir(model_dir) if mc_run.startswith('mc_run')]
+
     for dir in model_dirs:
         if lin:
             with open(os.path.join(dir, 'run_card.json')) as json_data:
@@ -660,9 +661,9 @@ def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=
     r_truth = likelihood_ratio_truth(events, c, process=process, lin=lin, quad=quad, n_kin=n_kin)
     tau_truth = np.log(r_truth)
 
-    # mzh = events['m_zh'].values
-    # mask = np.argwhere(mzh > 1.0).flatten()
-    # mask_comp = np.setdiff1d(np.arange(len(events)), mask)
+    mzh = events['m_tt'].values
+    mask = np.argwhere(mzh < 0.5).flatten()
+    mask_comp = np.setdiff1d(np.arange(len(events)), mask)
 
     # overview plot for all replicas
     ncols = 5
@@ -674,9 +675,9 @@ def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=
     x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
     for i in range(mc_reps):
         ax = plt.subplot(nrows, ncols, i + 1)
-        #plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
-        #plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='k')
-        plt.scatter(tau_truth, tau_nn[i,:], s=2)
+        plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
+        plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='red')
+        #plt.scatter(tau_truth, tau_nn[i,:], s=2)
         plt.plot(x, x, linestyle='dashed', color='grey')
         plt.text(0.1, 0.9, 'rep {}'.format(model_idx[i]), horizontalalignment='left',
                  verticalalignment='center',
@@ -692,9 +693,10 @@ def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=
     fig2, ax = plt.subplots(figsize=(8, 8))
     x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
     #x= np.linspace(0, 6, 100)
-    # plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='k')
-    # plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
-    plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
+
+    plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
+    plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='red')
+    #plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
     plt.plot(x, x, linestyle='dashed', color='grey')
     plt.xlabel(r'$\tau(x, c)^{\rm{truth}}$')
     plt.ylabel(r'$\tau(x, c)^{\rm{NN}}$')
@@ -761,7 +763,7 @@ def likelihood_ratio_nn(df, c, train_parameters, path_to_models, epoch=-1, lin=F
     return r, model_idx
 
 
-def decision_function_nn(df, c, train_parameters, path_to_models, network_size, epoch=-1, lin=False, quad=False):
+def decision_function_nn(df, c, train_parameters, path_to_models, epoch=-1, lin=False, quad=False):
     """
     Computes the reconstructed decission function f(x, c)
 
@@ -786,21 +788,23 @@ def decision_function_nn(df, c, train_parameters, path_to_models, network_size, 
     f: numpy.ndarray, shape=(M,)
         Reconstructed decission function f for the events ``x``
     """
-    ratio, model_idx = likelihood_ratio_nn(df, c, train_parameters, path_to_models, network_size, epoch, lin=lin, quad=quad)
+    ratio, model_idx = likelihood_ratio_nn(df, c, train_parameters, path_to_models, epoch, lin=lin, quad=quad)
     f = 1 / (1 + ratio)
     return f
 
-def accuracy_1d(c, path_to_models, network_size, mc_reps, epoch, lin, quad):
+def accuracy_1d(c, path_to_models, c_train, epoch, lin, quad):
 
     fig, ax = plt.subplots(figsize=(10,6))
 
-    x = np.linspace(mh + mz + 1e-2, 2.5, 100)
+    x = np.linspace(2 * mt + 1e-2, 3.0, 200)
     x = np.stack((x, np.zeros(len(x))), axis=-1)
 
-    x_nn = np.stack((np.log(np.linspace(mh + mz + 1e-2, 2.5, 100)), np.zeros(len(x))), axis=-1)
+    df = pd.DataFrame(x, columns=['m_tt', 'y'])
+    f_ana_lin = decision_function_truth(df, c, n_kin=2, process='tt', lin=True, quad=False)
 
-    f_ana_lin = decision_function_truth(x, c, lin=True)
-    f_preds_nn = decision_function_nn(x_nn, c, path_to_models, network_size, mc_reps, epoch, lin, quad)
+    f_preds_nn = decision_function_nn(df, c, c_train,
+                                 path_to_models,
+                                 lin=True, quad=False)
 
     f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
     f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
@@ -813,7 +817,8 @@ def accuracy_1d(c, path_to_models, network_size, mc_reps, epoch, lin, quad):
     #ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
 
     plt.ylim((0, 1))
-    plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
+    #plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
+    plt.xlim(np.min(x[:, 0]), 0.5)
     plt.ylabel(r'$f\;(x, c)$')
     plt.xlabel(r'$m_{ZH}\;[\mathrm{TeV}]$')
     plt.legend()

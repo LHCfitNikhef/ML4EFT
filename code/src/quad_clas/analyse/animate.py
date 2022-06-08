@@ -38,7 +38,7 @@ class Animate:
         #x = np.stack((x, 2* np.ones(len(x))), axis=-1)
 
         df = pd.DataFrame(x, columns=['m_tt', 'y'])
-        f_ana_lin = analyse.decision_function_truth(df, self.c, n_kin=2, process='tt', quad=True)
+        f_ana_lin = analyse.decision_function_truth(df, self.c, n_kin=2, process='tt', lin=True, quad=False)
         #f_ana_quad = analyse.decision_function_truth(df, self.c, quad=True)
 
         fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
@@ -49,10 +49,10 @@ class Animate:
 
         f_preds_lin_init = analyse.decision_function_nn(df, self.c, self.c_train,
                                                         self.path_to_models,
-                                                        self.architecture,
                                                         epoch=1,
                                                         lin=self.lin,
                                                         quad=self.quad)
+
 
         # create empty line objects
         lines = []
@@ -80,8 +80,9 @@ class Animate:
 
         plt.legend(loc='upper right', fontsize=15, frameon=False)
         plt.ylim((0, 1))
+        plt.xlim(np.min(x[:, 0]), 0.5)
 
-        plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
+        #plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
         plt.ylabel(r'$f\;(x, c)$')
         #plt.xlabel(r'$m_{ZH}\;[\mathrm{TeV}]$')
         plt.xlabel(r'$m_{t\bar{t}}\;[\mathrm{TeV}]$')
@@ -97,7 +98,7 @@ class Animate:
         # animation function.  This is called sequentially
         def animate(i):
             print(i)
-            f_preds_nn = analyse.decision_function_nn(df, self.c, self.c_train, self.path_to_models, self.architecture, epoch=i + 1,
+            f_preds_nn = analyse.decision_function_nn(df, self.c, self.c_train, self.path_to_models, epoch=i + 1,
                                                        lin=self.lin, quad=self.quad)
             for rep_nr, line in enumerate(lines):
                 line.set_data(x[:, 0], f_preds_nn[rep_nr, :])

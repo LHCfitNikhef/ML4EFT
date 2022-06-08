@@ -17,7 +17,7 @@ bin_width = 10 * 10 ** -3
 
 title = r'$\rm{t\bar{t}}\;\rm{production}\;\rm{benchmark,}\;\rm{LO+}\mathcal{O}\left(\Lambda^{-4}\right)$'#title = r'$t\bar{t}\;\rm{production}\;\rm{benchmark,}\;\rm{sm}$'
 
-event_path = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/quad/ctgre/events_0.pkl.gz"
+event_path = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz"
 #event_path = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/U35/quad/cuu/events_0.pkl.gz"
 df = pd.read_pickle(event_path)
 
@@ -47,7 +47,8 @@ def plot_benchmark(df, c1, c2, title, lin=False, quad=False):
     y_max = np.max(cross_section)
     ax1.set_ylim((0.8*y_min, 1.5*y_max))
 
-    ax1.set_xlim((0.2, 1.5))
+    #ax1.set_xlim((0.2, 1.5))
+    ax1.set_xlim((0.35, 0.5))
     plt.yscale('log')
 
     plt.ylabel(r'$d\sigma/dm_{t\bar{t}}\;\mathrm{[pb\:TeV^{-1}]}$')
@@ -61,11 +62,11 @@ def plot_benchmark(df, c1, c2, title, lin=False, quad=False):
 
     plt.ylabel(r'$\rm{num/ana}$')
 
-    plt.xlim((0.2, 1.5))
+    plt.xlim((0.35, 0.5))
     plt.xlabel(r'$m_{t\bar{t}}\;\mathrm{[TeV]}$')
     return fig
 
 
-fig = plot_benchmark(df, -10, 0, title, lin=False, quad=True)
+fig = plot_benchmark(df, 0, 0, title, lin=True, quad=False)
 
-fig.savefig("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/01_06/tt_benchmark_ctgre_quad.pdf")
+fig.savefig("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/07_06/tt_benchmark_sm.pdf")

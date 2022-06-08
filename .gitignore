@@ -279,6 +279,9 @@ TSWLatexianTemp*
 #Les Houches Event files
 *.lhe
 
+# stoomboot output files
+*.sh.*
+
 #Directories
 code/output/models/
 code/quad_clas/lhapdf_install_folder/
