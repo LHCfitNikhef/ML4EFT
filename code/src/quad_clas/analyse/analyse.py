@@ -354,7 +354,7 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
     return fig
 
 
-def coeff_comp(path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=False, cross=False, path_sm_data=None):
+def coeff_comp(path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=False, cross=False, path_sm_data=None, cut=None):
     """
     Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
@@ -384,9 +384,11 @@ def coeff_comp(path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=
     epsilon = 1e-2
 
     if process == 'ZH':
-        mx_min, mx_max = mz + mh + epsilon, 2
+        mx_min = mz + mh + epsilon if cut is None else cut
+        mx_max = 2
     elif process == 'tt':
-        mx_min, mx_max = 2 * mt + epsilon, 2
+        mx_min = 2 * mt + epsilon if cut is None else cut
+        mx_max = 2
 
     y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
 
@@ -477,6 +479,7 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
     models = []
     losses = []
 
+    # collect all model directories
     model_dirs = [os.path.join(model_dir, mc_run) for mc_run in os.listdir(model_dir) if mc_run.startswith('mc_run')]
 
     for dir in model_dirs:
@@ -484,6 +487,7 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
             with open(os.path.join(dir, 'run_card.json')) as json_data:
                 run_card = json.load(json_data)
                 architecture = [run_card['input_size']] + run_card['hidden_sizes'] + [run_card['output_size']]
+                patience = run_card['patience']
             loaded_model = quad_clas.PredictorLinear(architecture, c_train)
         elif quad:
             loaded_model = quad_clas.PredictorQuadratic(architecture)
@@ -502,8 +506,8 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
         with open(path_to_loss) as file:
             loss = [float(line.rstrip()) for line in file]
 
-        # store the final loss of each model
-        losses.append(loss[-1])
+        # store the optimal training loss of each model
+        losses.append(loss[-patience])
 
         # load all the parameters into the trained network and save
         loaded_model.load_state_dict(torch.load(network_path))
@@ -516,28 +520,26 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
     cluster_labels = kmeans.labels_
     cluster_nr_low_loss = np.argmin(kmeans.cluster_centers_)
 
-    model_idx = np.argwhere(cluster_labels == cluster_nr_low_loss).flatten()
+    # find model indices in the low loss cluster
+    idx_low_loss = np.argwhere(cluster_labels == cluster_nr_low_loss).flatten()
 
-    if np.std(losses[model_idx]) / np.std(losses) < 0.1: # if relative std has been reduced by a factor 10
-        models_good = models[model_idx]
-    else:
+    if np.std(losses[idx_low_loss]) / np.std(losses) < 0.1: # if relative std has been reduced by a factor 10
+        models_good = models[idx_low_loss]
+    else: # don't select models based on clustering
         sigma_loss = (np.nanpercentile(losses, 84) - np.nanpercentile(losses, 16))
         los_med = np.nanpercentile(losses, 50)
 
-        model_idx = np.argwhere((los_med - 2 * sigma_loss < losses) & (losses < los_med + 2 * sigma_loss)).flatten()
-        models_good = models[model_idx]
+        idx_low_loss = np.argwhere((los_med - 2 * sigma_loss < losses) & (losses < los_med + 2 * sigma_loss)).flatten()
+        models_good = models[idx_low_loss]
 
-
-    # only keep models within 5 sigma
-
-
-    # retrieve the rep numbers of the good models
-    models_good_idx = []
-    for idx in model_idx:
+    # retrieve the rep numbers of the models in the low loss cluster
+    models_idx = []
+    for idx in idx_low_loss:
         mc_idx = int(os.path.basename(model_dirs[idx]).split('mc_run_', 1)[1])
-        models_good_idx.append(mc_idx)
+        models_idx.append(mc_idx)
+    models_idx = np.array(models_idx) # original indexing
 
-    return models_good, models_good_idx
+    return models_good, models_idx
 
 
 def load_coefficients_nn(df, c_train, path_to_models, epoch=-1):
@@ -587,12 +589,12 @@ def load_coefficients_nn(df, c_train, path_to_models, epoch=-1):
                     scaler = joblib.load(scaler_path)
                     features_scaled = scaler.transform(df[features])
 
-
                     with torch.no_grad():
                         n_alphas.append(loaded_model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten())
 
                 n_alphas = np.array(n_alphas)
                 n_lin.append(n_alphas)
+            n_lin = np.array(n_lin)
 
         if order == 'quad':
             for path in paths:
@@ -616,18 +618,99 @@ def load_coefficients_nn(df, c_train, path_to_models, epoch=-1):
                 n_gammas = np.array(n_gammas)
                 n_cross.append(n_gammas)
 
-    n_rep_min = min([n_lin_i.shape[0] for n_lin_i in n_lin])
+    # find the size of smallest replica set
+    # n_rep_min = min([n_lin_i.shape[0] for n_lin_i in n_lin])
 
-    n_lin_matched = np.zeros((len(n_lin), n_rep_min, len(df)))
-    for i, n_lin_i in enumerate(n_lin):
-        rnd_idx = np.random.choice(np.arange(n_lin_i.shape[0]), n_rep_min, replace=False)
-        n_lin_matched[i] = n_lin[i][rnd_idx, :]
-
+    #n_lin_matched = np.zeros((len(n_lin), n_rep_min, len(df)))
+    # for i, n_lin_i in enumerate(n_lin):
+    #     rnd_idx = np.random.choice(np.arange(n_lin_i.shape[0]), n_rep_min, replace=False)
+    #     n_lin_matched[i] = n_lin[i][rnd_idx, :]
+    #
     #n_lin = np.array(n_lin)
     n_quad = np.array(n_quad)
     n_cross = np.array(n_cross)
 
-    return [n_lin_matched, model_idx], n_quad, n_cross
+    return [n_lin, model_idx], n_quad, n_cross
+
+
+def plot_loss_overview(path_to_models, order, op):
+
+    model_dir_base = path_to_models[order][op]
+    model_dirs = [os.path.join(model_dir_base, mc_run) for mc_run in os.listdir(model_dir_base) if mc_run.startswith('mc_run')]
+
+    mc_reps = len(model_dirs)
+
+    # patience
+    # TODO: create training object so that the runcard does not to be loaded every time
+    with open(os.path.join(model_dirs[0], 'run_card.json')) as json_data:
+        patience = json.load(json_data)['patience']
+
+    # load training and validation losses
+    loss_train = []
+    loss_val = []
+    for i in range(mc_reps):
+        with open(os.path.join(model_dir_base, 'mc_run_{}'.format(i), 'loss.out')) as f:
+            loss_train.append([float(line) for line in f.read().splitlines()])
+        with open(os.path.join(model_dir_base, 'mc_run_{}'.format(i), 'loss_val.out')) as f:
+            loss_val.append([float(line) for line in f.read().splitlines()])
+
+    ncols = 5
+    nrows = int(np.ceil(mc_reps / ncols))
+
+    fig = plt.figure(figsize=(ncols * 4, nrows * 4))
+
+    from matplotlib.ticker import NullFormatter
+
+    train_loss_best = np.array([loss[-patience] for loss in loss_train])
+
+    for i in range(mc_reps):
+        ax = plt.subplot(nrows, ncols, i + 1)
+        epochs = np.arange(len(loss_train[i]))
+
+        label_val = r'$L_{\mathrm{val}}$' if i == 0 else None
+        label_train = r'$L_{\mathrm{tr}}$' if i == 0 else None
+
+        ax.plot(epochs, loss_train[i], label=label_train)
+        ax.plot(epochs, loss_val[i], label=label_val)
+        ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
+
+        ax.set_yscale('log')
+        ax.yaxis.set_major_formatter(NullFormatter())
+        ax.yaxis.set_minor_formatter(NullFormatter())
+        ax.axes.yaxis.set_ticklabels([])
+        ax.set_ymargin(0.1)
+
+        ax.text(0.9, 0.9, r"$\mathrm{{rep}}\;{}$".format(i), horizontalalignment='right',
+                 verticalalignment='center',
+                 transform=ax.transAxes)
+
+
+        ymax = loss_val[i][min([50, epochs[-patience] - 20])]
+        ymin = min(np.log10(loss_train[i])) - 0.1 * (np.log10(ymax) - min(np.log10(loss_train[i])))
+
+        ax.set_ylim(10 ** ymin, ymax)
+        ax.set_xlim(left=10)
+
+
+        med_loss = np.percentile(train_loss_best, 50)
+        low_loss = np.percentile(train_loss_best, 16)
+        high_loss = np.percentile(train_loss_best, 84)
+        loss_sigma = np.abs((high_loss - low_loss)/2)
+
+        signif = (train_loss_best[i] - med_loss) / loss_sigma
+
+        ax.text(0.9, 0.8, r"$Z={:.2f}$".format(signif), horizontalalignment='right',
+                verticalalignment='center',
+                transform=ax.transAxes)
+
+        #ax.fill_between(epochs, low_loss, high_loss, alpha=0.3)
+        ax.axhline(med_loss, 0, 1, color='k', linestyle='dotted')
+
+        if i == 0:
+            ax.legend(loc="lower left", frameon=False)
+
+    plt.tight_layout()
+    return fig
 
 
 def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=True, quad=False, epoch=-1):
@@ -656,6 +739,7 @@ def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=
     `matplotlib.figure.Figure`
         Plot of the median only
     """
+    plot_loss_overview(path_to_models, 'lin', 'ctgre')
     r_nn, model_idx = likelihood_ratio_nn(events, c, c_train, path_to_models, lin=lin, quad=quad, epoch=epoch)
     tau_nn = np.log(r_nn)
 
@@ -674,8 +758,11 @@ def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=
     fig1 = plt.figure(figsize=(ncols * 4, nrows * 4))
 
     x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
-    for i in range(mc_reps):
-        ax = plt.subplot(nrows, ncols, i + 1)
+
+    #for i in range(mc_reps):
+
+    for i in np.argsort(model_idx):
+        ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
         # plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
         # plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='red')
         plt.scatter(tau_truth, tau_nn[i,:], s=2, color='k')
@@ -800,8 +887,8 @@ def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad):
     x = np.linspace(2 * mt + 1e-2, 3.0, 200)
     x = np.stack((x, np.zeros(len(x))), axis=-1)
 
-    #df = pd.DataFrame(x, columns=['m_tt', 'y'])
-    df = pd.DataFrame(x, columns=['m_zh', 'y'])
+    df = pd.DataFrame(x, columns=['m_tt', 'y'])
+    #df = pd.DataFrame(x, columns=['m_zh', 'y'])
     f_ana_lin = decision_function_truth(df, c, n_kin=2, process=process, lin=True, quad=False)
 
     f_preds_nn = decision_function_nn(df, c, c_train,

@@ -183,23 +183,36 @@ class PreProcessing():
 
     def load_data(self):
 
-        df_sm = pd.read_pickle(self.path['sm'], compression="infer")
-        self.xsec_sm = df_sm.iloc[0, 0]
-        # test
-        #df_sm = df_sm[(df_sm['m_tt'] > 0.5)]
+        # sm
 
+        df_sm_full = pd.read_pickle(self.path['sm'], compression="infer")
+        df_sm_wo_xsec = df_sm_full.iloc[1:, :]
 
-        self.df_sm = df_sm.iloc[1:,:].sample(self.n_dat)
-        #self.df_sm = df_sm.sample(self.n_dat)
+        # cross section before cuts
+        self.xsec_sm = df_sm_full.iloc[0, 0]
 
-        df_eft = pd.read_pickle(self.path['eft'], compression="infer")
+        # reweigh the cross section after cuts
+        cuts = df_sm_wo_xsec['m_tt'] > 0.5
+        event_ratio_with_cut = len(df_sm_wo_xsec[cuts]) / len(df_sm_wo_xsec)
+        self.xsec_sm *= event_ratio_with_cut
 
-        # test
-        self.xsec_eft = df_eft.iloc[0, 0]
-        #df_eft = df_eft[(df_eft['m_tt'] > 0.5)]
+        self.df_sm = df_sm_wo_xsec[(df_sm_wo_xsec['m_tt'] > 0.5)].sample(self.n_dat)
 
-        self.df_eft = df_eft.iloc[1:, :].sample(self.n_dat)
-        #self.df_eft = df_eft.sample(self.n_dat)
+        # eft
+
+        df_eft_full = pd.read_pickle(self.path['eft'], compression="infer")
+        df_eft_wo_xsec = df_eft_full.iloc[1:, :]
+
+        # cross section before cuts
+        self.xsec_eft = df_eft_full.iloc[0, 0]
+
+        # reweigh the cross section after cuts
+        cuts = df_eft_wo_xsec['m_tt'] > 0.5
+        event_ratio_with_cut = len(df_eft_wo_xsec[cuts]) / len(df_eft_wo_xsec)
+        self.xsec_eft *= event_ratio_with_cut
+
+        self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_tt'] > 0.5)].sample(self.n_dat)
+
 
 
     def feature_scaling(self, scaler_path):

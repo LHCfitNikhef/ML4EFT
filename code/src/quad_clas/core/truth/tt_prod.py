@@ -16,12 +16,12 @@ from quad_clas.core.truth import vh_prod
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 mt = 0.17276  # 172 #Top quark mass plot_mg5_ana_mttin GeV
 s = 14 ** 2  # (14*10**3)**2#GeV^2
-Gf = 0.0000116637
+Gf = 0.000011663787
 v = 1 / np.sqrt(Gf * np.sqrt(2)) * 10 ** -3  # 1/np.sqrt(Gf*np.sqrt(2))
 asQCD = 0.1179
 LambdaSMEFT = 1  # 10**3
 pb_convert = 3.894E2
-yt = 0.9922828427689138
+yt = 1#0.9922828427689138
 
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
@@ -67,7 +67,7 @@ class crossSectionSMEFT:
                     108 * np.pi * LambdaSMEFT ** 4 * hats)
         #kappa_22 = sqrt * (9 * hats * (hats - mt ** 2)) / (108 * np.pi * LambdaSMEFT ** 4 * hats)
         kappa_22 = sqrt * ((hats - mt ** 2)) / (48 * np.pi * LambdaSMEFT ** 4 )
-        kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * yt * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
+        kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
         sm = (8 * np.pi * asQCD ** 2 * (2 * mt ** 2 + hats) * sqrt) / (27 * hats ** 2)
         if lin:
             return sm + cuGRe * kappa_1# + cuu * kappa_22

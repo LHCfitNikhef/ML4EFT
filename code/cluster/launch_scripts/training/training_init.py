@@ -4,15 +4,15 @@ import quad_clas.core.classifier as classifier
 # training settings
 
 # tt
-#path_to_json = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt/run_card_tt_mtt_y_pt.json'
+path_to_json = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt/run_card_tt_mtt_y_pt.json'
 
 # zh
-path_to_json = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/zh/run_card_zh_mzh_y.json'
+#path_to_json = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/zh/run_card_zh_mzh_y.json'
 
 nn_rep = sys.argv[1]
 
 # model directory
-output_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh'
+output_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt'
 
 # launch fit
 fitter = classifier.Fitter(path_to_json, nn_rep, output_path)

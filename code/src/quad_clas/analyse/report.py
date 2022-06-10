@@ -9,45 +9,54 @@ from pandas import json_normalize
 import re
 import subprocess
 import PyPDF2
-
-# path_to_models = {'lin': {
-#     'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_m_tt_gt_05',
-#     'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/08/model_ctgre_lin_m_tt_gt_05'}}
+import sys
 
 path_to_models = {'lin': {
-    'cHW': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/2022/06/08/model_chw_lin_baseline',
-    'cHW': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/2022/06/08/model_chw_lin_baseline'}}
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/10/model_ctgre_lin_m_tt_gt_05_v2',
+    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/10/model_ctgre_lin_m_tt_gt_05_v2'}}
+
+# path_to_models = {'lin': {
+#     'cHW': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/2022/06/08/model_chw_lin_baseline',
+#     'cHW': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh/2022/06/08/model_chw_lin_baseline'}}
 
 
-path_to_runcard = os.path.join(path_to_models['lin']['cHW'], 'mc_run_0/run_card.json')
-report_path = os.path.join(path_to_models['lin']['cHW'], 'report')
+path_to_runcard = os.path.join(path_to_models['lin']['ctgre'], 'mc_run_0/run_card.json')
+report_path = os.path.join(path_to_models['lin']['ctgre'], 'report')
 if not os.path.exists(report_path):
     os.makedirs(report_path)
+
+# loss overview
+
+fig = analyse.plot_loss_overview(path_to_models, 'lin', 'ctgre')
+fig.savefig(os.path.join(report_path, 'loss_overview.pdf'))
 
 # point by point comparison
 
 # ttbar
 
 
-#sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
-sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh/features_mzh_y_ptz/sm/events_0.pkl.gz'
+sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
+#sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh/features_mzh_y_ptz/sm/events_0.pkl.gz'
 
 
 n_dat = 5000
-events_sm = pd.read_pickle(sm_data_path).iloc[1:, :].sample(int(n_dat), random_state=1)
-#events_sm = events_sm[(events_sm['m_tt'] < 0.5)]
+#events_sm = pd.read_pickle(sm_data_path).iloc[1:, :].sample(int(n_dat), random_state=1)
+events_sm = pd.read_pickle(sm_data_path)
+events_sm = events_sm.iloc[1:,:]
+events_sm = events_sm[(events_sm['m_tt'] > 0.5)]
+events_sm = events_sm.sample(int(n_dat), random_state=1)
 luminosity = 5e3
 
 fig_reps, fig_median = analyse.point_by_point_comp(
     events=events_sm,
-    c=np.array([2, 0]),
+    c=np.array([-2, 0]),
     path_to_models=path_to_models,
     c_train={
-        "cHW": 10.0,
+        "ctgre": -10.0,
         "cuu": 0
     },
     n_kin=2,
-    process='ZH',
+    process='tt',
     lin=True,
     quad=False,
     epoch=-1)
@@ -56,13 +65,15 @@ fig_reps, fig_median = analyse.point_by_point_comp(
 fig_reps.savefig(os.path.join(report_path, 'reps_pbp.pdf'))
 fig_median.savefig(os.path.join(report_path, 'median_pbp.pdf'))
 
+
+
 # decision function (1d)
 
-fig_accuracy_1d = analyse.accuracy_1d(c=[2, 0],
+fig_accuracy_1d = analyse.accuracy_1d(c=[-5, 0],
                                       path_to_models=path_to_models,
-                                      c_train={"cHW": 10, "cuu_quad": 100.0},
+                                      c_train={"ctgre": -10, "cuu_quad": 100.0},
                                       epoch=-1,
-                                      process='ZH',
+                                      process='tt',
                                       lin=True,
                                       quad=False)
 
@@ -72,18 +83,19 @@ fig_accuracy_1d.savefig(os.path.join(report_path, 'decision_fct_1d.pdf'))
 
 heatmap_median, heatmap_pull = analyse.coeff_comp(
     path_to_models=path_to_models,
-    c1=10,
+    c1=-10,
     c2=0,
     c_train={
-        "cHW": 10,
+        "ctgre": -10,
         "cuu_quad": 100.0
     },
     n_kin=2,
-    process='ZH',
+    process='tt',
     lin=True,
     quad=False,
     cross=False,
-    path_sm_data=None)
+    path_sm_data=None,
+    cut=0.5)
 
 heatmap_median.savefig(os.path.join(report_path, 'heatmap_med.pdf'))
 heatmap_pull.savefig(os.path.join(report_path, 'heatmap_pull.pdf'))
@@ -163,7 +175,7 @@ def PDFmerge(pdfs, output):
 
 def main():
     # pdf files to merge
-    pdfs = ['my_report.pdf', 'median_pbp.pdf', 'reps_pbp.pdf', 'decision_fct_1d.pdf', 'heatmap_med.pdf', 'heatmap_pull.pdf']
+    pdfs = ['my_report.pdf', 'median_pbp.pdf', 'reps_pbp.pdf', 'loss_overview.pdf', 'decision_fct_1d.pdf', 'heatmap_med.pdf', 'heatmap_pull.pdf']
     pdfs = [os.path.join(report_path, pdf_i) for pdf_i in pdfs]
 
     # output pdf file name
