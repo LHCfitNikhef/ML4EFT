@@ -670,32 +670,47 @@ def plot_loss_overview(path_to_models, order, op):
         label_val = r'$L_{\mathrm{val}}$' if i == 0 else None
         label_train = r'$L_{\mathrm{tr}}$' if i == 0 else None
 
-        ax.plot(epochs, loss_train[i], label=label_train)
-        ax.plot(epochs, loss_val[i], label=label_val)
+        loss_train_rep = np.array(loss_train[i])
+        loss_val_rep = np.array(loss_val[i])
+
+        #ratio_train = np.log(loss_train_rep[10:]) - np.log(loss_train_rep[:-10])
+        #ratio_val = np.log(loss_val_rep[10:]) - np.log(loss_val_rep[:-10])
+
+        # ax.plot(epochs[10:], ratio_train, label=label_train)
+        # ax.plot(epochs[10:], ratio_val, label=label_val)
+        ax.plot(epochs, loss_train_rep, label=label_train)
+        ax.plot(epochs, loss_val_rep, label=label_val)
         ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
 
-        ax.set_yscale('log')
+        #ax.set_yscale('log')
         ax.yaxis.set_major_formatter(NullFormatter())
         ax.yaxis.set_minor_formatter(NullFormatter())
         ax.axes.yaxis.set_ticklabels([])
         ax.set_ymargin(0.1)
+        ax.set_xmargin(0)
 
         ax.text(0.9, 0.9, r"$\mathrm{{rep}}\;{}$".format(i), horizontalalignment='right',
                  verticalalignment='center',
                  transform=ax.transAxes)
 
 
-        ymax = loss_val[i][min([50, epochs[-patience] - 20])]
-        ymin = min(np.log10(loss_train[i])) - 0.1 * (np.log10(ymax) - min(np.log10(loss_train[i])))
-
-        ax.set_ylim(10 ** ymin, ymax)
+        #ymax = loss_val[i][min([50, epochs[-patience] - 20])]
+        #ymin = min(np.log10(loss_train[i])) - 0.1 * (np.log10(ymax) - min(np.log10(loss_train[i])))
+        #ax.set_ylim(top=ymax)
+        #ax.set_ylim(10 ** ymin, ymax)
         ax.set_xlim(left=10)
 
+        #ax.set_ylim(min([np.min(loss_val_rep[-patience - 50:]), np.min(loss_train_rep[-patience -50:])]), max([np.max(loss_val_rep[-patience-50:]), np.max(loss_train_rep[-patience - 50:]) ]))
+        #ax.set_ylim(-0.001, 0.001)
 
         med_loss = np.percentile(train_loss_best, 50)
         low_loss = np.percentile(train_loss_best, 16)
         high_loss = np.percentile(train_loss_best, 84)
         loss_sigma = np.abs((high_loss - low_loss)/2)
+
+        #ax.set_ylim(np.percentile(train_loss_best, 16), np.percentile(train_loss_best, 84))
+        #ax.set_ylim(loss_train_rep[-1], loss_val_rep[-patience] + 0.5)
+        ax.set_ylim(loss_train_rep[-1] - 0.2 * loss_sigma, loss_train_rep[-1] + 0.8 * loss_sigma)
 
         signif = (train_loss_best[i] - med_loss) / loss_sigma
 
@@ -704,13 +719,18 @@ def plot_loss_overview(path_to_models, order, op):
                 transform=ax.transAxes)
 
         #ax.fill_between(epochs, low_loss, high_loss, alpha=0.3)
-        ax.axhline(med_loss, 0, 1, color='k', linestyle='dotted')
+        #ax.axhline(med_loss, 0, 1, color='k', linestyle='dotted')
 
         if i == 0:
             ax.legend(loc="lower left", frameon=False)
 
     plt.tight_layout()
-    return fig
+
+    fig_loss, ax = plt.subplots(figsize=(10, 6))
+    kwargs = dict(histtype='stepfilled', alpha=0.3, density=False, bins=20, ec="k")
+    ax.hist(train_loss_best, **kwargs, label=r'$\rm{Training}\;\rm{loss}$')
+
+    return fig, fig_loss
 
 
 def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=True, quad=False, epoch=-1):
