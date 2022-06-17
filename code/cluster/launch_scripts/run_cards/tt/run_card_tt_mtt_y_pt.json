@@ -1,5 +1,5 @@
 {
-  "name": "ctgre_lin_m_tt_gt_05_v2",
+  "name": "ctgre_lin_cut_05_no_delta_min",
   "epochs": 1000,
   "lr": 0.001,
   "n_batches": 1,
@@ -31,5 +31,8 @@
   "lag_mult": 0,
   "loss_type": "CE",
   "scaler_type": "robust",
-  "patience": 100
+  "patience": 100,
+  "threshold_cut": 0.5,
+  "delta_min": 0.00,
+  "val_ratio": 0.2
 }

@@ -15,25 +15,29 @@ import sys
 #     'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/14/model_ctgre_lin_m_tt_gt_05_min_delta',
 #     'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/14/model_ctgre_lin_m_tt_gt_05_min_delta'}}
 
-date = "2022/06/16"
-name = "model_chw_lin_baseline_v2"
+yr = "2022"
+month = "06"
+day = "17"
+date = "{yr}_{m}_{d}".format(yr=yr, m=month, d=day)
+
+name = "model_ctgre_lin_cut_05_no_delta_min"
 
 path_to_models = {'lin': {
-    'cHW': os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh', date, name),
-    'cHW': os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh', date, name)}}
+    'ctgre': os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name),
+    'ctgre': os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name)}}
 
 
-path_to_runcard = os.path.join(path_to_models['lin']['cHW'], 'mc_run_0/run_card.json')
-report_path = os.path.join(path_to_models['lin']['cHW'], 'report')
+path_to_runcard = os.path.join(path_to_models['lin']['ctgre'], 'mc_run_0/run_card.json')
+report_path = os.path.join(path_to_models['lin']['ctgre'], 'report')
 if not os.path.exists(report_path):
     os.makedirs(report_path)
 
 # loss overview
 
-fig, fig_loss, fig_delta = analyse.plot_loss_overview(path_to_models, 'lin', 'cHW')
+fig, fig_loss, fig_delta = analyse.plot_loss_overview(path_to_models, 'lin', 'ctgre')
 fig.savefig(os.path.join(report_path, 'loss_overview.pdf'))
 fig_loss.savefig(os.path.join(report_path, 'loss_dist.pdf'))
-fig_delta.savefig(os.path.join(report_path, 'loss_delta.pdf'))
+#fig_delta.savefig(os.path.join(report_path, 'loss_delta.pdf'))
 #sys.exit()
 
 # point by point comparison
@@ -41,29 +45,29 @@ fig_delta.savefig(os.path.join(report_path, 'loss_delta.pdf'))
 # ttbar
 
 
-#sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
-sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh/features_mzh_y_ptz/sm/events_0.pkl.gz'
+sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
+#sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh/features_mzh_y_ptz/sm/events_0.pkl.gz'
 
 
 n_dat = 5000
 #events_sm = pd.read_pickle(sm_data_path).iloc[1:, :].sample(int(n_dat), random_state=1)
 events_sm = pd.read_pickle(sm_data_path)
 events_sm = events_sm.iloc[1:,:]
-#events_sm = events_sm[(events_sm['m_tt'] > 0.5)]
-events_sm = events_sm[(events_sm['m_zh'] > 0.25)]
+events_sm = events_sm[(events_sm['m_tt'] > 0.5)]
+#events_sm = events_sm[(events_sm['m_zh'] > 0.25)]
 events_sm = events_sm.sample(int(n_dat), random_state=1)
 luminosity = 5e3
 
 fig_reps, fig_median = analyse.point_by_point_comp(
     events=events_sm,
-    c=np.array([5, 0]),
+    c=np.array([-2, 0]),
     path_to_models=path_to_models,
     c_train={
-        "cHW": 10.0,
+        "ctgre": -10.0,
         "cuu": 0
     },
     n_kin=2,
-    process='ZH',
+    process='tt',
     lin=True,
     quad=False,
     epoch=-1)
@@ -76,13 +80,14 @@ fig_median.savefig(os.path.join(report_path, 'median_pbp.pdf'))
 
 # decision function (1d)
 
-fig_accuracy_1d = analyse.accuracy_1d(c=[5, 0],
+fig_accuracy_1d = analyse.accuracy_1d(c=[-5, 0],
                                       path_to_models=path_to_models,
-                                      c_train={"cHW": 10, "cuu_quad": 100.0},
+                                      c_train={"ctgre": -10, "cuu_quad": 100.0},
                                       epoch=-1,
-                                      process='ZH',
+                                      process='tt',
                                       lin=True,
-                                      quad=False)
+                                      quad=False,
+                                      cut=0.5)
 
 fig_accuracy_1d.savefig(os.path.join(report_path, 'decision_fct_1d.pdf'))
 
@@ -90,19 +95,19 @@ fig_accuracy_1d.savefig(os.path.join(report_path, 'decision_fct_1d.pdf'))
 
 heatmap_median, heatmap_pull = analyse.coeff_comp(
     path_to_models=path_to_models,
-    c1=10,
+    c1=-10,
     c2=0,
     c_train={
-        "cHW": 10,
+        "ctgre": -10,
         "cuu_quad": 100.0
     },
     n_kin=2,
-    process='ZH',
+    process='tt',
     lin=True,
     quad=False,
     cross=False,
     path_sm_data=None,
-    cut=0.25)
+    cut=0.5)
 
 heatmap_median.savefig(os.path.join(report_path, 'heatmap_med.pdf'))
 heatmap_pull.savefig(os.path.join(report_path, 'heatmap_pull.pdf'))
@@ -183,10 +188,11 @@ def PDFmerge(pdfs, output):
 
 def main():
     # pdf files to merge
-    pdfs = ['my_report.pdf', 'median_pbp.pdf', 'reps_pbp.pdf', 'loss_overview.pdf', 'decision_fct_1d.pdf', 'heatmap_med.pdf', 'heatmap_pull.pdf']
+    pdfs = ['my_report.pdf', 'median_pbp.pdf', 'reps_pbp.pdf', 'loss_overview.pdf', 'loss_dist.pdf', 'decision_fct_1d.pdf', 'heatmap_med.pdf', 'heatmap_pull.pdf']
     pdfs = [os.path.join(report_path, pdf_i) for pdf_i in pdfs]
 
     # output pdf file name
+
     output = os.path.join(report_path, 'report_{date}_{model_name}.pdf'.format(date=date, model_name=name))
 
     # calling pdf merge function

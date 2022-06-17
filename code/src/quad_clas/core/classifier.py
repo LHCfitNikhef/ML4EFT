@@ -24,6 +24,11 @@ import quad_clas.analyse.analyse as analyse
 from sklearn.preprocessing import StandardScaler, RobustScaler, QuantileTransformer
 import joblib
 
+# fix seeds
+# torch.manual_seed(0)
+# np.random.seed(0)
+
+
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 rc('text', usetex=True)
@@ -166,22 +171,23 @@ class PredictorCross(nn.Module):
 
 class PreProcessing():
 
-    def __init__(self, n_dat, path, features, scaler_type):
+    def __init__(self, fitter, path):
 
-        self.n_dat = n_dat
+        #self.n_dat = fitter.n_dat
         self.path = path
-        self.features = features
+        #self.features = fitter.features
 
-        if scaler_type == 'robust':
+
+        if fitter.scaler_type == 'robust':
             self.scaler = RobustScaler(quantile_range=(5, 95))
-        elif scaler_type == 'standardise':
+        elif fitter.scaler_type == 'standardise':
             self.scaler = StandardScaler()
         else:
             self.scaler = QuantileTransformer(n_quantiles=1000, output_distribution='normal')
 
-        self.load_data()
+        self.load_data(fitter)
 
-    def load_data(self):
+    def load_data(self, fitter):
 
         # sm
 
@@ -192,11 +198,14 @@ class PreProcessing():
         self.xsec_sm = df_sm_full.iloc[0, 0]
 
         # reweigh the cross section after cuts
-        cuts = df_sm_wo_xsec['m_tt'] > 0.5
+        cuts = df_sm_wo_xsec['m_tt'] > fitter.threshold_cut
+        #cuts = df_sm_wo_xsec['m_zh'] > 0.25
+
         event_ratio_with_cut = len(df_sm_wo_xsec[cuts]) / len(df_sm_wo_xsec)
         self.xsec_sm *= event_ratio_with_cut
 
-        self.df_sm = df_sm_wo_xsec[(df_sm_wo_xsec['m_tt'] > 0.5)].sample(self.n_dat)
+        self.df_sm = df_sm_wo_xsec[(df_sm_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
+        #self.df_sm = df_sm_wo_xsec[(df_sm_wo_xsec['m_zh'] > 0.25)].sample(self.n_dat)
 
         # eft
 
@@ -207,15 +216,16 @@ class PreProcessing():
         self.xsec_eft = df_eft_full.iloc[0, 0]
 
         # reweigh the cross section after cuts
-        cuts = df_eft_wo_xsec['m_tt'] > 0.5
+        cuts = df_eft_wo_xsec['m_tt'] > fitter.threshold_cut
+        #cuts = df_eft_wo_xsec['m_zh'] > 0.25
         event_ratio_with_cut = len(df_eft_wo_xsec[cuts]) / len(df_eft_wo_xsec)
         self.xsec_eft *= event_ratio_with_cut
 
-        self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_tt'] > 0.5)].sample(self.n_dat)
+        self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
+        #self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_zh'] > 0.25)].sample(self.n_dat)
 
 
-
-    def feature_scaling(self, scaler_path):
+    def feature_scaling(self, fitter, scaler_path):
 
         # add log features for pT
         # self.df_sm['log_pt_z'] = np.log(self.df_sm['pt_z'])
@@ -232,15 +242,15 @@ class PreProcessing():
         df = pd.concat([self.df_sm, self.df_eft])
 
         # fit the scaler transformer to the eft and sm features
-        self.scaler.fit(df[self.features])
+        self.scaler.fit(df[fitter.features])
 
         # rescale the sm and eft data
-        features_sm_scaled = self.scaler.transform(self.df_sm[self.features])
-        features_eft_scaled = self.scaler.transform(self.df_eft[self.features])
+        features_sm_scaled = self.scaler.transform(self.df_sm[fitter.features])
+        features_eft_scaled = self.scaler.transform(self.df_eft[fitter.features])
 
         # convert transformed features to dataframe
-        df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=self.features)
-        df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=self.features)
+        df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=fitter.features)
+        df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=fitter.features)
 
         # import matplotlib.pyplot as plt
         # bins = np.concatenate([np.array([-2]), np.linspace(-1, 1, 20), np.array([2])])
@@ -326,6 +336,9 @@ class Fitter:
         self.loss_type = self.run_options['loss_type']
         self.scaler_type = self.run_options['scaler_type']
         self.patience = self.run_options['patience']
+        self.threshold_cut = self.run_options['threshold_cut']
+        self.delta_min = self.run_options['delta_min']
+        self.val_ratio = self.run_options['val_ratio']
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
         self.network_size = [self.run_options['input_size']] + self.run_options['hidden_sizes'] + [
@@ -428,11 +441,11 @@ class Fitter:
         path_dict = {'sm': path_sm, 'eft': path_eft}
 
         # preprocessing of the data
-        preproc = PreProcessing(self.n_dat, path_dict, self.features, self.scaler_type)
+        preproc = PreProcessing(self, path_dict)
 
         # save the scaler
         scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
-        df_sm_scaled, df_eft_scaled = preproc.feature_scaling(scaler_path)
+        df_sm_scaled, df_eft_scaled = preproc.feature_scaling(self, scaler_path)
 
         # We construct an eft and a sm data set for each value of c in c_values and make a list out of it
         # As of the new version of the code where only the sm and any non-zero point in EFT space are needed
@@ -458,8 +471,11 @@ class Fitter:
         data_all = [data_eft, data_sm]
 
         # split each data set in training (50%) and validation (50%).
-        data_split = [data.random_split(dataset, [int(len(dataset) / 2), int(len(dataset) / 2)]) for dataset in
-                      data_all]
+        data_split = []
+        for dataset in data_all:
+            n_val_points = int(self.val_ratio * len(dataset))
+            n_train_points = len(dataset) - n_val_points
+            data_split.append(data.random_split(dataset, [n_train_points, n_val_points]))
 
         # collect all the training and validation sets
         data_train, data_val = [], []
@@ -566,8 +582,8 @@ class Fitter:
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
 
-            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}. sign = {sign}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, sign=output[0])
+            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}". \
+                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, overfit=overfit_counter)
             logging.info(training_status)
 
             np.savetxt(path + 'loss.out', loss_list_train)
@@ -582,10 +598,13 @@ class Fitter:
             # validation loss increases during the epoch. If the counter increases for patience epochs straight
             # the training is stopped
 
-            if loss_val > min(loss_list_val) and epoch > 1:
-                overfit_counter += 1
-            else:
-                overfit_counter = 0
+            if epoch > 10:
+                delta = np.abs(loss_list_val[-1] - loss_list_val[-10])
+                no_improvement = loss_val > min(loss_list_val) or delta < self.delta_min
+                if no_improvement:
+                    overfit_counter += 1
+                else:
+                    overfit_counter = 0
 
             if overfit_counter == self.patience:
                 stopping_point = epoch - self.patience # TODO subtract an addition 0ne
@@ -663,7 +682,7 @@ class Fitter:
             penalty = 0
 
         # add up all the losses in the batch
-        return torch.sum(loss + penalty, dim=0)
+        return torch.mean(loss + penalty, dim=0)
 
 
 

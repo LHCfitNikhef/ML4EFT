@@ -17,6 +17,7 @@ import joblib
 import json
 import pandas as pd
 from sklearn.cluster import KMeans
+from scipy import integrate
 
 # import own pacakges
 from quad_clas.core import classifier as quad_clas
@@ -27,6 +28,7 @@ from ..preproc import constants
 mz = constants.mz # z boson mass [TeV]
 mh = constants.mh
 mt = constants.mt
+col_s = constants.col_s
 
 # matplotlib.use('PDF')
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
@@ -683,9 +685,9 @@ def plot_loss_overview(path_to_models, order, op):
         ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
 
         #ax.set_yscale('log')
-        ax.yaxis.set_major_formatter(NullFormatter())
-        ax.yaxis.set_minor_formatter(NullFormatter())
-        ax.axes.yaxis.set_ticklabels([])
+        # ax.yaxis.set_major_formatter(NullFormatter())
+        # ax.yaxis.set_minor_formatter(NullFormatter())
+        # ax.axes.yaxis.set_ticklabels([])
         ax.set_ymargin(0.1)
         ax.set_xmargin(0)
 
@@ -726,11 +728,76 @@ def plot_loss_overview(path_to_models, order, op):
 
     plt.tight_layout()
 
-    fig_loss, ax = plt.subplots(figsize=(10, 6))
+    fig_delta = plt.figure(figsize=(ncols * 4, nrows * 4))
+
+    for i in range(mc_reps):
+        ax = plt.subplot(nrows, ncols, i + 1)
+        epochs = np.arange(len(loss_train[i]))
+
+        label_val = r'$L_{\mathrm{val}}$' if i == 0 else None
+        label_train = r'$L_{\mathrm{tr}}$' if i == 0 else None
+
+        loss_train_rep = np.array(loss_train[i])
+        loss_val_rep = np.array(loss_val[i])
+
+        ratio_train = loss_train_rep[10:] - loss_train_rep[:-10]
+        ratio_val = loss_val_rep[10:] - loss_val_rep[:-10]
+
+        ax.plot(epochs[10:][-patience - 50:], ratio_train[-patience - 50:], label=label_train)
+        ax.plot(epochs[10:][-patience - 50:], ratio_val[-patience - 50:], label=label_val)
+        ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
+
+        ax.set_ymargin(0.1)
+        ax.set_xmargin(0)
+
+        ax.text(0.9, 0.9, r"$\mathrm{{rep}}\;{}$".format(i), horizontalalignment='right',
+                verticalalignment='center',
+                transform=ax.transAxes)
+
+
+        #ax.set_xlim(left=10)
+
+        ax.set_ylim(-0.03, 0.03)
+
+
+        if i == 0:
+            ax.legend(loc="lower left", frameon=False)
+
+    plt.tight_layout()
+
+    #loss_ana = analytical_loss([10, 0])
+
+    fig_loss_dist, ax = plt.subplots(figsize=(10, 6))
     kwargs = dict(histtype='stepfilled', alpha=0.3, density=False, bins=20, ec="k")
     ax.hist(train_loss_best, **kwargs, label=r'$\rm{Training}\;\rm{loss}$')
+    plt.xlabel(r'$L_{\mathrm{tr}}$')
+    plt.ylabel(r'$n_{\mathrm{rep}}$')
 
-    return fig, fig_loss
+
+    return fig, fig_loss_dist, fig_delta
+
+
+def analytical_loss(c):
+
+    def integrand(y, m_x):
+
+        # convert features to pandas dataframe
+        df = pd.DataFrame({'m_zh': [m_x], 'y': [y]})
+
+        # analytical decision function
+        g = decision_function_truth(df, c, n_kin=2, process='ZH', lin=True, quad=False)
+
+        # diff xsec in EFT
+        dsigma_dx_eft = vh_prod.dsigma_dmvh_dy(y, m_x, -10, 0, True, False)
+
+        # diff xsec in SM
+        dsigma_dx_sm = vh_prod.dsigma_dmvh_dy(y, m_x, 0, 0, True, False)
+
+        return - dsigma_dx_eft * np.log(1 - g) - dsigma_dx_sm * np.log(g)
+
+    loss = integrate.dblquad(integrand, 0.25, 2.0, lambda m_x: -np.log(np.sqrt(col_s)/m_x), lambda m_x:np.log(np.sqrt(col_s)/m_x))
+
+    return loss[0]
 
 
 def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=True, quad=False, epoch=-1):
@@ -759,7 +826,6 @@ def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=
     `matplotlib.figure.Figure`
         Plot of the median only
     """
-    plot_loss_overview(path_to_models, 'lin', 'ctgre')
     r_nn, model_idx = likelihood_ratio_nn(events, c, c_train, path_to_models, lin=lin, quad=quad, epoch=epoch)
     tau_nn = np.log(r_nn)
 
@@ -900,15 +966,18 @@ def decision_function_nn(df, c, train_parameters, path_to_models, epoch=-1, lin=
     f = 1 / (1 + ratio)
     return f
 
-def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad):
+def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad, cut):
 
     fig, ax = plt.subplots(figsize=(10,6))
 
-    x = np.linspace(2 * mt + 1e-2, 3.0, 200)
+    x = np.linspace(cut, 3.0, 200)
     x = np.stack((x, np.zeros(len(x))), axis=-1)
 
-    df = pd.DataFrame(x, columns=['m_tt', 'y'])
-    #df = pd.DataFrame(x, columns=['m_zh', 'y'])
+    if process == 'tt':
+        df = pd.DataFrame(x, columns=['m_tt', 'y'])
+    elif process == 'ZH':
+        df = pd.DataFrame(x, columns=['m_zh', 'y'])
+
     f_ana_lin = decision_function_truth(df, c, n_kin=2, process=process, lin=True, quad=False)
 
     f_preds_nn = decision_function_nn(df, c, c_train,
@@ -926,9 +995,9 @@ def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad):
     #ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
 
     plt.ylim((0, 1))
-    #plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
+    plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
     #plt.xlim(np.min(x[:, 0]), 0.5)
-    plt.xlim(0.5, np.max(x[:, 0]))
+
     plt.ylabel(r'$f\;(x, c)$')
     xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
     plt.xlabel(xlabel)

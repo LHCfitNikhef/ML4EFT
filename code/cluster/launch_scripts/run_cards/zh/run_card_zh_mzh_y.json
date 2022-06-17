@@ -1,12 +1,12 @@
 {
-  "name": "chw_lin_baseline",
+  "name": "chw_lin_baseline_v2",
   "epochs": 1000,
   "lr": 0.001,
   "n_batches": 1,
   "input_size": 2,
   "output_size": 1,
   "hidden_sizes": [100, 100, 100],
-  "n_dat": 100000,
+  "n_dat": 65000,
   "quadratic": 0,
   "cross_term": 0,
   "coeff": [
@@ -27,5 +27,5 @@
   "lag_mult": 0,
   "loss_type": "CE",
   "scaler_type": "robust",
-  "patience": 50
+  "patience": 100
 }
