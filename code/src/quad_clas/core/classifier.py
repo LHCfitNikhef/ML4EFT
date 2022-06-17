@@ -113,27 +113,23 @@ class PredictorQuadratic(nn.Module):
         Returns the function f(x,c) from the paper (Wulzer et al.) in the quadratic case
     """
 
-    def __init__(self, architecture):
+    def __init__(self, architecture, c):
         super().__init__()
-        self.architecture = architecture
-        self.n_beta = MLP(architecture)
+        self.c = c
+        self.NN = MLP(architecture)
+        # add constraint
 
-    def forward(self, x, c, path_lin, path_quad):
-        n_beta_out = self.n_beta(x)
-        n_lin = PredictorLinear(self.architecture)
-        n_lin.load_state_dict(torch.load(path_lin))
+    def forward(self, fitter, preproc, x):
+        NN_out = self.NN(x)
 
-        # undo quad rescaling
-        dir_lin = os.path.dirname(path_lin)
-        #dir_quad = dir_lin.replace('lin', 'quad')
-        mean, std = np.loadtxt(os.path.join(path_quad, 'scaling.dat'))
-        x_orig = (x * std) + mean
+        # scale back the features to the original representation
+        x_orig = preproc.scaler.inverse_transform(x)
+        df = pd.DataFrame(x_orig, columns=fitter.features)
 
-        # recale lin
-        mean, std = np.loadtxt(os.path.join(dir_lin, 'scaling.dat'))
-        x = (x_orig - mean) /std
+        [n_lin, rep_idx], n_quad, n_cross = analyse.load_coefficients_nn(df, fitter.pretrained_models, epoch=-1)
 
-        r = 1 + c * n_lin.n_alpha(x.float()) + c ** 2 * n_beta_out
+        r = 1 + self.c * n_lin + self.c ** 2 * NN_out
+
         return 1 / (1 + r)
 
 class PredictorCross(nn.Module):
@@ -339,15 +335,34 @@ class Fitter:
         self.threshold_cut = self.run_options['threshold_cut']
         self.delta_min = self.run_options['delta_min']
         self.val_ratio = self.run_options['val_ratio']
+        self.pretrained_models = self.run_options['pretrained_models']
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
         self.network_size = [self.run_options['input_size']] + self.run_options['hidden_sizes'] + [
             self.run_options['output_size']]
         self.event_data_path = self.run_options['event_data']  # path to training data
 
-        self.eft_dict = self.run_options['coeff']
-        self.c1 = self.eft_dict[0]['value']
-        self.c2 = self.eft_dict[1]['value']
+        # perhaps use a dict instead
+        # c_train values
+        coeff_train_values = np.array([dummy for dummy in self.run_options['coeff_train'].values()])
+        if self.cross_term:
+            # cross terms go like c1 * c2 * NN, so two EFT parameters need to be retained
+            self.coeff_train_val = np.prod(coeff_train_values)
+            self.coeff_train_key = ''
+            for key, value in self.run_options['coeff_train'].items():
+                self.coeff_train_key += key + '_'
+            self.coeff_train_key = self.coeff_train_key[:-1]
+
+        else:
+            # linear and quadratic terms depend only on a single coefficient
+            self.coeff_train_val = np.sum(coeff_train_values)
+            for key, value in self.run_options['coeff_train'].items():
+                if value != 0:
+                    self.coeff_train_key = key
+                    break
+                else:
+                    continue
+
 
         self.mc_run = mc_run
         self.lag_mult = self.run_options['lag_mult']
@@ -365,53 +380,29 @@ class Fitter:
                           'mc_path': mc_path,
                           'log_path': log_path}
 
+        self.scaler = None
+
         if not os.path.exists(mc_path):
             os.makedirs(mc_path)
             os.makedirs(os.path.join(mc_path, 'plots'))
             os.makedirs(os.path.join(mc_path, 'animation'))
             os.makedirs(log_path)
 
-        # single coefficients
-        if self.c1 != 0 and self.c2 == 0:
-            self.eft_op = self.eft_dict[0]['op']
-            self.eft_value = self.c1
-        if self.c1 == 0 and self.c2 != 0:
-            self.eft_op = self.eft_dict[1]['op']
-            self.eft_value = self.c2
-
-        # cross terms
-        if self.c1 != 0 and self.c2 != 0:
-            self.eft_op = self.eft_dict[0]['op'] + "_" + self.eft_dict[1]['op']
-            self.eft_value = self.c1 * self.c2
 
         # initialise all paths to None, unless we run at pure quadratic or cross term level
         self.path_lin_1 = self.path_lin_2 = self.path_quad_1 = self.path_quad_2 = None
-
-        # for pure quadratic and cross terms only: build the paths to the pretraind models
-        if self.quadratic:
-
-            self.path_lin_1 = self.run_options['path_lin_1'].format(self.mc_run)
-            self.model = PredictorQuadratic(self.network_size)
-
-        elif self.cross_term:
-
-            self.path_lin_1 = self.run_options['path_lin_1'].format(self.mc_run)
-            self.path_lin_2 = self.run_options['path_lin_2'].format(self.mc_run)
-            self.path_quad_1 = self.run_options['path_quad_1'].format(self.mc_run)
-            self.path_quad_2 = self.run_options['path_quad_2'].format(self.mc_run)
-
 
 
         # build the paths to the eft event data and initialize the right model
         if self.quadratic:
             self.path_dict['eft_data_path'] = 'quad/{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorQuadratic(self.network_size)
+            self.model = PredictorQuadratic(self.network_size, self.coeff_train_val)
         elif self.cross_term:
             self.path_dict['eft_data_path'] = 'cross_term/{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = PredictorCross(self.network_size)
         else:
             self.path_dict['eft_data_path'] = 'lin/{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorLinear(self.network_size, self.eft_value)
+            self.model = PredictorLinear(self.network_size, self.coeff_train_val)
 
         # create log file with timestamp
         t = time.localtime()
@@ -422,10 +413,10 @@ class Fitter:
         logging.info("All directories created, ready to load the data")
 
         # load the training and validation data
-        data_train, data_val = self.load_data()
+        data_train, data_val, preproc = self.load_data()
 
         # start the training
-        self.train_classifier(data_train, data_val)
+        self.train_classifier(data_train, data_val, preproc)
 
         # copy run card to the appropriate folder
         with open(mc_path + 'run_card.json', 'w') as outfile:
@@ -436,7 +427,7 @@ class Fitter:
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
         path_sm = os.path.join(self.event_data_path, 'sm/events_{}.pkl.gz'.format(self.mc_run))
-        path_eft = os.path.join(self.event_data_path, self.path_dict['eft_data_path'].format(eft_coeff=self.eft_op, mc_run=self.mc_run))
+        path_eft = os.path.join(self.event_data_path, self.path_dict['eft_data_path'].format(eft_coeff=self.coeff_train_key, mc_run=self.mc_run))
 
         path_dict = {'sm': path_sm, 'eft': path_eft}
 
@@ -483,9 +474,9 @@ class Fitter:
             data_train.append(dataset[0])
             data_val.append(dataset[1])
 
-        return data_train, data_val
+        return data_train, data_val, preproc
 
-    def train_classifier(self, data_train, data_val):
+    def train_classifier(self, data_train, data_val, preproc):
 
         # define the optimizer
         optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
@@ -504,9 +495,9 @@ class Fitter:
             dataset_val in data_val]
 
         # call the training loop
-        self.training_loop(optimizer=optimizer, train_loader=train_data_loader, val_loader=val_data_loader, scheduler=None)
+        self.training_loop(optimizer=optimizer, train_loader=train_data_loader, val_loader=val_data_loader, preproc=preproc)
 
-    def training_loop(self, optimizer, train_loader, val_loader, scheduler):
+    def training_loop(self, optimizer, train_loader, val_loader, preproc):
 
         path = self.path_dict['mc_path']
 
@@ -541,7 +532,7 @@ class Fitter:
                         if isinstance(self.model, PredictorLinear):
                             output = self.model(event.float())
                         if isinstance(self.model, PredictorQuadratic):
-                            output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1, self.path_dict['mc_path'])
+                            output = self.model(self, preproc, event.float())
                         if isinstance(self.model, PredictorCross):
                             output = self.model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
                                            self.path_quad_2)
@@ -630,32 +621,6 @@ class Fitter:
         if isinstance(m, nn.Linear):
             m.reset_parameters()
 
-    @staticmethod
-    def plot_loss(train_loss, val_loss):
-        """
-        Plot the training and validation loss per epoch
-
-        Parameters
-        ----------
-        train_loss: numpy.ndarray, shape=(M,)
-            Training loss for M epochs
-        val_loss: numpy.ndarray, shape=(M,)
-            Validation loss for M epochs
-
-        Returns
-        -------
-        fig
-        """
-
-        fig = plt.figure()
-        plt.plot(np.array(train_loss[-50:]), label=r'$\rm{Train}$')
-        plt.plot(np.array(val_loss[-50:]), label=r'$\rm{Val}$')
-        plt.xlabel(r'$\rm{Epochs}$')
-        plt.ylabel(r'$\rm{Loss}$')
-        plt.legend()
-        plt.yscale('log')
-        plt.tight_layout()
-        return fig
 
     def loss_fn(self, outputs, labels, w_e):
 

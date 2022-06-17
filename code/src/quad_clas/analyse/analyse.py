@@ -544,7 +544,7 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
     return models_good, models_idx
 
 
-def load_coefficients_nn(df, c_train, path_to_models, epoch=-1):
+def load_coefficients_nn(df, path_to_models, epoch=-1):
     """
     Loads in the nn models at specified in ``path_to_models`` and returns a tuple of length 3
     with the linear, quadratic and cross term coefficient functions.
@@ -580,8 +580,8 @@ def load_coefficients_nn(df, c_train, path_to_models, epoch=-1):
 
     for order, paths in path_to_models.items():
         if order == 'lin':
-            for coeff, path in paths.items():
-                loaded_models_lin, model_idx = load_models(c_train[coeff], path, epoch=epoch, lin=True)
+            for coeff, [c_train, path] in paths.items():
+                loaded_models_lin, model_idx = load_models(c_train, path, epoch=epoch, lin=True)
                 n_alphas = []
                 for i, loaded_model in enumerate(loaded_models_lin):
                     path_to_model = os.path.join(path, 'mc_run_{}'.format(model_idx[i]))
@@ -620,15 +620,6 @@ def load_coefficients_nn(df, c_train, path_to_models, epoch=-1):
                 n_gammas = np.array(n_gammas)
                 n_cross.append(n_gammas)
 
-    # find the size of smallest replica set
-    # n_rep_min = min([n_lin_i.shape[0] for n_lin_i in n_lin])
-
-    #n_lin_matched = np.zeros((len(n_lin), n_rep_min, len(df)))
-    # for i, n_lin_i in enumerate(n_lin):
-    #     rnd_idx = np.random.choice(np.arange(n_lin_i.shape[0]), n_rep_min, replace=False)
-    #     n_lin_matched[i] = n_lin[i][rnd_idx, :]
-    #
-    #n_lin = np.array(n_lin)
     n_quad = np.array(n_quad)
     n_cross = np.array(n_cross)
 
