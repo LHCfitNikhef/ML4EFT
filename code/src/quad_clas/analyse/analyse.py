@@ -480,6 +480,7 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
 
     models = []
     losses = []
+    scalers = []
 
     # collect all model directories
     model_dirs = [os.path.join(model_dir, mc_run) for mc_run in os.listdir(model_dir) if mc_run.startswith('mc_run')]
@@ -491,6 +492,9 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
                 architecture = [run_card['input_size']] + run_card['hidden_sizes'] + [run_card['output_size']]
                 patience = run_card['patience']
             loaded_model = quad_clas.PredictorLinear(architecture, c_train)
+
+            scaler_path = os.path.join(dir, 'scaler.gz')
+            scaler = joblib.load(scaler_path)
         elif quad:
             loaded_model = quad_clas.PredictorQuadratic(architecture)
         else:
@@ -514,9 +518,11 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
         # load all the parameters into the trained network and save
         loaded_model.load_state_dict(torch.load(network_path))
         models.append(loaded_model)
+        scalers.append(scaler)
 
     losses = np.array(losses)
     models = np.array(models)
+    scalers = np.array(scalers)
 
     kmeans = KMeans(n_clusters=2, random_state=0).fit(losses.reshape(-1,1))
     cluster_labels = kmeans.labels_
@@ -527,12 +533,15 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
 
     if np.std(losses[idx_low_loss]) / np.std(losses) < 0.1: # if relative std has been reduced by a factor 10
         models_good = models[idx_low_loss]
+
+        scalers = scalers[idx_low_loss]
     else: # don't select models based on clustering
         sigma_loss = (np.nanpercentile(losses, 84) - np.nanpercentile(losses, 16))
         los_med = np.nanpercentile(losses, 50)
 
         idx_low_loss = np.argwhere((los_med - 2 * sigma_loss < losses) & (losses < los_med + 2 * sigma_loss)).flatten()
         models_good = models[idx_low_loss]
+        scalers = scalers[idx_low_loss]
 
     # retrieve the rep numbers of the models in the low loss cluster
     models_idx = []
@@ -541,7 +550,7 @@ def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False
         models_idx.append(mc_idx)
     models_idx = np.array(models_idx) # original indexing
 
-    return models_good, models_idx
+    return models_good, models_idx, scalers
 
 
 def load_coefficients_nn(df, path_to_models, epoch=-1):

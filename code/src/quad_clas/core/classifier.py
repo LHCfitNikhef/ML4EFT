@@ -89,6 +89,17 @@ class ConstraintActivation(CustomActivationFunction):
             return - torch.relu(x) - 1 / self.c - 1e-6
 
 
+class ConstraintActivationQuad(CustomActivationFunction):
+
+    def __init__(self, c, nn_lin):
+        super().__init__()
+        self.c = c
+        self.nn_lin = nn_lin
+
+    def forward(self, x):
+        return torch.relu(x) - (1 + self.c * self.nn_lin) / self.c ** 2 + 1e-6
+
+
 class PredictorLinear(nn.Module):
     """
     Returns the function f(x,c) from the paper (Wulzer et al.) in the linear case
@@ -113,22 +124,45 @@ class PredictorQuadratic(nn.Module):
         Returns the function f(x,c) from the paper (Wulzer et al.) in the quadratic case
     """
 
-    def __init__(self, architecture, c):
+    def __init__(self, fitter):
         super().__init__()
-        self.c = c
-        self.NN = MLP(architecture)
-        # add constraint
+        self.c = fitter.coeff_train_val
+        self.NN = MLP(fitter.network_size)
+        # add constraint?
+
+        self.coeff = [*fitter.pretrained_models_path['lin']][0]
+        # load pretrained linear models
+        #c_train, model_path = fitter.pretrained_models_path['lin'][coeff]
+
+        self.pretrained_lin_models_dict = {}
+        for coeff, [c_train, model_path] in fitter.pretrained_models_path['lin'].items():
+            pretrained_models, idx, self.scalers_lin = analyse.load_models(c_train, model_path, epoch=-1, lin=True)
+            self.pretrained_lin_models_dict[coeff] = {'models': pretrained_models, 'idx': idx}
+
+        # add constraint to final layer to enforce xsec positivity
+        self.n_alpha.layers.add_module('constraint', ConstraintActivationQuad(self.c, nn_lin))# nn_lin depends again on x, pfff
+        
 
     def forward(self, fitter, preproc, x):
+
         NN_out = self.NN(x)
+
+        # replica number
+        rep_nr = int(fitter.mc_run)
+        rep_idx = np.argwhere(self.pretrained_lin_models_dict[self.coeff]['idx'] == rep_nr).flatten()[0]
+
+        n_lin = self.pretrained_lin_models_dict[self.coeff]['models'][rep_idx]
 
         # scale back the features to the original representation
         x_orig = preproc.scaler.inverse_transform(x)
         df = pd.DataFrame(x_orig, columns=fitter.features)
 
-        [n_lin, rep_idx], n_quad, n_cross = analyse.load_coefficients_nn(df, fitter.pretrained_models, epoch=-1)
+        # rescale using linear scaler
+        features_scaled = self.scalers_lin[rep_idx].transform(df)
 
-        r = 1 + self.c * n_lin + self.c ** 2 * NN_out
+        n_lin_out = n_lin.n_alpha(torch.tensor(features_scaled).float())
+
+        r = 1 + self.c * n_lin_out + self.c ** 2 * NN_out
 
         return 1 / (1 + r)
 
@@ -335,7 +369,7 @@ class Fitter:
         self.threshold_cut = self.run_options['threshold_cut']
         self.delta_min = self.run_options['delta_min']
         self.val_ratio = self.run_options['val_ratio']
-        self.pretrained_models = self.run_options['pretrained_models']
+        self.pretrained_models_path = self.run_options['pretrained_models']
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
         self.network_size = [self.run_options['input_size']] + self.run_options['hidden_sizes'] + [
@@ -396,7 +430,7 @@ class Fitter:
         # build the paths to the eft event data and initialize the right model
         if self.quadratic:
             self.path_dict['eft_data_path'] = 'quad/{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorQuadratic(self.network_size, self.coeff_train_val)
+            self.model = PredictorQuadratic(self)
         elif self.cross_term:
             self.path_dict['eft_data_path'] = 'cross_term/{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = PredictorCross(self.network_size)
@@ -554,7 +588,7 @@ class Fitter:
                         output = self.model(event.float())
 
                     if isinstance(self.model, PredictorQuadratic):
-                        output = self.model(event.float(), self.c1 + self.c2, self.path_lin_1, self.path_dict['mc_path'])
+                        output = self.model(self, preproc, event.float())
                     if isinstance(self.model, PredictorCross):
                         output = model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
                                        self.path_quad_2, self.path_dict['mc_path'])
@@ -574,7 +608,7 @@ class Fitter:
             loss_list_val.append(loss_val)
 
             training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, overfit=overfit_counter)
+                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, overfit=output[0])
             logging.info(training_status)
 
             np.savetxt(path + 'loss.out', loss_list_train)

@@ -23,8 +23,8 @@ date = "{yr}_{m}_{d}".format(yr=yr, m=month, d=day)
 name = "model_ctgre_lin_cut_05_no_delta_min"
 
 path_to_models = {'lin': {
-    'ctgre': os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name),
-    'ctgre': os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name)}}
+    'ctgre': [-10, os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name)],
+    'ctgre': [-10, os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name)]}}
 
 
 path_to_runcard = os.path.join(path_to_models['lin']['ctgre'], 'mc_run_0/run_card.json')
