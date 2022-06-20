@@ -109,7 +109,7 @@ class PredictorLinear(nn.Module):
         super().__init__()
         self.c = c
         self.n_alpha = MLP(architecture)
-        self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
+        #self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
 
     def forward(self, x):
 
@@ -369,7 +369,7 @@ class Fitter:
         self.threshold_cut = self.run_options['threshold_cut']
         self.delta_min = self.run_options['delta_min']
         self.val_ratio = self.run_options['val_ratio']
-        self.pretrained_models_path = self.run_options['pretrained_models']
+        self.pretrained_models_path = self.run_options['pretrained_models'] if 'pretrained_models' in self.run_options else None
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
         self.network_size = [self.run_options['input_size']] + self.run_options['hidden_sizes'] + [
@@ -541,6 +541,7 @@ class Fitter:
         # by one whenever the the validation loss increases during an epoch
 
         overfit_counter = 0
+        neg_r_counter = 0
 
         # outer loop that runs over the number of epochs
         iterations = 0
@@ -559,12 +560,15 @@ class Fitter:
             torch.save(self.model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
 
             # compute validation loss
+            negative_r = False
             with torch.no_grad():
                 for minibatch in zip(*val_loader):
                     val_loss = torch.zeros(1)
                     for i, [event, weight, label] in enumerate(minibatch):
                         if isinstance(self.model, PredictorLinear):
                             output = self.model(event.float())
+                            if not negative_r:
+                                negative_r = any(output >= 1) or any(output <= 0)
                         if isinstance(self.model, PredictorQuadratic):
                             output = self.model(self, preproc, event.float())
                         if isinstance(self.model, PredictorCross):
@@ -586,7 +590,8 @@ class Fitter:
                 for i, [event, weight, label] in enumerate(minibatch): # i=0: eft, i=1: sm
                     if isinstance(self.model, PredictorLinear):
                         output = self.model(event.float())
-
+                        if not negative_r:
+                            negative_r = any(output >= 1) or any(output <= 0)
                     if isinstance(self.model, PredictorQuadratic):
                         output = self.model(self, preproc, event.float())
                     if isinstance(self.model, PredictorCross):
@@ -602,13 +607,16 @@ class Fitter:
 
                 loss_train += train_loss.item()
 
+            if negative_r:  # count how many epochs r < 0
+                neg_r_counter += 1
+
             #scheduler.step(train_loss)
 
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
 
-            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, overfit=output[0])
+            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}, Negative r: {neg_r}". \
+                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, overfit=overfit_counter, neg_r=neg_r_counter)
             logging.info(training_status)
 
             np.savetxt(path + 'loss.out', loss_list_train)
@@ -623,9 +631,9 @@ class Fitter:
             # validation loss increases during the epoch. If the counter increases for patience epochs straight
             # the training is stopped
 
-            if epoch > 10:
-                delta = np.abs(loss_list_val[-1] - loss_list_val[-10])
-                no_improvement = loss_val > min(loss_list_val) or delta < self.delta_min
+            if epoch > 20 and not negative_r:
+                delta = np.abs(loss_list_val[-1] - loss_list_val[-20])
+                no_improvement = loss_val > min(loss_list_val[neg_r_counter:]) or delta < self.delta_min
                 if no_improvement:
                     overfit_counter += 1
                 else:
@@ -666,22 +674,18 @@ class Fitter:
         """
 
         if self.loss_type == 'CE':
-
-            # if any(outputs >= 1) or any(outputs <= 0):
-            #     import pdb;
-            #     pdb.set_trace()
-            loss = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
+            if any(outputs >= 1) or any(outputs <= 0): # if r <= 0
+                logging.info("Detected negative r")
+                relu = nn.ReLU()
+                # r = (1 - f) / f, give penalty if r < 0
+                loss = self.lag_mult * relu((outputs - 1) / outputs)
+            else:
+                loss = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
         elif self.loss_type == 'QC':
             loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
 
-        if self.lag_mult != 0:
-            relu = nn.ReLU()
-            penalty = lag_mult * relu((outputs - 1) / outputs) # r = (1 - f) / f, give penalty if r < 0
-        else:
-            penalty = 0
-
-        # add up all the losses in the batch
-        return torch.mean(loss + penalty, dim=0)
+        # average over all the losses in the batch
+        return torch.mean(loss, dim=0)
 
 
 

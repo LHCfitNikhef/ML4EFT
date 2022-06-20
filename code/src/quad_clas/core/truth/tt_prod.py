@@ -35,7 +35,7 @@ class crossSectionSMEFT:
 
     """
 
-    def sigma_part_gg(self, hats, cuGRe, cuu, lin, quad):  # TODO: fix the gluon gluon contribution
+    def sigma_part_gg(self, hats, cuGRe, cuu, order):  # TODO: fix the gluon gluon contribution
         if np.sqrt(hats) == 2 * mt:
             return 0
 
@@ -52,13 +52,15 @@ class crossSectionSMEFT:
                     sqrt + 1)) + hats * (7 * np.sqrt(hats * (hats - 4 * mt ** 2)) + 4 * hats * np.log(
                 1 - sqrt) - 4 * hats * np.log(sqrt + 1)))
 
-        if lin:
+        if order is None:
+            return sm
+        elif order == 'lin':
             return sm + cuGRe * kappa_1
-        if quad:
+        elif order == 'quad':
             return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11
-        #return sm
 
-    def sigma_part_qq(self, hats, cuGRe, cuu, lin, quad):
+
+    def sigma_part_qq(self, hats, cuGRe, cuu, order):
         if np.sqrt(hats) == 2 * mt:
             return 0
 
@@ -69,73 +71,51 @@ class crossSectionSMEFT:
         kappa_22 = sqrt * ((hats - mt ** 2)) / (48 * np.pi * LambdaSMEFT ** 4 )
         kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
         sm = (8 * np.pi * asQCD ** 2 * (2 * mt ** 2 + hats) * sqrt) / (27 * hats ** 2)
-        if lin:
-            return sm + cuGRe * kappa_1# + cuu * kappa_22
-        if quad:
+
+        if order is None:
+            return sm
+        elif order == 'lin':
+            return sm + cuGRe * kappa_1
+        elif order == 'quad':
             return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
-        #return sm + cuu * kappa_22
+
 
 xsec = crossSectionSMEFT()
 
-def weight(sqrts, mu, x1, x2, cuGRe, cuu, lin, quad):
+def weight(sqrts, mu, x1, x2, c, order):
     """
     NP parameter: order in the EFT
     order parameter: work at one specific order
     """
+    cuGRe, cuu = c
     hats = sqrts ** 2
-    w_ii = (xsec.sigma_part_gg(hats, cuGRe, cuu, lin, quad)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
-    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, 0, lin, quad)) * (
+    w_ii = (xsec.sigma_part_gg(hats, cuGRe, cuu, order)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
+    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, 0, order)) * (
                 p.xfxQ(1, x1, mu) * p.xfxQ(-1, x2, mu) + p.xfxQ(3, x1, mu) * p.xfxQ(-3, x2, mu) + p.xfxQ(5, x1,
                                                                                                          mu) * p.xfxQ(
             -5, x2, mu))
-    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, cuu, lin, quad)) * (
+    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, cuu, order)) * (
                 p.xfxQ(2, x1, mu) * p.xfxQ(-2, x2, mu) + p.xfxQ(4, x1, mu) * p.xfxQ(-4, x2, mu))
-    # w_ii += 2*(xsec.sigma_part_qq(hats, cuGRe, cuu))*np.sum([p.xfxQ(pid, x1, mu)*p.xfxQ(-pid, x2, mu) for pid in p.flavors()[:5]])
+
     return w_ii
 
 
-def n_alpha_ana(mtt, y):
-    """
-    :param mtt: invariant mass of the top-quark pair
-    :param y: rapidity of the top-quark pair
-    :return: r(x,c) = 1 + c*n_alpha at the linear level in the EFT. This function gives n_alpha (analytically).
-    """
-    x1 = mtt / np.sqrt(s) * np.exp(y)
-    x2 = mtt / np.sqrt(s) * np.exp(-y)
-    if np.abs(y) < np.log(np.sqrt(s) / mtt):
-        return weight(mtt, 91.188, x1, x2, 1, order="NHO", NP=None) / weight(mtt, 91.188, x1, x2, 1, order="SM",
-                                                                             NP=None)
-    else:
-        return 0
-
-def dsigma_dx(x, cug, cuu):
-    """
-        Compute the doubly differential cross section in mtt and y at any order NP
-        """
-    mtt, y = x
-    if mtt == 2 * mt: return 0  # if at threshold return zero
-
-    if np.abs(y) < np.log(np.sqrt(s) / mtt):  # check whether x = {mtt, y} falls inside the physically allowed region
-        x1 = mtt / np.sqrt(s) * np.exp(y)
-        x2 = mtt / np.sqrt(s) * np.exp(-y)
-        dsigma_dmtt_dy = 2 * mtt / s * v_weight(mtt, 91.188, x1, x2, cug, cuu) / (x1 * x2)
-        return pb_convert * dsigma_dmtt_dy
-    else:
-        return 0
-
-
 v_weight = np.vectorize(weight, otypes=[np.float])
+v_weight.excluded.add(4)
 
 
-def dsigma_dmtt_dy(y, mtt, cuGRe, cuu, lin, quad):
+def dsigma_dmtt_dy(y, mtt, c=None, order=None):
     """
     Compute the doubly differential cross section in mtt and y at any order NP
     """
+
+    if c is None:
+        c = np.zeros(2)
     if mtt == 2 * mt: return 0  # if at threshold return zero
     if np.abs(y) < np.log(np.sqrt(s) / mtt):  # check whether x = {mtt, y} falls inside the physically allowed region
         x1 = mtt / np.sqrt(s) * np.exp(y)
         x2 = mtt / np.sqrt(s) * np.exp(-y)
-        dsigma_dmtt_dy = 2 * mtt / s * v_weight(mtt, 91.188, x1, x2, cuGRe, cuu, lin, quad) / (x1 * x2)
+        dsigma_dmtt_dy = 2 * mtt / s * v_weight(mtt, 91.188, x1, x2, c, order) / (x1 * x2)
         return pb_convert * dsigma_dmtt_dy
     else:
         return 0
@@ -144,64 +124,15 @@ def dsigma_dmtt_dy(y, mtt, cuGRe, cuu, lin, quad):
 dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float])
 
 
-def dsigma_dmtt(mtt, cuGRe, cuu, lin, quad):
+def dsigma_dmtt(mtt, c, order):
     y_min, y_max = -0.5 * np.log(s / mtt), 0.5 * np.log(s / mtt)
-    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, cuGRe, cuu, lin, quad), n=10)[0] #TODO: n=100 previously, does n= 10 also give good performances?
+    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, c, order), n=10)[0]
     return dsigma_dmtt
 
 #%%
 
+# remove below?
 
-def likelihood_ratio(y, mtt, cuGRe, cuu):
-    """
-    Compute the 2D analytic likelihood ratio r(x, c)
-    """
-    dsigma_0 = dsigma_dmtt_dy(y, mtt, cuGRe, cuu)  # EFT
-    dsigma_1 = dsigma_dmtt_dy(y, mtt, 0, 0)  # SM
-    ratio = dsigma_0 / dsigma_1 if dsigma_1 != 0 else 0
-    return ratio
-
-
-def likelihood_ratio_1D(mtt, cHW, cHq3, lin=False, quad=False):
-    """
-    Compute the 1D analytic likelihood ratio r(x, c)
-    """
-    dsigma_0 = vh_prod.dsigma_dmvh(mtt, cHW, cHq3, lin=lin, quad=quad)  # EFT
-    dsigma_1 = vh_prod.dsigma_dmvh(mtt, 0, 0, lin=lin, quad=quad)  # SM
-    ratio = dsigma_0 / dsigma_1 if dsigma_1 != 0 else 0
-    return ratio
-
-
-
-def renScale(theta, sqrts):
-    sP = sqrts ** 2
-    p_T = np.sqrt((sP / 4) - mt ** 2) * np.sin(theta)
-    m_T = np.sqrt(sP / 4 - p_T ** 2)
-    H_T = 2 * (np.sqrt(mt ** 2 + p_T ** 2))
-    # return (H_T/4)
-    return 91.188
-
-
-def diffCross(sqrts, cuGRe, cuu):
-    """Continuous version"""
-    mtt = sqrts
-    if sqrts >= 2 * mt:
-        return dsigma_dmtt(mtt, cuGRe, cuu)
-    else:
-        return 0
-
-
-def invariant_mass(p1, p2):
-    return np.sqrt(
-        sum((1 if mu == 'e' else -1) * (getattr(p1, mu) + getattr(p2, mu)) ** 2 for mu in ['e', 'px', 'py', 'pz']))
-
-
-def rapidity(p1, p2):
-    # Follow P&S page 565
-    q0 = getattr(p1, 'e') + getattr(p2, 'e')  # energy of the top quark pair in the pp COM frame
-    q3 = getattr(p1, 'pz') + getattr(p2, 'pz')
-    y = 0.5 * np.log((q0 + q3) / (q0 - q3))
-    return y
 
 
 def crossSection(binWidth, mtt_max, cuGRe, cuu):
@@ -370,7 +301,6 @@ def plot_likelihood_ratio_1D(x, cHW, cHq3, lin=False, quad=False):
     y = [1 / (1 + likelihood_ratio_1D(x_i, cHW, cHq3, lin=lin, quad=quad)) for x_i in x]
     return np.array(y)
 
-likelihood_ratio_1D_v = np.vectorize(likelihood_ratio_1D, otypes=[np.float])
 
 def f_analytic(mtt, y, cuGRe, cuu):
     r = likelihood_ratio(y, mtt, cuGRe, cuu)

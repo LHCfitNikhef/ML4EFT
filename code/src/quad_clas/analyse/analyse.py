@@ -18,6 +18,7 @@ import json
 import pandas as pd
 from sklearn.cluster import KMeans
 from scipy import integrate
+import logging
 
 # import own pacakges
 from quad_clas.core import classifier as quad_clas
@@ -33,6 +34,257 @@ col_s = constants.col_s
 # matplotlib.use('PDF')
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
+
+
+class Analyse:
+
+    def __init__(self, path_to_models):
+
+        self.path_to_models = path_to_models
+        self.model_dict = {}
+
+        # logging.basicConfig(filename=log_path + '/training_{}.log'.format(current_time), level=logging.INFO,
+        #                     format='%(asctime)s:%(levelname)s:%(message)s')
+
+    @staticmethod
+    def load_loss(path_to_loss):
+        """
+
+        Parameters
+        ----------
+        path_to_loss: str
+            Path to loss file
+
+        Returns
+        -------
+        loss: list
+            list of losses per epoch
+        """
+        with open(path_to_loss) as f:
+            loss = [float(line.rstrip()) for line in f]
+        return loss
+
+    @staticmethod
+    def load_run_card(path):
+        """
+        Parameters
+        ----------
+        path: str
+            path to json model run card that stores the hyperparameter settings
+
+        Returns
+        -------
+        run_card: dict
+            dictionary with all the hyperparameter settings
+        """
+        with open(path) as json_data:
+            run_card = json.load(json_data)
+        run_card['architecture'] = [run_card['input_size']] + run_card['hidden_sizes'] + [run_card['output_size']]
+
+        return run_card
+
+    @staticmethod
+    def filter_out_models(losses):
+        """
+        Filter out the badly trained models based on kmeans clustering.
+
+        Parameters
+        ----------
+        losses: numpy.ndarray
+
+        Returns
+        -------
+        good_model_idx: numpy.ndarray
+            Array indices of the good models
+        """
+
+        kmeans = KMeans(n_clusters=2, random_state=0).fit(losses.reshape(-1, 1))
+        cluster_labels = kmeans.labels_
+        cluster_nr_low_loss = np.argmin(kmeans.cluster_centers_)
+
+        # find model indices in the low loss cluster
+        good_model_idx = np.argwhere(cluster_labels == cluster_nr_low_loss).flatten()
+
+        # if relative std has not been reduced by a factor 10, select only models within +- 4 sigma
+        if np.std(losses[good_model_idx]) / np.std(losses) > 0.1:
+
+            sigma_loss = (np.nanpercentile(losses, 84) - np.nanpercentile(losses, 16)) / 2
+            los_med = np.nanpercentile(losses, 50)
+
+            good_model_idx = np.argwhere(
+                (los_med - 4 * sigma_loss < losses) & (losses < los_med + 4 * sigma_loss)).flatten()
+
+        return good_model_idx
+
+    def load_models(self, c_train, model_path, order, epoch):
+        """
+
+        Parameters
+        ----------
+        c_train: float
+            EFT value used during training
+        model_path: str
+            path to model directory
+        order: str
+            Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad`` or ``cross``.
+        epoch: int
+            Epoch number to load
+
+        Returns
+        -------
+
+        """
+        # collect all replica paths
+        rep_paths = [os.path.join(model_path, mc_run) for mc_run in os.listdir(model_path) if
+                      mc_run.startswith('mc_run')]
+
+        losses_tr = []  # to store the final training losses
+        losses_val = []  # to store the final validation losses
+
+        models = []
+        scalers = []
+
+        for rep_path in rep_paths:
+
+            path_to_run_card = os.path.join(rep_path, 'run_card.json')
+            path_to_scaler = os.path.join(rep_path, 'scaler.gz')
+
+            run_card = self.load_run_card(path_to_run_card)
+            scaler = joblib.load(path_to_scaler)
+
+            if order == 'lin':
+                loaded_model = quad_clas.PredictorLinear(run_card['architecture'], c_train)
+            elif order == 'quad':
+                pass
+            elif order == 'cross':
+                pass
+            else:
+                print("Please select one of ['lin', 'quad', 'cross'] as order in the runcard")
+
+            # build path to model config file
+            if epoch != -1:  # if specific epoch is requested
+                network_path = os.path.join(rep_path, 'trained_nn_{}.pt'.format(epoch))
+                if not os.path.isfile(network_path):
+                    network_path = os.path.join(rep_path, 'trained_nn.pt')
+            else:
+                network_path = os.path.join(rep_path, 'trained_nn.pt')
+
+            # load the model
+            loaded_model.load_state_dict(torch.load(network_path))
+
+            # read the losses
+            path_to_loss_tr = os.path.join(os.path.dirname(network_path), 'loss.out')
+            path_to_loss_val = os.path.join(os.path.dirname(network_path), 'loss_val.out')
+
+            loss_tr = self.load_loss(path_to_loss_tr)
+            loss_val = self.load_loss(path_to_loss_val)
+
+            # load all the parameters into the trained network and save
+            losses_tr.append(loss_tr[-run_card['patience']])
+            losses_val.append(loss_val[-run_card['patience']])
+
+            models.append(loaded_model)
+            scalers.append(scaler)
+
+        losses_tr = np.array(losses_tr)
+        losses_val = np.array(losses_val)
+        models = np.array(models)
+        scalers = np.array(scalers)
+
+        # filter out the badly trained models based on their training loss
+
+        good_model_idx = self.filter_out_models(losses_tr)
+        models = models[good_model_idx]
+        scalers = scalers[good_model_idx]
+
+        # map model indices back to rep number
+        models_rep_nr = []
+        for idx in good_model_idx:
+            rep_nr = int(os.path.basename(rep_paths[idx]).split('mc_run_', 1)[1])
+            models_rep_nr.append(rep_nr)
+        models_rep_nr = np.array(models_rep_nr)
+
+        return models, models_rep_nr, scalers, run_card
+
+    def build_model_dict(self, epoch=-1):
+        """
+        Construct a model dictionary that stores all the info about the models
+
+        Parameters
+        ----------
+        epoch: int, optional
+            Epoch to load, set to the best model by default
+        """
+        for order, dict_fo in self.path_to_models.items():
+            for c_name, [c_train, model_path] in dict_fo.items():
+                pretrained_models, models_idx, scalers, run_card = self.load_models(c_train, model_path, order, epoch)
+                self.model_dict[order] = {c_name: {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
+                                                   'run_card': run_card}}
+
+    def likelihood_ratio_truth(self, events, c, features, process, order=None):
+        """
+        Computes the analytic likelihood ratio r(x, c)
+
+        Parameters
+        ----------
+        order: str, optional
+            Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad``.
+        process: str
+            Choose between ``tt`` or ``ZH``
+        features: list
+            List of kinematic labels
+        events : pd.DataFrame
+            Pandas DataFrame with the events
+        c : numpy.ndarray, shape=(M,)
+            EFT point in M dimensions, e.g c = (cHW, cHq3)
+
+
+        Returns
+        -------
+        ratio: numpy.ndarray
+            Likelihood ratio wrt the SM 
+        """
+
+        n_features = len(features)
+
+        if process == 'ZH':
+            if n_features == 1:
+                dsigma_0 = [vh_prod.dsigma_dmvh(*x[features], c, order) for index, x in
+                            events.iterrows()]  # EFT
+                dsigma_1 = [vh_prod.dsigma_dmvh(*x[features]) for index, x in
+                            events.iterrows()]  # SM
+            elif n_features == 2:
+                dsigma_0 = [vh_prod.dsigma_dmvh_dy(*x[features], c, order) for index, x in
+                            events.iterrows()]  # EFT
+                dsigma_1 = [vh_prod.dsigma_dmvh_dy(*x[features]) for index, x in
+                            events.iterrows()]  # SM
+            elif n_features == 3:
+                dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(*x[features], c, order) for
+                            index, x in
+                            events.iterrows()]  # EFT
+                dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(*x[features]) for
+                            index, x in
+                            events.iterrows()]  # SM
+            else:
+                raise NotImplementedError("No more than three features are currently supported")
+
+        if process == 'tt':
+
+            if n_features == 1:
+                dsigma_0 = [tt_prod.dsigma_dmtt(*x[features], c, order) for _, x in events.iterrows()]  # EFT
+                dsigma_1 = [tt_prod.dsigma_dmtt(*x[features]) for _, x in
+                            events.iterrows()]  # SM
+            else:
+                dsigma_0 = [tt_prod.dsigma_dmtt_dy(*x[features], c, order) for _, x in
+                            events.iterrows()]  # EFT
+                dsigma_1 = [tt_prod.dsigma_dmtt_dy(*x[features]) for _, x in
+                            events.iterrows()]  # SM
+
+        dsigma_0, dsigma_1 = np.array(dsigma_0), np.array(dsigma_1)
+
+        ratio = np.divide(dsigma_0, dsigma_1, out=np.zeros_like(dsigma_0), where=dsigma_1 != 0)
+
+        return ratio.flatten()
 
 
 def likelihood_ratio_truth(events, c, n_kin, process, lin=False, quad=False):
@@ -281,7 +533,7 @@ def coeff_function_truth(x, c, n_kin, process, lin, quad, cross):
         return coeff_cross
 
 
-def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
+def coeff_comp_rep(path_to_model, network_size, c1, c2, lin, quad, cross, cut=None):
     """
     Compares the EFT coefficient function of the individual replica stored at ``path_model`` with the truth.
     The ratio is plotted and returned as a matplotlib figure.
@@ -315,7 +567,14 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
 
     s = 14 ** 2
     epsilon = 1e-2
-    mvh_min, mvh_max = mz + mh + epsilon, 2
+
+    if process == 'ZH':
+        mx_min = mz + mh + epsilon if cut is None else cut
+        mx_max = 2
+    elif process == 'tt':
+        mx_min = 2 * mt + epsilon if cut is None else cut
+        mx_max = 2
+
     y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
 
     x_spacing, y_spacing = 1e-2, 0.01
@@ -324,15 +583,20 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
 
     mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
     grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
-    grid_unscaled_tensor = torch.Tensor(grid)
+
+    if process == 'ZH':
+        df = pd.DataFrame({'m_zh': grid[:, 0], 'y': grid[:, 1]})
+    elif process == 'tt':
+        df = pd.DataFrame({'m_tt': grid[:, 0], 'y': grid[:, 1]})
 
     # truth
 
-    lin = True if not (quad or cross) else False # if both quad and cross are false, lin must be true
 
     coeff_truth = coeff_function_truth(grid, np.array([c1, c2]), lin, quad, cross)
     coeff_truth = coeff_truth.reshape(mvh_grid.shape)
     # models
+
+    [coeff_nn, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch)
 
     coeff_nn = coeff_function_nn(grid_unscaled_tensor, path_to_model, network_size, lin, quad, cross)
     coeff_nn = coeff_nn.reshape(mvh_grid.shape)
@@ -346,10 +610,10 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, quad, cross):
 
     bounds = [0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05]
     fig = plot_heatmap(coeff_truth / coeff_nn,
-                       xlabel=r'$m_{ZH}\;\rm{[TeV]}$',
+                       xlabel=r'$m_{t\bar{t}}\;\rm{[TeV]}$',
                        ylabel=r'$\rm{Rapidity}$',
                        title=title,
-                       extent=[mvh_min, mvh_max, y_min, y_max],
+                       extent=[mx_min, mx_max, y_min, y_max],
                        cmap='seismic',
                        bounds=bounds)
 
@@ -411,7 +675,8 @@ def coeff_comp(path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=
 
     # models
 
-    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, c_train, path_to_models, epoch=-1)
+    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch=-1)
+
     n_lin = n_lin[0,:, :].reshape((n_lin.shape[1], *mx_grid.shape))
     coeff_nn_median = np.percentile(n_lin, 50, axis=0)
     coeff_nn_high = np.percentile(n_lin, 84, axis=0)
@@ -590,7 +855,7 @@ def load_coefficients_nn(df, path_to_models, epoch=-1):
     for order, paths in path_to_models.items():
         if order == 'lin':
             for coeff, [c_train, path] in paths.items():
-                loaded_models_lin, model_idx = load_models(c_train, path, epoch=epoch, lin=True)
+                loaded_models_lin, model_idx, scalers = load_models(c_train, path, epoch=epoch, lin=True)
                 n_alphas = []
                 for i, loaded_model in enumerate(loaded_models_lin):
                     path_to_model = os.path.join(path, 'mc_run_{}'.format(model_idx[i]))
@@ -637,7 +902,7 @@ def load_coefficients_nn(df, path_to_models, epoch=-1):
 
 def plot_loss_overview(path_to_models, order, op):
 
-    model_dir_base = path_to_models[order][op]
+    model_dir_base = path_to_models[order][op][-1]
     model_dirs = [os.path.join(model_dir_base, mc_run) for mc_run in os.listdir(model_dir_base) if mc_run.startswith('mc_run')]
 
     mc_reps = len(model_dirs)
@@ -917,7 +1182,7 @@ def likelihood_ratio_nn(df, c, train_parameters, path_to_models, epoch=-1, lin=F
     numpy.ndarray, shape=(mc_reps, M)
     """
     # nn models at the specified epoch
-    [n_lin_matched, model_idx], n_quad, n_cross = load_coefficients_nn(df, train_parameters, path_to_models, epoch=epoch)
+    [n_lin_matched, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch=epoch)
 
     if lin:
         r = 1 + np.einsum('i, ijk', c, n_lin_matched)

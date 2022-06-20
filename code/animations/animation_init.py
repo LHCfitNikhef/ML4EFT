@@ -13,8 +13,8 @@ from quad_clas.analyse.animate import Animate
 # tt
 
 path_to_models = {'lin': {
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/07/model_ctgre_lin_v2',
-    'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/07/model_ctgre_lin_v2'}}
+    'ctgre': [-10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/19/model_ctgre_lin_penalty_v5'],
+    'ctgre': [-10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/19/model_ctgre_lin_penalty_v5']}}
 
 #%%
 animation1D = Animate(architecture=[2,100, 100, 100, 1],
@@ -24,8 +24,8 @@ animation1D = Animate(architecture=[2,100, 100, 100, 1],
                           "cuu_quad": 100.0
                       },
                       path_to_models=path_to_models,
-                      save_path='/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/07_06/ctgre_lin_anim_200_epochs.gif',
-                      frames=100,
+                      save_path='/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/19/model_ctgre_lin_penalty_v5/report/anim_1d.gif',
+                      frames=200,
                       lin=True,
                       quad=False)
 animation1D.make_animation()

@@ -17,18 +17,18 @@ import sys
 
 yr = "2022"
 month = "06"
-day = "17"
+day = "19"
 date = "{yr}_{m}_{d}".format(yr=yr, m=month, d=day)
 
-name = "model_ctgre_lin_cut_05_no_delta_min"
+name = "model_ctgre_lin_penalty_v6"
 
 path_to_models = {'lin': {
     'ctgre': [-10, os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name)],
     'ctgre': [-10, os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name)]}}
 
 
-path_to_runcard = os.path.join(path_to_models['lin']['ctgre'], 'mc_run_0/run_card.json')
-report_path = os.path.join(path_to_models['lin']['ctgre'], 'report')
+path_to_runcard = os.path.join(path_to_models['lin']['ctgre'][-1], 'mc_run_0/run_card.json')
+report_path = os.path.join(path_to_models['lin']['ctgre'][-1], 'report')
 if not os.path.exists(report_path):
     os.makedirs(report_path)
 

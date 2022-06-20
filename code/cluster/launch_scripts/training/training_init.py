@@ -4,7 +4,7 @@ import quad_clas.core.classifier as classifier
 # training settings
 
 # tt
-path_to_json = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt/run_card_tt_quad.json'
+path_to_json = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt/run_card_tt_mtt_y_pt.json'
 
 # zh
 #path_to_json = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/zh/run_card_zh_mzh_y.json'

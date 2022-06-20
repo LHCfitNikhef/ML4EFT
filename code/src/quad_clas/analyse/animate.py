@@ -33,7 +33,8 @@ class Animate:
 
         # analytical decision function
         #x = np.linspace(mh + mz + 1e-2, 2.5, 100)
-        x = np.linspace(2 * mt + 1e-2, 3.0, 200)
+        #x = np.linspace(2 * mt + 1e-2, 3.0, 200)
+        x = np.linspace(0.5, 3.0, 200)
         x = np.stack((x, np.zeros(len(x))), axis=-1)
         #x = np.stack((x, 2* np.ones(len(x))), axis=-1)
 
@@ -73,15 +74,15 @@ class Animate:
         fill = ax.fill_between(x[:, 0], f_preds_quad_init_up, f_preds_quad_init_down, color='C0', alpha=0.3,
                                label=r'$\rm{NN\;1}\sigma\rm{-band}$')
 
-        #ax.plot(x[:, 0], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
-        ax.plot(x[:, 0], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-4}\right)$')
+        ax.plot(x[:, 0], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
+        #ax.plot(x[:, 0], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-4}\right)$')
         #ax.plot(x[:, 0], f_ana_quad, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-4}\right)$')
         epoch_text = ax.text(0.02, 0.92, '', transform=ax.transAxes, fontsize=15)
 
         plt.legend(loc='upper right', fontsize=15, frameon=False)
-        plt.ylim((0, 1))
-        plt.xlim(np.min(x[:, 0]), 0.5)
-
+        plt.ylim((-0.5, 1.5))
+        #plt.xlim(np.min(x[:, 0]), 0.5)
+        plt.xlim(0.5, np.max(x[:, 0]))
         #plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
         plt.ylabel(r'$f\;(x, c)$')
         #plt.xlabel(r'$m_{ZH}\;[\mathrm{TeV}]$')

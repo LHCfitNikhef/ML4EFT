@@ -15,7 +15,9 @@ v = 1 / np.sqrt(Gf * np.sqrt(2))  # vev [TeV]
 pb_convert = 3.894E2  # conversion factor to pb
 
 
-def sigma_part_vh_up(hats, cHW, cHq3, lin, quad):
+def sigma_part_vh_up(hats, c, order):
+
+    cHW, cHq3 = c
 
     pz2 = (hats ** 2 + mz ** 4 + mh ** 4 - 2 * hats * mz ** 2 - 2 * hats * mh ** 2 - 2 * mz ** 2 * mh ** 2) / (4 * hats)
     pz = np.sqrt(pz2)
@@ -33,9 +35,9 @@ def sigma_part_vh_up(hats, cHW, cHq3, lin, quad):
     xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (4 * sth2 - 3)) / (
                 27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
 
-    if lin:
+    if order == 'lin':
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3
-    if quad:
+    if order == 'quad':
         xsec_quad_cHq3_cHq3 = (mz ** 4 * pz * (3 * mz ** 2 + pz2)) / (
                     36 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats))
 
@@ -49,7 +51,8 @@ def sigma_part_vh_up(hats, cHW, cHq3, lin, quad):
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
                cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
 
-def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
+def sigma_part_vh_down(hats, c, order):
+    cHW, cHq3 = c
 
     pz2 = (hats ** 2 + mz ** 4 + mh ** 4 - 2 * hats * mz ** 2 - 2 * hats * mh ** 2 - 2 * mz ** 2 * mh ** 2) / (4 * hats)
     pz = np.sqrt(pz2)
@@ -68,9 +71,9 @@ def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
     xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (2 * sth2 - 3)) / (
                 27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
 
-    if lin:
+    if order == 'lin':
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3
-    if quad:
+    if order == 'quad':
         xsec_quad_cHq3_cHq3 = (mz ** 4 * pz * (3 * mz ** 2 + pz2)) / (
                     36 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats))
 
@@ -84,7 +87,8 @@ def sigma_part_vh_down(hats, cHW, cHq3, lin, quad):
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3 + \
                cHq3 ** 2 * xsec_quad_cHq3_cHq3 + cHW ** 2 * xsec_quad_cHW_cHW + cHW * cHq3 * xsec_quad_cHW_cHq3  # + cHWB * xsec_lin_cHWB / LambdaSMEFT
 
-def dsigma_part_dpt_vh_up(hats, ptv, cHW, cHq3, lin, quad):
+def dsigma_part_dpt_vh_up(hats, ptv, c, order):
+    cHW, cHq3 = c
 
     # minimum energy required to generate an event with transverse momentum ptv
     s_min = mh ** 2 + mz ** 2 + 2 * (ptv ** 2 + np.sqrt((mh ** 2 + ptv ** 2) * (mz ** 2 + ptv ** 2)))
@@ -146,7 +150,8 @@ def dsigma_part_dpt_vh_up(hats, ptv, cHW, cHq3, lin, quad):
 
     return dsigma_dpT_1 + dsigma_dpT_2
 
-def dsigma_part_dpt_vh_down(hats, ptv, cHW, cHq3, lin, quad):
+def dsigma_part_dpt_vh_down(hats, ptv, c, order):
+    cHW, cHq3 = c
 
     # minimum energy required to generate an event with transverse momentum ptv
     s_min = mh ** 2 + mz ** 2 + 2 * (ptv ** 2 + np.sqrt((mh ** 2 + ptv ** 2) * (mz ** 2 + ptv ** 2)))
@@ -204,7 +209,7 @@ def dsigma_part_dpt_vh_down(hats, ptv, cHW, cHq3, lin, quad):
 
     return dsigma_dpT_1 + dsigma_dpT_2
 
-def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
+def weight(sqrts, mu, x1, x2, c, order):
     """
     """
     hats = sqrts ** 2
@@ -219,11 +224,11 @@ def weight(sqrts, mu, x1, x2, cHW, cHq3, lin, quad):
     #     [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) for pid in
     #      flavor_down])
 
-    weight_up = (sigma_part_vh_up(hats, cHW, cHq3, lin, quad)) * pdfs_up
-    weight_down = (sigma_part_vh_down(hats, cHW, cHq3, lin, quad)) * pdfs_down
+    weight_up = (sigma_part_vh_up(hats, c, order)) * pdfs_up
+    weight_down = (sigma_part_vh_down(hats, c, order)) * pdfs_down
     return weight_down + weight_up
 
-def weight_pt(sqrts, ptv, mu, x1, x2, cHW, cHq3, lin, quad):
+def weight_pt(sqrts, ptv, mu, x1, x2, c, order):
     """
     """
     hats = sqrts ** 2
@@ -233,11 +238,11 @@ def weight_pt(sqrts, ptv, mu, x1, x2, cHW, cHq3, lin, quad):
     pdfs_up = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_up])
     pdfs_down = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_down])
 
-    weight_up = (dsigma_part_dpt_vh_up(hats, ptv, cHW, cHq3, lin, quad)) * pdfs_up
-    weight_down = (dsigma_part_dpt_vh_down(hats, ptv, cHW, cHq3, lin, quad)) * pdfs_down
+    weight_up = (dsigma_part_dpt_vh_up(hats, ptv, c, order)) * pdfs_up
+    weight_down = (dsigma_part_dpt_vh_down(hats, ptv, c, order)) * pdfs_down
     return weight_down + weight_up
 
-def dsigma_dmvh_dy_dpt(y, mvh, ptv, cHW, cHq3, lin, quad):
+def dsigma_dmvh_dy_dpt(y, mvh, ptv, c, order):
     """
     Compute the doubly differential cross section in mtt and y at any order NP
     """
@@ -247,12 +252,12 @@ def dsigma_dmvh_dy_dpt(y, mvh, ptv, cHW, cHq3, lin, quad):
     if np.abs(y) < np.log(np.sqrt(s) / mvh):  # check whether x = {mtt, y} falls inside the physically allowed region
         x1 = mvh / np.sqrt(s) * np.exp(y)
         x2 = mvh / np.sqrt(s) * np.exp(-y)
-        dsigma_dmtt_dy = 2 * mvh / s * v_weight_pt(mvh, ptv, 91.188, x1, x2, cHW, cHq3, lin, quad) / (x1 * x2)
+        dsigma_dmtt_dy = 2 * mvh / s * v_weight_pt(mvh, ptv, 91.188, x1, x2, c, order) / (x1 * x2)
         return pb_convert * dsigma_dmtt_dy
     else:
         return 0
 
-def dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin, quad):
+def dsigma_dmvh_dy(y, mvh, c, order):
     """
     Compute the doubly differential cross section in mtt and y at any order NP
     """
@@ -262,15 +267,15 @@ def dsigma_dmvh_dy(y, mvh, cHW, cHq3, lin, quad):
     if np.abs(y) < np.log(np.sqrt(s) / mvh):  # check whether x = {mtt, y} falls inside the physically allowed region
         x1 = mvh / np.sqrt(s) * np.exp(y)
         x2 = mvh / np.sqrt(s) * np.exp(-y)
-        dsigma_dmtt_dy = 2 * mvh / s * v_weight(mvh, 91.188, x1, x2, cHW, cHq3, lin, quad) / (x1 * x2)
+        dsigma_dmtt_dy = 2 * mvh / s * v_weight(mvh, 91.188, x1, x2, c, order) / (x1 * x2)
         return pb_convert * dsigma_dmtt_dy
     else:
         return 0
 
-def dsigma_dmvh(mvh, cHW, cHq3, lin, quad):
+def dsigma_dmvh(mvh, c, order):
 
     y_min, y_max = -0.5 * np.log(s / mvh), 0.5 * np.log(s / mvh)
-    dsigma_dmvh = integrate.fixed_quad(dsigma_dmvh_dy_vec, y_min, y_max, args=(mvh, cHW, cHq3, lin, quad), n=10)[0]
+    dsigma_dmvh = integrate.fixed_quad(dsigma_dmvh_dy_vec, y_min, y_max, args=(mvh, c, order), n=10)[0]
     return dsigma_dmvh
 
 def sigma_bin(bins, cHW, cHq3, lin=False, quad=False):

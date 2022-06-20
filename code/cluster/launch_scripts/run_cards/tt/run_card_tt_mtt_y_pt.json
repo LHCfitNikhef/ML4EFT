@@ -1,7 +1,7 @@
 {
-  "name": "ctgre_lin_cut_05_no_delta_min",
-  "epochs": 1000,
-  "lr": 0.001,
+  "name": "ctgre_lin_penalty_v6",
+  "epochs": 2000,
+  "lr": 0.0001,
   "n_batches": 1,
   "input_size": 2,
   "output_size": 1,
@@ -23,16 +23,17 @@
       "value": 0.0
     }
   ],
+  "coeff_train": {"ctgre":  -10, "c":  0},
   "event_data": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l",
   "features": [
     "m_tt",
     "y"
   ],
-  "lag_mult": 0,
+  "lag_mult": 100000,
   "loss_type": "CE",
   "scaler_type": "robust",
-  "patience": 100,
+  "patience": 200,
   "threshold_cut": 0.5,
-  "delta_min": 0.00,
+  "delta_min": 0.01,
   "val_ratio": 0.2
 }
