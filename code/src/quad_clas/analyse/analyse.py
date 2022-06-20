@@ -11,6 +11,7 @@ import sys
 import copy
 import matplotlib.gridspec as gridspec
 from matplotlib import animation
+from matplotlib.ticker import NullFormatter
 import os, sys
 import pickle
 import joblib
@@ -173,8 +174,8 @@ class Analyse:
             loaded_model.load_state_dict(torch.load(network_path))
 
             # read the losses
-            path_to_loss_tr = os.path.join(os.path.dirname(network_path), 'loss.out')
-            path_to_loss_val = os.path.join(os.path.dirname(network_path), 'loss_val.out')
+            path_to_loss_tr = os.path.join(rep_path, 'loss.out')
+            path_to_loss_val = os.path.join(rep_path, 'loss_val.out')
 
             loss_tr = self.load_loss(path_to_loss_tr)
             loss_val = self.load_loss(path_to_loss_val)
@@ -204,7 +205,7 @@ class Analyse:
             models_rep_nr.append(rep_nr)
         models_rep_nr = np.array(models_rep_nr)
 
-        return models, models_rep_nr, scalers, run_card
+        return models, models_rep_nr, scalers, run_card, rep_paths
 
     def build_model_dict(self, epoch=-1):
         """
@@ -221,9 +222,9 @@ class Analyse:
         self.model_dict = defaultdict(dict)
         for order, dict_fo in self.path_to_models.items():
             for c_name, [c_train, model_path] in dict_fo.items():
-                pretrained_models, models_idx, scalers, run_card = self.load_models(c_train, model_path, order, epoch)
+                pretrained_models, models_idx, scalers, run_card, rep_paths = self.load_models(c_train, model_path, order, epoch)
                 self.model_dict[order][c_name] = {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
-                                             'run_card': run_card}
+                                             'run_card': run_card, 'rep_paths': rep_paths}
 
         self.model_df = pd.DataFrame.from_dict({(i, j): self.model_dict[i][j]
                                                 for i in self.model_dict.keys()
@@ -251,7 +252,6 @@ class Analyse:
 
         models_evaluated = copy.deepcopy(self.model_dict)
 
-        # import pdb; pdb.set_trace()
         # models = models_evaluated.loc[:]['models'].values
         # scalers = models_evaluated.loc[:]['scalers'].values
         # feature_names = models_evaluated.loc[:]['run_card'].values[0]['features']
@@ -274,8 +274,6 @@ class Analyse:
                                                orient='index')
 
         return models_evaluated_df
-
-
 
     def coeff_function_truth(self, df, c, features, process, order):
 
@@ -402,6 +400,21 @@ class Analyse:
         return fig1, fig2
 
     def likelihood_ratio_nn(self, df, c):
+        """
+           Computes NN likelihood ratio
+
+           Parameters
+           ----------
+           df: pd.DataFrame
+               event info
+           c: numpy.ndarray
+               EFT point
+
+           Returns
+           -------
+           ratio: numpy.ndarray
+               NN likelihood ratio
+           """
 
         models_evaluated = self.evaluate_models(df)
 
@@ -409,8 +422,8 @@ class Analyse:
 
         if 'lin' in models_evaluated.index:
             lin_models = models_evaluated['models'].loc["lin"]
-            for i, (_, nn_lin) in enumerate(lin_models.iteritems()):
-                ratio += c[i] * nn_lin
+            for c_name, nn_lin in lin_models.iteritems():
+                ratio += c[c_name] * nn_lin
 
         if 'quad' in models_evaluated.index:
             quad_models = models_evaluated['models'].loc["quad"]
@@ -420,6 +433,159 @@ class Analyse:
         ratio = np.vstack(ratio)
 
         return ratio
+
+    def decision_function_nn(self, df, c):
+        """
+        Computes NN decision function
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            event info
+        c: numpy.ndarray
+            EFT point
+
+        Returns
+        -------
+        decision_function: numpy.ndarray
+            NN decision function
+        """
+        ratio = self.likelihood_ratio(df, c)
+        decision_function = 1 / (1 + ratio)
+        return decision_function
+
+    def point_by_point_comp(self, df, c, features, process):
+
+        r_nn = self.likelihood_ratio_nn(df, c)
+        tau_nn = np.log(r_nn)
+
+        order = self.model_df.index[-1][0]  # last index, first column gives the order
+
+        r_truth = self.likelihood_ratio_truth(df, c, features, process, order)
+        tau_truth = np.log(r_truth)
+
+        # overview plot for all replicas
+        ncols = 5
+        mc_reps = r_nn.shape[0]
+        nrows = int(np.ceil(mc_reps / ncols))
+
+        fig1 = plt.figure(figsize=(ncols * 4, nrows * 4))
+
+        x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
+
+        for k, v in c.items():
+            if v != 0:
+                model_idx = self.model_df.loc[order, k]['idx']
+
+        for i in np.argsort(model_idx):
+            ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
+
+            # plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
+            # plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='red')
+
+            plt.scatter(tau_truth, tau_nn[i, :], s=2, color='k')
+            plt.plot(x, x, linestyle='dashed', color='grey')
+            plt.text(0.1, 0.9, r"$\mathrm{{rep}}\;{}$".format(model_idx[i]), horizontalalignment='left',
+                     verticalalignment='center',
+                     transform=ax.transAxes)
+
+            plt.xlim((np.min(x), np.max(x)))
+            plt.ylim((np.min(x), np.max(x)))
+
+        plt.tight_layout()
+
+        # median
+        fig2, ax = plt.subplots(figsize=(8, 8))
+        x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
+
+        # plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
+        # plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='red')
+
+        plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
+        plt.plot(x, x, linestyle='dashed', color='grey')
+        plt.xlabel(r'$\tau(x, c)^{\rm{truth}}$')
+        plt.ylabel(r'$\tau(x, c)^{\rm{NN}}$')
+        plt.xlim((np.min(x), np.max(x)))
+        plt.ylim((np.min(x), np.max(x)))
+        plt.tight_layout()
+
+        return fig1, fig2
+
+    def plot_loss_overview(self):
+
+        if self.model_df is None:
+            self.build_model_dict()
+
+        loss_tr = []
+        loss_val = []
+        figs = []
+        for (order, c_name), rep_paths in self.model_df['rep_paths'].iteritems():
+
+            mc_reps = len(rep_paths)
+            ncols = 5
+            nrows = int(np.ceil(mc_reps / ncols))
+
+            patience = self.model_df.loc[order, c_name]['run_card']['patience']
+            model_idx = self.model_df.loc[order, c_name]['idx']
+
+            for rep_path in rep_paths:
+                path_to_loss_tr = os.path.join(rep_path, 'loss.out')
+                loss_tr.append(self.load_loss(path_to_loss_tr))
+
+                path_to_loss_val = os.path.join(rep_path, 'loss_val.out')
+                loss_val.append(self.load_loss(path_to_loss_val))
+
+            fig = plt.figure(figsize=(ncols * 4, nrows * 4))
+
+            train_loss_best = np.array([loss[-patience] for loss in loss_tr])
+
+            for i in np.argsort(model_idx):
+                ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
+                epochs = np.arange(len(loss_tr[i]))
+
+                label_val = r'$L_{\mathrm{val}}$' if i == 0 else None
+                label_train = r'$L_{\mathrm{tr}}$' if i == 0 else None
+
+                loss_train_rep = np.array(loss_tr[i])
+                loss_val_rep = np.array(loss_val[i])
+
+                ax.plot(epochs, loss_train_rep, label=label_train)
+                ax.plot(epochs, loss_val_rep, label=label_val)
+                ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
+
+                # ax.set_yscale('log')
+                # ax.yaxis.set_major_formatter(NullFormatter())
+                # ax.yaxis.set_minor_formatter(NullFormatter())
+                # ax.axes.yaxis.set_ticklabels([])
+                ax.set_ymargin(0.1)
+                ax.set_xmargin(0)
+
+                ax.text(0.9, 0.9, r"$\mathrm{{rep}}\;{}$".format(model_idx[i]), horizontalalignment='right',
+                        verticalalignment='center',
+                        transform=ax.transAxes)
+
+                ax.set_xlim(left=10)
+
+                med_loss = np.percentile(train_loss_best, 50)
+                low_loss = np.percentile(train_loss_best, 16)
+                high_loss = np.percentile(train_loss_best, 84)
+                loss_sigma = np.abs((high_loss - low_loss) / 2)
+
+                ax.set_ylim(loss_train_rep[-1] - 0.2 * loss_sigma, loss_train_rep[-1] + 0.8 * loss_sigma)
+
+                signif = (train_loss_best[i] - med_loss) / loss_sigma
+
+                ax.text(0.9, 0.8, r"$Z={:.2f}$".format(signif), horizontalalignment='right',
+                        verticalalignment='center',
+                        transform=ax.transAxes)
+
+                if i == 0:
+                    ax.legend(loc="lower left", frameon=False)
+
+            plt.tight_layout()
+            figs.append(fig)
+
+        return figs
 
     @staticmethod
     def likelihood_ratio_truth(events, c, features, process, order=None):
@@ -449,6 +615,7 @@ class Analyse:
         n_features = len(features)
 
         if process == 'ZH':
+            c = np.array([c['cHW'], c['cHq3']])
             if n_features == 1:
                 dsigma_0 = [vh_prod.dsigma_dmvh(*x[features], c, order) for index, x in
                             events.iterrows()]  # EFT
@@ -470,7 +637,7 @@ class Analyse:
                 raise NotImplementedError("No more than three features are currently supported")
 
         if process == 'tt':
-
+            c = np.array([c['ctgre'], c['cut']])
             if n_features == 1:
                 dsigma_0 = [tt_prod.dsigma_dmtt(*x[features], c, order) for _, x in events.iterrows()]  # EFT
                 dsigma_1 = [tt_prod.dsigma_dmtt(*x[features]) for _, x in
@@ -724,109 +891,6 @@ def coeff_comp_rep(path_to_model, network_size, c1, c2, lin, quad, cross, cut=No
     return fig
 
 
-def coeff_comp(path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=False, cross=False, path_sm_data=None, cut=None):
-    """
-    Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
-
-    Parameters
-    ----------
-    mc_reps: int
-        Number of replicas to include
-    path_model: str
-        Path to models, e.g. models/model_x/mc_run_{mc_run}
-    network_size: list
-        Architecture of the network
-    c1: float
-        Value of the 1st EFT coefficient used during training
-    c2: float
-        Value of the 2nd EFT coefficient used during training
-    path_sm_data: str, optional
-        Path to sm .npy event file which will be plotted on top of the heatmap
-
-    Returns
-    -------
-    `matplotlib.figure.Figure`
-        Heatmap of coefficient function ratio
-    `matplotlib.figure.Figure`
-        Heatmap of pull
-    """
-    s = 14 ** 2
-    epsilon = 1e-2
-
-    if process == 'ZH':
-        mx_min = mz + mh + epsilon if cut is None else cut
-        mx_max = 2
-    elif process == 'tt':
-        mx_min = 2 * mt + epsilon if cut is None else cut
-        mx_max = 2
-
-    y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
-
-    x_spacing, y_spacing = 1e-2, 0.01
-    mx_span = np.arange(mx_min, mx_max, x_spacing)
-    y_span = np.arange(y_min, y_max, y_spacing)
-
-    mx_grid, y_grid = np.meshgrid(mx_span, y_span)
-    grid = np.c_[mx_grid.ravel(), y_grid.ravel()]
-
-    if process == 'ZH':
-        df = pd.DataFrame({'m_zh': grid[:, 0], 'y': grid[:, 1]})
-    elif process == 'tt':
-        df = pd.DataFrame({'m_tt': grid[:, 0], 'y': grid[:, 1]})
-
-    # truth
-    coeff_truth = coeff_function_truth(df, np.array([c1, c2]), n_kin, process, lin, quad, cross).reshape(mx_grid.shape)
-
-    # models
-
-    [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch=-1)
-
-    n_lin = n_lin[0,:, :].reshape((n_lin.shape[1], *mx_grid.shape))
-    coeff_nn_median = np.percentile(n_lin, 50, axis=0)
-    coeff_nn_high = np.percentile(n_lin, 84, axis=0)
-    coeff_nn_low = np.percentile(n_lin, 16, axis=0)
-    coeff_nn_unc = (coeff_nn_high - coeff_nn_low) / 2
-
-
-    # visualise sm events
-    if path_sm_data is not None:
-        path_dict_sm = {0: path_sm_data}
-        data_sm = quad_classifier_cluster.EventDataset(c=0,
-                                                       n_features=2,
-                                                       path_dict=path_dict_sm,
-                                                       n_dat=500,
-                                                       hypothesis=1)
-        sm_events = data_sm.events.numpy()
-    else:
-        sm_events = None
-
-    # median
-    median_ratio = coeff_truth / coeff_nn_median
-    title= r'$\rm{Truth/NN\;(median)}$'
-
-    xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
-    fig1 = plot_heatmap(median_ratio,
-                        xlabel=xlabel,
-                        ylabel=r'$\rm{Rapidity}$',
-                        title=title,
-                        extent=[mx_min, mx_max, y_min, y_max],
-                        cmap='seismic',
-                        bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
-
-    # pull
-    pull = (coeff_truth - coeff_nn_median) / coeff_nn_unc
-
-    fig2 = plot_heatmap(pull,
-                        xlabel=xlabel,
-                        ylabel=r'$\rm{Rapidity}$',
-                        title=r'$\rm{Pull}$',
-                        extent=[mx_min, mx_max, y_min, y_max],
-                        cmap='seismic',
-                        bounds=np.linspace(-1.5, 1.5, 10))
-
-    return fig1, fig2
-
-
 def plot_loss_overview(path_to_models, order, op):
 
     model_dir_base = path_to_models[order][op][-1]
@@ -991,172 +1055,6 @@ def analytical_loss(c):
 
     return loss[0]
 
-
-def point_by_point_comp(events, c, c_train, path_to_models, n_kin, process, lin=True, quad=False, epoch=-1):
-    """
-    Make a point by point comparison between the truth and the models
-
-    Parameters
-    ----------
-    mc_reps: int
-        Number of replicas to include
-    events: pandas.DataFrame, shape=(M, N)
-        Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    c: numpy.ndarray, shape=(M,)
-        EFT point in M dimensions, e.g c = (cHW, cHq3)
-    path_to_models: dict
-        dictionary containing the paths to the trained models for each order in the eft expansion (linear, quadratic
-        and cross terms)
-    network_size: list
-        Network architecture
-
-    Returns
-    -------
-    `matplotlib.figure.Figure`
-        Overview plot of all the replicas
-    `matplotlib.figure.Figure`
-        Plot of the median only
-    """
-    r_nn, model_idx = likelihood_ratio_nn(events, c, c_train, path_to_models, lin=lin, quad=quad, epoch=epoch)
-    tau_nn = np.log(r_nn)
-
-    r_truth = likelihood_ratio_truth(events, c, process=process, lin=lin, quad=quad, n_kin=n_kin)
-    tau_truth = np.log(r_truth)
-
-    # mzh = events['m_tt'].values
-    # mask = np.argwhere(mzh < 0.5).flatten()
-    # mask_comp = np.setdiff1d(np.arange(len(events)), mask)
-
-    # overview plot for all replicas
-    ncols = 5
-    mc_reps = r_nn.shape[0]
-    nrows = int(np.ceil(mc_reps/ncols))
-
-    fig1 = plt.figure(figsize=(ncols * 4, nrows * 4))
-
-    x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
-
-    #for i in range(mc_reps):
-
-    for i in np.argsort(model_idx):
-        ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
-        # plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
-        # plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='red')
-        plt.scatter(tau_truth, tau_nn[i,:], s=2, color='k')
-        plt.plot(x, x, linestyle='dashed', color='grey')
-        plt.text(0.1, 0.9, 'rep {}'.format(model_idx[i]), horizontalalignment='left',
-                 verticalalignment='center',
-                 transform=ax.transAxes)
-        # plt.xlim((0, 6))
-        # plt.ylim((0, 6))
-        plt.xlim((np.min(x), np.max(x)))
-        plt.ylim((np.min(x), np.max(x)))
-
-    plt.tight_layout()
-
-    # median
-    fig2, ax = plt.subplots(figsize=(8, 8))
-    x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
-    #x= np.linspace(0, 6, 100)
-
-    # plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
-    # plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='red')
-    plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
-    plt.plot(x, x, linestyle='dashed', color='grey')
-    plt.xlabel(r'$\tau(x, c)^{\rm{truth}}$')
-    plt.ylabel(r'$\tau(x, c)^{\rm{NN}}$')
-    plt.xlim((np.min(x), np.max(x)))
-    plt.ylim((np.min(x), np.max(x)))
-    plt.tight_layout()
-    # plt.xlim((0, 6))
-    # plt.ylim((0, 6))
-    return fig1, fig2
-
-
-def likelihood_ratio_nn(df, c, train_parameters, path_to_models, epoch=-1, lin=False, quad=False):
-    """
-    Computes the likelihood ratio using the nn models
-
-    Parameters
-    ----------
-     x : torch.tensor, shape=(M, N)
-        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    c: numpy.ndarray
-        EFT paramters
-    architecture: list
-        The architecture of the model, e.g.
-
-            .. math::
-
-                [n_i, 10, 15, 5, n_f],
-
-        where :math:`n_i` and :math:`n_f` denote the number of input features and output target values respectively.
-    path_to_models: dict
-        Dictionary with the paths to the nn models for lin, quad and cross
-    mc_reps: int
-        Number of replicas to load
-    epoch: int
-        Set to the best model be default, but pass a specific epoch if needed
-    lin: bool
-        Set to True for linear corrections
-    quad: bool
-        Set to True for quadratic corrections
-
-    Returns
-    -------
-    numpy.ndarray, shape=(mc_reps, M)
-    """
-    # nn models at the specified epoch
-    [n_lin_matched, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch=epoch)
-
-    if lin:
-        r = 1 + np.einsum('i, ijk', c, n_lin_matched)
-    elif quad:
-
-        # TODO: c should have the same dimesnions as n_lin_trained
-        # trained nn models
-        n_lin_trained, n_quad_trained, n_cross_trained = load_coefficients_nn(x, network_size, path_to_models, mc_reps,
-                                                                              epoch=-1)
-
-        lin_cor = np.einsum('i, ijk', c, n_lin_trained)
-        if len(n_cross_trained) > 0: # if cross terms are available
-            quadratic_cor = np.einsum('i, ijk', c ** 2, n_quad_trained) + np.prod(c) * n_cross
-        else:
-            quadratic_cor = np.einsum('i, ijk', c ** 2, n_quad)
-        r = 1 + lin_cor + quadratic_cor
-    return r, model_idx
-
-
-def decision_function_nn(df, c, train_parameters, path_to_models, epoch=-1, lin=False, quad=False):
-    """
-    Computes the reconstructed decission function f(x, c)
-
-    Parameters
-    ----------
-    x : torch.tensor, shape=(M, N)
-        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    c : numpy.ndarray, shape=(M,)
-        EFT point in M dimensions, e.g c = (cHW, cHq3)
-    path_to_models: dict
-        Path to the nn model root directory
-    mc_reps: int
-        Monte Carlo replica number
-    lin: bool, optional
-        Set to False by default. Turn on for linear corrections.
-    quad: bool, optional
-        Set to False by default. Turn on for quadratic corrections.
-
-    Returns
-    -------
-    f: numpy.ndarray, shape=(M,)
-        Reconstructed decission function f for the events ``x``
-    """
-    ratio, model_idx = likelihood_ratio_nn(df, c, train_parameters, path_to_models, epoch, lin=lin, quad=quad)
-    f = 1 / (1 + ratio)
-    return f
 
 def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad, cut):
 
