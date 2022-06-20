@@ -218,16 +218,16 @@ class Analyse:
 
         from collections import defaultdict
 
-        model_dict = defaultdict(dict)
+        self.model_dict = defaultdict(dict)
         for order, dict_fo in self.path_to_models.items():
             for c_name, [c_train, model_path] in dict_fo.items():
                 pretrained_models, models_idx, scalers, run_card = self.load_models(c_train, model_path, order, epoch)
-                model_dict[order][c_name] = {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
+                self.model_dict[order][c_name] = {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
                                              'run_card': run_card}
 
-        self.model_df = pd.DataFrame.from_dict({(i, j): model_dict[i][j]
-                                                for i in model_dict.keys()
-                                                for j in model_dict[i].keys()},
+        self.model_df = pd.DataFrame.from_dict({(i, j): self.model_dict[i][j]
+                                                for i in self.model_dict.keys()
+                                                for j in self.model_dict[i].keys()},
                                                orient='index')
 
     def evaluate_models(self, df):
@@ -249,9 +249,13 @@ class Analyse:
         if self.model_df is None:
             self.build_model_dict()
 
-        models_evaluated = copy.deepcopy(self.model_df)
+        models_evaluated = copy.deepcopy(self.model_dict)
 
-        models_evaluated.loc[:]['models'] = models_evaluated.map
+        # import pdb; pdb.set_trace()
+        # models = models_evaluated.loc[:]['models'].values
+        # scalers = models_evaluated.loc[:]['scalers'].values
+        # feature_names = models_evaluated.loc[:]['run_card'].values[0]['features']
+        # features_scaled =
 
         for order, dict_fo in self.model_dict.items():
             for c_name, dict_c in dict_fo.items():
@@ -264,7 +268,14 @@ class Analyse:
                         model_ev = model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten()
                     models_evaluated[order][c_name]['models'][i] = model_ev
 
-        return models_evaluated
+        models_evaluated_df = pd.DataFrame.from_dict({(i, j): models_evaluated[i][j]
+                                                for i in models_evaluated.keys()
+                                                for j in models_evaluated[i].keys()},
+                                               orient='index')
+
+        return models_evaluated_df
+
+
 
     def coeff_function_truth(self, df, c, features, process, order):
 
@@ -395,16 +406,12 @@ class Analyse:
         models_evaluated = self.evaluate_models(df)
 
         ratio = 1
+        lin_models = models_evaluated['models'].loc["lin"]
+        for i, (c_name, c_value) in enumerate(lin_models.iteritems()):
+            ratio += c[i] * c_value
+        ratio = np.vstack(ratio)
 
-        #for i, (c_name, dict_c) in enumerate(models_evaluated['lin'].items()):
-
-
-
-        # nn models at the specified epoch
-        [n_lin_matched, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch=epoch)
-
-        if lin:
-            r = 1 + np.einsum('i, ijk', c, n_lin_matched)
+        return ratio
 
     @staticmethod
     def likelihood_ratio_truth(events, c, features, process, order=None):
