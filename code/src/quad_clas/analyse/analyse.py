@@ -406,9 +406,17 @@ class Analyse:
         models_evaluated = self.evaluate_models(df)
 
         ratio = 1
-        lin_models = models_evaluated['models'].loc["lin"]
-        for i, (c_name, c_value) in enumerate(lin_models.iteritems()):
-            ratio += c[i] * c_value
+
+        if 'lin' in models_evaluated.index:
+            lin_models = models_evaluated['models'].loc["lin"]
+            for i, (_, nn_lin) in enumerate(lin_models.iteritems()):
+                ratio += c[i] * nn_lin
+
+        if 'quad' in models_evaluated.index:
+            quad_models = models_evaluated['models'].loc["quad"]
+            for i, (_, nn_quad) in enumerate(quad_models.iteritems()):
+                ratio += c[i] ** 2 * nn_quad
+
         ratio = np.vstack(ratio)
 
         return ratio
