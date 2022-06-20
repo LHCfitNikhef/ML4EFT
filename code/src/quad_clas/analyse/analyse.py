@@ -41,7 +41,7 @@ class Analyse:
     def __init__(self, path_to_models):
 
         self.path_to_models = path_to_models
-        self.model_dict = {}
+        self.model_df = None
 
         # logging.basicConfig(filename=log_path + '/training_{}.log'.format(current_time), level=logging.INFO,
         #                     format='%(asctime)s:%(levelname)s:%(message)s')
@@ -216,17 +216,19 @@ class Analyse:
             Epoch to load, set to the best model by default
         """
 
+        from collections import defaultdict
+
+        model_dict = defaultdict(dict)
         for order, dict_fo in self.path_to_models.items():
             for c_name, [c_train, model_path] in dict_fo.items():
                 pretrained_models, models_idx, scalers, run_card = self.load_models(c_train, model_path, order, epoch)
-                self.model_dict[order] = {c_name: {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
-                                                   'run_card': run_card}}
+                model_dict[order][c_name] = {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
+                                             'run_card': run_card}
 
-        self.model_df = pd.DataFrame.from_dict({(i,j): self.model_dict[i][j]
-                           for i in self.model_dict.keys()
-                           for j in self.model_dict[i].keys()},
-                       orient='index')
-
+        self.model_df = pd.DataFrame.from_dict({(i, j): model_dict[i][j]
+                                                for i in model_dict.keys()
+                                                for j in model_dict[i].keys()},
+                                               orient='index')
 
     def evaluate_models(self, df):
         """
@@ -244,10 +246,12 @@ class Analyse:
         """
 
         # load models if not done already
-        if self.model_dict == {}:
+        if self.model_df is None:
             self.build_model_dict()
 
-        models_evaluated = copy.deepcopy(self.model_dict)
+        models_evaluated = copy.deepcopy(self.model_df)
+
+        models_evaluated.loc[:]['models'] = models_evaluated.map
 
         for order, dict_fo in self.model_dict.items():
             for c_name, dict_c in dict_fo.items():
@@ -391,8 +395,7 @@ class Analyse:
         models_evaluated = self.evaluate_models(df)
 
         ratio = 1
-        import pdb;
-        pdb.set_trace()
+
         #for i, (c_name, dict_c) in enumerate(models_evaluated['lin'].items()):
 
 
