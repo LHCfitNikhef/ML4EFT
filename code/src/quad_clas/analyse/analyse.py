@@ -215,11 +215,18 @@ class Analyse:
         epoch: int, optional
             Epoch to load, set to the best model by default
         """
+
         for order, dict_fo in self.path_to_models.items():
             for c_name, [c_train, model_path] in dict_fo.items():
                 pretrained_models, models_idx, scalers, run_card = self.load_models(c_train, model_path, order, epoch)
                 self.model_dict[order] = {c_name: {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
                                                    'run_card': run_card}}
+
+        self.model_df = pd.DataFrame.from_dict({(i,j): self.model_dict[i][j]
+                           for i in self.model_dict.keys()
+                           for j in self.model_dict[i].keys()},
+                       orient='index')
+
 
     def evaluate_models(self, df):
         """
@@ -240,7 +247,7 @@ class Analyse:
         if self.model_dict == {}:
             self.build_model_dict()
 
-        models_evaluated = self.model_dict.copy()
+        models_evaluated = copy.deepcopy(self.model_dict)
 
         for order, dict_fo in self.model_dict.items():
             for c_name, dict_c in dict_fo.items():
@@ -255,12 +262,30 @@ class Analyse:
 
         return models_evaluated
 
+    def coeff_function_truth(self, df, c, features, process, order):
 
+        c1, c2 = c
+        ratio_truth_lin = self.likelihood_ratio_truth(df, c, features, process, order)
+        # compute the mask once to select the physical region in phase space
+        mask = ratio_truth_lin == 0
+        coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / np.sum(c))
+        if order == 'lin':  # only one of the c elements can be nonzero
+            return coeff_lin
+        elif order == 'quad':  # only one of the c elements can be nonzero
+            ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
+            # TODO: rewrite the below
+            coeff_quad = np.ma.masked_where(mask, (ratio_truth_quad - 1 - np.sum(c) * coeff_lin) / np.sum(c) ** 2)
+            return coeff_quad
+        elif order == 'cross':
+            ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
+            ratio_truth_quad_1 = likelihood_ratio_truth(x, np.array([c1, 0]), quad=True)
+            ratio_truth_quad_2 = likelihood_ratio_truth(x, np.array([0, c2]), quad=True)
+            coeff_cross = np.ma.masked_where(mask,
+                                             (ratio_truth_quad - ratio_truth_quad_1 - ratio_truth_quad_2 + 1) / np.prod(
+                                                 c))
+            return coeff_cross
 
-
-    # TODO: finish method below
-    def coeff_accuracy(self, path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=False, cross=False,
-                   path_sm_data=None, cut=None):
+    def accuracy_heatmap(self, c_name, order, process, cut=None):
         """
         Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
@@ -286,7 +311,7 @@ class Analyse:
         `matplotlib.figure.Figure`
             Heatmap of pull
         """
-        s = constans.col_s ** 2
+        s = constants.col_s ** 2
         epsilon = 1e-2
 
         if process == 'ZH':
@@ -306,48 +331,41 @@ class Analyse:
         grid = np.c_[mx_grid.ravel(), y_grid.ravel()]
 
         if process == 'ZH':
-            df = pd.DataFrame({'m_zh': grid[:, 0], 'y': grid[:, 1]})
+            df = pd.DataFrame({'y': grid[:, 1], 'm_zh': grid[:, 0]})
         elif process == 'tt':
-            df = pd.DataFrame({'m_tt': grid[:, 0], 'y': grid[:, 1]})
-
-        # truth
-        coeff_truth = self.coeff_function_truth(df, np.array([c1, c2]), n_kin, process, lin, quad, cross).reshape(
-            mx_grid.shape)
+            df = pd.DataFrame({'y': grid[:, 1], 'm_tt': grid[:, 0]})
 
         # models
 
-        # load models if not done already
-        if self.model_dict == {}:
-            self.build_model_dict()
+        models_evaluated = self.evaluate_models(df)
+        nn = models_evaluated[order][c_name]['models']
+        nn = np.vstack(nn)
+        n_models = nn.shape[0]
 
+        nn = nn.reshape((n_models, *mx_grid.shape))
 
+        # determine median, low and high CI
 
-        [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch=-1)
+        nn_median = np.percentile(nn, 50, axis=0)
+        nn_high = np.percentile(nn, 84, axis=0)
+        nn_low = np.percentile(nn, 16, axis=0)
+        nn_unc = (nn_high - nn_low) / 2
 
-        n_lin = n_lin[0, :, :].reshape((n_lin.shape[1], *mx_grid.shape))
-        coeff_nn_median = np.percentile(n_lin, 50, axis=0)
-        coeff_nn_high = np.percentile(n_lin, 84, axis=0)
-        coeff_nn_low = np.percentile(n_lin, 16, axis=0)
-        coeff_nn_unc = (coeff_nn_high - coeff_nn_low) / 2
+        # truth
 
-        # visualise sm events
-        if path_sm_data is not None:
-            path_dict_sm = {0: path_sm_data}
-            data_sm = quad_classifier_cluster.EventDataset(c=0,
-                                                           n_features=2,
-                                                           path_dict=path_dict_sm,
-                                                           n_dat=500,
-                                                           hypothesis=1)
-            sm_events = data_sm.events.numpy()
-        else:
-            sm_events = None
+        features = df.columns.values
+        c_train = list(models_evaluated[order][c_name]['run_card']['coeff_train'].values())
+        coeff_truth = self.coeff_function_truth(df, c_train, features, process, order).reshape(
+            mx_grid.shape)
+
+        # TODO: add option to overlay events as points on the heatmap
 
         # median
-        median_ratio = coeff_truth / coeff_nn_median
+        median_ratio = coeff_truth / nn_median
         title = r'$\rm{Truth/NN\;(median)}$'
 
         xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
-        fig1 = plot_heatmap(median_ratio,
+        fig1 = self.plot_heatmap(median_ratio,
                             xlabel=xlabel,
                             ylabel=r'$\rm{Rapidity}$',
                             title=title,
@@ -356,9 +374,9 @@ class Analyse:
                             bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
 
         # pull
-        pull = (coeff_truth - coeff_nn_median) / coeff_nn_unc
+        pull = (coeff_truth - nn_median) / nn_unc
 
-        fig2 = plot_heatmap(pull,
+        fig2 = self.plot_heatmap(pull,
                             xlabel=xlabel,
                             ylabel=r'$\rm{Rapidity}$',
                             title=r'$\rm{Pull}$',
@@ -368,7 +386,22 @@ class Analyse:
 
         return fig1, fig2
 
+    def likelihood_ratio_nn(self, df, c):
 
+        models_evaluated = self.evaluate_models(df)
+
+        ratio = 1
+        import pdb;
+        pdb.set_trace()
+        #for i, (c_name, dict_c) in enumerate(models_evaluated['lin'].items()):
+
+
+
+        # nn models at the specified epoch
+        [n_lin_matched, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch=epoch)
+
+        if lin:
+            r = 1 + np.einsum('i, ijk', c, n_lin_matched)
 
     @staticmethod
     def likelihood_ratio_truth(events, c, features, process, order=None):
@@ -520,110 +553,70 @@ class Analyse:
 
 
 #TODO: coeff_function_nn can be replaced entirely by load_coefficients_nn
-def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False, animate=False, epoch=None):
-    """
-    Computes the nn coefficient functions in the EFT expansion up to either linear or quadratic level
+# def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False, animate=False, epoch=None):
+#     """
+#     Computes the nn coefficient functions in the EFT expansion up to either linear or quadratic level
+#
+#     Parameters
+#     ----------
+#      x : torch.tensor, shape=(M, N)
+#         Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
+#         the invariant mass and the rapidity.
+#     path_to_models: str
+#         Path to the nn model directory, e.g. ./model_x/mc_run_0
+#     architecture: list
+#         The architecture of the model, e.g.
+#
+#             .. math::
+#
+#                 [n_i, 10, 15, 5, n_f],
+#
+#         where :math:`n_i` and :math:`n_f` denote the number of input features and output target values respectively.
+#     mc_run: int
+#         Monte Carlo replica number
+#     lin: bool, optional
+#         Set to False by default. Turn on for linear corrections.
+#     quad: bool, optional
+#         Set to False by default. Turn on for quadratic corrections.
+#     cross: bool, optional
+#         Set to False by default. Turn on for cross term corrections
+#
+#     Returns
+#     -------
+#
+#     """
+#     with torch.no_grad():
+#
+#         if lin:
+#             nn = quad_clas.PredictorLinear(architecture)
+#         elif quad:
+#             nn = quad_clas.PredictorQuadratic(architecture)
+#         elif cross:
+#             nn = quad_clas.PredictorCross(architecture)
+#
+#         if animate and epoch is not None:
+#             path_nn = os.path.join(path_to_model, 'trained_nn_{epoch}.pt'.format(epoch=epoch))
+#             if not os.path.exists(path_nn):
+#                 path_nn = os.path.join(path_to_model, 'trained_nn.pt')
+#         else:
+#             path_nn = os.path.join(path_to_model, 'trained_nn.pt')
+#         nn.load_state_dict(torch.load(path_nn))
+#
+#         scaler_path = os.path.join(path_to_model, 'scaler.gz')
+#         scaler = joblib.load(scaler_path)
+#         x_scaled = scaler.transform(x)
+#         x_scaled = torch.tensor(x_scaled)
+#
+#         if lin:
+#             n_lin_out = nn.n_alpha(x_scaled.float()).numpy().flatten()
+#             return n_lin_out
+#         elif quad:
+#             n_quad_out = nn.n_beta(x_scaled.float()).numpy().flatten()
+#             return n_quad_out
+#         elif cross:
+#             n_cross_out = nn.n_gamma(x_scaled.float()).numpy().flatten()
+#             return n_cross_out
 
-    Parameters
-    ----------
-     x : torch.tensor, shape=(M, N)
-        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    path_to_models: str
-        Path to the nn model directory, e.g. ./model_x/mc_run_0
-    architecture: list
-        The architecture of the model, e.g.
-
-            .. math::
-
-                [n_i, 10, 15, 5, n_f],
-
-        where :math:`n_i` and :math:`n_f` denote the number of input features and output target values respectively.
-    mc_run: int
-        Monte Carlo replica number
-    lin: bool, optional
-        Set to False by default. Turn on for linear corrections.
-    quad: bool, optional
-        Set to False by default. Turn on for quadratic corrections.
-    cross: bool, optional
-        Set to False by default. Turn on for cross term corrections
-
-    Returns
-    -------
-
-    """
-    with torch.no_grad():
-
-        if lin:
-            nn = quad_clas.PredictorLinear(architecture)
-        elif quad:
-            nn = quad_clas.PredictorQuadratic(architecture)
-        elif cross:
-            nn = quad_clas.PredictorCross(architecture)
-
-        if animate and epoch is not None:
-            path_nn = os.path.join(path_to_model, 'trained_nn_{epoch}.pt'.format(epoch=epoch))
-            if not os.path.exists(path_nn):
-                path_nn = os.path.join(path_to_model, 'trained_nn.pt')
-        else:
-            path_nn = os.path.join(path_to_model, 'trained_nn.pt')
-        nn.load_state_dict(torch.load(path_nn))
-
-        scaler_path = os.path.join(path_to_model, 'scaler.gz')
-        scaler = joblib.load(scaler_path)
-        x_scaled = scaler.transform(x)
-        x_scaled = torch.tensor(x_scaled)
-
-        if lin:
-            n_lin_out = nn.n_alpha(x_scaled.float()).numpy().flatten()
-            return n_lin_out
-        elif quad:
-            n_quad_out = nn.n_beta(x_scaled.float()).numpy().flatten()
-            return n_quad_out
-        elif cross:
-            n_cross_out = nn.n_gamma(x_scaled.float()).numpy().flatten()
-            return n_cross_out
-
-
-def coeff_function_truth(x, c, n_kin, process, lin, quad, cross):
-    """
-    Computes the truth coefficient functions in the EFT expansion up to either linear or quadratic level
-
-    Parameters
-    ----------
-     x : numpy.ndarray, shape=(M, N)
-        Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    c : numpy.ndarray, shape=(M,)
-        EFT point in M dimensions, e.g c = (cHW, cHq3)
-    lin: bool, optional
-        Set to False by default. Turn on for linear corrections.
-    quad: bool, optional
-        Set to False by default. Turn on for quadratic corrections.
-
-    Returns
-    -------
-
-    """
-
-    c1, c2 = c
-    ratio_truth_lin = likelihood_ratio_truth(x, c, n_kin, process, lin=True)
-    # compute the mask once to select the physical region in phase space
-    mask = ratio_truth_lin == 0
-    coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / np.sum(c))
-    if lin: # only one of the c elements can be nonzero
-        return coeff_lin
-    elif quad: # only one of the c elements can be nonzero
-        ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
-        # TODO: rewrite the below
-        coeff_quad = np.ma.masked_where(mask, (ratio_truth_quad - 1 - np.sum(c) * coeff_lin) / np.sum(c) ** 2)
-        return coeff_quad
-    elif cross:
-        ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
-        ratio_truth_quad_1 = likelihood_ratio_truth(x, np.array([c1, 0]), quad=True)
-        ratio_truth_quad_2 = likelihood_ratio_truth(x, np.array([0, c2]), quad=True)
-        coeff_cross = np.ma.masked_where(mask, (ratio_truth_quad - ratio_truth_quad_1 - ratio_truth_quad_2 + 1) / np.prod(c))
-        return coeff_cross
 
 
 def coeff_comp_rep(path_to_model, network_size, c1, c2, lin, quad, cross, cut=None):
@@ -814,183 +807,6 @@ def coeff_comp(path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=
                         bounds=np.linspace(-1.5, 1.5, 10))
 
     return fig1, fig2
-
-
-def load_models(c_train, model_dir, epoch=-1, lin=False, quad=False, cross=False):
-    """
-    Load the pretrained models
-
-    Parameters
-    ----------
-    architecture: list
-        Arcitecture of the model
-    model_dir:
-        path to model directory up to mc_run (pass rep number as string format), e.g.
-        /models/mc_run_{}
-    model_nrs: iterable object
-        An iterable that contains all the replicas that should be loaded
-
-    Returns
-    -------
-    models: list
-        List of loaded models
-    """
-
-    models = []
-    losses = []
-    scalers = []
-
-    # collect all model directories
-    model_dirs = [os.path.join(model_dir, mc_run) for mc_run in os.listdir(model_dir) if mc_run.startswith('mc_run')]
-
-    for dir in model_dirs:
-        if lin:
-            with open(os.path.join(dir, 'run_card.json')) as json_data:
-                run_card = json.load(json_data)
-                architecture = [run_card['input_size']] + run_card['hidden_sizes'] + [run_card['output_size']]
-                patience = run_card['patience']
-            loaded_model = quad_clas.PredictorLinear(architecture, c_train)
-
-            scaler_path = os.path.join(dir, 'scaler.gz')
-            scaler = joblib.load(scaler_path)
-        elif quad:
-            loaded_model = quad_clas.PredictorQuadratic(architecture)
-        else:
-            loaded_model = quad_clas.PredictorCross(architecture)
-
-        if epoch != -1:
-            network_path = os.path.join(dir, 'trained_nn_{}.pt'.format(epoch))
-            if not os.path.isfile(network_path):
-                network_path = os.path.join(dir, 'trained_nn.pt')
-        else:
-            network_path = os.path.join(dir, 'trained_nn.pt')
-
-        # read the loss
-        path_to_loss = os.path.join(os.path.dirname(network_path), 'loss.out')
-        with open(path_to_loss) as file:
-            loss = [float(line.rstrip()) for line in file]
-
-        # store the optimal training loss of each model
-        losses.append(loss[-patience])
-
-        # load all the parameters into the trained network and save
-        loaded_model.load_state_dict(torch.load(network_path))
-        models.append(loaded_model)
-        scalers.append(scaler)
-
-    losses = np.array(losses)
-    models = np.array(models)
-    scalers = np.array(scalers)
-
-    kmeans = KMeans(n_clusters=2, random_state=0).fit(losses.reshape(-1,1))
-    cluster_labels = kmeans.labels_
-    cluster_nr_low_loss = np.argmin(kmeans.cluster_centers_)
-
-    # find model indices in the low loss cluster
-    idx_low_loss = np.argwhere(cluster_labels == cluster_nr_low_loss).flatten()
-
-    if np.std(losses[idx_low_loss]) / np.std(losses) < 0.1: # if relative std has been reduced by a factor 10
-        models_good = models[idx_low_loss]
-
-        scalers = scalers[idx_low_loss]
-    else: # don't select models based on clustering
-        sigma_loss = (np.nanpercentile(losses, 84) - np.nanpercentile(losses, 16))
-        los_med = np.nanpercentile(losses, 50)
-
-        idx_low_loss = np.argwhere((los_med - 2 * sigma_loss < losses) & (losses < los_med + 2 * sigma_loss)).flatten()
-        models_good = models[idx_low_loss]
-        scalers = scalers[idx_low_loss]
-
-    # retrieve the rep numbers of the models in the low loss cluster
-    models_idx = []
-    for idx in idx_low_loss:
-        mc_idx = int(os.path.basename(model_dirs[idx]).split('mc_run_', 1)[1])
-        models_idx.append(mc_idx)
-    models_idx = np.array(models_idx) # original indexing
-
-    return models_good, models_idx, scalers
-
-
-def load_coefficients_nn(df, path_to_models, epoch=-1):
-    """
-    Loads in the nn models at specified in ``path_to_models`` and returns a tuple of length 3
-    with the linear, quadratic and cross term coefficient functions.
-
-    Parameters
-    ----------
-    x : pandas.DataFrame, shape=(M, N)
-        Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    architecture: list
-        The architecture of the model, e.g.
-
-            .. math::
-
-                [n_i, 10, 15, 5, n_f],
-
-        where :math:`n_i` and :math:`n_f` denote the number of input features and output target values respectively.
-    path_to_models: dict
-        Dictionary with the paths to the nn models for lin, quad and cross
-    mc_reps: int
-        Number of replicas to load
-    epoch: int
-        Set to the best model be default, but pass a specific epoch if needed
-
-    Returns
-    -------
-    n_lin, n_quad, n_cross: numpy.ndarray, shape = (2 or 1, mc_reps, len(x))
-    """
-
-    n_lin = []
-    n_quad = []
-    n_cross = []
-
-    for order, paths in path_to_models.items():
-        if order == 'lin':
-            for coeff, [c_train, path] in paths.items():
-                loaded_models_lin, model_idx, scalers = load_models(c_train, path, epoch=epoch, lin=True)
-                n_alphas = []
-                for i, loaded_model in enumerate(loaded_models_lin):
-                    path_to_model = os.path.join(path, 'mc_run_{}'.format(model_idx[i]))
-                    with open(os.path.join(path_to_model, 'run_card.json')) as json_data:
-                        features = json.load(json_data)['features']
-                    scaler_path = os.path.join(path_to_model, 'scaler.gz')
-                    scaler = joblib.load(scaler_path)
-                    features_scaled = scaler.transform(df[features])
-
-                    with torch.no_grad():
-                        n_alphas.append(loaded_model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten())
-
-                n_alphas = np.array(n_alphas)
-                n_lin.append(n_alphas)
-            n_lin = np.array(n_lin)
-
-        if order == 'quad':
-            for path in paths:
-                loaded_models_quad, means, std = load_models(architecture, path, range(mc_reps), epoch=epoch, quad=True)
-                n_betas = []
-                for i in range(len(loaded_models_quad)):
-                    x_scaled = (x - means[i]) / std[i]
-                    with torch.no_grad():
-                        n_betas.append(loaded_models_quad[i].n_beta(torch.tensor(x_scaled).float()).numpy().flatten())
-                n_betas = np.array(n_betas)
-                n_quad.append(n_betas)
-
-        if order == 'cross':
-            for path in paths:
-                loaded_models_cross, means, std = load_models(architecture, path, range(mc_reps), epoch=epoch, cross=True)
-                n_gammas = []
-                for i in range(len(loaded_models_cross)):
-                    x_scaled = (x - means[i]) / std[i]
-                    with torch.no_grad():
-                        n_gammas.append(loaded_models_cross[i].n_gamma(x_scaled.float()).numpy().flatten())
-                n_gammas = np.array(n_gammas)
-                n_cross.append(n_gammas)
-
-    n_quad = np.array(n_quad)
-    n_cross = np.array(n_cross)
-
-    return [n_lin, model_idx], n_quad, n_cross
 
 
 def plot_loss_overview(path_to_models, order, op):
