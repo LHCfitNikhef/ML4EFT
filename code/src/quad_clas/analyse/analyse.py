@@ -221,7 +221,157 @@ class Analyse:
                 self.model_dict[order] = {c_name: {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
                                                    'run_card': run_card}}
 
-    def likelihood_ratio_truth(self, events, c, features, process, order=None):
+    def evaluate_models(self, df):
+        """
+        Evaluates the loaded models on a Pandas DataFrame ``df``
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            input to the models
+
+        Returns
+        -------
+        models_evaluated:dict
+            Evaluated model dictionary
+        """
+
+        # load models if not done already
+        if self.model_dict == {}:
+            self.build_model_dict()
+
+        models_evaluated = self.model_dict.copy()
+
+        for order, dict_fo in self.model_dict.items():
+            for c_name, dict_c in dict_fo.items():
+                models = dict_c['models']
+
+                for i, model in enumerate(models):
+                    features = dict_c['run_card']['features']
+                    features_scaled = dict_c['scalers'][i].transform(df[features])
+                    with torch.no_grad():
+                        model_ev = model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten()
+                    models_evaluated[order][c_name]['models'][i] = model_ev
+
+        return models_evaluated
+
+
+
+
+    # TODO: finish method below
+    def coeff_accuracy(self, path_to_models, c1, c2, c_train, n_kin, process, lin=False, quad=False, cross=False,
+                   path_sm_data=None, cut=None):
+        """
+        Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
+
+        Parameters
+        ----------
+        mc_reps: int
+            Number of replicas to include
+        path_model: str
+            Path to models, e.g. models/model_x/mc_run_{mc_run}
+        network_size: list
+            Architecture of the network
+        c1: float
+            Value of the 1st EFT coefficient used during training
+        c2: float
+            Value of the 2nd EFT coefficient used during training
+        path_sm_data: str, optional
+            Path to sm .npy event file which will be plotted on top of the heatmap
+
+        Returns
+        -------
+        `matplotlib.figure.Figure`
+            Heatmap of coefficient function ratio
+        `matplotlib.figure.Figure`
+            Heatmap of pull
+        """
+        s = constans.col_s ** 2
+        epsilon = 1e-2
+
+        if process == 'ZH':
+            mx_min = mz + mh + epsilon if cut is None else cut
+            mx_max = 2
+        elif process == 'tt':
+            mx_min = 2 * mt + epsilon if cut is None else cut
+            mx_max = 2
+
+        y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
+
+        x_spacing, y_spacing = 1e-2, 0.01
+        mx_span = np.arange(mx_min, mx_max, x_spacing)
+        y_span = np.arange(y_min, y_max, y_spacing)
+
+        mx_grid, y_grid = np.meshgrid(mx_span, y_span)
+        grid = np.c_[mx_grid.ravel(), y_grid.ravel()]
+
+        if process == 'ZH':
+            df = pd.DataFrame({'m_zh': grid[:, 0], 'y': grid[:, 1]})
+        elif process == 'tt':
+            df = pd.DataFrame({'m_tt': grid[:, 0], 'y': grid[:, 1]})
+
+        # truth
+        coeff_truth = self.coeff_function_truth(df, np.array([c1, c2]), n_kin, process, lin, quad, cross).reshape(
+            mx_grid.shape)
+
+        # models
+
+        # load models if not done already
+        if self.model_dict == {}:
+            self.build_model_dict()
+
+
+
+        [n_lin, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch=-1)
+
+        n_lin = n_lin[0, :, :].reshape((n_lin.shape[1], *mx_grid.shape))
+        coeff_nn_median = np.percentile(n_lin, 50, axis=0)
+        coeff_nn_high = np.percentile(n_lin, 84, axis=0)
+        coeff_nn_low = np.percentile(n_lin, 16, axis=0)
+        coeff_nn_unc = (coeff_nn_high - coeff_nn_low) / 2
+
+        # visualise sm events
+        if path_sm_data is not None:
+            path_dict_sm = {0: path_sm_data}
+            data_sm = quad_classifier_cluster.EventDataset(c=0,
+                                                           n_features=2,
+                                                           path_dict=path_dict_sm,
+                                                           n_dat=500,
+                                                           hypothesis=1)
+            sm_events = data_sm.events.numpy()
+        else:
+            sm_events = None
+
+        # median
+        median_ratio = coeff_truth / coeff_nn_median
+        title = r'$\rm{Truth/NN\;(median)}$'
+
+        xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
+        fig1 = plot_heatmap(median_ratio,
+                            xlabel=xlabel,
+                            ylabel=r'$\rm{Rapidity}$',
+                            title=title,
+                            extent=[mx_min, mx_max, y_min, y_max],
+                            cmap='seismic',
+                            bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
+
+        # pull
+        pull = (coeff_truth - coeff_nn_median) / coeff_nn_unc
+
+        fig2 = plot_heatmap(pull,
+                            xlabel=xlabel,
+                            ylabel=r'$\rm{Rapidity}$',
+                            title=r'$\rm{Pull}$',
+                            extent=[mx_min, mx_max, y_min, y_max],
+                            cmap='seismic',
+                            bounds=np.linspace(-1.5, 1.5, 10))
+
+        return fig1, fig2
+
+
+
+    @staticmethod
+    def likelihood_ratio_truth(events, c, features, process, order=None):
         """
         Computes the analytic likelihood ratio r(x, c)
 
@@ -242,7 +392,7 @@ class Analyse:
         Returns
         -------
         ratio: numpy.ndarray
-            Likelihood ratio wrt the SM 
+            Likelihood ratio wrt the SM
         """
 
         n_features = len(features)
@@ -286,93 +436,87 @@ class Analyse:
 
         return ratio.flatten()
 
+    @staticmethod
+    def decision_function_truth(events, c, features, process, order=None):
+        """
+        Computes the analytic decision function
 
-def likelihood_ratio_truth(events, c, n_kin, process, lin=False, quad=False):
-    """
-    Computes the analytic likelihood ratio r(x, c)
-
-    Parameters
-    ----------
-    events : numpy.ndarray, shape=(M, N)
-        Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    c : numpy.ndarray, shape=(M,)
-        EFT point in M dimensions, e.g c = (cHW, cHq3)
-    lin: bool, optional
-        Set to False by default. Turn on for linear corrections.
-    quad: bool, optional
-        Set to False by default. Turn on for quadratic corrections.
-
-    Returns
-    -------
-    ratio: numpy.ndarray, shape=(M,)
-        Likelihood ratio wrt the SM for the events ``x``
-    """
-    # uncomment for ZH
-    if process == 'ZH':
-        cHW, cHq3 = c
-        if n_kin == 1:
-            dsigma_0 = [vh_prod.dsigma_dmvh(x['m_zh'], cHW, cHq3, lin=lin, quad=quad) for index, x in events.iterrows()]  # EFT
-            dsigma_1 = [vh_prod.dsigma_dmvh(x['m_zh'], 0, 0, lin=lin, quad=quad) for index, x in
-                        events.iterrows()]  # SM
-        elif n_kin == 2:
-            dsigma_0 = [vh_prod.dsigma_dmvh_dy(x['y'], x['m_zh'], cHW, cHq3, lin=lin, quad=quad) for index, x in
-                        events.iterrows()]  # EFT
-            dsigma_1 = [vh_prod.dsigma_dmvh_dy(x['y'], x['m_zh'], 0, 0, lin=lin, quad=quad) for index, x in
-                        events.iterrows()]  # SM
-        elif n_kin == 3:
-            dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(x['y'], x['m_zh'], x['pt_z'], cHW, cHq3, lin=lin, quad=quad) for index, x in
-                        events.iterrows()]  # EFT
-            dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(x['y'], x['m_zh'], x['pt_z'], 0, 0, lin=lin, quad=quad) for index, x in
-                        events.iterrows()]  # SM
-        else:
-            raise NotImplementedError("No more than three features are currently supported")
-
-    if process == 'tt':
-
-        c1, c2 = c
-        if n_kin == 1:
-            dsigma_0 = [tt_prod.dsigma_dmtt(x['m_tt'], c1, c2, lin, quad) for index, x in events.iterrows()]  # EFT
-            dsigma_1 = [tt_prod.dsigma_dmtt(x['m_tt'], 0, 0, lin, quad) for index, x in
-                        events.iterrows()]  # SM
-        else:
-            dsigma_0 = [tt_prod.dsigma_dmtt_dy(x['y'], x['m_tt'], c1, c2, lin, quad) for index, x in
-                        events.iterrows()]  # EFT
-            dsigma_1 = [tt_prod.dsigma_dmtt_dy(x['y'], x['m_tt'], 0, 0, lin, quad) for index, x in
-                        events.iterrows()]  # SM
-
-    dsigma_0, dsigma_1 = np.array(dsigma_0), np.array(dsigma_1)
-
-    ratio = np.divide(dsigma_0, dsigma_1, out=np.zeros_like(dsigma_0), where=dsigma_1 != 0)
-
-    return ratio.flatten()
+        Parameters
+        ----------
+        order: str, optional
+            Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad``.
+        process: str
+            Choose between ``tt`` or ``ZH``
+        features: list
+            List of kinematic labels
+        events : pd.DataFrame
+            Pandas DataFrame with the events
+        c : numpy.ndarray, shape=(M,)
+            EFT point in M dimensions, e.g c = (cHW, cHq3)
 
 
-def decision_function_truth(x, c, n_kin, process, lin=False, quad=False):
-    """
-    Computes the analytic decission function f(x, c)
+        Returns
+        -------
+        decision_function: numpy.ndarray
+            Truth decision function
+        """
+        ratio = self.likelihood_ratio_truth(events, c, features, process, order)
+        decision_function = 1 / (1 + ratio)
+        return decision_function
 
-    Parameters
-    ----------
-    x: numpy.ndarray, shape=(M, N)
-        Kinematic feature vector with M instances of N kinematics, e.g. N =2 for
-        the invariant mass and the rapidity.
-    c: numpy.ndarray, shape=(M,)
-        EFT point in M dimensions, e.g c = (cHW, cHq3)
-    lin: bool, optional
-        Set to False by default. Turn on for linear corrections.
-    quad: bool, optional
-        Set to False by default. Turn on for quadratic corrections.
+    @staticmethod
+    def plot_heatmap(data, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
+        """
+        Plot and return a heatmap of ``data``
 
-    Returns
-    -------
-    ratio: numpy.ndarray, shape=(M,)
-        Decission function f for the events ``x``
-    """
+        Parameters
+        ----------
+        data: numpy.ndarray, shape=(M, N)
+            Input array
+        xlabel: str
+            x-label
+        ylabel: str
+            y-label
+        title: str
+            title of plot
+        extent: list
+            boundaries of the heatmap, e.g. [x_0, x_1, y_1, y_2]
+        bounds: list
+            The boundaries of the discrete colourmap
+        cmap: str
+            colourmap to use, set to 'GnBu' by default
 
-    ratio = likelihood_ratio_truth(x, c,  n_kin, process, lin, quad)
-    f = 1 / (1 + ratio)
-    return f
+        Returns
+        -------
+        fig: `matplotlib.figure.Figure`
+        """
+
+        # discrete colorbar
+        cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
+
+        norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
+
+        cmap_copy.set_bad(color='gainsboro')
+
+        # continuous colormap
+
+        # cmap = copy.copy(plt.get_cmap(cmap))
+        # cmap.set_bad(color='white')
+        # cmap.set_over("#FFAF33")
+        # cmap.set_under("#FFAF33")
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.imshow(data, extent=extent,
+                  origin='lower', cmap=cmap_copy, aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), norm=norm)
+
+        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax)
+
+        cbar.minorticks_on()
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.title(title)
+        plt.tight_layout()
+        return fig
 
 
 #TODO: coeff_function_nn can be replaced entirely by load_coefficients_nn
@@ -439,57 +583,6 @@ def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cro
         elif cross:
             n_cross_out = nn.n_gamma(x_scaled.float()).numpy().flatten()
             return n_cross_out
-
-
-def plot_heatmap(im, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
-    """
-    Plot and return a heatmap of ``im``
-
-    Parameters
-    ----------
-    im: numpy.ndarray, shape=(M, N)
-        Input array
-    xlabel: str
-    ylabel: str
-    title: str
-    extent: list
-        boundaries of the heatmap, e.g. [x_0, x_1, y_1, y_2]
-    bounds: list
-        The boundaries of the discrete colourmap
-    cmap: str
-        colourmap to use, set to 'GnBu' by default
-
-    Returns
-    -------
-    fig: `matplotlib.figure.Figure`
-    """
-
-    # discrete colorbar
-    cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
-
-    norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
-
-    cmap_copy.set_bad(color='gainsboro')
-
-    # continious colormap
-
-    # cmap = copy.copy(plt.get_cmap(cmap))
-    # cmap.set_bad(color='white')
-    # cmap.set_over("#FFAF33")
-    # cmap.set_under("#FFAF33")
-
-    fig, ax = plt.subplots(figsize=(10, 8))
-    ax.imshow(im, extent=extent,
-              origin='lower', cmap=cmap_copy, aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), norm=norm)
-
-    cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax)
-
-    cbar.minorticks_on()
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.tight_layout()
-    return fig
 
 
 def coeff_function_truth(x, c, n_kin, process, lin, quad, cross):
