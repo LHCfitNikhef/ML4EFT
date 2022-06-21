@@ -117,7 +117,7 @@ class Analyse:
 
         return good_model_idx
 
-    def load_models(self, c_train, model_path, order, reps=None, epoch=-1):
+    def load_models(self, c_train, model_path, order, rep=None, epoch=-1):
         """
 
         Parameters
@@ -128,8 +128,8 @@ class Analyse:
             path to model directory
         order: str
             Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad`` or ``cross``.
-        reps: list, optional
-            List of specific replicas to include
+        reps: int, optional
+            Number of specific replicas to include
         epoch: int, optional
             Epoch number to load. Set to the best model by default.
 
@@ -139,11 +139,11 @@ class Analyse:
         """
 
         # collect all replica paths when no specific replica is requested
-        if reps is None:
+        if rep is None:
             rep_paths = [os.path.join(model_path, mc_run) for mc_run in os.listdir(model_path) if
                           mc_run.startswith('mc_run')]
         else:
-            rep_paths = [os.path.join(model_path, 'mc_run_{}'.format(rep)) for rep in reps]
+            rep_paths = [os.path.join(model_path, 'mc_run_{}'.format(rep))]
 
         losses_tr = []  # to store the final training losses
         losses_val = []  # to store the final validation losses
@@ -202,7 +202,7 @@ class Analyse:
         # have been included
         models_rep_nr = None
 
-        if reps is None:
+        if rep is None:
             good_model_idx = self.filter_out_models(losses_tr)
             models = models[good_model_idx]
             scalers = scalers[good_model_idx]
@@ -263,6 +263,8 @@ class Analyse:
         """
 
         # load models if not done already
+        if rep is not None:
+            self.build_model_dict(rep, epoch)
         if self.model_df is None:
             self.build_model_dict(rep, epoch)
 
@@ -320,7 +322,7 @@ class Analyse:
         #                                          c))
         #     return coeff_cross
 
-    def accuracy_heatmap(self, c_name, order, process, cut=None, reps=None, epoch=-1):
+    def accuracy_heatmap(self, c_name, order, process, cut=None, rep=None, epoch=-1, ax=None):
         """
         Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
@@ -346,7 +348,8 @@ class Analyse:
 
         y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
 
-        x_spacing, y_spacing = 1e-2, 0.01
+        # x_spacing, y_spacing = 1e-2, 0.01
+        x_spacing, y_spacing = 1e-1, 0.1
         mx_span = np.arange(mx_min, mx_max, x_spacing)
         y_span = np.arange(y_min, y_max, y_spacing)
 
@@ -359,7 +362,8 @@ class Analyse:
             df = pd.DataFrame({'y': grid[:, 1], 'm_tt': grid[:, 0]})
 
         # models
-        models_evaluated_df = self.evaluate_models(df, reps, epoch)
+
+        models_evaluated_df = self.evaluate_models(df, rep, epoch)
         nn = models_evaluated_df.loc[order, c_name]['models']
         nn = np.vstack(nn)
         n_models = nn.shape[0]
@@ -375,7 +379,7 @@ class Analyse:
         # TODO: add option to overlay events as points on the heatmap
 
         xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
-        if reps is None:
+        if rep is None:
 
             # determine median, low and high CI
 
@@ -408,18 +412,49 @@ class Analyse:
 
             return fig1, fig2
         else:
-            figs = []
-            for i, nn_rep in enumerate(nn):
-                title = r"$\mathrm{{Truth/NN}}\;(\mathrm{{rep}}\;{})$".format(reps[i])
-                fig = self.plot_heatmap(coeff_truth / nn_rep,
-                                     xlabel=xlabel,
-                                     ylabel=r'$\rm{Rapidity}$',
-                                     title=title,
-                                     extent=[mx_min, mx_max, y_min, y_max],
-                                     cmap='seismic',
-                                     bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
-                figs.append(fig)
-            return figs
+            title = r"$\mathrm{{Truth/NN}}\;(\mathrm{{rep}}\;{})$".format(rep)
+            self.plot_heatmap(ax, coeff_truth / nn[0],
+                              xlabel=xlabel,
+                              ylabel=r'$\rm{Rapidity}$',
+                              title=title,
+                              extent=[mx_min, mx_max, y_min, y_max],
+                              cmap='seismic',
+                              bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05],
+                              rep=rep)
+
+
+
+    def plot_heatmap_overview(self, c_name, order, process, cut=None, reps=None, epoch=-1):
+
+        n_cols = 4
+        mc_reps = len(reps)
+        n_rows = int(np.ceil(mc_reps / n_cols))
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(10 * n_cols, 10 * n_rows),
+                                 constrained_layout=False)
+
+        for i, rep in enumerate(reps):
+            self.accuracy_heatmap(c_name, order, process, cut, rep, epoch, axes.flatten()[i])
+
+        # cmap = 'seismic'
+        # bounds = [0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05]
+        #
+        # cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
+        # norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
+        #
+        # cmap_copy.set_bad(color='gainsboro')
+        #
+        # cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=axes.ravel().tolist(),
+        #                     orientation='horizontal', shrink=0.7)
+        #
+        # cbar.minorticks_on()
+
+        #fig.colorbar()
+        #fig.tight_layout()
+
+
+
+
+        return fig
 
     def likelihood_ratio_nn(self, df, c):
         """
@@ -704,7 +739,7 @@ class Analyse:
         return decision_function
 
     @staticmethod
-    def plot_heatmap(data, xlabel, ylabel, title, extent, bounds, cmap='GnBu'):
+    def plot_heatmap(ax, data, xlabel, ylabel, title, extent, bounds, cmap='GnBu', rep=None):
         """
         Plot and return a heatmap of ``data``
 
@@ -730,11 +765,15 @@ class Analyse:
         fig: `matplotlib.figure.Figure`
         """
 
+        #from mpl_toolkits.axes_grid1 import make_axes_locatable
+        #divider = make_axes_locatable(ax)
+        #cax = divider.append_axes("right", size="5%", pad=0.05)
+
         # discrete colorbar
         cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
-
+        #
         norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
-
+        #
         cmap_copy.set_bad(color='gainsboro')
 
         # continuous colormap
@@ -744,18 +783,25 @@ class Analyse:
         # cmap.set_over("#FFAF33")
         # cmap.set_under("#FFAF33")
 
-        fig, ax = plt.subplots(figsize=(10, 8))
+        #fig, ax = plt.subplots(figsize=(10, 8))
+        fig = ax.figure
+        rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 30})
+
         ax.imshow(data, extent=extent,
-                  origin='lower', cmap=cmap_copy, aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), norm=norm)
+                  origin='lower', aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), cmap=cmap_copy, norm=norm)
 
-        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax)
+        plt.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',
+                 verticalalignment='top',
+                 transform=ax.transAxes)
 
-        cbar.minorticks_on()
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
-        plt.title(title)
-        plt.tight_layout()
-        return fig
+        # cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax)
+        #
+        # cbar.minorticks_on()
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        #ax.set_title(title)
+        #fig.tight_layout()
+        #return fig
 
 
 #TODO: coeff_function_nn can be replaced entirely by load_coefficients_nn
