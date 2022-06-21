@@ -457,7 +457,7 @@ class Analyse:
 
         return fig
 
-    def likelihood_ratio_nn(self, df, c):
+    def likelihood_ratio_nn(self, df, c, epoch=-1):
         """
            Computes NN likelihood ratio
 
@@ -474,7 +474,7 @@ class Analyse:
                NN likelihood ratio
            """
 
-        models_evaluated = self.evaluate_models(df)
+        models_evaluated = self.evaluate_models(df, epoch=epoch)
 
         ratio = 1
 
@@ -492,7 +492,7 @@ class Analyse:
 
         return ratio
 
-    def decision_function_nn(self, df, c):
+    def decision_function_nn(self, df, c, epoch=-1):
         """
         Computes NN decision function
 
@@ -508,7 +508,7 @@ class Analyse:
         decision_function: numpy.ndarray
             NN decision function
         """
-        ratio = self.likelihood_ratio(df, c)
+        ratio = self.likelihood_ratio_nn(df, c, epoch=epoch)
         decision_function = 1 / (1 + ratio)
         return decision_function
 
@@ -645,6 +645,43 @@ class Analyse:
 
         return figs
 
+    def plot_accuracy_1d(self, c, process, order, cut, epoch=-1):
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        x = np.linspace(cut, 3.0, 200)
+        x = np.stack((np.zeros(len(x)), x), axis=-1)
+
+        if process == 'tt':
+            df = pd.DataFrame(x, columns=['y', 'm_tt'])
+        elif process == 'ZH':
+            df = pd.DataFrame(x, columns=['y', 'm_zh'])
+
+        f_ana_lin = self.decision_function_truth(df, c, df.columns.values, process, order)
+
+        f_preds_nn = self.decision_function_nn(df, c, epoch=epoch)
+
+        f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
+        f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
+
+        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$',
+                        alpha=0.4)
+
+        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
+
+        # single replica
+        # ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
+
+        plt.ylim((0, 1))
+        plt.xlim(np.min(x[:, 1]), np.max(x[:, 1]))
+
+        plt.ylabel(r'$g\;(x, c)$')
+        xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
+        plt.xlabel(xlabel)
+        plt.legend()
+        plt.tight_layout()
+        return fig
+
     @staticmethod
     def likelihood_ratio_truth(events, c, features, process, order=None):
         """
@@ -711,8 +748,7 @@ class Analyse:
 
         return ratio.flatten()
 
-    @staticmethod
-    def decision_function_truth(events, c, features, process, order=None):
+    def decision_function_truth(self, events, c, features, process, order=None):
         """
         Computes the analytic decision function
 
@@ -868,11 +904,6 @@ class Analyse:
 #             n_cross_out = nn.n_gamma(x_scaled.float()).numpy().flatten()
 #             return n_cross_out
 
-
-
-
-
-
 def plot_loss_overview(path_to_models, order, op):
 
     model_dir_base = path_to_models[order][op][-1]
@@ -1014,7 +1045,6 @@ def plot_loss_overview(path_to_models, order, op):
 
     return fig, fig_loss_dist, fig_delta
 
-
 def analytical_loss(c):
 
     def integrand(y, m_x):
@@ -1037,42 +1067,3 @@ def analytical_loss(c):
 
     return loss[0]
 
-
-def accuracy_1d(c, path_to_models, c_train, process, epoch, lin, quad, cut):
-
-    fig, ax = plt.subplots(figsize=(10,6))
-
-    x = np.linspace(cut, 3.0, 200)
-    x = np.stack((x, np.zeros(len(x))), axis=-1)
-
-    if process == 'tt':
-        df = pd.DataFrame(x, columns=['m_tt', 'y'])
-    elif process == 'ZH':
-        df = pd.DataFrame(x, columns=['m_zh', 'y'])
-
-    f_ana_lin = decision_function_truth(df, c, n_kin=2, process=process, lin=True, quad=False)
-
-    f_preds_nn = decision_function_nn(df, c, c_train,
-                                 path_to_models,
-                                 lin=True, quad=False)
-
-    f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
-    f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
-
-    ax.fill_between(x[:, 0], f_pred_down, f_pred_up, label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$', alpha=0.4)
-
-    ax.plot(x[:, 0], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
-
-    # single replica
-    #ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
-
-    plt.ylim((0, 1))
-    plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
-    #plt.xlim(np.min(x[:, 0]), 0.5)
-
-    plt.ylabel(r'$f\;(x, c)$')
-    xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
-    plt.xlabel(xlabel)
-    plt.legend()
-    plt.tight_layout()
-    return fig
