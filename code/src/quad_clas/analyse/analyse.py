@@ -33,6 +33,7 @@ mt = constants.mt
 col_s = constants.col_s
 
 # matplotlib.use('PDF')
+# TODO: update to 50 for heatmap overview plot
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 

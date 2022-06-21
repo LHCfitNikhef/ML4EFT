@@ -1,19 +1,17 @@
-# this scripts produces the pdf plots for the training report
-
 import numpy as np
 import quad_clas.analyse.analyse as analyse
 import os
-import pandas as pd
 import json
 from pandas import json_normalize
 import re
+import pandas as pd
 import subprocess
 import PyPDF2
 import sys
 
-# path_to_models = {'lin': {
-#     'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/14/model_ctgre_lin_m_tt_gt_05_min_delta',
-#     'ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/14/model_ctgre_lin_m_tt_gt_05_min_delta'}}
+# generate report for
+order = "lin"
+c_name = "ctgre"
 
 yr = "2022"
 month = "06"
@@ -23,94 +21,46 @@ date = "{yr}_{m}_{d}".format(yr=yr, m=month, d=day)
 name = "model_ctgre_lin_penalty_v6"
 
 path_to_models = {'lin': {
-    'ctgre': [-10, os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name)],
-    'ctgre': [-10, os.path.join('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt', yr, month, day, name)]}}
+    'ctgre': [-10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/19/model_ctgre_lin_penalty_v6'],
+    'cut': [-10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/19/model_ctgre_lin_penalty_v6']}}
 
+path_to_runcard = os.path.join(path_to_models[order][c_name][-1], 'mc_run_0', 'run_card.json')
 
-path_to_runcard = os.path.join(path_to_models['lin']['ctgre'][-1], 'mc_run_0/run_card.json')
-report_path = os.path.join(path_to_models['lin']['ctgre'][-1], 'report')
+analyser = analyse.Analyse(path_to_models)
+analyser.build_model_dict()
+
+event_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
+events_sm = pd.read_pickle(event_path)
+events_sm = events_sm.iloc[1:,:]
+events_sm = events_sm[(events_sm['m_tt'] > 0.5)]
+events_sm = events_sm.sample(5000, random_state=1)
+
+model_dir = os.path.dirname(analyser.model_df.loc[order, c_name]['rep_paths'][0])
+report_path = os.path.join(model_dir, 'report_test')
 if not os.path.exists(report_path):
     os.makedirs(report_path)
 
+# pbp comparison
+fig1, fig2 = analyser.point_by_point_comp(events_sm, {'ctgre': -2, 'cut': 0}, ['y', 'm_tt'], 'tt')
+fig1.savefig(os.path.join(report_path, 'pbp_rep.pdf'))
+fig2.savefig(os.path.join(report_path, 'pbp_med.pdf'))
+
 # loss overview
+figs = analyser.plot_loss_overview()
+figs[1].savefig(os.path.join(report_path, 'loss_overview.pdf'))
 
-fig, fig_loss, fig_delta = analyse.plot_loss_overview(path_to_models, 'lin', 'ctgre')
-fig.savefig(os.path.join(report_path, 'loss_overview.pdf'))
-fig_loss.savefig(os.path.join(report_path, 'loss_dist.pdf'))
-#fig_delta.savefig(os.path.join(report_path, 'loss_delta.pdf'))
-#sys.exit()
+# 1d accuracy
+fig = analyser.plot_accuracy_1d(c={'ctgre': -2, 'cut': 0}, process='tt', order='lin', cut=0.5, epoch=-1)
+fig.savefig(os.path.join(report_path, '1d_accuracy.pdf'))
 
-# point by point comparison
+# heatmap med and pull
+fig1, fig2 = analyser.accuracy_heatmap('ctgre', 'lin', 'tt', cut=0.5)
+fig1.savefig(os.path.join(report_path, 'heatmap_med.pdf'))
+fig2.savefig(os.path.join(report_path, 'heatmap_pull.pdf'))
 
-# ttbar
-
-
-sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
-#sm_data_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh/features_mzh_y_ptz/sm/events_0.pkl.gz'
-
-
-n_dat = 5000
-#events_sm = pd.read_pickle(sm_data_path).iloc[1:, :].sample(int(n_dat), random_state=1)
-events_sm = pd.read_pickle(sm_data_path)
-events_sm = events_sm.iloc[1:,:]
-events_sm = events_sm[(events_sm['m_tt'] > 0.5)]
-#events_sm = events_sm[(events_sm['m_zh'] > 0.25)]
-events_sm = events_sm.sample(int(n_dat), random_state=1)
-luminosity = 5e3
-
-fig_reps, fig_median = analyse.point_by_point_comp(
-    events=events_sm,
-    c=np.array([-2, 0]),
-    path_to_models=path_to_models,
-    c_train={
-        "ctgre": -10.0,
-        "cuu": 0
-    },
-    n_kin=2,
-    process='tt',
-    lin=True,
-    quad=False,
-    epoch=-1)
-
-
-fig_reps.savefig(os.path.join(report_path, 'reps_pbp.pdf'))
-fig_median.savefig(os.path.join(report_path, 'median_pbp.pdf'))
-
-
-
-# decision function (1d)
-
-fig_accuracy_1d = analyse.accuracy_1d(c=[-5, 0],
-                                      path_to_models=path_to_models,
-                                      c_train={"ctgre": -10, "cuu_quad": 100.0},
-                                      epoch=-1,
-                                      process='tt',
-                                      lin=True,
-                                      quad=False,
-                                      cut=0.5)
-
-fig_accuracy_1d.savefig(os.path.join(report_path, 'decision_fct_1d.pdf'))
-
-# performance heatmaps (2d)
-
-heatmap_median, heatmap_pull = analyse.coeff_comp(
-    path_to_models=path_to_models,
-    c1=-10,
-    c2=0,
-    c_train={
-        "ctgre": -10,
-        "cuu_quad": 100.0
-    },
-    n_kin=2,
-    process='tt',
-    lin=True,
-    quad=False,
-    cross=False,
-    path_sm_data=None,
-    cut=0.5)
-
-heatmap_median.savefig(os.path.join(report_path, 'heatmap_med.pdf'))
-heatmap_pull.savefig(os.path.join(report_path, 'heatmap_pull.pdf'))
+# heatmap overview plot
+fig = analyser.plot_heatmap_overview('ctgre', 'lin', 'tt', cut=0.5, reps=np.arange(20))
+fig.savefig(os.path.join(report_path, 'heatmap_overview.pdf'))
 
 
 L = [
@@ -136,7 +86,6 @@ L = [
 
 with open(path_to_runcard) as json_data:
     dict = json.load(json_data)
-
 
 df = json_normalize(dict, max_level=1).T
 
@@ -188,7 +137,8 @@ def PDFmerge(pdfs, output):
 
 def main():
     # pdf files to merge
-    pdfs = ['my_report.pdf', 'median_pbp.pdf', 'reps_pbp.pdf', 'loss_overview.pdf', 'loss_dist.pdf', 'decision_fct_1d.pdf', 'heatmap_med.pdf', 'heatmap_pull.pdf']
+    pdfs = ['my_report.pdf', 'pbp_med.pdf', 'pbp_rep.pdf', 'loss_overview.pdf', '1d_accuracy.pdf', 'heatmap_med.pdf',
+            'heatmap_pull.pdf', 'heatmap_overview.pdf']
     pdfs = [os.path.join(report_path, pdf_i) for pdf_i in pdfs]
 
     # output pdf file name
@@ -202,3 +152,4 @@ def main():
 if __name__ == "__main__":
     # calling the main function
     main()
+
