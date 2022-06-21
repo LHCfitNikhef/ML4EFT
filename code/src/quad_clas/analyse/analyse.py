@@ -117,7 +117,7 @@ class Analyse:
 
         return good_model_idx
 
-    def load_models(self, c_train, model_path, order, epoch):
+    def load_models(self, c_train, model_path, order, reps=None, epoch=-1):
         """
 
         Parameters
@@ -128,16 +128,22 @@ class Analyse:
             path to model directory
         order: str
             Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad`` or ``cross``.
-        epoch: int
-            Epoch number to load
+        reps: list, optional
+            List of specific replicas to include
+        epoch: int, optional
+            Epoch number to load. Set to the best model by default.
 
         Returns
         -------
 
         """
-        # collect all replica paths
-        rep_paths = [os.path.join(model_path, mc_run) for mc_run in os.listdir(model_path) if
-                      mc_run.startswith('mc_run')]
+
+        # collect all replica paths when no specific replica is requested
+        if reps is None:
+            rep_paths = [os.path.join(model_path, mc_run) for mc_run in os.listdir(model_path) if
+                          mc_run.startswith('mc_run')]
+        else:
+            rep_paths = [os.path.join(model_path, 'mc_run_{}'.format(rep)) for rep in reps]
 
         losses_tr = []  # to store the final training losses
         losses_val = []  # to store the final validation losses
@@ -192,27 +198,32 @@ class Analyse:
         models = np.array(models)
         scalers = np.array(scalers)
 
-        # filter out the badly trained models based on their training loss
+        # filter out the badly trained models based on their training loss only if all replicas
+        # have been included
+        models_rep_nr = None
 
-        good_model_idx = self.filter_out_models(losses_tr)
-        models = models[good_model_idx]
-        scalers = scalers[good_model_idx]
+        if reps is None:
+            good_model_idx = self.filter_out_models(losses_tr)
+            models = models[good_model_idx]
+            scalers = scalers[good_model_idx]
 
-        # map model indices back to rep number
-        models_rep_nr = []
-        for idx in good_model_idx:
-            rep_nr = int(os.path.basename(rep_paths[idx]).split('mc_run_', 1)[1])
-            models_rep_nr.append(rep_nr)
-        models_rep_nr = np.array(models_rep_nr)
+            # map model indices back to rep number
+            models_rep_nr = []
+            for idx in good_model_idx:
+                rep_nr = int(os.path.basename(rep_paths[idx]).split('mc_run_', 1)[1])
+                models_rep_nr.append(rep_nr)
+            models_rep_nr = np.array(models_rep_nr)
 
         return models, models_rep_nr, scalers, run_card, rep_paths
 
-    def build_model_dict(self, epoch=-1):
+    def build_model_dict(self, rep=None, epoch=-1):
         """
         Construct a model dictionary that stores all the info about the models
 
         Parameters
         ----------
+        rep: int, optional
+            Replica number in case a specific replica is requested
         epoch: int, optional
             Epoch to load, set to the best model by default
         """
@@ -222,7 +233,7 @@ class Analyse:
         self.model_dict = defaultdict(dict)
         for order, dict_fo in self.path_to_models.items():
             for c_name, [c_train, model_path] in dict_fo.items():
-                pretrained_models, models_idx, scalers, run_card, rep_paths = self.load_models(c_train, model_path, order, epoch)
+                pretrained_models, models_idx, scalers, run_card, rep_paths = self.load_models(c_train, model_path, order, rep, epoch)
                 self.model_dict[order][c_name] = {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
                                              'run_card': run_card, 'rep_paths': rep_paths}
 
@@ -231,7 +242,7 @@ class Analyse:
                                                 for j in self.model_dict[i].keys()},
                                                orient='index')
 
-    def evaluate_models(self, df):
+    def evaluate_models(self, df, rep=None, epoch=-1):
         """
         Evaluates the loaded models on a Pandas DataFrame ``df``
 
@@ -239,6 +250,11 @@ class Analyse:
         ----------
         df: pd.DataFrame
             input to the models
+        rep: int, optional
+            Replica number in case a specific replica is requested.
+            Set to ``None`` by default in which case all available replicas are included.
+        epoch: int, optional
+            Epoch number to load. Set to the best model by default.
 
         Returns
         -------
@@ -248,7 +264,8 @@ class Analyse:
 
         # load models if not done already
         if self.model_df is None:
-            self.build_model_dict()
+            self.build_model_dict(rep, epoch)
+
 
         models_evaluated = copy.deepcopy(self.model_dict)
 
@@ -272,50 +289,43 @@ class Analyse:
                                                 for i in models_evaluated.keys()
                                                 for j in models_evaluated[i].keys()},
                                                orient='index')
-
         return models_evaluated_df
 
-    def coeff_function_truth(self, df, c, features, process, order):
+    def coeff_function_truth(self, df, c_name, features, process, order):
 
-        c1, c2 = c
+        # create c dict
+
+        c = {}
+        for k, v in self.path_to_models[order].items():
+            c[k] = v[0] if k == c_name else 0
+
         ratio_truth_lin = self.likelihood_ratio_truth(df, c, features, process, order)
         # compute the mask once to select the physical region in phase space
         mask = ratio_truth_lin == 0
-        coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / np.sum(c))
+
+        coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / c[c_name])
         if order == 'lin':  # only one of the c elements can be nonzero
             return coeff_lin
-        elif order == 'quad':  # only one of the c elements can be nonzero
-            ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
-            # TODO: rewrite the below
-            coeff_quad = np.ma.masked_where(mask, (ratio_truth_quad - 1 - np.sum(c) * coeff_lin) / np.sum(c) ** 2)
-            return coeff_quad
-        elif order == 'cross':
-            ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
-            ratio_truth_quad_1 = likelihood_ratio_truth(x, np.array([c1, 0]), quad=True)
-            ratio_truth_quad_2 = likelihood_ratio_truth(x, np.array([0, c2]), quad=True)
-            coeff_cross = np.ma.masked_where(mask,
-                                             (ratio_truth_quad - ratio_truth_quad_1 - ratio_truth_quad_2 + 1) / np.prod(
-                                                 c))
-            return coeff_cross
+        # elif order == 'quad':  # only one of the c elements can be nonzero
+        #     ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
+        #     # TODO: rewrite the below
+        #     coeff_quad = np.ma.masked_where(mask, (ratio_truth_quad - 1 - np.sum(c) * coeff_lin) / np.sum(c) ** 2)
+        #     return coeff_quad
+        # elif order == 'cross':
+        #     ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
+        #     ratio_truth_quad_1 = likelihood_ratio_truth(x, np.array([c1, 0]), quad=True)
+        #     ratio_truth_quad_2 = likelihood_ratio_truth(x, np.array([0, c2]), quad=True)
+        #     coeff_cross = np.ma.masked_where(mask,
+        #                                      (ratio_truth_quad - ratio_truth_quad_1 - ratio_truth_quad_2 + 1) / np.prod(
+        #                                          c))
+        #     return coeff_cross
 
-    def accuracy_heatmap(self, c_name, order, process, cut=None):
+    def accuracy_heatmap(self, c_name, order, process, cut=None, reps=None, epoch=-1):
         """
         Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
         Parameters
         ----------
-        mc_reps: int
-            Number of replicas to include
-        path_model: str
-            Path to models, e.g. models/model_x/mc_run_{mc_run}
-        network_size: list
-            Architecture of the network
-        c1: float
-            Value of the 1st EFT coefficient used during training
-        c2: float
-            Value of the 2nd EFT coefficient used during training
-        path_sm_data: str, optional
-            Path to sm .npy event file which will be plotted on top of the heatmap
 
         Returns
         -------
@@ -349,55 +359,67 @@ class Analyse:
             df = pd.DataFrame({'y': grid[:, 1], 'm_tt': grid[:, 0]})
 
         # models
-
-        models_evaluated = self.evaluate_models(df)
-        nn = models_evaluated[order][c_name]['models']
+        models_evaluated_df = self.evaluate_models(df, reps, epoch)
+        nn = models_evaluated_df.loc[order, c_name]['models']
         nn = np.vstack(nn)
         n_models = nn.shape[0]
 
         nn = nn.reshape((n_models, *mx_grid.shape))
 
-        # determine median, low and high CI
-
-        nn_median = np.percentile(nn, 50, axis=0)
-        nn_high = np.percentile(nn, 84, axis=0)
-        nn_low = np.percentile(nn, 16, axis=0)
-        nn_unc = (nn_high - nn_low) / 2
-
         # truth
 
         features = df.columns.values
-        c_train = list(models_evaluated[order][c_name]['run_card']['coeff_train'].values())
-        coeff_truth = self.coeff_function_truth(df, c_train, features, process, order).reshape(
+        coeff_truth = self.coeff_function_truth(df, c_name, features, process, order).reshape(
             mx_grid.shape)
 
         # TODO: add option to overlay events as points on the heatmap
 
-        # median
-        median_ratio = coeff_truth / nn_median
-        title = r'$\rm{Truth/NN\;(median)}$'
-
         xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
-        fig1 = self.plot_heatmap(median_ratio,
-                            xlabel=xlabel,
-                            ylabel=r'$\rm{Rapidity}$',
-                            title=title,
-                            extent=[mx_min, mx_max, y_min, y_max],
-                            cmap='seismic',
-                            bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
+        if reps is None:
 
-        # pull
-        pull = (coeff_truth - nn_median) / nn_unc
+            # determine median, low and high CI
 
-        fig2 = self.plot_heatmap(pull,
-                            xlabel=xlabel,
-                            ylabel=r'$\rm{Rapidity}$',
-                            title=r'$\rm{Pull}$',
-                            extent=[mx_min, mx_max, y_min, y_max],
-                            cmap='seismic',
-                            bounds=np.linspace(-1.5, 1.5, 10))
+            nn_median = np.percentile(nn, 50, axis=0)
+            nn_high = np.percentile(nn, 84, axis=0)
+            nn_low = np.percentile(nn, 16, axis=0)
+            nn_unc = (nn_high - nn_low) / 2
+            # median
+            median_ratio = coeff_truth / nn_median
+            title = r'$\rm{Truth/NN\;(median)}$'
 
-        return fig1, fig2
+            fig1 = self.plot_heatmap(median_ratio,
+                                xlabel=xlabel,
+                                ylabel=r'$\rm{Rapidity}$',
+                                title=title,
+                                extent=[mx_min, mx_max, y_min, y_max],
+                                cmap='seismic',
+                                bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
+
+            # pull
+            pull = (coeff_truth - nn_median) / nn_unc
+
+            fig2 = self.plot_heatmap(pull,
+                                xlabel=xlabel,
+                                ylabel=r'$\rm{Rapidity}$',
+                                title=r'$\rm{Pull}$',
+                                extent=[mx_min, mx_max, y_min, y_max],
+                                cmap='seismic',
+                                bounds=np.linspace(-1.5, 1.5, 10))
+
+            return fig1, fig2
+        else:
+            figs = []
+            for i, nn_rep in enumerate(nn):
+                title = r"$\mathrm{{Truth/NN}}\;(\mathrm{{rep}}\;{})$".format(reps[i])
+                fig = self.plot_heatmap(coeff_truth / nn_rep,
+                                     xlabel=xlabel,
+                                     ylabel=r'$\rm{Rapidity}$',
+                                     title=title,
+                                     extent=[mx_min, mx_max, y_min, y_max],
+                                     cmap='seismic',
+                                     bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
+                figs.append(fig)
+            return figs
 
     def likelihood_ratio_nn(self, df, c):
         """
@@ -602,9 +624,8 @@ class Analyse:
             List of kinematic labels
         events : pd.DataFrame
             Pandas DataFrame with the events
-        c : numpy.ndarray, shape=(M,)
-            EFT point in M dimensions, e.g c = (cHW, cHq3)
-
+        c : dict
+            EFT point with operator names specified as keys
 
         Returns
         -------
@@ -804,91 +825,7 @@ class Analyse:
 
 
 
-def coeff_comp_rep(path_to_model, network_size, c1, c2, lin, quad, cross, cut=None):
-    """
-    Compares the EFT coefficient function of the individual replica stored at ``path_model`` with the truth.
-    The ratio is plotted and returned as a matplotlib figure.
 
-    Parameters
-    ----------
-    path_model: str
-        Path to model replica
-    network_size: list
-        The architecture of the model, e.g.
-
-        .. math::
-
-            [n_i, 10, 15, 5, n_f],
-
-        where :math:`n_i` and :math:`n_f` denote the number of input features and output target values respectively.
-
-    c1: float
-        Value of the 1st EFT coefficient used during training
-    c2: float
-        Value of the 2nd EFT coefficient used during training
-    quad: bool
-        Set to True when quadratic coefficient functions are trained
-    cross: bool
-        Set to True when cross term coefficient functions are trained
-
-    Returns
-    -------
-    `matplotlib.figure.Figure`
-    """
-
-    s = 14 ** 2
-    epsilon = 1e-2
-
-    if process == 'ZH':
-        mx_min = mz + mh + epsilon if cut is None else cut
-        mx_max = 2
-    elif process == 'tt':
-        mx_min = 2 * mt + epsilon if cut is None else cut
-        mx_max = 2
-
-    y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
-
-    x_spacing, y_spacing = 1e-2, 0.01
-    mvh_span = np.arange(mvh_min, mvh_max, x_spacing)
-    y_span = np.arange(y_min, y_max, y_spacing)
-
-    mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
-    grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
-
-    if process == 'ZH':
-        df = pd.DataFrame({'m_zh': grid[:, 0], 'y': grid[:, 1]})
-    elif process == 'tt':
-        df = pd.DataFrame({'m_tt': grid[:, 0], 'y': grid[:, 1]})
-
-    # truth
-
-
-    coeff_truth = coeff_function_truth(grid, np.array([c1, c2]), lin, quad, cross)
-    coeff_truth = coeff_truth.reshape(mvh_grid.shape)
-    # models
-
-    [coeff_nn, model_idx], n_quad, n_cross = load_coefficients_nn(df, path_to_models, epoch)
-
-    coeff_nn = coeff_function_nn(grid_unscaled_tensor, path_to_model, network_size, lin, quad, cross)
-    coeff_nn = coeff_nn.reshape(mvh_grid.shape)
-
-    if lin:
-        title=r'$\rm{NN/Truth}\;(lin)$'
-    elif quad:
-        title=r'$\rm{NN/Truth}\;(quad)$'
-    elif cross:
-        title = r'$\rm{NN/Truth}\;(cross)$'
-
-    bounds = [0.95, 0.96, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.04, 1.05]
-    fig = plot_heatmap(coeff_truth / coeff_nn,
-                       xlabel=r'$m_{t\bar{t}}\;\rm{[TeV]}$',
-                       ylabel=r'$\rm{Rapidity}$',
-                       title=title,
-                       extent=[mx_min, mx_max, y_min, y_max],
-                       cmap='seismic',
-                       bounds=bounds)
-
-    return fig
 
 
 def plot_loss_overview(path_to_models, order, op):
