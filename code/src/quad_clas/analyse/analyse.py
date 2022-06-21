@@ -33,7 +33,7 @@ mt = constants.mt
 col_s = constants.col_s
 
 # matplotlib.use('PDF')
-rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
+rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
 
@@ -350,7 +350,6 @@ class Analyse:
         y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
 
         x_spacing, y_spacing = 1e-2, 0.01
-        #x_spacing, y_spacing = 1e-1, 0.1
         mx_span = np.arange(mx_min, mx_max, x_spacing)
         y_span = np.arange(y_min, y_max, y_spacing)
 
@@ -391,10 +390,12 @@ class Analyse:
             nn_low = np.percentile(nn, 16, axis=0)
             nn_unc = (nn_high - nn_low) / 2
             # median
-            median_ratio = coeff_truth / nn_median
+            median_ratio = self.coeff_truth / nn_median
             title = r'$\rm{Truth/NN\;(median)}$'
 
-            fig1 = self.plot_heatmap(median_ratio,
+            fig_1, ax_1 = plt.subplots(figsize=(10, 8))
+
+            im_1 = self.plot_heatmap(ax_1, median_ratio,
                                 xlabel=xlabel,
                                 ylabel=r'$\rm{Rapidity}$',
                                 title=title,
@@ -403,9 +404,12 @@ class Analyse:
                                 bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
 
             # pull
-            pull = (coeff_truth - nn_median) / nn_unc
 
-            fig2 = self.plot_heatmap(pull,
+            fig_2, ax_2 = plt.subplots(figsize=(10, 8))
+
+            pull = (self.coeff_truth - nn_median) / nn_unc
+
+            im_2 = self.plot_heatmap(ax_2, pull,
                                 xlabel=xlabel,
                                 ylabel=r'$\rm{Rapidity}$',
                                 title=r'$\rm{Pull}$',
@@ -413,7 +417,7 @@ class Analyse:
                                 cmap='seismic',
                                 bounds=np.linspace(-1.5, 1.5, 10))
 
-            return fig1, fig2
+            return fig_1, fig_2
         else:
             title = r"$\mathrm{{Truth/NN}}\;(\mathrm{{rep}}\;{})$".format(rep)
             im = self.plot_heatmap(ax, self.coeff_truth / nn[0],
@@ -433,7 +437,7 @@ class Analyse:
         n_cols = 4
         mc_reps = len(reps)
         n_rows = int(np.ceil(mc_reps / n_cols))
-        #fig, axes = plt.subplots(n_rows, n_cols, figsize=(10 * n_cols, 10 * n_rows))
+
         fig = plt.figure(figsize=(10 * n_cols, 10 * n_rows))
 
         grid = AxesGrid(fig, 111,
@@ -446,33 +450,10 @@ class Analyse:
                         )
 
         for i, rep in enumerate(reps):
-            #ax.set_axis_off()
-            #im = ax.imshow(np.random.random((16, 16)), vmin=0, vmax=1)
             im = self.accuracy_heatmap(c_name, order, process, cut, rep, epoch, grid[i])
 
-        cbar = grid[-1].cax.colorbar(im)
-        cbar = grid.cbar_axes[0].colorbar(im)
-        # for i, rep in enumerate(reps):
-        #     self.accuracy_heatmap(c_name, order, process, cut, rep, epoch, axes.flatten()[i])
-
-        # cmap = 'seismic'
-        # bounds = [0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05]
-        #
-        # cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
-        # norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
-        #
-        # cmap_copy.set_bad(color='gainsboro')
-        #
-        # cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=axes.ravel().tolist(),
-        #                     orientation='horizontal', shrink=0.7)
-        #
-        # cbar.minorticks_on()
-
-        #fig.colorbar()
-        #fig.tight_layout()
-
-
-
+        grid[-1].cax.colorbar(im)
+        grid.cbar_axes[0].colorbar(im)
 
         return fig
 
@@ -785,15 +766,10 @@ class Analyse:
         fig: `matplotlib.figure.Figure`
         """
 
-        #from mpl_toolkits.axes_grid1 import make_axes_locatable
-        #divider = make_axes_locatable(ax)
-        #cax = divider.append_axes("right", size="5%", pad=0.05)
 
         # discrete colorbar
         cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
-        #
         norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
-        #
         cmap_copy.set_bad(color='gainsboro')
 
         # continuous colormap
@@ -803,25 +779,27 @@ class Analyse:
         # cmap.set_over("#FFAF33")
         # cmap.set_under("#FFAF33")
 
-        #fig, ax = plt.subplots(figsize=(10, 8))
-        fig = ax.figure
-        rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
+        if rep is not None:
+            fig = ax.figure
+            rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
+        else:
+            fig = plt.figure(figsize=(10,8))
 
         im = ax.imshow(data, extent=extent,
                   origin='lower', aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), cmap=cmap_copy, norm=norm)
 
-        ax.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',
-                 verticalalignment='top',
-                 transform=ax.transAxes)
+        if rep is not None:
+            ax.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',
+                     verticalalignment='top',
+                     transform=ax.transAxes)
+        else:
+            cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax)
+            ax.set_title(title)
+            plt.tight_layout()
 
-        # cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax)
-        #
-        # cbar.minorticks_on()
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-        #ax.set_title(title)
-        #fig.tight_layout()
-        #return fig
+
         return im
 
 
