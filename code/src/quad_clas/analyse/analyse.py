@@ -33,7 +33,7 @@ mt = constants.mt
 col_s = constants.col_s
 
 # matplotlib.use('PDF')
-rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
+rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
 rc('text', usetex=True)
 
 
@@ -43,6 +43,7 @@ class Analyse:
 
         self.path_to_models = path_to_models
         self.model_df = None
+        self.coeff_truth = None
 
         # logging.basicConfig(filename=log_path + '/training_{}.log'.format(current_time), level=logging.INFO,
         #                     format='%(asctime)s:%(levelname)s:%(message)s')
@@ -348,8 +349,8 @@ class Analyse:
 
         y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
 
-        # x_spacing, y_spacing = 1e-2, 0.01
-        x_spacing, y_spacing = 1e-1, 0.1
+        x_spacing, y_spacing = 1e-2, 0.01
+        #x_spacing, y_spacing = 1e-1, 0.1
         mx_span = np.arange(mx_min, mx_max, x_spacing)
         y_span = np.arange(y_min, y_max, y_spacing)
 
@@ -373,8 +374,10 @@ class Analyse:
         # truth
 
         features = df.columns.values
-        coeff_truth = self.coeff_function_truth(df, c_name, features, process, order).reshape(
-            mx_grid.shape)
+
+        if self.coeff_truth is None:
+            self.coeff_truth = self.coeff_function_truth(df, c_name, features, process, order).reshape(
+                mx_grid.shape)
 
         # TODO: add option to overlay events as points on the heatmap
 
@@ -413,7 +416,7 @@ class Analyse:
             return fig1, fig2
         else:
             title = r"$\mathrm{{Truth/NN}}\;(\mathrm{{rep}}\;{})$".format(rep)
-            self.plot_heatmap(ax, coeff_truth / nn[0],
+            im = self.plot_heatmap(ax, self.coeff_truth / nn[0],
                               xlabel=xlabel,
                               ylabel=r'$\rm{Rapidity}$',
                               title=title,
@@ -421,19 +424,36 @@ class Analyse:
                               cmap='seismic',
                               bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05],
                               rep=rep)
-
-
+            return im
 
     def plot_heatmap_overview(self, c_name, order, process, cut=None, reps=None, epoch=-1):
+
+        from mpl_toolkits.axes_grid1 import AxesGrid
 
         n_cols = 4
         mc_reps = len(reps)
         n_rows = int(np.ceil(mc_reps / n_cols))
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=(10 * n_cols, 10 * n_rows),
-                                 constrained_layout=False)
+        #fig, axes = plt.subplots(n_rows, n_cols, figsize=(10 * n_cols, 10 * n_rows))
+        fig = plt.figure(figsize=(10 * n_cols, 10 * n_rows))
+
+        grid = AxesGrid(fig, 111,
+                        nrows_ncols=(n_rows, n_cols),
+                        axes_pad=1.0,
+                        cbar_mode='single',
+                        cbar_location='bottom',
+                        cbar_pad=1.5,
+                        cbar_size=0.5
+                        )
 
         for i, rep in enumerate(reps):
-            self.accuracy_heatmap(c_name, order, process, cut, rep, epoch, axes.flatten()[i])
+            #ax.set_axis_off()
+            #im = ax.imshow(np.random.random((16, 16)), vmin=0, vmax=1)
+            im = self.accuracy_heatmap(c_name, order, process, cut, rep, epoch, grid[i])
+
+        cbar = grid[-1].cax.colorbar(im)
+        cbar = grid.cbar_axes[0].colorbar(im)
+        # for i, rep in enumerate(reps):
+        #     self.accuracy_heatmap(c_name, order, process, cut, rep, epoch, axes.flatten()[i])
 
         # cmap = 'seismic'
         # bounds = [0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05]
@@ -785,12 +805,12 @@ class Analyse:
 
         #fig, ax = plt.subplots(figsize=(10, 8))
         fig = ax.figure
-        rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 30})
+        rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
 
-        ax.imshow(data, extent=extent,
+        im = ax.imshow(data, extent=extent,
                   origin='lower', aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), cmap=cmap_copy, norm=norm)
 
-        plt.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',
+        ax.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',
                  verticalalignment='top',
                  transform=ax.transAxes)
 
@@ -802,6 +822,7 @@ class Analyse:
         #ax.set_title(title)
         #fig.tight_layout()
         #return fig
+        return im
 
 
 #TODO: coeff_function_nn can be replaced entirely by load_coefficients_nn
