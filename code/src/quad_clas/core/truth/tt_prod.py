@@ -122,6 +122,7 @@ def dsigma_dmtt_dy(y, mtt, c=None, order=None):
 
 
 dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float])
+dsigma_dmtt_dy_vec.excluded.add(2)
 
 
 def dsigma_dmtt(mtt, c, order):

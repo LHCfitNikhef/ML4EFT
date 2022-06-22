@@ -34,7 +34,8 @@ def sigma_part_vh_up(hats, c, order):
     # xsec_lin_cHWB = (np.sqrt(2) * mz ** 2 * pz * np.sqrt(mz ** 2 + pz2) * np.sqrt(cth2) * np.sqrt(sth2) * Gf * mz ** 2 *(9 - 24 * sth2 + 32 * sth2 ** 2)) / (27 * np.pi * (mz ** 2 - hats) ** 2 )
     xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (4 * sth2 - 3)) / (
                 27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
-
+    if order is None:
+        return xsec_sm
     if order == 'lin':
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3
     if order == 'quad':
@@ -71,6 +72,8 @@ def sigma_part_vh_down(hats, c, order):
     xsec_lin_cHq3 = (mz ** 2 * pz * (-3 * mz ** 2 - pz2) * cth2 * Gf * mz ** 2 * sth2 * (2 * sth2 - 3)) / (
                 27 * np.sqrt(2) * cth2 * np.pi * (mz ** 2 - hats) ** 2 * np.sqrt(hats) * sth2)
 
+    if order is None:
+        return xsec_sm
     if order == 'lin':
         return xsec_sm + cHW * xsec_lin_cHW + cHq3 * xsec_lin_cHq3
     if order == 'quad':
@@ -257,10 +260,12 @@ def dsigma_dmvh_dy_dpt(y, mvh, ptv, c, order):
     else:
         return 0
 
-def dsigma_dmvh_dy(y, mvh, c, order):
+def dsigma_dmvh_dy(y, mvh, c=None, order=None):
     """
     Compute the doubly differential cross section in mtt and y at any order NP
     """
+    if c is None:
+        c = np.zeros(2)
 
     if mvh == mz + mh: return 0  # if at threshold return zero
 
@@ -311,6 +316,7 @@ def nu_i(a, cHW, cHq3, luminosity, lin=False, quad=False):
     return nu
 
 v_weight = np.vectorize(weight, otypes=[np.float])
+v_weight.excluded.add(4)
 v_weight_pt = np.vectorize(weight_pt, otypes=[np.float])
 dsigma_dmvh_dy_vec = np.vectorize(dsigma_dmvh_dy, otypes=[np.float])
 dsigma_dmvh_vec = np.vectorize(dsigma_dmvh, otypes=[np.float])
