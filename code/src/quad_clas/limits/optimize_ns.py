@@ -139,7 +139,15 @@ class Optimize:
         self.observed_data = sm_data.sample(int(n_tot_sm), random_state=1)
 
         if self.mode == "nn":
-            self.nn_models = self.nn_analyser.evaluate_models(self.observed_data)
+
+            # evaluated nn models on pseudo dataset
+            self.nn_analyser.evaluate_models(self.observed_data)
+
+            models_evaluated = self.nn_analyser.models_evaluated_df['models']
+
+            # taken median over models
+            self.nn_analyser.models_evaluated_df['models'] = models_evaluated.apply(lambda row:
+                                                                                           np.median(row, axis=0))
 
         if self.mode == "truth":
             self.dsigma_dx_sm, self.dsigma_dx_eft = theory_pred.compute_diff_coefficients(self.observed_data, self.process)
@@ -173,23 +181,20 @@ class Optimize:
         for i, c_name in enumerate(self.th_pred.th_dict['lin'].keys()):
             self.param_names[c_name] = cube[i]
 
-        for i, (_, sigma_i) in enumerate(self.th_pred.th_dict['lin'].items()):
-            sigma += cube[i] * sigma_i
+        for c_name, sigma_i in self.th_pred.th_dict['lin'].items():
+            sigma += self.param_names[c_name] * sigma_i
 
-        for i, (_, sigma_i) in enumerate(self.th_pred.th_dict['quad'].items()):
-            sigma += cube[i] ** 2 * sigma_i
-
-
-        # sigma = theory_pred_total['sm'] + theory_pred_total[self.parameters] @ cube
+        for c_name, sigma_i in self.th_pred.th_dict['quad'].items():
+            sigma += self.param_names[c_name] ** 2 * sigma_i
 
         nu = sigma * self.lumi
+        ratio_med = self.nn_analyser.likelihood_ratio_nn(self.param_names)
 
-        ratio = self.nn_analyser.likelihood_ratio_nn(self.observed_data, self.param_names, models_evaluated=self.nn_models)
-        log_r = np.log(ratio)
-        log_r_med = np.median(log_r, axis=0) # or take median of replicas before computing r?
+
+        log_r_med = np.log(ratio_med)
 
         log_likelihood = -nu + np.sum(log_r_med)
-
+        
         return log_likelihood
 
     def log_like_truth(self, cube):

@@ -44,6 +44,7 @@ class Analyse:
 
         self.path_to_models = path_to_models
         self.model_df = None
+        self.models_evaluated_df = None
         self.coeff_truth = None
 
         # logging.basicConfig(filename=log_path + '/training_{}.log'.format(current_time), level=logging.INFO,
@@ -331,11 +332,12 @@ class Analyse:
                         model_ev = model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten()
                     models_evaluated[order][c_name]['models'][i] = model_ev
 
-        models_evaluated_df = pd.DataFrame.from_dict({(i, j): models_evaluated[i][j]
+                models_evaluated[order][c_name]['models'] = np.vstack(models_evaluated[order][c_name]['models'])
+
+        self.models_evaluated_df = pd.DataFrame.from_dict({(i, j): models_evaluated[i][j]
                                                 for i in models_evaluated.keys()
                                                 for j in models_evaluated[i].keys()},
                                                orient='index')
-        return models_evaluated_df
 
     def coeff_function_truth(self, df, c_name, features, process, order):
 
@@ -501,7 +503,7 @@ class Analyse:
 
         return fig
 
-    def likelihood_ratio_nn(self, df, c, epoch=-1, models_evaluated=None):
+    def likelihood_ratio_nn(self, c, df=None, epoch=-1):
         """
            Computes NN likelihood ratio
 
@@ -518,19 +520,19 @@ class Analyse:
                NN likelihood ratio
            """
 
-        # TODO: amortised option: for a fixed df, compute the ratio
-        if models_evaluated is None:
-            models_evaluated = self.evaluate_models(df, epoch=epoch)
+        # update evaluated models for a new df
+        if df is not None:
+            self.evaluate_models(df, epoch=epoch)
 
         ratio = 1
 
-        if 'lin' in models_evaluated.index:
-            lin_models = models_evaluated['models'].loc["lin"]
+        if 'lin' in self.models_evaluated_df.index:
+            lin_models = self.models_evaluated_df['models'].loc["lin"]
             for c_name, nn_lin in lin_models.iteritems():
                 ratio += c[c_name] * nn_lin
 
-        if 'quad' in models_evaluated.index:
-            quad_models = models_evaluated['models'].loc["quad"]
+        if 'quad' in self.models_evaluated_df.index:
+            quad_models = self.models_evaluated_df['models'].loc["quad"]
             for c_name, nn_quad in quad_models.iteritems():
                 ratio += c[c_name] ** 2 * nn_quad
 
