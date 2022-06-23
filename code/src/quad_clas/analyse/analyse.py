@@ -164,7 +164,7 @@ class Analyse:
             if order == 'lin':
                 loaded_model = quad_clas.PredictorLinear(run_card['architecture'], c_train)
             elif order == 'quad':
-                pass
+                loaded_model = quad_clas.PredictorLinear(run_card['architecture'], c_train ** 2)
             elif order == 'cross':
                 pass
             else:
@@ -307,14 +307,13 @@ class Analyse:
         # compute the mask once to select the physical region in phase space
         mask = ratio_truth_lin == 0
 
-        coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / c[c_name])
+
         if order == 'lin':  # only one of the c elements can be nonzero
+            coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / c[c_name])
             return coeff_lin
-        # elif order == 'quad':  # only one of the c elements can be nonzero
-        #     ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
-        #     # TODO: rewrite the below
-        #     coeff_quad = np.ma.masked_where(mask, (ratio_truth_quad - 1 - np.sum(c) * coeff_lin) / np.sum(c) ** 2)
-        #     return coeff_quad
+        elif order == 'quad':  # only one of the c elements can be nonzero
+            coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / c[c_name] ** 2)
+            return coeff_lin
         # elif order == 'cross':
         #     ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
         #     ratio_truth_quad_1 = likelihood_ratio_truth(x, np.array([c1, 0]), quad=True)
@@ -435,6 +434,8 @@ class Analyse:
 
         from mpl_toolkits.axes_grid1 import AxesGrid
 
+        rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
+
         n_cols = 4
         mc_reps = len(reps)
         n_rows = int(np.ceil(mc_reps / n_cols))
@@ -477,6 +478,7 @@ class Analyse:
 
         models_evaluated = self.evaluate_models(df, epoch=epoch)
 
+
         ratio = 1
 
         if 'lin' in models_evaluated.index:
@@ -484,10 +486,10 @@ class Analyse:
             for c_name, nn_lin in lin_models.iteritems():
                 ratio += c[c_name] * nn_lin
 
-        if 'quad' in models_evaluated.index:
-            quad_models = models_evaluated['models'].loc["quad"]
-            for i, (_, nn_quad) in enumerate(quad_models.iteritems()):
-                ratio += c[i] ** 2 * nn_quad
+        # if 'quad' in models_evaluated.index:
+        #     quad_models = models_evaluated['models'].loc["quad"]
+        #     for c_name, nn_quad in quad_models.iteritems():
+        #         ratio += c[c_name] ** 2 * nn_quad
 
         ratio = np.vstack(ratio)
 
@@ -513,12 +515,13 @@ class Analyse:
         decision_function = 1 / (1 + ratio)
         return decision_function
 
-    def point_by_point_comp(self, df, c, features, process):
+    def point_by_point_comp(self, df, c, features, process, order):
 
         r_nn = self.likelihood_ratio_nn(df, c)
         tau_nn = np.log(r_nn)
 
-        order = self.model_df.index[-1][0]  # last index, first column gives the order
+        # TODO: fix the below
+        #order = self.model_df.index[-1][0]  # last index, first column gives the order
 
         r_truth = self.likelihood_ratio_truth(df, c, features, process, order)
         tau_truth = np.log(r_truth)
@@ -551,6 +554,7 @@ class Analyse:
             plt.xlim((np.min(x), np.max(x)))
             plt.ylim((np.min(x), np.max(x)))
 
+
         plt.tight_layout()
 
         # median
@@ -566,6 +570,8 @@ class Analyse:
         plt.ylabel(r'$\tau(x, c)^{\rm{NN}}$')
         plt.xlim((np.min(x), np.max(x)))
         plt.ylim((np.min(x), np.max(x)))
+
+
         plt.tight_layout()
 
         return fig1, fig2
@@ -575,10 +581,12 @@ class Analyse:
         if self.model_df is None:
             self.build_model_dict()
 
-        loss_tr = []
-        loss_val = []
+
         figs = []
         for (order, c_name), rep_paths in self.model_df['rep_paths'].iteritems():
+
+            loss_tr = []
+            loss_val = []
 
             mc_reps = len(rep_paths)
             ncols = 5
@@ -597,13 +605,14 @@ class Analyse:
             fig = plt.figure(figsize=(ncols * 4, nrows * 4))
 
             train_loss_best = np.array([loss[-patience] for loss in loss_tr])
+            val_loss_best = np.array([loss[-patience] for loss in loss_val])
 
             for i in np.argsort(model_idx):
                 ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
                 epochs = np.arange(len(loss_tr[i]))
 
-                label_val = r'$L_{\mathrm{val}}$' if i == 0 else None
-                label_train = r'$L_{\mathrm{tr}}$' if i == 0 else None
+                label_val = r'$L_{\mathrm{val}}$' if model_idx[i] == 0 else None
+                label_train = r'$L_{\mathrm{tr}}$' if model_idx[i] == 0 else None
 
                 loss_train_rep = np.array(loss_tr[i])
                 loss_val_rep = np.array(loss_val[i])
@@ -613,9 +622,9 @@ class Analyse:
                 ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
 
                 # ax.set_yscale('log')
-                # ax.yaxis.set_major_formatter(NullFormatter())
-                # ax.yaxis.set_minor_formatter(NullFormatter())
-                # ax.axes.yaxis.set_ticklabels([])
+                ax.yaxis.set_major_formatter(NullFormatter())
+                ax.yaxis.set_minor_formatter(NullFormatter())
+                ax.axes.yaxis.set_ticklabels([])
                 ax.set_ymargin(0.1)
                 ax.set_xmargin(0)
 
@@ -625,20 +634,32 @@ class Analyse:
 
                 ax.set_xlim(left=10)
 
-                med_loss = np.percentile(train_loss_best, 50)
-                low_loss = np.percentile(train_loss_best, 16)
-                high_loss = np.percentile(train_loss_best, 84)
-                loss_sigma = np.abs((high_loss - low_loss) / 2)
+                med_loss_tr = np.percentile(train_loss_best, 50)
+                low_loss_tr = np.percentile(train_loss_best, 16)
+                high_loss_tr = np.percentile(train_loss_best, 84)
+                loss_sigma_tr = np.abs((high_loss_tr - low_loss_tr) / 2)
 
-                ax.set_ylim(loss_train_rep[-1] - 0.2 * loss_sigma, loss_train_rep[-1] + 0.8 * loss_sigma)
+                med_loss_val = np.percentile(val_loss_best, 50)
+                low_loss_val = np.percentile(val_loss_best, 16)
+                high_loss_val = np.percentile(val_loss_best, 84)
+                loss_sigma_val = np.abs((high_loss_val - low_loss_val) / 2)
 
-                signif = (train_loss_best[i] - med_loss) / loss_sigma
+                # same scale (not everything visible)
+
+                # ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
+                #             min(loss_train_rep[-1], loss_val_rep[-1]) + 2 * max(loss_sigma_val, loss_sigma_tr))
+
+                # everything visible (not the same scale)
+                ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
+                            max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
+
+                signif = (train_loss_best[i] - med_loss_tr) / loss_sigma_tr
 
                 ax.text(0.9, 0.8, r"$Z={:.2f}$".format(signif), horizontalalignment='right',
                         verticalalignment='center',
                         transform=ax.transAxes)
 
-                if i == 0:
+                if model_idx[i] == 0:
                     ax.legend(loc="lower left", frameon=False)
 
             plt.tight_layout()
@@ -665,10 +686,10 @@ class Analyse:
         f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
         f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
 
-        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$',
+        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r'$\rm{NN}$',
                         alpha=0.4)
 
-        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
+        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r'$\rm{Truth}$')
 
         # single replica
         # ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
