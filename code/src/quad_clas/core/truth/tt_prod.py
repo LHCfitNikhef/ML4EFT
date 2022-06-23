@@ -57,7 +57,8 @@ class crossSectionSMEFT:
         elif order == 'lin':
             return sm + cuGRe * kappa_1
         elif order == 'quad':
-            return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11
+            #return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11
+            return sm + cuGRe ** 2 * kappa_11
 
 
     def sigma_part_qq(self, hats, cuGRe, cuu, order):
@@ -77,7 +78,8 @@ class crossSectionSMEFT:
         elif order == 'lin':
             return sm + cuGRe * kappa_1
         elif order == 'quad':
-            return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
+            #return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
+            return sm + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
 
 
 xsec = crossSectionSMEFT()
@@ -90,12 +92,22 @@ def weight(sqrts, mu, x1, x2, c, order):
     cuGRe, cuu = c
     hats = sqrts ** 2
     w_ii = (xsec.sigma_part_gg(hats, cuGRe, cuu, order)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
-    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, 0, order)) * (
-                p.xfxQ(1, x1, mu) * p.xfxQ(-1, x2, mu) + p.xfxQ(3, x1, mu) * p.xfxQ(-3, x2, mu) + p.xfxQ(5, x1,
-                                                                                                         mu) * p.xfxQ(
-            -5, x2, mu))
-    w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, cuu, order)) * (
-                p.xfxQ(2, x1, mu) * p.xfxQ(-2, x2, mu) + p.xfxQ(4, x1, mu) * p.xfxQ(-4, x2, mu))
+    w_ii += (xsec.sigma_part_qq(hats, cuGRe, 0, order)) * (
+                p.xfxQ(1, x1, mu) * p.xfxQ(-1, x2, mu) +
+                p.xfxQ(1, x2, mu) * p.xfxQ(-1, x1, mu) +
+                p.xfxQ(3, x1, mu) * p.xfxQ(-3, x2, mu) +
+                p.xfxQ(3, x2, mu) * p.xfxQ(-3, x1, mu) +
+                p.xfxQ(5, x1,mu) * p.xfxQ(-5, x2, mu) +
+                p.xfxQ(5, x2, mu) * p.xfxQ(-5, x1, mu)
+    )
+    # w_ii += 2 * (xsec.sigma_part_qq(hats, cuGRe, cuu, order)) * (
+    #             p.xfxQ(2, x1, mu) * p.xfxQ(-2, x2, mu) + p.xfxQ(4, x1, mu) * p.xfxQ(-4, x2, mu))
+    w_ii += (xsec.sigma_part_qq(hats, cuGRe, cuu, order)) * (
+            p.xfxQ(2, x1, mu) * p.xfxQ(-2, x2, mu) +
+            p.xfxQ(2, x2, mu) * p.xfxQ(-2, x1, mu) +
+            p.xfxQ(4, x1, mu) * p.xfxQ(-4, x2, mu) +
+            p.xfxQ(4, x2, mu) * p.xfxQ(-4, x1, mu)
+    )
 
     return w_ii
 
