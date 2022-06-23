@@ -175,11 +175,12 @@ class Optimize:
 
     def log_like_nn(self, cube):
 
-        sigma = self.th_pred.th_dict['sm']
-
         # convert cube to df
         for i, c_name in enumerate(self.th_pred.th_dict['lin'].keys()):
             self.param_names[c_name] = cube[i]
+
+        # compute inclusive xsec at cube
+        sigma = self.th_pred.th_dict['sm']
 
         for c_name, sigma_i in self.th_pred.th_dict['lin'].items():
             sigma += self.param_names[c_name] * sigma_i
@@ -188,14 +189,13 @@ class Optimize:
             sigma += self.param_names[c_name] ** 2 * sigma_i
 
         nu = sigma * self.lumi
+
+        # median likelihood ratio
         ratio_med = self.nn_analyser.likelihood_ratio_nn(self.param_names)
-
-
         log_r_med = np.log(ratio_med)
 
-        log_likelihood = -nu + np.sum(log_r_med)
-        
-        return log_likelihood
+        return -nu + np.sum(log_r_med)
+
 
     def log_like_truth(self, cube):
 

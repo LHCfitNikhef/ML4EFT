@@ -109,7 +109,7 @@ class PredictorLinear(nn.Module):
         super().__init__()
         self.c = c
         self.n_alpha = MLP(architecture)
-        #self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
+        self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
 
     def forward(self, x):
 
@@ -252,6 +252,7 @@ class PreProcessing():
         self.xsec_eft *= event_ratio_with_cut
 
         self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
+
         #self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_zh'] > 0.25)].sample(self.n_dat)
 
 
@@ -389,7 +390,7 @@ class Fitter:
 
         else:
             # linear and quadratic terms depend only on a single coefficient
-            self.coeff_train_val = np.sum(coeff_train_values)
+            self.coeff_train_value = np.sum(coeff_train_values)
             for key, value in self.run_options['coeff_train'].items():
                 if value != 0:
                     self.coeff_train_key = key
@@ -430,13 +431,14 @@ class Fitter:
         # build the paths to the eft event data and initialize the right model
         if self.quadratic:
             self.path_dict['eft_data_path'] = 'quad/{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorQuadratic(self)
+            self.model = PredictorLinear(self.network_size, self.coeff_train_value ** 2)
+            #self.model = PredictorQuadratic(self)
         elif self.cross_term:
             self.path_dict['eft_data_path'] = 'cross_term/{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = PredictorCross(self.network_size)
         else:
             self.path_dict['eft_data_path'] = 'lin/{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorLinear(self.network_size, self.coeff_train_val)
+            self.model = PredictorLinear(self.network_size, self.coeff_train_value)
 
         # create log file with timestamp
         t = time.localtime()
