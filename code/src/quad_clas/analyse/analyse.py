@@ -50,6 +50,48 @@ class Analyse:
         #                     format='%(asctime)s:%(levelname)s:%(message)s')
 
     @staticmethod
+    def get_event_paths(root_path):
+        """
+        Returns a list of paths to the MC DataFrames at ``root_path``
+
+        Parameters
+        ----------
+        root_path: str
+            path to the DataFrame directory
+
+        Returns
+        -------
+        event_paths: list
+            list of paths to the MC DataFrames at ``root_path``
+        """
+        event_paths = [os.path.join(root_path, mc_run) for mc_run in
+                       os.listdir(root_path) if mc_run.startswith('events_')]
+        return event_paths
+
+    @staticmethod
+    def load_events(event_path):
+        """
+        Loads a Pandas DataFrame with MC events
+
+        Parameters
+        ----------
+        event_path: str
+            Path to DataFrame (including the xsec as first row)
+
+        Returns
+        -------
+        events: pd.DataFrame
+            Pandas DataFrame with events (xsec extracted)
+        xsec: float
+            Inclusive xsec of the events
+        """
+        event_df = pd.read_pickle(event_path)
+        events = event_df.iloc[1:, :]
+        xsec = event_df.iloc[0, 0]
+
+        return events, xsec
+
+    @staticmethod
     def load_loss(path_to_loss):
         """
 
@@ -459,7 +501,7 @@ class Analyse:
 
         return fig
 
-    def likelihood_ratio_nn(self, df, c, epoch=-1):
+    def likelihood_ratio_nn(self, df, c, epoch=-1, models_evaluated=None):
         """
            Computes NN likelihood ratio
 
@@ -476,8 +518,9 @@ class Analyse:
                NN likelihood ratio
            """
 
-        models_evaluated = self.evaluate_models(df, epoch=epoch)
-
+        # TODO: amortised option: for a fixed df, compute the ratio
+        if models_evaluated is None:
+            models_evaluated = self.evaluate_models(df, epoch=epoch)
 
         ratio = 1
 
@@ -486,10 +529,10 @@ class Analyse:
             for c_name, nn_lin in lin_models.iteritems():
                 ratio += c[c_name] * nn_lin
 
-        # if 'quad' in models_evaluated.index:
-        #     quad_models = models_evaluated['models'].loc["quad"]
-        #     for c_name, nn_quad in quad_models.iteritems():
-        #         ratio += c[c_name] ** 2 * nn_quad
+        if 'quad' in models_evaluated.index:
+            quad_models = models_evaluated['models'].loc["quad"]
+            for c_name, nn_quad in quad_models.iteritems():
+                ratio += c[c_name] ** 2 * nn_quad
 
         ratio = np.vstack(ratio)
 

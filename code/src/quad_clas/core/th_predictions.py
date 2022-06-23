@@ -37,6 +37,7 @@ class TheoryPred:
         Construct a theory prediction dictionary
         """
 
+        c_names = []
         for order, dict_fo in self.path_to_theory_pred.items():
 
             if order == 'sm':
@@ -51,6 +52,15 @@ class TheoryPred:
                     elif order == 'quad':
                         self.th_dict[order][c_name] = (xsec_eft - self.th_dict['sm']) / c_value ** 2
 
+                    if c_name not in c_names:
+                        c_names.append(c_name)
+
+        # add missing zeros
+        for c_name in c_names:
+            if c_name not in self.th_dict['lin'].keys():
+                self.th_dict['lin'][c_name] = 0
+            if c_name not in self.th_dict['quad'].keys():
+                self.th_dict['quad'][c_name] = 0
 
     def compute_th_pred(self, path_to_events):
 
@@ -73,6 +83,8 @@ class TheoryPred:
         xsec_col = np.array(xsec_col)
 
         return np.mean(xsec_col, axis=0)
+
+
 
 
     def compute_diff_coefficients(self, observed_data, process):

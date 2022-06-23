@@ -9,13 +9,17 @@ from pathlib import Path
 import shutil
 
 import quad_clas.analyse.analyse as analyse
+import quad_clas.core.th_predictions as theory_pred
 from quad_clas.core.truth import vh_prod
 from quad_clas.preproc import constants
+
 from quad_clas.core.th_predictions import TheoryPred
 
 mz = constants.mz
 mh = constants.mh
 
+# fix randomness
+np.random.seed(0)
 
 class Optimize:
 
@@ -34,6 +38,7 @@ class Optimize:
 
         self.config = config.copy()
         self.rep = rep
+        self.param_names = {}
 
         if self.rep is not None:
             self.config["results_path"] = os.path.join(self.config["results_path"], "r_{}".format(self.rep))
@@ -43,8 +48,8 @@ class Optimize:
         with open(os.path.join(self.config['results_path'], 'input_card.json'), 'w') as json_data:
             json.dump(self.config, json_data)
 
-        if "HOcorrections" in self.config.keys():
-            self.HOcorrections = self.config["HOcorrections"]
+        if "order" in self.config.keys():
+            self.order = self.config["order"]
 
         if "process" in self.config.keys():
             self.process = self.config["process"]
@@ -56,9 +61,8 @@ class Optimize:
             )
             sys.exit()
 
-        if "parameters" in self.config.keys():
-            self.parameters = self.config["parameters"]
-            self.n_params = len(self.parameters)
+        if "path_to_theory_pred" in self.config.keys():
+            self.path_to_theory_pred = self.config["path_to_theory_pred"]
         else:
             print(
                 "Parameters names (parameters) not set in the input card. Aborting."
@@ -103,83 +107,44 @@ class Optimize:
         elif self.mode == "nn":
             if "path_to_models" in self.config.keys():
                 self.path_to_models = self.config["path_to_models"]
+                self.nn_analyser = analyse.Analyse(self.path_to_models)
             else:
                 print(
                     "No path tot model (path_to_models) specified. Please set in the in the input card. Aborting."
                 )
                 sys.exit()
-            # if "architecture" in self.config.keys():
-            #     self.architecture = self.config["architecture"]
-            # else:
-            #     print(
-            #         "No architecture (architecture) specified. Please set in the in the input card. Aborting."
-            #     )
-            #     sys.exit()
 
             self.bins = None
             self.kinematic = None
-        else:  # unbinned case
+        else:  # truth case
             self.bins = None
             self.kinematic = None
-        
-        event_path = self.config['theory_pred_path']
-        theory_pred = TheoryPred(coeff=self.parameters.keys(),
-                                 event_path=event_path,
-                                 HOcorrections = self.HOcorrections,
-                                 bins=self.bins,
-                                 kinematic=self.kinematic)
+
+        self.th_pred = theory_pred.TheoryPred(self.path_to_theory_pred,
+                                         kinematic=self.kinematic,
+                                         bins=self.bins)
+
+        # nr of dof
+        self.n_params = max(len(self.th_pred.th_dict['lin']), len(self.th_pred.th_dict['quad']))
 
         # load dataset (pseudo data)
         sm_data_path = self.config['observed_data_path']
-        sm_data = pd.read_pickle(sm_data_path).iloc[1:, :]
+        sm_data, _ = analyse.Analyse.load_events(sm_data_path)
 
         # construct observed dataset
-        np.random.seed(0)
-        theory_pred_total = theory_pred.df.sum(axis=1)
-        xsec_sm = theory_pred_total['sm'] # TODO: take xsec from df directly?
-        nu_tot_sm = xsec_sm * config['lumi']
+        xsec_sm_tot = np.sum(self.th_pred.th_dict['sm']) # sum over bins
+        nu_tot_sm = xsec_sm_tot * config['lumi']
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         self.observed_data = sm_data.sample(int(n_tot_sm), random_state=1)
 
-        #self.observed_data['log_m_zh'] = np.log(self.observed_data['m_zh'])
-
-        # check
-        #self.observed_data = self.observed_data[(self.observed_data['m_zh'] < 0.8) & (self.observed_data['m_zh'] > 0.5)]
-        #self.observed_data = self.observed_data[self.observed_data['m_zh'] < 1.0]
-
-        # observed counts
         if self.mode == "nn":
-
-            [n_lin, model_idx], n_quad, n_cross = analyse.load_coefficients_nn(self.observed_data, self.parameters, self.path_to_models)
-            rep_tot = np.array([n_lin[i].shape[0] for i in range(len(n_lin))])
-            rep_ava = rep_tot.min() # max available replicas
-
-            if self.rep is None:
-                self.n_lin_chw = np.median(n_lin[0], axis=0)
-                self.n_lin_chq3 = np.median(n_lin[1], axis=0)
-            else:
-                if self.rep >= rep_ava:
-                    print(
-                        "The specified replica number is not available, please enter a smaller number. Aborting."
-                    )
-
-                    try:
-                        shutil.rmtree(self.config['results_path'])
-                    except OSError as e:
-                        print("Error: %s : %s" % (self.config['results_path'], e.strerror))
-
-                    sys.exit()
-                self.n_lin_chw = n_lin[0][self.rep, :]
-                self.n_lin_chq3 = n_lin[1][self.rep, :]
+            self.nn_models = self.nn_analyser.evaluate_models(self.observed_data)
 
         if self.mode == "truth":
             self.dsigma_dx_sm, self.dsigma_dx_eft = theory_pred.compute_diff_coefficients(self.observed_data, self.process)
         elif self.mode == "binned":
             self.n_i, _ = np.histogram(self.observed_data[self.kinematic].values, self.bins)
-
-        # theory predictions
-        self.theory_pred = theory_pred.df
 
     def my_prior(self, cube):
         """
@@ -202,16 +167,28 @@ class Optimize:
 
     def log_like_nn(self, cube):
 
-        theory_pred_total = self.theory_pred.sum(axis=1)
+        sigma = self.th_pred.th_dict['sm']
 
-        sigma = theory_pred_total['sm'] + theory_pred_total[self.parameters] @ cube
+        # convert cube to df
+        for i, c_name in enumerate(self.th_pred.th_dict['lin'].keys()):
+            self.param_names[c_name] = cube[i]
+
+        for i, (_, sigma_i) in enumerate(self.th_pred.th_dict['lin'].items()):
+            sigma += cube[i] * sigma_i
+
+        for i, (_, sigma_i) in enumerate(self.th_pred.th_dict['quad'].items()):
+            sigma += cube[i] ** 2 * sigma_i
+
+
+        # sigma = theory_pred_total['sm'] + theory_pred_total[self.parameters] @ cube
 
         nu = sigma * self.lumi
 
-        r_nn = 1 + cube[0] * self.n_lin_chw + cube[1] * self.n_lin_chq3
+        ratio = self.nn_analyser.likelihood_ratio_nn(self.observed_data, self.param_names, models_evaluated=self.nn_models)
+        log_r = np.log(ratio)
+        log_r_med = np.median(log_r, axis=0) # or take median of replicas before computing r?
 
-        log_r_nn = np.log(r_nn)
-        log_likelihood = -nu + np.sum(log_r_nn)
+        log_likelihood = -nu + np.sum(log_r_med)
 
         return log_likelihood
 
@@ -254,11 +231,7 @@ class Optimize:
         """Run the minimisation with Nested Sampling"""
 
         # Prefix for results
-        if self.rep is not None:
-
-            prefix = os.path.join(self.config["results_path"], "1k-")
-        else:
-            prefix = os.path.join(self.config["results_path"], "1k-")
+        prefix = os.path.join(self.config["results_path"], "1k-")
 
         t1 = time.perf_counter()
 
@@ -311,7 +284,7 @@ class Optimize:
         """
 
         vals = {}
-        for i, (c, samples) in enumerate(zip(self.parameters.keys(), result['samples'].T)):
+        for i, (c, samples) in enumerate(zip(self.param_names.keys(), result['samples'].T)):
             vals[c] = samples.tolist()
         with open(os.path.join(self.config['results_path'], 'posterior.json'), "w") as f:
             json.dump(vals, f)
