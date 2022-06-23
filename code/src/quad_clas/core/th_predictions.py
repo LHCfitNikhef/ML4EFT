@@ -3,7 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import re
 import os
+import quad_clas.analyse.analyse as analyse
 from quad_clas.core.truth import vh_prod, tt_prod
+from collections import defaultdict
 
 class TheoryPred:
     """
@@ -11,8 +13,8 @@ class TheoryPred:
 
     Parameters
     ----------
-    coeff: array-like
-        Array of SMEFT coefficient names
+    coeff: dict
+        Dictionary of EFT parameter names and values corresponding to the event data
     bins: array-like
         Array with bin edges
     event_path: str
@@ -21,147 +23,56 @@ class TheoryPred:
         Number of replicas to use, 50 by default. The SMEFT predictions are averages over the replicas.
     """
 
-    def __init__(self, coeff, event_path, HOcorrections, bins=None, kinematic=None):
+    def __init__(self, path_to_theory_pred, kinematic=None, bins=None):
 
-        self.coeff = coeff
-        if bins is None:
-            #self.bins = [0, 4]
-            self.bins = [0, 4000]
-        else:
-            self.bins = bins
-
+        self.path_to_theory_pred = path_to_theory_pred
+        self.bins = bins
         self.kinematic = kinematic
+        self.th_dict = defaultdict(dict)
 
-        self.event_path = event_path
-        self.df = None
-        self.HOcorrections = HOcorrections
+        self.build_theory_pred_df()
 
-
-        self.predictions()
-
-    def read_param_value(self, wc):
+    def build_theory_pred_df(self):
         """
-        Function to read parameter value from param card
-
-        Parameters
-        ----------
-        wc: str
-            EFT coefficient
-
-        Returns
-        -------
-        param: float
-            Value of the EFT coefficient in the param card
+        Construct a theory prediction dictionary
         """
 
-        #TODO: regular expression does not select wilson coefficients that end with a number
-        return 10
-        # filename = os.path.join(self.event_path, 'lin', wc, 'param_card.dat')
-        # match_number = re.compile('[-+]?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *[-+]?\ *[0-9]+)?')
-        #
-        # with open(filename, 'r') as f:
-        #     data = f.readlines()
-        #     f.close()
-        #
-        # for line in data:
-        #     if wc + ' \n' in line or wc + '\n' in line:
-        #         final_list = [float(x) for x in re.findall(match_number, line)]
-        #         param = float(final_list[-1])
-        #         break
-        #
-        # return param
+        for order, dict_fo in self.path_to_theory_pred.items():
+
+            if order == 'sm':
+                xsec_sm = self.compute_th_pred(path_to_events=dict_fo)
+                self.th_dict[order] = xsec_sm
+            else:
+                for c_name, [c_value, path_to_events] in dict_fo.items():
+                    xsec_eft = self.compute_th_pred(path_to_events)
+
+                    if order == 'lin':
+                        self.th_dict[order][c_name] = (xsec_eft - self.th_dict['sm']) / c_value
+                    elif order == 'quad':
+                        self.th_dict[order][c_name] = (xsec_eft - self.th_dict['sm']) / c_value ** 2
 
 
-    def predictions(self):
-        nbins = np.size(self.bins) - 1
+    def compute_th_pred(self, path_to_events):
 
-        predictions = dict()
+        # path to events
+        events_paths = analyse.Analyse.get_event_paths(path_to_events)
 
-        # SM predictions
-        SMpredictions = []
+        # store the xsec per bin for all the replicas
+        xsec_col = []
+        for path in events_paths:
+            events, tot_xsec = analyse.Analyse.load_events(event_path=path)
 
-        base_dir_sm = os.path.join(self.event_path, 'sm')
-        for df_path_rep in os.listdir(base_dir_sm):
-            if not df_path_rep.startswith('events'):
-                continue
+            if self.bins is None:
+                xsec_i = tot_xsec
+            else:
+                n_tot = len(events)
+                n_i, _ = np.histogram(events[self.kinematic], self.bins)
+                xsec_i = (n_i / n_tot) * tot_xsec
 
-            df = pd.read_pickle(os.path.join(base_dir_sm, df_path_rep))
+            xsec_col.append(xsec_i)
+        xsec_col = np.array(xsec_col)
 
-            if self.kinematic is None:
-                self.kinematic = df.columns.values[0]
-
-            sigma = df.iloc[0, 0]
-            events = df.iloc[1:, :]
-            n_events = len(events)
-            n, _ = np.histogram(events[self.kinematic], bins=self.bins)
-            SMpredictions.append(n * sigma / n_events)
-
-        predictions['sm'] = np.average(SMpredictions, axis=0)
-
-        # linear predictions
-
-        for coeff in self.coeff:
-            base_dir = os.path.join(self.event_path, 'lin', coeff)
-
-            EFTpredictions = []
-            for df_path_rep in os.listdir(base_dir):
-                if not df_path_rep.startswith('events'):
-                    continue
-
-                df = pd.read_pickle(os.path.join(base_dir, df_path_rep))
-
-                sigma = df.iloc[0,0]
-                events = df.iloc[1:, :]
-
-                wc = self.read_param_value(coeff)
-
-                n_events = len(events)
-
-                n, _ = np.histogram(events[self.kinematic], bins=self.bins)
-
-                sigma_EFT = n * sigma / n_events
-
-                sigma_lin = (1. / wc) * (sigma_EFT - predictions['sm'])
-
-                EFTpredictions.append(sigma_lin)
-
-            predictions[coeff] = np.average(EFTpredictions, axis=0)
-
-        #predictions['cuu'] = 0
-
-        # quadratic predictions
-        if self.HOcorrections:
-            for coeff in self.coeff:
-                base_dir = os.path.join(self.event_path, 'quad', coeff)
-
-                EFTpredictions = []
-                for df_path_rep in os.listdir(base_dir):
-                    if not df_path_rep.startswith('events'):
-                        continue
-
-                    df = pd.read_pickle(os.path.join(base_dir, df_path_rep))
-
-                    sigma = df.iloc[0,0]
-                    events = df.iloc[1:, :]
-
-                    wc = self.read_param_value(coeff)
-
-                    n_events = len(events)
-
-                    n, _ = np.histogram(events[self.kinematic], bins=self.bins)
-
-                    sigma_EFT = n * sigma / n_events
-
-                    sigma_quad = (1. / wc ** 2) * (sigma_EFT - predictions['sm'] - wc * predictions[coeff])
-
-                    EFTpredictions.append(sigma_quad)
-
-                predictions[coeff + '*' + coeff] = np.average(EFTpredictions, axis=0)
-
-
-        bin_index = ['Bin ' + str(s + 1) for s in np.arange(nbins)]
-        self.df = pd.DataFrame(predictions, index=bin_index).T
-
+        return np.mean(xsec_col, axis=0)
 
 
     def compute_diff_coefficients(self, observed_data, process):
