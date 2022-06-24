@@ -147,7 +147,7 @@ class TheoryPred:
             dsigma_dx_c2_quad = np.array(
                 [dsigma_dx(*row[features], [0, 10], "quad") for _, row in events.iterrows()])
 
-            dsigma_dx_c1_lin_coef = (dsigma_dx_c1 - dsigma_dx_sm) / -10
+            dsigma_dx_c1_lin_coef = (dsigma_dx_c1 - dsigma_dx_sm) / (-10)
 
             dsigma_dx_c2_lin_coef = (dsigma_dx_c2 - dsigma_dx_sm) / 10
 

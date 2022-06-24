@@ -7,6 +7,7 @@ import os
 import pandas as pd
 from pathlib import Path
 import shutil
+import copy
 
 import quad_clas.analyse.analyse as analyse
 import quad_clas.core.th_predictions as theory_pred
@@ -137,7 +138,7 @@ class Optimize:
         nu_tot_sm = xsec_sm_tot * config['lumi']
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
-        self.observed_data = sm_data.sample(int(10), random_state=1)
+        self.observed_data = sm_data.sample(int(n_tot_sm), random_state=1)
 
         if self.mode == "nn":
             # evaluated nn models on pseudo dataset
@@ -203,22 +204,25 @@ class Optimize:
 
     def log_like_truth(self, cube):
 
-        self.cube_to_dict(cube)
+        #self.cube_to_dict(cube)
+        for i, c_name in enumerate(self.th_pred.th_dict['lin'].keys()):
+            self.param_names[c_name] = cube[i]
 
         # compute inclusive and differential xsec at cube
         sigma = self.th_pred.th_dict['sm']
-        dsigma_dx = self.dsigma_dx['sm']
+        dsigma_dx = copy.deepcopy(self.dsigma_dx['sm'])
 
         for c_name, sigma_i in self.th_pred.th_dict['lin'].items():
             sigma += self.param_names[c_name] * sigma_i
             dsigma_dx += self.param_names[c_name] * self.dsigma_dx['lin'][c_name]
+
 
         for c_name, sigma_i in self.th_pred.th_dict['quad'].items():
             sigma += self.param_names[c_name] ** 2 * sigma_i
             dsigma_dx += self.param_names[c_name] ** 2 * self.dsigma_dx['quad'][c_name]
 
         nu = sigma * self.lumi
-        log_like = -nu + np.sum(np.log(dsigma_dx))
+        log_like = -nu + np.sum(np.log(dsigma_dx / self.dsigma_dx['sm']))
 
         return log_like
 
@@ -262,7 +266,7 @@ class Optimize:
                                    resume=False,
                                    importance_nested_sampling=True
                                    )
-
+        print("NS done!")
         t2 = time.perf_counter()
 
         print("Time = ", (t2 - t1) / 60.0)

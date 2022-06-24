@@ -100,7 +100,7 @@ def weight(sqrts, mu, x1, x2, c, order):
                 p.xfxQ(5, x1,mu) * p.xfxQ(-5, x2, mu) +
                 p.xfxQ(5, x2, mu) * p.xfxQ(-5, x1, mu)
     )
-    
+
     w_ii += (xsec.sigma_part_qq(hats, cuGRe, cuu, order)) * (
             p.xfxQ(2, x1, mu) * p.xfxQ(-2, x2, mu) +
             p.xfxQ(2, x2, mu) * p.xfxQ(-2, x1, mu) +
