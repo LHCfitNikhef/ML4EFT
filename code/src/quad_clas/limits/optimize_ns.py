@@ -21,8 +21,8 @@ mh = constants.mh
 # fix randomness
 np.random.seed(0)
 
-class Optimize:
 
+class Optimize:
     """
     Parameters
     ----------
@@ -116,13 +116,14 @@ class Optimize:
 
             self.bins = None
             self.kinematic = None
-        else:  # truth case
+        elif self.mode == "truth":
             self.bins = None
             self.kinematic = None
+            self.th_features = self.config['th_features']
 
         self.th_pred = theory_pred.TheoryPred(self.path_to_theory_pred,
-                                         kinematic=self.kinematic,
-                                         bins=self.bins)
+                                              kinematic=self.kinematic,
+                                              bins=self.bins)
 
         # nr of dof
         self.n_params = max(len(self.th_pred.th_dict['lin']), len(self.th_pred.th_dict['quad']))
@@ -132,14 +133,13 @@ class Optimize:
         sm_data, _ = analyse.Analyse.load_events(sm_data_path)
 
         # construct observed dataset
-        xsec_sm_tot = np.sum(self.th_pred.th_dict['sm']) # sum over bins
+        xsec_sm_tot = np.sum(self.th_pred.th_dict['sm'])  # sum over bins
         nu_tot_sm = xsec_sm_tot * config['lumi']
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
-        self.observed_data = sm_data.sample(int(n_tot_sm), random_state=1)
+        self.observed_data = sm_data.sample(int(10), random_state=1)
 
         if self.mode == "nn":
-
             # evaluated nn models on pseudo dataset
             self.nn_analyser.evaluate_models(self.observed_data)
 
@@ -147,10 +147,11 @@ class Optimize:
 
             # taken median over models
             self.nn_analyser.models_evaluated_df['models'] = models_evaluated.apply(lambda row:
-                                                                                           np.median(row, axis=0))
+                                                                                    np.median(row, axis=0))
 
         if self.mode == "truth":
-            self.dsigma_dx_sm, self.dsigma_dx_eft = theory_pred.compute_diff_coefficients(self.observed_data, self.process)
+            self.dsigma_dx = self.th_pred.compute_diff_coefficients(self)
+
         elif self.mode == "binned":
             self.n_i, _ = np.histogram(self.observed_data[self.kinematic].values, self.bins)
 
@@ -173,11 +174,15 @@ class Optimize:
 
         return cube
 
-    def log_like_nn(self, cube):
+    def cube_to_dict(self, cube):
 
-        # convert cube to df
+        # convert cube to dict
         for i, c_name in enumerate(self.th_pred.th_dict['lin'].keys()):
             self.param_names[c_name] = cube[i]
+
+    def log_like_nn(self, cube):
+
+        self.cube_to_dict(cube)
 
         # compute inclusive xsec at cube
         sigma = self.th_pred.th_dict['sm']
@@ -196,33 +201,34 @@ class Optimize:
 
         return -nu + np.sum(log_r_med)
 
-
     def log_like_truth(self, cube):
 
-        theory_pred_total = self.theory_pred.sum(axis=1)
+        self.cube_to_dict(cube)
 
-        quad_idx = [i for i, (index, _) in enumerate(theory_pred_total.items()) if '*' in index]
+        # compute inclusive and differential xsec at cube
+        sigma = self.th_pred.th_dict['sm']
+        dsigma_dx = self.dsigma_dx['sm']
 
-        if self.HOcorrections:
-            sigma = theory_pred_total['sm'] + theory_pred_total[self.parameters] @ cube + theory_pred_total.iloc[quad_idx] @ (cube ** 2)
-            dsigma_dx = self.dsigma_dx_sm + self.dsigma_dx_eft['lin'].T @ cube + self.dsigma_dx_eft['quad'].T @ (
-                        cube ** 2)
-        else:
-            sigma = theory_pred_total['sm'] + theory_pred_total[self.parameters] @ cube
-            dsigma_dx = self.dsigma_dx_sm + self.dsigma_dx_eft['lin'].T @ cube
+        for c_name, sigma_i in self.th_pred.th_dict['lin'].items():
+            sigma += self.param_names[c_name] * sigma_i
+            dsigma_dx += self.param_names[c_name] * self.dsigma_dx['lin'][c_name]
+
+        for c_name, sigma_i in self.th_pred.th_dict['quad'].items():
+            sigma += self.param_names[c_name] ** 2 * sigma_i
+            dsigma_dx += self.param_names[c_name] ** 2 * self.dsigma_dx['quad'][c_name]
 
         nu = sigma * self.lumi
+        log_like = -nu + np.sum(np.log(dsigma_dx))
 
-        log_likelihood = -nu + np.sum(np.log(dsigma_dx))
-
-        return log_likelihood
+        return log_like
 
     def log_like_binned(self, cube):
 
         quad_idx = [i for i, (index, _) in enumerate(self.theory_pred.iterrows()) if '*' in index]
 
         if self.HOcorrections:
-            sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.loc[self.parameters].T @ cube + self.theory_pred.iloc[quad_idx].T @ (cube ** 2)
+            sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.loc[self.parameters].T @ cube + \
+                      self.theory_pred.iloc[quad_idx].T @ (cube ** 2)
         else:
             sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.loc[self.parameters].T @ cube
 
@@ -230,7 +236,6 @@ class Optimize:
         log_l_i = self.n_i * np.log(nu_i) - nu_i
 
         return log_l_i.sum()
-
 
     def run_sampling(self):
         """Run the minimisation with Nested Sampling"""
@@ -293,9 +298,3 @@ class Optimize:
             vals[c] = samples.tolist()
         with open(os.path.join(self.config['results_path'], 'posterior.json'), "w") as f:
             json.dump(vals, f)
-
-
-
-
-
-

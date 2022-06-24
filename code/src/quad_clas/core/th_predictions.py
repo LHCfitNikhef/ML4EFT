@@ -28,6 +28,7 @@ class TheoryPred:
         self.path_to_theory_pred = path_to_theory_pred
         self.bins = bins
         self.kinematic = kinematic
+        self.c_names = []
         self.th_dict = defaultdict(dict)
 
         self.build_theory_pred_df()
@@ -37,7 +38,6 @@ class TheoryPred:
         Construct a theory prediction dictionary
         """
 
-        c_names = []
         for order, dict_fo in self.path_to_theory_pred.items():
 
             if order == 'sm':
@@ -52,11 +52,11 @@ class TheoryPred:
                     elif order == 'quad':
                         self.th_dict[order][c_name] = (xsec_eft - self.th_dict['sm']) / c_value ** 2
 
-                    if c_name not in c_names:
-                        c_names.append(c_name)
+                    if c_name not in self.c_names:
+                        self.c_names.append(c_name)
 
         # add missing zeros
-        for c_name in c_names:
+        for c_name in self.c_names:
             if c_name not in self.th_dict['lin'].keys():
                 self.th_dict['lin'][c_name] = 0
             if c_name not in self.th_dict['quad'].keys():
@@ -84,14 +84,13 @@ class TheoryPred:
 
         return np.mean(xsec_col, axis=0)
 
+    def compute_diff_coefficients(self, optimizer):
 
+        events = optimizer.observed_data
+        features = optimizer.th_features
+        n_features = len(features)
 
-
-    def compute_diff_coefficients(self, observed_data, process):
-
-        dsigma_dx_sm, dsigma_dx_eft = None, None
-
-        if process == 'ZH':
+        if optimizer.process == 'ZH':
 
             dsigma_dx_sm = np.array(
                 [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 0, lin=True, quad=False) for index, row in
@@ -127,43 +126,41 @@ class TheoryPred:
             dsigma_dx_eft = {'lin': np.stack((dsigma_dx_c1_lin_coef, dsigma_dx_c2_lin_coef))}
 
 
-        elif process == 'tt':
+        elif optimizer.process == 'tt':
 
-            dsigma_dx_sm = np.array(
-                [tt_prod.dsigma_dmtt(row['m_tt'], 0, 0, lin=True, quad=False) for index, row
-                 in
-                 observed_data.iterrows()])
+            if n_features == 1:
+                dsigma_dx = tt_prod.dsigma_dmtt
+            if n_features == 2:
+                dsigma_dx = tt_prod.dsigma_dmtt_dy
 
-            dsigma_dx_c1 = np.array(
-                [tt_prod.dsigma_dmtt(row['m_tt'], -10, 0, lin=True, quad=False) for index, row
-                 in
-                 observed_data.iterrows()])
+            dsigma_dx_sm = np.array([dsigma_dx(*row[features]) for _, row in events.iterrows()])
+
+            dsigma_dx_c1 = np.array([dsigma_dx(*row[features], [-10, 0], "lin") for _, row
+                                     in events.iterrows()])
+
+            dsigma_dx_c2 = np.array(
+                [dsigma_dx(*row[features], [0, 10], "lin") for _, row in events.iterrows()])
+
+            dsigma_dx_c1_quad = np.array(
+                [dsigma_dx(*row[features], [-10, 0], "quad") for _, row in events.iterrows()])
+
+            dsigma_dx_c2_quad = np.array(
+                [dsigma_dx(*row[features], [0, 10], "quad") for _, row in events.iterrows()])
 
             dsigma_dx_c1_lin_coef = (dsigma_dx_c1 - dsigma_dx_sm) / -10
 
-            dsigma_dx_c2 = np.array(
-                [tt_prod.dsigma_dmtt(row['m_tt'], 0, 10, lin=True, quad=False) for index, row
-                 in
-                 observed_data.iterrows()])
-
             dsigma_dx_c2_lin_coef = (dsigma_dx_c2 - dsigma_dx_sm) / 10
 
-            dsigma_dx_c1_quad = np.array(
-                [tt_prod.dsigma_dmtt(row['m_tt'], 10, 0, lin=False, quad=True) for index, row
-                 in
-                 observed_data.iterrows()])
+            dsigma_dx_c1_quad_coef = (dsigma_dx_c1_quad - dsigma_dx_sm) / 100
 
-            dsigma_dx_c1_quad_coef = (dsigma_dx_c1_quad - dsigma_dx_sm - 10 * dsigma_dx_c1_lin_coef) / 100
+            dsigma_dx_c2_quad_coef = (dsigma_dx_c2_quad - dsigma_dx_sm) / 100
 
-            dsigma_dx_c2_quad = np.array(
-                [tt_prod.dsigma_dmtt(row['m_tt'], 0, 10, lin=False, quad=True) for index, row
-                 in
-                 observed_data.iterrows()])
+        dsigma_dx = {'sm': dsigma_dx_sm,
+                     'lin': {optimizer.th_pred.c_names[0]: dsigma_dx_c1_lin_coef,
+                             optimizer.th_pred.c_names[1]: dsigma_dx_c2_lin_coef},
+                     'quad': {optimizer.th_pred.c_names[0]: dsigma_dx_c1_quad_coef,
+                             optimizer.th_pred.c_names[1]: dsigma_dx_c2_quad_coef}
+                     }
 
-            dsigma_dx_c2_quad_coef = (dsigma_dx_c2_quad - dsigma_dx_sm - 10 * dsigma_dx_c2_lin_coef) / 100
-
-            dsigma_dx_eft = {'lin': np.stack((dsigma_dx_c1_lin_coef, dsigma_dx_c2_lin_coef)),
-                             'quad': np.stack((dsigma_dx_c1_quad_coef, dsigma_dx_c2_quad_coef))}
-
-        return dsigma_dx_sm, dsigma_dx_eft
+        return dsigma_dx
 
