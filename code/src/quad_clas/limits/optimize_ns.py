@@ -216,7 +216,6 @@ class Optimize:
             sigma += self.param_names[c_name] * sigma_i
             dsigma_dx += self.param_names[c_name] * self.dsigma_dx['lin'][c_name]
 
-
         for c_name, sigma_i in self.th_pred.th_dict['quad'].items():
             sigma += self.param_names[c_name] ** 2 * sigma_i
             dsigma_dx += self.param_names[c_name] ** 2 * self.dsigma_dx['quad'][c_name]
@@ -228,18 +227,22 @@ class Optimize:
 
     def log_like_binned(self, cube):
 
-        quad_idx = [i for i, (index, _) in enumerate(self.theory_pred.iterrows()) if '*' in index]
+        for i, c_name in enumerate(self.th_pred.th_dict['lin'].keys()):
+            self.param_names[c_name] = cube[i]
 
-        if self.HOcorrections:
-            sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.loc[self.parameters].T @ cube + \
-                      self.theory_pred.iloc[quad_idx].T @ (cube ** 2)
-        else:
-            sigma_i = self.theory_pred.loc['sm'] + self.theory_pred.loc[self.parameters].T @ cube
+        sigma = 0
 
-        nu_i = sigma_i * self.lumi
-        log_l_i = self.n_i * np.log(nu_i) - nu_i
+        for c_name, sigma_i in self.th_pred.th_dict['lin'].items():
+            sigma += self.param_names[c_name] * sigma_i
 
-        return log_l_i.sum()
+        for c_name, sigma_i in self.th_pred.th_dict['quad'].items():
+            sigma += self.param_names[c_name] ** 2 * sigma_i
+
+        sigma += self.th_pred.th_dict['sm']
+
+        nu_i = sigma * self.lumi
+        log_like_i = self.n_i * np.log(nu_i) - nu_i
+        return np.nansum(log_like_i)
 
     def run_sampling(self):
         """Run the minimisation with Nested Sampling"""
@@ -262,9 +265,10 @@ class Optimize:
                                    outputfiles_basename=prefix,
                                    verbose=True,
                                    n_live_points=self.live_points,
-                                   const_efficiency_mode=False,
-                                   resume=False,
-                                   importance_nested_sampling=True
+                                   const_efficiency_mode=True,
+                                   importance_nested_sampling=True,
+                                   sampling_efficiency=0.01,
+                                   evidence_tolerance=0.5
                                    )
         print("NS done!")
         t2 = time.perf_counter()
