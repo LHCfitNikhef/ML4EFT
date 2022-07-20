@@ -11,43 +11,69 @@ import sys
 
 # generate report for
 order = "lin"
-c_name = "ctgre"
+c_name = "cHWB"
 
 yr = "2022"
-month = "06"
-day = "19"
+month = "07"
+day = "15"
 date = "{yr}_{m}_{d}".format(yr=yr, m=month, d=day)
 
-name = "model_ctgre_lin_penalty_v6"
+name = "model_cbhre_lin"
 
-path_to_models = {'lin': {
-    'ctgre': [-10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/19/model_ctgre_lin_penalty_v6'],
-    'cut': [-10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/19/model_ctgre_lin_penalty_v6']}}
+# path_to_models = {'lin': {
+#     'ctgre': [-10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/22/model_ctgre_lin'],
+#     'cut': [10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/22/model_ctgre_quad']},
+#     'quad': {'ctgre': [-10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/22/model_ctgre_quad'],
+#              'cut': [10, '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/22/model_ctu1_quad']}}
+
+# path_to_models = {
+#     "lin": {"cbhre": [-20, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/15/model_cbhre_lin"],
+#             "chw": [50, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/15/model_chw_lin"]}}
+
+path_to_models = {
+    "lin": {"cHu": [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHu"],
+    "cHd":  [-10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHd"],
+    "cHj1":  [-10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHj1"],
+    "cHj3":  [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHj3"],
+    "cbHRe":  [-10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cbHRe"],
+    "cHW":  [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHW"],
+    "cHWB":  [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHWB"]}}
 
 path_to_runcard = os.path.join(path_to_models[order][c_name][-1], 'mc_run_0', 'run_card.json')
 
 analyser = analyse.Analyse(path_to_models)
 analyser.build_model_dict()
 
-event_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_0.pkl.gz'
+event_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l_mtt_05/sm/events_0.pkl.gz'
 events_sm = pd.read_pickle(event_path)
 events_sm = events_sm.iloc[1:,:]
-events_sm = events_sm[(events_sm['m_tt'] > 0.5)]
+
+#events_sm = events_sm[(events_sm['m_tt'] > 0.5)]
 events_sm = events_sm.sample(5000, random_state=1)
 
 model_dir = os.path.dirname(analyser.model_df.loc[order, c_name]['rep_paths'][0])
-report_path = os.path.join(model_dir, 'report_test')
+report_path = os.path.join(model_dir, 'report')
 if not os.path.exists(report_path):
     os.makedirs(report_path)
 
-# pbp comparison
-fig1, fig2 = analyser.point_by_point_comp(events_sm, {'ctgre': -2, 'cut': 0}, ['y', 'm_tt'], 'tt')
-fig1.savefig(os.path.join(report_path, 'pbp_rep.pdf'))
-fig2.savefig(os.path.join(report_path, 'pbp_med.pdf'))
 
-# loss overview
-figs = analyser.plot_loss_overview()
-figs[1].savefig(os.path.join(report_path, 'loss_overview.pdf'))
+
+# # pbp comparison
+# fig1, fig2 = analyser.point_by_point_comp(events_sm, {'ctgre': -2, 'cut': 0}, ['y', 'm_tt'], 'tt', 'lin')
+# fig1.savefig(os.path.join(report_path, 'pbp_rep.pdf'))
+# fig2.savefig(os.path.join(report_path, 'pbp_med.pdf'))
+
+# # loss overview
+fig, losses = analyser.plot_loss_overview(c_name, order)
+fig.savefig(os.path.join(report_path, 'loss_{}_{}.pdf'.format(c_name, order)))
+sys.exit()
+#fig.savefig(os.path.join(report_path, 'loss_overview.pdf'))
+
+loss_ana = analyser.analytical_loss({'ctgre': 10, 'cut': 0},  ['y', 'm_tt'], 'tt', order)
+fig = analyser.plot_loss_dist(losses, loss_ana)
+
+fig.savefig(os.path.join(report_path, 'loss_dist.pdf'))
+
 
 # 1d accuracy
 fig = analyser.plot_accuracy_1d(c={'ctgre': -2, 'cut': 0}, process='tt', order='lin', cut=0.5, epoch=-1)
@@ -94,6 +120,8 @@ ch = '/ML4EFT'
 pattern  = ".*" + ch
 # Remove all characters before the character '-' from string
 df.loc[['event_data']] = re.sub(pattern, '', df.loc[['event_data']][0].values[0])
+
+df = df.drop('pretrained_models.lin')
 
 df.loc['model_date'] = date
 df[0] = [fr'\verb|{row}|' for row in df[0]]
@@ -143,7 +171,7 @@ def main():
 
     # output pdf file name
 
-    output = os.path.join(report_path, 'report_{date}_{model_name}.pdf'.format(date=date, model_name=name))
+    output = os.path.join(report_path, 'report_{date}_{model_name}_v2.pdf'.format(date=date, model_name=name))
 
     # calling pdf merge function
     PDFmerge(pdfs=pdfs, output=output)

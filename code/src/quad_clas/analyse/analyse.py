@@ -199,6 +199,10 @@ class Analyse:
         for rep_path in rep_paths:
 
             path_to_run_card = os.path.join(rep_path, 'run_card.json')
+            if not os.path.isfile(path_to_run_card): # if model did not get trained, jump to the next one
+                rep_paths.remove(rep_path)
+                continue
+
             path_to_scaler = os.path.join(rep_path, 'scaler.gz')
 
             run_card = self.load_run_card(path_to_run_card)
@@ -528,8 +532,9 @@ class Analyse:
 
         if 'lin' in self.models_evaluated_df.index:
             lin_models = self.models_evaluated_df['models'].loc["lin"]
-            for c_name, nn_lin in lin_models.iteritems():
-                ratio += c[c_name] * nn_lin
+
+            for c_name, c_val in c.items():
+                ratio += c_val * lin_models[c_name]
 
         if 'quad' in self.models_evaluated_df.index:
             quad_models = self.models_evaluated_df['models'].loc["quad"]
@@ -564,9 +569,6 @@ class Analyse:
 
         r_nn = self.likelihood_ratio_nn(df, c)
         tau_nn = np.log(r_nn)
-
-        # TODO: fix the below
-        #order = self.model_df.index[-1][0]  # last index, first column gives the order
 
         r_truth = self.likelihood_ratio_truth(df, c, features, process, order)
         tau_truth = np.log(r_truth)
@@ -621,96 +623,93 @@ class Analyse:
 
         return fig1, fig2
 
-    def plot_loss_overview(self):
+    def plot_loss_overview(self, c_name, order):
 
         if self.model_df is None:
             self.build_model_dict()
 
+        rep_paths = self.model_df['rep_paths'][order][c_name]
 
-        figs = []
-        for (order, c_name), rep_paths in self.model_df['rep_paths'].iteritems():
+        loss_tr = []
+        loss_val = []
 
-            loss_tr = []
-            loss_val = []
+        mc_reps = len(rep_paths)
+        ncols = 5
+        nrows = int(np.ceil(mc_reps / ncols))
 
-            mc_reps = len(rep_paths)
-            ncols = 5
-            nrows = int(np.ceil(mc_reps / ncols))
+        patience = self.model_df.loc[order, c_name]['run_card']['patience']
+        model_idx = self.model_df.loc[order, c_name]['idx']
 
-            patience = self.model_df.loc[order, c_name]['run_card']['patience']
-            model_idx = self.model_df.loc[order, c_name]['idx']
+        for rep_path in rep_paths:
+            path_to_loss_tr = os.path.join(rep_path, 'loss.out')
+            loss_tr.append(self.load_loss(path_to_loss_tr))
 
-            for rep_path in rep_paths:
-                path_to_loss_tr = os.path.join(rep_path, 'loss.out')
-                loss_tr.append(self.load_loss(path_to_loss_tr))
+            path_to_loss_val = os.path.join(rep_path, 'loss_val.out')
+            loss_val.append(self.load_loss(path_to_loss_val))
 
-                path_to_loss_val = os.path.join(rep_path, 'loss_val.out')
-                loss_val.append(self.load_loss(path_to_loss_val))
+        fig = plt.figure(figsize=(ncols * 4, nrows * 4))
 
-            fig = plt.figure(figsize=(ncols * 4, nrows * 4))
+        train_loss_best = np.array([loss[-patience] for loss in loss_tr])
+        val_loss_best = np.array([loss[-patience] for loss in loss_val])
 
-            train_loss_best = np.array([loss[-patience] for loss in loss_tr])
-            val_loss_best = np.array([loss[-patience] for loss in loss_val])
+        for i in np.argsort(model_idx):
+            ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
+            epochs = np.arange(len(loss_tr[i]))
 
-            for i in np.argsort(model_idx):
-                ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
-                epochs = np.arange(len(loss_tr[i]))
+            label_val = r'$L_{\mathrm{val}}$' if model_idx[i] == 0 else None
+            label_train = r'$L_{\mathrm{tr}}$' if model_idx[i] == 0 else None
 
-                label_val = r'$L_{\mathrm{val}}$' if model_idx[i] == 0 else None
-                label_train = r'$L_{\mathrm{tr}}$' if model_idx[i] == 0 else None
+            loss_train_rep = np.array(loss_tr[i])
+            loss_val_rep = np.array(loss_val[i])
 
-                loss_train_rep = np.array(loss_tr[i])
-                loss_val_rep = np.array(loss_val[i])
+            ax.plot(epochs, loss_train_rep, label=label_train)
+            ax.plot(epochs, loss_val_rep, label=label_val)
+            ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
 
-                ax.plot(epochs, loss_train_rep, label=label_train)
-                ax.plot(epochs, loss_val_rep, label=label_val)
-                ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
+            # ax.set_yscale('log')
+            ax.yaxis.set_major_formatter(NullFormatter())
+            ax.yaxis.set_minor_formatter(NullFormatter())
+            ax.axes.yaxis.set_ticklabels([])
+            ax.set_ymargin(0.1)
+            ax.set_xmargin(0)
 
-                # ax.set_yscale('log')
-                ax.yaxis.set_major_formatter(NullFormatter())
-                ax.yaxis.set_minor_formatter(NullFormatter())
-                ax.axes.yaxis.set_ticklabels([])
-                ax.set_ymargin(0.1)
-                ax.set_xmargin(0)
+            ax.text(0.9, 0.9, r"$\mathrm{{rep}}\;{}$".format(model_idx[i]), horizontalalignment='right',
+                    verticalalignment='center',
+                    transform=ax.transAxes)
 
-                ax.text(0.9, 0.9, r"$\mathrm{{rep}}\;{}$".format(model_idx[i]), horizontalalignment='right',
-                        verticalalignment='center',
-                        transform=ax.transAxes)
+            ax.set_xlim(left=10)
 
-                ax.set_xlim(left=10)
+            med_loss_tr = np.percentile(train_loss_best, 50)
+            low_loss_tr = np.percentile(train_loss_best, 16)
+            high_loss_tr = np.percentile(train_loss_best, 84)
+            loss_sigma_tr = np.abs((high_loss_tr - low_loss_tr) / 2)
 
-                med_loss_tr = np.percentile(train_loss_best, 50)
-                low_loss_tr = np.percentile(train_loss_best, 16)
-                high_loss_tr = np.percentile(train_loss_best, 84)
-                loss_sigma_tr = np.abs((high_loss_tr - low_loss_tr) / 2)
+            med_loss_val = np.percentile(val_loss_best, 50)
+            low_loss_val = np.percentile(val_loss_best, 16)
+            high_loss_val = np.percentile(val_loss_best, 84)
+            loss_sigma_val = np.abs((high_loss_val - low_loss_val) / 2)
 
-                med_loss_val = np.percentile(val_loss_best, 50)
-                low_loss_val = np.percentile(val_loss_best, 16)
-                high_loss_val = np.percentile(val_loss_best, 84)
-                loss_sigma_val = np.abs((high_loss_val - low_loss_val) / 2)
+            # same scale (not everything visible)
 
-                # same scale (not everything visible)
+            # ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
+            #             min(loss_train_rep[-1], loss_val_rep[-1]) + 2 * max(loss_sigma_val, loss_sigma_tr))
 
-                # ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
-                #             min(loss_train_rep[-1], loss_val_rep[-1]) + 2 * max(loss_sigma_val, loss_sigma_tr))
+            # everything visible (not the same scale)
+            ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
+                        max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
 
-                # everything visible (not the same scale)
-                ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
-                            max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
+            signif = (train_loss_best[i] - med_loss_tr) / loss_sigma_tr
 
-                signif = (train_loss_best[i] - med_loss_tr) / loss_sigma_tr
+            ax.text(0.9, 0.8, r"$Z={:.2f}$".format(signif), horizontalalignment='right',
+                    verticalalignment='center',
+                    transform=ax.transAxes)
 
-                ax.text(0.9, 0.8, r"$Z={:.2f}$".format(signif), horizontalalignment='right',
-                        verticalalignment='center',
-                        transform=ax.transAxes)
+            if model_idx[i] == 0:
+                ax.legend(loc="lower left", frameon=False)
 
-                if model_idx[i] == 0:
-                    ax.legend(loc="lower left", frameon=False)
+        plt.tight_layout()
 
-            plt.tight_layout()
-            figs.append(fig)
-
-        return figs
+        return fig, train_loss_best
 
     def plot_accuracy_1d(self, c, process, order, cut, epoch=-1):
 
@@ -803,10 +802,17 @@ class Analyse:
                 dsigma_0 = [tt_prod.dsigma_dmtt(*x[features], c, order) for _, x in events.iterrows()]  # EFT
                 dsigma_1 = [tt_prod.dsigma_dmtt(*x[features]) for _, x in
                             events.iterrows()]  # SM
-            else:
+            elif n_features == 2:
                 dsigma_0 = [tt_prod.dsigma_dmtt_dy(*x[features], c, order) for _, x in
                             events.iterrows()]  # EFT
                 dsigma_1 = [tt_prod.dsigma_dmtt_dy(*x[features]) for _, x in
+                            events.iterrows()]  # SM
+            elif n_features == 3:
+                dsigma_0 = [tt_prod.dsigma_dmtt_dy_dpt(*x[features], c, order) for
+                            index, x in
+                            events.iterrows()]  # EFT
+                dsigma_1 = [tt_prod.dsigma_dmtt_dy_dpt(*x[features]) for
+                            index, x in
                             events.iterrows()]  # SM
 
         dsigma_0, dsigma_1 = np.array(dsigma_0), np.array(dsigma_1)
@@ -905,232 +911,43 @@ class Analyse:
 
         return im
 
+    def analytical_loss(self, c, features, process, order):
 
-#TODO: coeff_function_nn can be replaced entirely by load_coefficients_nn
-# def coeff_function_nn(x, path_to_model, architecture, lin=False, quad=False, cross=False, animate=False, epoch=None):
-#     """
-#     Computes the nn coefficient functions in the EFT expansion up to either linear or quadratic level
-#
-#     Parameters
-#     ----------
-#      x : torch.tensor, shape=(M, N)
-#         Kinematics feature vector with M instances of N kinematics, e.g. N =2 for
-#         the invariant mass and the rapidity.
-#     path_to_models: str
-#         Path to the nn model directory, e.g. ./model_x/mc_run_0
-#     architecture: list
-#         The architecture of the model, e.g.
-#
-#             .. math::
-#
-#                 [n_i, 10, 15, 5, n_f],
-#
-#         where :math:`n_i` and :math:`n_f` denote the number of input features and output target values respectively.
-#     mc_run: int
-#         Monte Carlo replica number
-#     lin: bool, optional
-#         Set to False by default. Turn on for linear corrections.
-#     quad: bool, optional
-#         Set to False by default. Turn on for quadratic corrections.
-#     cross: bool, optional
-#         Set to False by default. Turn on for cross term corrections
-#
-#     Returns
-#     -------
-#
-#     """
-#     with torch.no_grad():
-#
-#         if lin:
-#             nn = quad_clas.PredictorLinear(architecture)
-#         elif quad:
-#             nn = quad_clas.PredictorQuadratic(architecture)
-#         elif cross:
-#             nn = quad_clas.PredictorCross(architecture)
-#
-#         if animate and epoch is not None:
-#             path_nn = os.path.join(path_to_model, 'trained_nn_{epoch}.pt'.format(epoch=epoch))
-#             if not os.path.exists(path_nn):
-#                 path_nn = os.path.join(path_to_model, 'trained_nn.pt')
-#         else:
-#             path_nn = os.path.join(path_to_model, 'trained_nn.pt')
-#         nn.load_state_dict(torch.load(path_nn))
-#
-#         scaler_path = os.path.join(path_to_model, 'scaler.gz')
-#         scaler = joblib.load(scaler_path)
-#         x_scaled = scaler.transform(x)
-#         x_scaled = torch.tensor(x_scaled)
-#
-#         if lin:
-#             n_lin_out = nn.n_alpha(x_scaled.float()).numpy().flatten()
-#             return n_lin_out
-#         elif quad:
-#             n_quad_out = nn.n_beta(x_scaled.float()).numpy().flatten()
-#             return n_quad_out
-#         elif cross:
-#             n_cross_out = nn.n_gamma(x_scaled.float()).numpy().flatten()
-#             return n_cross_out
+        def integrand(y, m_x, c, features, process, order):
 
-def plot_loss_overview(path_to_models, order, op):
+            # convert features to pandas dataframe
+            df = pd.DataFrame({features[1]: [m_x], features[0]: [y]})
+            
+            # analytical decision function
+            g = self.decision_function_truth(df, c, features, process, order)
+            if process == 'tt':
+                c = np.array([c['ctgre'], c['cut']])
+                dsigma_dx_eft = tt_prod.dsigma_dmtt_dy(y, m_x, c, order)
+                dsigma_dx_sm = tt_prod.dsigma_dmtt_dy(y, m_x)
 
-    model_dir_base = path_to_models[order][op][-1]
-    model_dirs = [os.path.join(model_dir_base, mc_run) for mc_run in os.listdir(model_dir_base) if mc_run.startswith('mc_run')]
+            elif process == 'ZH':
+                c = np.array([c['cHW'], c['cHq3']])
+                dsigma_dx_eft = tt_prod.dsigma_dmvh_dy(y, m_x, c, order)
+                dsigma_dx_sm = tt_prod.dsigma_dmvh_dy(y, m_x)
 
-    mc_reps = len(model_dirs)
+            return - dsigma_dx_eft * np.log(1 - g) - dsigma_dx_sm * np.log(g)
 
-    # patience
-    # TODO: create training object so that the runcard does not to be loaded every time
-    with open(os.path.join(model_dirs[0], 'run_card.json')) as json_data:
-        patience = json.load(json_data)['patience']
+        loss = integrate.dblquad(integrand, 0.5, 4.0, lambda m_x: -np.log(col_s / m_x),
+                                 lambda m_x: np.log(col_s / m_x), args=(c, features, process, order))
 
-    # load training and validation losses
-    loss_train = []
-    loss_val = []
-    for i in range(mc_reps):
-        with open(os.path.join(model_dir_base, 'mc_run_{}'.format(i), 'loss.out')) as f:
-            loss_train.append([float(line) for line in f.read().splitlines()])
-        with open(os.path.join(model_dir_base, 'mc_run_{}'.format(i), 'loss_val.out')) as f:
-            loss_val.append([float(line) for line in f.read().splitlines()])
+        return loss[0]
 
-    ncols = 5
-    nrows = int(np.ceil(mc_reps / ncols))
+    def plot_loss_dist(self, losses, loss_ana):
 
-    fig = plt.figure(figsize=(ncols * 4, nrows * 4))
+        fig, ax = plt.subplots(figsize=(10, 6))
 
-    from matplotlib.ticker import NullFormatter
-
-    train_loss_best = np.array([loss[-patience] for loss in loss_train])
-
-    for i in range(mc_reps):
-        ax = plt.subplot(nrows, ncols, i + 1)
-        epochs = np.arange(len(loss_train[i]))
-
-        label_val = r'$L_{\mathrm{val}}$' if i == 0 else None
-        label_train = r'$L_{\mathrm{tr}}$' if i == 0 else None
-
-        loss_train_rep = np.array(loss_train[i])
-        loss_val_rep = np.array(loss_val[i])
-
-        #ratio_train = np.log(loss_train_rep[10:]) - np.log(loss_train_rep[:-10])
-        #ratio_val = np.log(loss_val_rep[10:]) - np.log(loss_val_rep[:-10])
-
-        # ax.plot(epochs[10:], ratio_train, label=label_train)
-        # ax.plot(epochs[10:], ratio_val, label=label_val)
-        ax.plot(epochs, loss_train_rep, label=label_train)
-        ax.plot(epochs, loss_val_rep, label=label_val)
-        ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
-
-        #ax.set_yscale('log')
-        # ax.yaxis.set_major_formatter(NullFormatter())
-        # ax.yaxis.set_minor_formatter(NullFormatter())
-        # ax.axes.yaxis.set_ticklabels([])
-        ax.set_ymargin(0.1)
-        ax.set_xmargin(0)
-
-        ax.text(0.9, 0.9, r"$\mathrm{{rep}}\;{}$".format(i), horizontalalignment='right',
-                 verticalalignment='center',
-                 transform=ax.transAxes)
+        kwargs = dict(histtype='stepfilled', alpha=0.3, density=False, bins=20, ec="k")
+        ax.hist(losses, **kwargs)
+        ax.axvline(loss_ana, linestyle='dotted')
+        return fig
 
 
-        #ymax = loss_val[i][min([50, epochs[-patience] - 20])]
-        #ymin = min(np.log10(loss_train[i])) - 0.1 * (np.log10(ymax) - min(np.log10(loss_train[i])))
-        #ax.set_ylim(top=ymax)
-        #ax.set_ylim(10 ** ymin, ymax)
-        ax.set_xlim(left=10)
-
-        #ax.set_ylim(min([np.min(loss_val_rep[-patience - 50:]), np.min(loss_train_rep[-patience -50:])]), max([np.max(loss_val_rep[-patience-50:]), np.max(loss_train_rep[-patience - 50:]) ]))
-        #ax.set_ylim(-0.001, 0.001)
-
-        med_loss = np.percentile(train_loss_best, 50)
-        low_loss = np.percentile(train_loss_best, 16)
-        high_loss = np.percentile(train_loss_best, 84)
-        loss_sigma = np.abs((high_loss - low_loss)/2)
-
-        #ax.set_ylim(np.percentile(train_loss_best, 16), np.percentile(train_loss_best, 84))
-        #ax.set_ylim(loss_train_rep[-1], loss_val_rep[-patience] + 0.5)
-        ax.set_ylim(loss_train_rep[-1] - 0.2 * loss_sigma, loss_train_rep[-1] + 0.8 * loss_sigma)
-
-        signif = (train_loss_best[i] - med_loss) / loss_sigma
-
-        ax.text(0.9, 0.8, r"$Z={:.2f}$".format(signif), horizontalalignment='right',
-                verticalalignment='center',
-                transform=ax.transAxes)
-
-        #ax.fill_between(epochs, low_loss, high_loss, alpha=0.3)
-        #ax.axhline(med_loss, 0, 1, color='k', linestyle='dotted')
-
-        if i == 0:
-            ax.legend(loc="lower left", frameon=False)
-
-    plt.tight_layout()
-
-    fig_delta = plt.figure(figsize=(ncols * 4, nrows * 4))
-
-    for i in range(mc_reps):
-        ax = plt.subplot(nrows, ncols, i + 1)
-        epochs = np.arange(len(loss_train[i]))
-
-        label_val = r'$L_{\mathrm{val}}$' if i == 0 else None
-        label_train = r'$L_{\mathrm{tr}}$' if i == 0 else None
-
-        loss_train_rep = np.array(loss_train[i])
-        loss_val_rep = np.array(loss_val[i])
-
-        ratio_train = loss_train_rep[10:] - loss_train_rep[:-10]
-        ratio_val = loss_val_rep[10:] - loss_val_rep[:-10]
-
-        ax.plot(epochs[10:][-patience - 50:], ratio_train[-patience - 50:], label=label_train)
-        ax.plot(epochs[10:][-patience - 50:], ratio_val[-patience - 50:], label=label_val)
-        ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
-
-        ax.set_ymargin(0.1)
-        ax.set_xmargin(0)
-
-        ax.text(0.9, 0.9, r"$\mathrm{{rep}}\;{}$".format(i), horizontalalignment='right',
-                verticalalignment='center',
-                transform=ax.transAxes)
 
 
-        #ax.set_xlim(left=10)
 
-        ax.set_ylim(-0.03, 0.03)
-
-
-        if i == 0:
-            ax.legend(loc="lower left", frameon=False)
-
-    plt.tight_layout()
-
-    #loss_ana = analytical_loss([10, 0])
-
-    fig_loss_dist, ax = plt.subplots(figsize=(10, 6))
-    kwargs = dict(histtype='stepfilled', alpha=0.3, density=False, bins=20, ec="k")
-    ax.hist(train_loss_best, **kwargs, label=r'$\rm{Training}\;\rm{loss}$')
-    plt.xlabel(r'$L_{\mathrm{tr}}$')
-    plt.ylabel(r'$n_{\mathrm{rep}}$')
-
-
-    return fig, fig_loss_dist, fig_delta
-
-def analytical_loss(c):
-
-    def integrand(y, m_x):
-
-        # convert features to pandas dataframe
-        df = pd.DataFrame({'m_zh': [m_x], 'y': [y]})
-
-        # analytical decision function
-        g = decision_function_truth(df, c, n_kin=2, process='ZH', lin=True, quad=False)
-
-        # diff xsec in EFT
-        dsigma_dx_eft = vh_prod.dsigma_dmvh_dy(y, m_x, -10, 0, True, False)
-
-        # diff xsec in SM
-        dsigma_dx_sm = vh_prod.dsigma_dmvh_dy(y, m_x, 0, 0, True, False)
-
-        return - dsigma_dx_eft * np.log(1 - g) - dsigma_dx_sm * np.log(g)
-
-    loss = integrate.dblquad(integrand, 0.25, 2.0, lambda m_x: -np.log(np.sqrt(col_s)/m_x), lambda m_x:np.log(np.sqrt(col_s)/m_x))
-
-    return loss[0]
 

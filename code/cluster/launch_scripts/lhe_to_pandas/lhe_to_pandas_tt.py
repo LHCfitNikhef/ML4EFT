@@ -11,7 +11,11 @@ mc_rep = sys.argv[3]
 def lhe_to_pandas(path_to_lhe):
 
     lhe_init = pylhe.readLHEInit(path_to_lhe)
-    xsec = lhe_init['procInfo'][0]['xSection']
+
+    xsec = 0
+    for process in lhe_init['procInfo']:
+        xsec += process['xSection']
+
     events = []
 
     for e in pylhe.readLHE(path_to_lhe):

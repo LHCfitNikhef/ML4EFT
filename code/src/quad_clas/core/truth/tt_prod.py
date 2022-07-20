@@ -57,7 +57,6 @@ class crossSectionSMEFT:
         elif order == 'lin':
             return sm + cuGRe * kappa_1
         elif order == 'quad':
-            #return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11
             return sm + cuGRe ** 2 * kappa_11
 
 
@@ -68,7 +67,6 @@ class crossSectionSMEFT:
         sqrt = np.sqrt(1 - 4 * mt ** 2 / hats)
         kappa_11 = sqrt * (8 * np.pi * v ** 2 * yt ** 2 * asQCD * (8 * mt ** 2 + hats)) / (
                     108 * np.pi * LambdaSMEFT ** 4 * hats)
-        #kappa_22 = sqrt * (9 * hats * (hats - mt ** 2)) / (108 * np.pi * LambdaSMEFT ** 4 * hats)
         kappa_22 = sqrt * ((hats - mt ** 2)) / (48 * np.pi * LambdaSMEFT ** 4 )
         kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
         sm = (8 * np.pi * asQCD ** 2 * (2 * mt ** 2 + hats) * sqrt) / (27 * hats ** 2)
@@ -78,8 +76,175 @@ class crossSectionSMEFT:
         elif order == 'lin':
             return sm + cuGRe * kappa_1
         elif order == 'quad':
-            #return sm + cuGRe * kappa_1 + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
             return sm + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
+
+    def dsigma_part_qq_dpt(self, hats, pt, cuGRe, cuu, order):
+
+        # minimum energy required to generate an event with transverse momentum ptv
+        s_min = 4 * mt ** 2 + 4 * pt ** 2
+
+        if hats < s_min:
+            return 0
+
+        S = hats
+
+        pi = np.sqrt(S) / 2
+        pf2 = (S - 4 * mt ** 2) / 4
+
+        pf = np.sqrt(pf2)
+
+        def me_sq(theta):
+            U = mt ** 2 - 2 * pi * (np.sqrt(mt ** 2 + pf2) - pf * np.cos(theta))
+            T = 2 * mt ** 2 - S - U
+
+            me_sq_sm = 64 * asQCD ** 2 * np.pi ** 2 * (2 * mt ** 4 + T ** 2 + 2 * mt ** 2 * (S-T-U) + U ** 2) / (9 * S ** 2)
+
+            me_sq_kappa_1 = - (128 * np.sqrt(2) * asQCD ** (3/2) * mt * np.pi ** (3/2) * (2 * mt ** 2 * (S-T-U) + (T+U) ** 2) * v)/(9 * S ** 2)
+            me_sq_kappa_11 = (64 * asQCD * np.pi * (4 * mt ** 2 * S * U - S * U * (S + U) + 2 * mt ** 2 * (T + U) * (T + 2 * U) + mt ** 4  * (3 * S - 4 * (T + 2 * U))) * v ** 2)/(9 * S ** 2)
+
+            me_sq_kappa_22 = (U - mt ** 2) ** 2
+
+            if order is None:
+                me_sq = me_sq_sm
+            elif order == 'lin':
+                me_sq =  me_sq_sm + cuGRe * me_sq_kappa_1
+            elif order == 'quad':
+                me_sq =  me_sq_sm + cuGRe ** 2 * me_sq_kappa_11 + cuu ** 2 * me_sq_kappa_22
+
+            return me_sq
+
+        theta = np.arcsin(pt / pf)
+        me_sq_theta = me_sq(theta)
+        me_sq_pi_theta = me_sq(np.pi - theta)
+
+        dsigma_dpT_1 = 2 * np.pi * np.tan(theta) * me_sq_theta / (64 * np.pi ** 2 * S * pi)
+        dsigma_dpT_2 = 2 * np.pi * np.abs(np.tan(theta)) * me_sq_pi_theta / (64 * np.pi ** 2 * S * pi)
+
+
+        return dsigma_dpT_1 + dsigma_dpT_2
+
+
+    def dsigma_part_gg_dpt(self, hats, pt, cuGRe, cuu, order):
+
+        # minimum energy required to generate an event with transverse momentum ptv
+        s_min = 4 * mt ** 2 + 4 * pt ** 2
+
+        if hats < s_min:
+            return 0
+
+        S = hats
+
+        pi = np.sqrt(S) / 2
+        pf2 = (S - 4 * mt ** 2) / 4
+
+        pf = np.sqrt(pf2)
+
+        def me_sq(theta):
+
+            U = mt ** 2 - 2 * pi * (np.sqrt(mt ** 2 + pf2) - pf * np.cos(theta))
+            T = 2 * mt ** 2 - S - U
+
+            me_sq_sm = -1 / (3 * S ** 2 * (mt ** 2 - T) ** 2 * (mt ** 2 - U) ** 2) * 2 * asQCD ** 2 * np.pi ** 2 * (
+                        -36 * mt ** 10 * T -
+                        mt ** 2 * (S * T * (15 * S ** 3 - 35 * S ** 2 * T - 84 * S * T ** 2 + 14 * T ** 3) + (-S ** 4 +
+                                                                                                              27 * S ** 3 * T - 126 * S ** 2 * T ** 2 + 99 * S * T ** 3 + 72 * T ** 4) * U + (
+                                               30 * S ** 3 +
+                                               184 * S ** 2 * T + 119 * S * T ** 2 + 72 * T ** 3) * U ** 2 +
+                                   S * (51 * S + 292 * T) * U ** 3 + 36 * (S + T) * U ** 4) +
+                        2 * mt ** 8 * (
+                                    7 * S ** 2 + S * (-31 * T + 101 * U) + 9 * (6 * T ** 2 + 3 * T * U + U ** 2)) +
+                        mt ** 6 * (S ** 2 * (230 * T - 201 * U) + S * (20 * T ** 2 - 169 * T * U - 411 * U ** 2) -
+                                   36 * (3 * T ** 3 + 5 * T ** 2 * U + T * U ** 2 + U ** 3)) +
+                        T * (S ** 4 * (8 * T - U) + S ** 3 * U * (-3 * T + 14 * U) +
+                             18 * T * U ** 2 * (2 * T ** 2 - T * U + U ** 2) +
+                             S ** 2 * (-8 * T ** 3 - 20 * T ** 2 * U + 34 * T * U ** 2 + 35 * U ** 3) +
+                             S * U * (14 * T ** 3 + 43 * T ** 2 * U + 47 * T * U ** 2 + 36 * U ** 3)) +
+                        mt ** 4 * (7 * S ** 4 + S ** 3 * (-51 * T + 62 * U) +
+                                   S ** 2 * (-240 * T ** 2 - 81 * T * U + 262 * U ** 2) +
+                                   S * (56 * T ** 3 + 52 * T ** 2 * U + 487 * T * U ** 2 + 245 * U ** 3) +
+                                   18 * (2 * T ** 4 + 11 * T ** 3 * U + 3 * T ** 2 * U ** 2 + 3 * T * U ** 3 + U ** 4)))
+
+            me_sq_kappa_1 = (1 / (3 * S ** 2 * (mt ** 2 - T) ** 2 * (mt ** 2 - U) ** 2)) * np.sqrt(2) * asQCD ** (
+                    3 / 2) * mt * np.pi ** (
+                                    3 / 2) * (288 * mt ** 12 + 12 * mt ** 10 * (79 * S - 84 * T - 72 * U) +
+                                              72 * T ** 2 * U ** 2 * (T + U) * (2 * T + U) + S ** 4 * (
+                                                          64 * T ** 2 + 15 * T * U + 32 * U ** 2) +
+                                              2 * S * T * U * (
+                                                          4 * T ** 3 + 175 * T ** 2 * U + 143 * T * U ** 2 + 8 * U ** 3) +
+                                              2 * S ** 3 * (8 * T ** 3 + 2 * T ** 2 * U + 85 * T * U ** 2 + 20 * U ** 3) +
+                                              S ** 2 * (
+                                                          -48 * T ** 4 - 179 * T ** 3 * U + 262 * T ** 2 * U ** 2 + 83 * T * U ** 3 + 8 * U ** 4) +
+                                              2 * mt ** 8 * (-734 * S ** 2 - 9 * S * (119 * T + 55 * U) +
+                                                             36 * (18 * T ** 2 + 39 * T * U + 13 * U ** 2)) +
+                                              mt ** 6 * (183 * S ** 3 + S ** 2 * (2971 * T + 1307 * U) +
+                                                         2 * S * (751 * T ** 2 + 876 * T * U - 103 * U ** 2) -
+                                                         144 * (
+                                                                     5 * T ** 3 + 23 * T ** 2 * U + 19 * T * U ** 2 + 3 * U ** 3)) +
+                                              mt ** 4 * (111 * S ** 4 + S ** 3 * (-267 * T + 131 * U) -
+                                                         2 * S ** 2 * (1157 * T ** 2 + 718 * T * U + 138 * U ** 2) +
+                                                         12 * S * (
+                                                                     -25 * T ** 3 - 60 * T ** 2 * U + 77 * T * U ** 2 + 22 * U ** 3) +
+                                                         72 * (
+                                                                     2 * T ** 4 + 23 * T ** 3 * U + 39 * T ** 2 * U ** 2 + 15 * T * U ** 3 + U ** 4)) +
+                                              mt ** 2 * (S ** 3 * (T - 2 * U) * (236 * T + 41 * U) - S ** 4 * (
+                                143 * T + 79 * U) -
+                                                         144 * T * U * (
+                                                                     2 * T ** 3 + 8 * T ** 2 * U + 6 * T * U ** 2 + U ** 3) +
+                                                         S ** 2 * (
+                                                                     659 * T ** 3 + 900 * T ** 2 * U - 562 * T * U ** 2 + 93 * U ** 3) -
+                                                         2 * S * (
+                                                                     4 * T ** 4 + 25 * T ** 3 * U + 534 * T ** 2 * U ** 2 + 275 * T * U ** 3 + 8 * U ** 4))) * v
+
+            me_sq_kappa_11 = -(1 / (3 * S ** 2 * (mt ** 2 - T) ** 2 * (mt ** 2 - U) ** 2)) * asQCD * np.pi * (
+                        864 * mt ** 14 + 4 * mt ** 12 * (89 * S - 612 * T - 576 * U) +
+                        mt ** 10 * (-1440 * S ** 2 + S * (-778 * T + 392 * U) +
+                                    72 * (34 * T ** 2 + 87 * T * U + 29 * U ** 2)) -
+                        mt ** 8 * (173 * S ** 3 + S ** 2 * (-3033 * T + 76 * U) +
+                                   S * (-374 * T ** 2 + 867 * T * U + 1469 * U ** 2) +
+                                   144 * (7 * T ** 3 + 41 * T ** 2 * U + 37 * T * U ** 2 + 5 * U ** 3)) +
+                        S * T * U * (4 * S ** 4 + S ** 3 * (3 * T + 28 * U) +
+                                     S ** 2 * (-59 * T ** 2 + 40 * T * U - 11 * U ** 2) +
+                                     S * (-64 * T ** 3 + 46 * T ** 2 * U + 76 * T * U ** 2 - 71 * U ** 3) - (T + U) * (
+                                                 6 * T ** 3 -
+                                                 31 * T ** 2 * U - 38 * T * U ** 2 + 36 * U ** 3)) +
+                        mt ** 6 * (280 * S ** 4 + S ** 3 * (231 * T + 1297 * U) +
+                                   S ** 2 * (-2530 * T ** 2 + 1161 * T * U + 1151 * U ** 2) +
+                                   S * (163 * T ** 3 + 824 * T ** 2 * U + 2643 * T * U ** 2 + 958 * U ** 3) +
+                                   72 * (2 * T ** 4 + 31 * T ** 3 * U + 63 * T ** 2 * U ** 2 + 23 * T * U ** 3 + U ** 4)) +
+                        mt ** 4 * (4 * S ** 5 - S ** 4 * (309 * T + 220 * U) -
+                                   S ** 3 * (37 * T ** 2 + 1819 * T * U + 711 * U ** 2) +
+                                   S ** 2 * (617 * T ** 3 - 494 * T ** 2 * U - 2201 * T * U ** 2 - 610 * U ** 3) -
+                                   144 * T * U * (2 * T ** 3 + 10 * T ** 2 * U + 8 * T * U ** 2 + U ** 3) -
+                                   S * (121 * T ** 4 + 439 * T ** 3 * U + 1406 * T ** 2 * U ** 2 + 1233 * T * U ** 3 +
+                                        273 * U ** 4)) +
+                        mt ** 2 * (-4 * S ** 5 * (T + U) + 72 * T ** 2 * U ** 2 * (T + U) * (2 * T + U) +
+                                   S ** 4 * (157 * T ** 2 - 39 * T * U + 100 * U ** 2) +
+                                   S ** 3 * (163 * T ** 3 + 437 * T ** 2 * U + 407 * T * U ** 2 + 235 * U ** 3) +
+                                   S ** 2 * (
+                                               8 * T ** 4 + 313 * T ** 3 * U + 356 * T ** 2 * U ** 2 + 558 * T * U ** 3 + 167 * U ** 4) +
+                                   S * (
+                                               6 * T ** 5 + 96 * T ** 4 * U + 207 * T ** 3 * U ** 2 + 206 * T ** 2 * U ** 3 + 271 * T * U ** 4 +
+                                               36 * U ** 5))) * v ** 2
+
+            if order is None:
+                me_sq = me_sq_sm
+            elif order == 'lin':
+                me_sq =  me_sq_sm + cuGRe * me_sq_kappa_1
+            elif order == 'quad':
+                me_sq =  me_sq_sm + cuGRe ** 2 * me_sq_kappa_11
+
+            return me_sq
+
+        theta = np.arcsin(pt / pf)
+
+        me_sq_theta = me_sq(theta)
+        me_sq_pi_theta = me_sq(np.pi - theta)
+
+        dsigma_dpT_1 = 2 * np.pi * np.tan(theta) * me_sq_theta / (64 * np.pi ** 2 * S * pi)
+        dsigma_dpT_2 = 2 * np.pi * np.abs(np.tan(theta)) * me_sq_pi_theta / (64 * np.pi ** 2 * S * pi)
+
+        return dsigma_dpT_1 + dsigma_dpT_2
+
 
 
 xsec = crossSectionSMEFT()
@@ -89,6 +254,7 @@ def weight(sqrts, mu, x1, x2, c, order):
     NP parameter: order in the EFT
     order parameter: work at one specific order
     """
+
     cuGRe, cuu = c
     hats = sqrts ** 2
     w_ii = (xsec.sigma_part_gg(hats, cuGRe, cuu, order)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
@@ -111,8 +277,44 @@ def weight(sqrts, mu, x1, x2, c, order):
     return w_ii
 
 
+def weight_pt(sqrts, pt, mu, x1, x2, c, order):
+    """
+    """
+    cuGRe, cuu = c
+    hats = sqrts ** 2
+    flavor_up = [2, 4]
+    flavor_down = [1, 3, 5]
+
+    pdfs_up = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_up])
+    pdfs_down = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_down])
+
+    weight = xsec.dsigma_part_gg_dpt(hats, pt, cuGRe, cuu, order) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
+    weight += (xsec.dsigma_part_qq_dpt(hats, pt, cuGRe, cuu, order)) * pdfs_up
+    weight += (xsec.dsigma_part_qq_dpt(hats, pt, cuGRe, 0, order)) * pdfs_down
+
+    return weight
+
 v_weight = np.vectorize(weight, otypes=[np.float])
 v_weight.excluded.add(4)
+
+v_weight_pt = np.vectorize(weight_pt, otypes=[np.float])
+v_weight_pt.excluded.add(5)
+
+def dsigma_dmtt_dy_dpt(y, mtt, pt, c=None, order=None):
+    """
+    Compute the doubly differential cross section in mtt and y at any order NP
+    """
+    if c is None:
+        c = np.zeros(2)
+    if mtt == 2 * mt: return 0  # if at threshold return zero
+
+    if np.abs(y) < np.log(np.sqrt(s) / mtt):  # check whether x = {mtt, y} falls inside the physically allowed region
+        x1 = mtt / np.sqrt(s) * np.exp(y)
+        x2 = mtt / np.sqrt(s) * np.exp(-y)
+        dsigma_dmtt_dy = 2 * mtt / s * v_weight_pt(mtt, pt, 91.188, x1, x2, c, order) / (x1 * x2)
+        return pb_convert * dsigma_dmtt_dy
+    else:
+        return 0
 
 
 def dsigma_dmtt_dy(y, mtt, c=None, order=None):

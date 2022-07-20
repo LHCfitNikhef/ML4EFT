@@ -132,6 +132,8 @@ class TheoryPred:
                 dsigma_dx = tt_prod.dsigma_dmtt
             if n_features == 2:
                 dsigma_dx = tt_prod.dsigma_dmtt_dy
+            if n_features == 3:
+                dsigma_dx = tt_prod.dsigma_dmtt_dy_dpt
 
             dsigma_dx_sm = np.array([dsigma_dx(*row[features]) for _, row in events.iterrows()])
 

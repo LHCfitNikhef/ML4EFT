@@ -228,14 +228,14 @@ class PreProcessing():
         self.xsec_sm = df_sm_full.iloc[0, 0]
 
         # reweigh the cross section after cuts
-        cuts = df_sm_wo_xsec['m_tt'] > fitter.threshold_cut
+        #cuts = df_sm_wo_xsec['m_tt'] > fitter.threshold_cut
         #cuts = df_sm_wo_xsec['m_zh'] > 0.25
 
-        event_ratio_with_cut = len(df_sm_wo_xsec[cuts]) / len(df_sm_wo_xsec)
-        self.xsec_sm *= event_ratio_with_cut
+        #event_ratio_with_cut = len(df_sm_wo_xsec[cuts]) / len(df_sm_wo_xsec)
+        #self.xsec_sm *= event_ratio_with_cut
 
-        self.df_sm = df_sm_wo_xsec[(df_sm_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
-        #self.df_sm = df_sm_wo_xsec[(df_sm_wo_xsec['m_zh'] > 0.25)].sample(self.n_dat)
+        #self.df_sm = df_sm_wo_xsec[(df_sm_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
+        self.df_sm = df_sm_wo_xsec.sample(fitter.n_dat)
 
         # eft
 
@@ -246,12 +246,13 @@ class PreProcessing():
         self.xsec_eft = df_eft_full.iloc[0, 0]
 
         # reweigh the cross section after cuts
-        cuts = df_eft_wo_xsec['m_tt'] > fitter.threshold_cut
+        #cuts = df_eft_wo_xsec['m_tt'] > fitter.threshold_cut
         #cuts = df_eft_wo_xsec['m_zh'] > 0.25
-        event_ratio_with_cut = len(df_eft_wo_xsec[cuts]) / len(df_eft_wo_xsec)
-        self.xsec_eft *= event_ratio_with_cut
+        #event_ratio_with_cut = len(df_eft_wo_xsec[cuts]) / len(df_eft_wo_xsec)
+        #self.xsec_eft *= event_ratio_with_cut
 
-        self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
+        # self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
+        self.df_eft = df_eft_wo_xsec.sample(fitter.n_dat)
 
         #self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_zh'] > 0.25)].sample(self.n_dat)
 
@@ -360,10 +361,11 @@ class Fitter:
             self.run_options = json.load(json_data)
 
         self.run = self.run_options['name']
+        self.process_id = self.run_options["process_id"]
         self.lr = self.run_options["lr"]
         self.n_batches = self.run_options["n_batches"]
         self.quadratic = self.run_options['quadratic']
-        self.cross_term = self.run_options['cross_term']
+
         self.loss_type = self.run_options['loss_type']
         self.scaler_type = self.run_options['scaler_type']
         self.patience = self.run_options['patience']
@@ -373,20 +375,30 @@ class Fitter:
         self.pretrained_models_path = self.run_options['pretrained_models'] if 'pretrained_models' in self.run_options else None
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
-        self.network_size = [self.run_options['input_size']] + self.run_options['hidden_sizes'] + [
+        self.features = self.run_options['features']
+        self.network_size = [len(self.features)] + self.run_options['hidden_sizes'] + [
             self.run_options['output_size']]
         self.event_data_path = self.run_options['event_data']  # path to training data
 
         # perhaps use a dict instead
         # c_train values
         coeff_train_values = np.array([dummy for dummy in self.run_options['coeff_train'].values()])
-        if self.cross_term:
-            # cross terms go like c1 * c2 * NN, so two EFT parameters need to be retained
-            self.coeff_train_val = np.prod(coeff_train_values)
-            self.coeff_train_key = ''
-            for key, value in self.run_options['coeff_train'].items():
-                self.coeff_train_key += key + '_'
-            self.coeff_train_key = self.coeff_train_key[:-1]
+
+        if self.quadratic:
+
+            if 0 in coeff_train_values: # c1 * c1 coefficient function
+                self.coeff_train_value = np.sum(coeff_train_values) ** 2
+                for key, value in self.run_options['coeff_train'].items():
+                    if value != 0:
+                        self.coeff_train_key = key + '_' + key
+
+            else: # c1 * c2 coefficient function
+                self.coeff_train_value = np.prod(coeff_train_values)
+
+                self.coeff_train_key = ''
+                for key, value in self.run_options['coeff_train'].items():
+                    self.coeff_train_key += key + '_'
+                self.coeff_train_key = self.coeff_train_key[:-1]
 
         else:
             # linear and quadratic terms depend only on a single coefficient
@@ -402,7 +414,7 @@ class Fitter:
         self.mc_run = mc_run
         self.lag_mult = self.run_options['lag_mult']
 
-        self.features = self.run_options['features']
+
 
         output_dir = os.path.join(output_dir, time.strftime("%Y/%m/%d"))
         os.makedirs(output_dir, exist_ok=True)
@@ -430,14 +442,10 @@ class Fitter:
 
         # build the paths to the eft event data and initialize the right model
         if self.quadratic:
-            self.path_dict['eft_data_path'] = 'quad/{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorLinear(self.network_size, self.coeff_train_value ** 2)
-            #self.model = PredictorQuadratic(self)
-        elif self.cross_term:
-            self.path_dict['eft_data_path'] = 'cross_term/{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorCross(self.network_size)
+            self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
+            self.model = PredictorLinear(self.network_size, self.coeff_train_value)
         else:
-            self.path_dict['eft_data_path'] = 'lin/{eft_coeff}/events_{mc_run}.pkl.gz'
+            self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = PredictorLinear(self.network_size, self.coeff_train_value)
 
         # create log file with timestamp
@@ -462,8 +470,8 @@ class Fitter:
 
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
-        path_sm = os.path.join(self.event_data_path, 'sm/events_{}.pkl.gz'.format(self.mc_run))
-        path_eft = os.path.join(self.event_data_path, self.path_dict['eft_data_path'].format(eft_coeff=self.coeff_train_key, mc_run=self.mc_run))
+        path_sm = os.path.join(self.event_data_path, self.process_id + '_sm/events_{}.pkl.gz'.format(self.mc_run))
+        path_eft = os.path.join(self.event_data_path, self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.coeff_train_key, mc_run=self.mc_run))
 
         path_dict = {'sm': path_sm, 'eft': path_eft}
 
@@ -473,6 +481,7 @@ class Fitter:
         # save the scaler
         scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
         df_sm_scaled, df_eft_scaled = preproc.feature_scaling(self, scaler_path)
+
 
         # We construct an eft and a sm data set for each value of c in c_values and make a list out of it
         # As of the new version of the code where only the sm and any non-zero point in EFT space are needed
@@ -515,7 +524,8 @@ class Fitter:
     def train_classifier(self, data_train, data_val, preproc):
 
         # define the optimizer
-        optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
+        optimizer = optim.AdamW(self.model.parameters(), lr=self.lr)
+
 
         #decay_rate = 0.96
         #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer)

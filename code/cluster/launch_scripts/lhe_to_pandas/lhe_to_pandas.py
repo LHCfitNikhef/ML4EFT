@@ -2,16 +2,23 @@ import pylhe
 import pandas as pd
 import numpy as np
 import sys, os
+from pathlib import Path
+import subprocess
 import quad_clas.preproc.lhe_reader.compute_kinematics as lhe
 
-lhe_path = sys.argv[1]
-save_loc = sys.argv[2]
-mc_rep = sys.argv[3]
+event_dir = sys.argv[1]
+process = sys.argv[2]
+save_root = sys.argv[3]
+n_rep = sys.argv[4]
 
 def lhe_to_pandas(path_to_lhe):
 
     lhe_init = pylhe.readLHEInit(path_to_lhe)
-    xsec = lhe_init['procInfo'][0]['xSection']
+
+    xsec = 0
+    for process in lhe_init['procInfo']:
+        xsec += process['xSection']
+
     events = []
 
     for e in pylhe.readLHE(path_to_lhe):
@@ -33,7 +40,7 @@ def lhe_to_pandas(path_to_lhe):
         ll = l1 + l2
 
         # delta kinematics
-        d_eta_b_bbar = lhe.get_deta(b.get_rapdity(), bbar.get_rapdity())
+        d_eta_b_bbar = lhe.get_deta(b.get_pseudorapidity(), bbar.get_pseudorapidity())
 
         d_phi_b_bb = lhe.get_dphi(b.get_phi(), bb.get_phi())
         d_phi_l_b = lhe.get_dphi(l1.get_phi(), b.get_phi())
@@ -68,7 +75,35 @@ def lhe_to_pandas(path_to_lhe):
 
     return df
 
+if os.path.basename(event_dir).startswith(process) is True:
 
-df = lhe_to_pandas(lhe_path)
-df.to_pickle(os.path.join(save_loc, "events_{}.pkl.gz".format(mc_rep)), compression="infer")
+    for r in range(int(n_rep)):
+        print(r)
+        run_path = os.path.join(event_dir, "job{}".format(r+1), 'Events')
+
+        if len(os.listdir(run_path)) != 0:
+            run_nrs = [int(runs.split("_", 1)[-1]) for runs in os.listdir(run_path)]
+            run_nr_max = max(run_nrs)
+        else:
+            print(run_path)
+            continue
+
+        if run_nr_max < 10:
+            lhe_path = os.path.join(run_path, 'run_0{}'.format(run_nr_max), 'unweighted_events.lhe')
+        else:
+            lhe_path = os.path.join(run_path, 'run_{}'.format(run_nr_max), 'unweighted_events.lhe')
+
+        if os.path.isfile('{}.gz'.format(lhe_path)):
+            subprocess.run("gunzip {}.gz".format(lhe_path), shell=True)
+
+        df = lhe_to_pandas(lhe_path)
+
+        event_name = os.path.basename(event_dir)
+        save_dir = os.path.join(save_root, event_name)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+
+        print(r)
+        df.to_pickle(os.path.join(save_dir, "events_{}.pkl.gz".format(r)), compression="infer")
 

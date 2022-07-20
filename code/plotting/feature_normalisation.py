@@ -17,7 +17,7 @@ rc('text', usetex=True)
 
 # tt
 
-df = pd.read_pickle("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l/sm/events_1.pkl.gz").iloc[1:,:]
+df = pd.read_pickle("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh_llbb_final/zh_sm/events_0.pkl.gz").iloc[1:,:]
 
 # initialise sklearn scalers
 stdsc = StandardScaler()
@@ -38,61 +38,88 @@ bins = np.concatenate([np.array([-2]), np.linspace(-1, 1, 20), np.array([2])])
 
 # zh llbb
 
-#df = df.drop(labels=['pt_z', 'pt_b', 'pt_bbar'], axis=1)
+df = df.drop(labels=['pt_bbar'], axis=1)
 
-# x_labels = [r'$m_{b\bar{b}}$',
-#             r'$\Delta R(b_1, b_2)$',
-#             r'$\Delta\phi(b, bb)$',
-#             r'$|\Delta \eta(Z, bb)|$',
-#             r'$m_{ll}$',
-#             r'$\Delta\phi(b, l)$',
-#             r'$\log p_T^Z$',
-#             r'$\log p_T^b$'
-#            ]
+x_labels = [r'$p_T^Z$',
+            r'$p_T^b$',
+            r'$m_{b\bar{b}}$',
+            r'$\Delta R(b_1, b_2)$',
+            r'$\Delta\phi(b, bb)$',
+            r'$|\Delta \eta(Z, bb)|$',
+            r'$m_{ll}$',
+            r'$\Delta\phi(b, l)$']
+# tt
 
-x_labels = [r'$p_T^t$',
-            r'$m_{t\bar{t}}$',
-            r'$y_{t\bar{t}}$'
-            ]
+# x_labels = [r'$p_T^t$',
+#             r'$m_{t\bar{t}}$',
+#             r'$y_{t\bar{t}}$'
+#             ]
 
 
 kwargs = dict(histtype='stepfilled', alpha=0.3, density=False, bins=bins, ec="k")
 
-n_cols = 2
-n_rows = int(np.ceil(df.shape[1] / n_cols))
-fig = plt.figure(figsize=(n_cols * 5, n_rows * 4))
 
-#df_scaled_rob = pd.read_pickle('/Users/jaco/Documents/ML4EFT/models/test/model_cbhre_lin_lag/mc_run_1/df_sm_scaled.pkl')
+n_rows = 2
+n_cols = int(np.ceil(df.shape[1] / n_rows))
+fig = plt.figure(figsize=(n_cols * 4, n_rows * 4))
+
 
 for i, feature in enumerate(df):
     ax = plt.subplot(n_rows, n_cols, i + 1)
-    ax.hist(df_scaled_std[feature].values, **kwargs, label=r'$\rm{Standardized}$')
+    ax.hist(df_scaled_std[feature].values, **kwargs, label=r'$\rm{Standardised}$')
     ax.hist(df_scaled_rob[feature].values, **kwargs, label=r'$\rm{Robust\;scaler}$')
+
     ax.set_yticklabels([])
     ax.set_xlim(-1.2, 1.2)
     plt.xlabel(x_labels[i])
-    plt.legend(prop={"size": 15}, loc='upper left')
+    if i == 0:
+        plt.legend(prop={"size": 15}, loc='lower left', frameon=True)
+
     ax.axvline(1, color='red', linestyle='solid')
     ax.axvline(-1, color='red', linestyle='solid')
 
 plt.tight_layout()
-#plt.show()
-fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/07_06/feature_scaling_tt.pdf')
+fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/19_07/features_zhllbb.pdf')
 
 
-#%%
-# # load existing scaler
-# import joblib
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import pandas as pd
-# scaler_path = '/Users/jaco/Documents/ML4EFT/models/test/model_chw_lin_log_lag/mc_run_0/scaler.gz'
-# scaler = joblib.load(scaler_path)
-# df = pd.read_pickle('/Users/jaco/Documents/ML4EFT/training_data/zh/features_mzh_y_ptz/sm/events_0.pkl.gz')
-# y = np.zeros(100000)
-# log_m_zh = np.log(df['m_zh'].iloc[1:])
-# x_unscaled = np.stack((log_m_zh, y), axis=-1)
-# x_scaled = scaler.transform(x_unscaled)
-#
-# plt.hist(x_scaled[:,0])
-# plt.show()
+########
+
+from matplotlib.ticker import NullFormatter
+
+kwargs = dict(histtype='stepfilled', alpha=0.3, density=True, ec="k", bins=50)
+
+fig = plt.figure(figsize=(8, 4))
+ax = plt.subplot(1, 2, 1)
+ax.set_yticklabels([])
+ax.hist(df['pt_z'].values, **kwargs)
+plt.xlabel(r'$p_T^Z\;[\mathrm{GeV}]$')
+plt.ylabel(r'$d\sigma/dp_T^Z\;[\mathrm{pb}\:\mathrm{GeV}^{-1}]$')
+# ax.text(0.9, 0.9,r'$\rm{Unscaled}$',
+#      horizontalalignment='right',
+#      verticalalignment='center',
+#      transform = ax.transAxes, size=6)
+#plt.legend(prop={"size": 15}, loc='upper right', frameon=True)
+plt.yscale('log')
+ax.yaxis.set_major_formatter(NullFormatter())
+ax.yaxis.set_minor_formatter(NullFormatter())
+ax.axes.yaxis.set_ticklabels([])
+ax = plt.subplot(1, 2, 2)
+kwargs = dict(histtype='stepfilled', alpha=0.3, density=True, ec="k", bins=bins)
+ax.hist(df_scaled_rob['pt_z'].values, **kwargs)
+plt.xlabel(r'$p_T^Z\;\rm{(rescaled)}$')
+plt.ylabel(r'$d\sigma/dp_T^Z$')
+# ax.text(0.9, 0.9,r'$\rm{Rescaled}$',
+#      horizontalalignment='right',
+#      verticalalignment='center',
+#      transform = ax.transAxes, size=6)
+ax.set_xlim(-1.2, 1.2)
+
+ax.axvline(1, color='red', linestyle='dotted')
+ax.axvline(-1, color='red', linestyle='dotted')
+plt.yscale('log')
+ax.yaxis.set_major_formatter(NullFormatter())
+ax.yaxis.set_minor_formatter(NullFormatter())
+ax.axes.yaxis.set_ticklabels([])
+#plt.legend(prop={"size": 15}, loc='upper right', frameon=True)
+plt.tight_layout()
+fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/19_07/features_zhllbb_transformed.pdf')

@@ -35,22 +35,20 @@ class Optimize:
             instance of TheoryPred that contains the theory predictions
     """
 
-    def __init__(self, config, rep=None):
+    def __init__(self, config, coeff=None, rep=None):
 
         self.config = config.copy()
         self.rep = rep
+        self.coeff = coeff
         self.param_names = {}
 
         if self.rep is not None:
             self.config["results_path"] = os.path.join(self.config["results_path"], "r_{}".format(self.rep))
-        Path(self.config["results_path"]).mkdir(parents=True, exist_ok=True)
-
-        # store input card as reference
-        with open(os.path.join(self.config['results_path'], 'input_card.json'), 'w') as json_data:
-            json.dump(self.config, json_data)
 
         if "order" in self.config.keys():
             self.order = self.config["order"]
+        if "prior" in self.config.keys():
+            self.prior_range = self.config["prior"]
 
         if "process" in self.config.keys():
             self.process = self.config["process"]
@@ -77,11 +75,6 @@ class Optimize:
                 "Number of live points (nlive) not set in the input card. Using default: 500"
             )
             self.live_points = 500
-
-        if "max_val" in self.config.keys():
-            self.max_val = self.config["max_val"]
-        if "min_val" in self.config.keys():
-            self.min_val = self.config["min_val"]
 
         if "lumi" in self.config.keys():
             self.lumi = self.config["lumi"]
@@ -126,8 +119,28 @@ class Optimize:
                                               kinematic=self.kinematic,
                                               bins=self.bins)
 
+        if self.coeff is None:
+            self.glob = True
+            self.coeff = self.th_pred.th_dict['lin'].keys() # coefficients to include in the fit
+        else:
+            self.glob = False
+
+        self.suffix = ''
+        if self.glob is False:
+            self.suffix += '_'
+            for c in self.coeff:
+                self.suffix += c + '_'
+            self.suffix = self.suffix[:-1]
+        self.output_path = os.path.join(self.config["results_path"], self.mode, self.suffix[1:])
+
+        Path(self.output_path).mkdir(parents=True, exist_ok=True)
+
+        # store input card as reference
+        with open(os.path.join(self.output_path, 'input_card.json'), 'w') as json_data:
+            json.dump(self.config, json_data)
+
         # nr of dof
-        self.n_params = max(len(self.th_pred.th_dict['lin']), len(self.th_pred.th_dict['quad']))
+        self.n_params = len(self.coeff)
 
         # load dataset (pseudo data)
         sm_data_path = self.config['observed_data_path']
@@ -170,29 +183,32 @@ class Optimize:
         cube: numpy.ndarray
             hypercube prior
         """
-        for i in range(self.n_params):
-            cube[i] = cube[i] * (self.max_val - self.min_val) + self.min_val
+
+        for i, c_name in enumerate(self.coeff):
+            prior_min, prior_max = self.prior_range[c_name]
+            cube[i] = cube[i] * (prior_max - prior_min) + prior_min
 
         return cube
 
     def cube_to_dict(self, cube):
 
         # convert cube to dict
-        for i, c_name in enumerate(self.th_pred.th_dict['lin'].keys()):
+        for i, c_name in enumerate(self.coeff):
             self.param_names[c_name] = cube[i]
+
 
     def log_like_nn(self, cube):
 
         self.cube_to_dict(cube)
 
         # compute inclusive xsec at cube
-        sigma = self.th_pred.th_dict['sm']
+        sigma = 0
 
-        for c_name, sigma_i in self.th_pred.th_dict['lin'].items():
-            sigma += self.param_names[c_name] * sigma_i
+        for c_name in self.coeff:
+            sigma += self.param_names[c_name] * self.th_pred.th_dict['lin'][c_name]
+            sigma += self.param_names[c_name] ** 2 * self.th_pred.th_dict['quad'][c_name]
 
-        for c_name, sigma_i in self.th_pred.th_dict['quad'].items():
-            sigma += self.param_names[c_name] ** 2 * sigma_i
+        sigma += self.th_pred.th_dict['sm']
 
         nu = sigma * self.lumi
 
@@ -227,28 +243,25 @@ class Optimize:
 
     def log_like_binned(self, cube):
 
-        for i, c_name in enumerate(self.th_pred.th_dict['lin'].keys()):
-            self.param_names[c_name] = cube[i]
+        self.cube_to_dict(cube)
 
         sigma = 0
 
-        for c_name, sigma_i in self.th_pred.th_dict['lin'].items():
-            sigma += self.param_names[c_name] * sigma_i
-
-        for c_name, sigma_i in self.th_pred.th_dict['quad'].items():
-            sigma += self.param_names[c_name] ** 2 * sigma_i
+        for c_name in self.coeff:
+            sigma += self.param_names[c_name] * self.th_pred.th_dict['lin'][c_name]
+            sigma += self.param_names[c_name] ** 2 * self.th_pred.th_dict['quad'][c_name]
 
         sigma += self.th_pred.th_dict['sm']
 
         nu_i = sigma * self.lumi
         log_like_i = self.n_i * np.log(nu_i) - nu_i
-        return np.nansum(log_like_i)
+        return np.sum(log_like_i)
 
     def run_sampling(self):
         """Run the minimisation with Nested Sampling"""
 
         # Prefix for results
-        prefix = os.path.join(self.config["results_path"], "1k-")
+        prefix = os.path.join(self.output_path, "1k-")
 
         t1 = time.perf_counter()
 
@@ -285,11 +298,11 @@ class Optimize:
         """ Remove raw NS output if you want to keep raw output, don't call this method"""
 
         filelist = [
-            f for f in os.listdir(self.config["results_path"]) if f.startswith("1k-")
+            f for f in os.listdir(self.output_path) if f.startswith("1k-")
         ]
         for f in filelist:
-            if f in os.listdir(self.config["results_path"]):
-                os.remove(os.path.join(self.config["results_path"], f))
+            if f in os.listdir(self.output_path):
+                os.remove(os.path.join(self.output_path, f))
 
     def save(self, result):
         """
@@ -304,5 +317,6 @@ class Optimize:
         vals = {}
         for i, (c, samples) in enumerate(zip(self.param_names.keys(), result['samples'].T)):
             vals[c] = samples.tolist()
-        with open(os.path.join(self.config['results_path'], 'posterior.json'), "w") as f:
+
+        with open(os.path.join(self.output_path, 'posterior' + self.suffix + '.json'), "w") as f:
             json.dump(vals, f)
