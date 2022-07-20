@@ -166,6 +166,17 @@ class EllipsePlotter:
                     alpha=1,
                     edgecolor=colors[i],
                 )
+
+
+                p3 = confidence_ellipse(
+                    coeff1_values,
+                    coeff2_values,
+                    ax,
+                    n_std=1,
+                    alpha=1,
+                    edgecolor=colors[i],
+                    linestyle='dotted'
+                )
                 ax.scatter(
                     np.mean(coeff1_values, axis=0),
                     np.mean(coeff2_values, axis=0),
@@ -187,8 +198,6 @@ class EllipsePlotter:
             plt.tick_params(which="both", direction="in", labelsize=15)
 
 
-
-
         plt.xlim(xmin, xmax)
         plt.ylim(ymin, ymax)
         #plt.xlim(-0.06, 0.06)
@@ -201,7 +210,7 @@ class EllipsePlotter:
         #plt.title(r"${\rm 68\%\ Confidence\ Level\ Bounds}$", fontsize=15)
 
 
-        return ax
+        return ax, hndls
         #plt.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/15_07/ellipse_zh_llbb_68.pdf')
 
 def sample_loader(path):
@@ -261,35 +270,75 @@ def sample_loader(path):
 
 df_nn_cHu_cHd = sample_loader('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns/binned/cHu_cHd/posterior_cHu_cHd.json')
 
-n_cols = 6
-n_rows = 6
-fig = plt.figure(figsize=(n_cols * 4, n_rows * 4))
+
 
 
 coeff_dict = {"cHu": r'$c_{\varphi u}$', "cHd": r'$c_{\varphi d}$', "cHj1": r'$c_{\varphi q}^{(1)}$', "cHj3": r'$c_{\varphi q}^{(3)}$',
               "cbHRe": r'$c_{b\varphi}$', "cHW": r'$c_{\varphi W}$', "cHWB": r'$c_{\varphi WB}$'}
 
-root = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns/binned"
+
+n_cols = len(coeff_dict) -1
+n_rows = n_cols
+
+
+fig = plt.figure(figsize=(n_cols * 4, n_rows * 4))
+
+root = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns/"
+root_7 = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_7/"
+#
+# for i, c1 in enumerate(coeff_dict.keys()):
+#     for j, c2 in enumerate(coeff_dict.keys()):
+#
+#         if j <= i:
+#             axes[i, j].set_visible(False)
+#         else:
+#             post_path = os.path.join(root, c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
+#             df = sample_loader(post_path)
+#             plotter = EllipsePlotter()
+#             plotter.plot(axes[i, j], [df], coeff1=c2, coeff2=c1,
+#                          labels=[r"$p_T^Z\in[75, 150, 250, 400, \infty)\:\mathrm{GeV}$"],
+#                          ax_labels=[coeff_dict[c2], coeff_dict[c1]])
+# plt.tight_layout()
+# fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_07/overview_test_new.pdf')
+
+labels = [r"$p_T^Z\in[75, 150, 250, 400, \infty)\:\mathrm{GeV}$", r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z)$",
+          r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features})$"]
 c1_old = "cHu"
-i = 0
+i = n_cols * n_rows
 j = 1
 for (c1, c2) in itertools.combinations(coeff_dict.keys(), 2):
     if c1 != c1_old:
-        i += j
+        i -= j
         j += 1
         c1_old = c1
-    ax = plt.subplot(n_rows, n_cols, i + 1)
+    ax = plt.subplot(n_rows, n_cols, i)
     print(i, c1, c2)
 
-    post_path = os.path.join(root, c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
-    df = sample_loader(post_path)
+    post_path_binned = os.path.join(root, 'binned', c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
+    post_path_nn = os.path.join(root, 'nn', c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
+    post_path_nn_7 = os.path.join(root_7, 'nn', c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
+
+
+    df_binned = sample_loader(post_path_binned)
+    df_nn = sample_loader(post_path_nn)
+    
+    df_nn_7 = sample_loader(post_path_nn_7)
     plotter = EllipsePlotter()
-    plotter.plot(ax, [df], coeff1=c2, coeff2=c1, labels=[r"$p_T^Z\in[75, 150, 250, 400, \infty)\:\mathrm{GeV}$"], ax_labels=[coeff_dict[c2], coeff_dict[c1]])
-    i += 1
+    ax, hndls = plotter.plot(ax, [df_binned, df_nn, df_nn_7], coeff1=c2, coeff2=c1, labels=labels, ax_labels=[coeff_dict[c2], coeff_dict[c1]])
+
+    if j!=1:
+        ax.set_xlabel('')
+    if not (i == n_cols * n_rows + 1 - j * n_cols):
+        ax.set_ylabel('')
+
+    i -= 1
+
+legend = fig.legend(
+        labels=labels, handles=hndls,
+        loc='upper center', frameon=False, fontsize=20)
+
+bbox = legend.get_window_extent(fig.canvas.get_renderer()).transformed(fig.transFigure.inverted())
+
 plt.tight_layout()
-fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_07/overview_test.pdf')
-# for i, c in enumerate(coeff):
-#     ax = plt.subplot(n_rows, n_cols, i + 1)
-#     ax.hist(df_nn_cHu_cHd[c], bins=50)
-#
-# fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_07/cHu_cHd_ellipse_binned.pdf')
+
+fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_07/overview_nn_stxs_vs_7.pdf')

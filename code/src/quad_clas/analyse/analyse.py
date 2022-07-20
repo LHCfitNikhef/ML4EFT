@@ -125,7 +125,7 @@ class Analyse:
         """
         with open(path) as json_data:
             run_card = json.load(json_data)
-        run_card['architecture'] = [run_card['input_size']] + run_card['hidden_sizes'] + [run_card['output_size']]
+        run_card['architecture'] = [len(run_card['features'])] + run_card['hidden_sizes'] + [run_card['output_size']]
 
         return run_card
 
