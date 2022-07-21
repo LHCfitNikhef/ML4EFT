@@ -8,6 +8,7 @@ import pandas as pd
 from pathlib import Path
 import shutil
 import copy
+import itertools
 
 import quad_clas.analyse.analyse as analyse
 import quad_clas.core.th_predictions as theory_pred
@@ -60,14 +61,6 @@ class Optimize:
             )
             sys.exit()
 
-        if "path_to_theory_pred" in self.config.keys():
-            self.path_to_theory_pred = self.config["path_to_theory_pred"]
-        else:
-            print(
-                "Parameters names (parameters) not set in the input card. Aborting."
-            )
-            sys.exit()
-
         if "nlive" in self.config.keys():
             self.live_points = self.config["nlive"]
         else:
@@ -100,8 +93,8 @@ class Optimize:
                 sys.exit()
         elif self.mode == "nn":
             if "path_to_models" in self.config.keys():
-                self.path_to_models = self.config["path_to_models"]
-                self.nn_analyser = analyse.Analyse(self.path_to_models)
+                self.path_to_models = self.build_path_dict(self.config['path_to_models'], self.order, prefix='model')
+                self.nn_analyser = analyse.Analyse(self.path_to_models, self.order)
             else:
                 print(
                     "No path tot model (path_to_models) specified. Please set in the in the input card. Aborting."
@@ -114,6 +107,14 @@ class Optimize:
             self.bins = None
             self.kinematic = None
             self.th_features = self.config['th_features']
+
+        if "path_to_theory_pred" in self.config.keys():
+            self.path_to_theory_pred = self.build_path_dict(self.config["path_to_theory_pred"], self.order, prefix=self.process)
+        else:
+            print(
+                "No path to theory predictions (path_to_theory_pred) specified. Please set in the in the input card. Aborting."
+            )
+            sys.exit()
 
         self.th_pred = theory_pred.TheoryPred(self.path_to_theory_pred,
                                               kinematic=self.kinematic,
@@ -169,6 +170,52 @@ class Optimize:
         elif self.mode == "binned":
             self.n_i, _ = np.histogram(self.observed_data[self.kinematic].values, self.bins)
 
+    @staticmethod
+    def build_path_dict(root, order, prefix):
+        """
+        Construct path to model dictionary
+
+        Parameters
+        ----------
+        root: str
+            Path to the model or theory prediction directory
+        prefix: str
+            For models: prefix = models
+            For theory predictions: prefix = "process_id"
+
+        Returns
+        -------
+        path_to_models: dict
+            Dictionary that holds the paths to the models per coefficient function
+        """
+        path_to_models = {}
+
+        if prefix != 'model':
+            path_to_models['sm'] = os.path.join(root, '{}_sm'.format(prefix))
+
+        path_to_models['lin'] = {}
+
+        if order == 'quad':
+            path_to_models['quad'] = {}
+
+        for model_dir in os.listdir(root):
+            if model_dir.startswith(prefix):
+                if 'sm' in model_dir: # sm has already been added
+                    continue
+                # linear
+                if model_dir.count('_') == 1:
+                    path_to_models['lin'].update({model_dir.split("{}_".format(prefix),1)[1]: os.path.join(root, model_dir)})
+
+                if model_dir.count('_') == 2 and order == 'quad':
+                    path_to_models['quad'].update(
+                        {model_dir.split("{}_".format(prefix), 1)[1]: os.path.join(root, model_dir)})
+            else:
+                continue
+
+        return path_to_models
+
+
+
     def my_prior(self, cube):
         """
         Construct prior volume
@@ -204,11 +251,18 @@ class Optimize:
         # compute inclusive xsec at cube
         sigma = 0
 
-        for c_name in self.coeff:
-            sigma += self.param_names[c_name] * self.th_pred.th_dict['lin'][c_name]
-            sigma += self.param_names[c_name] ** 2 * self.th_pred.th_dict['quad'][c_name]
-
         sigma += self.th_pred.th_dict['sm']
+
+        for c_name, c_val in self.param_names.items():
+            sigma += c_val * self.th_pred.th_dict['lin'][c_name]
+
+        if 'quad' in self.th_pred.th_dict:
+
+            quad_pred = self.th_pred.th_dict['quad']
+            for (c1, c2) in itertools.product(self.param_names.keys(), repeat=2):
+                c_name = '{}_{}'.format(c1, c2)
+                if c_name in quad_pred:
+                    sigma += self.param_names[c1] * self.param_names[c2] * quad_pred['{}_{}'.format(c1, c2)]
 
         nu = sigma * self.lumi
 
@@ -245,16 +299,26 @@ class Optimize:
 
         self.cube_to_dict(cube)
 
-        sigma = 0
+        # compute inclusive xsec at cube
 
-        for c_name in self.coeff:
-            sigma += self.param_names[c_name] * self.th_pred.th_dict['lin'][c_name]
-            sigma += self.param_names[c_name] ** 2 * self.th_pred.th_dict['quad'][c_name]
+        sigma = 0
 
         sigma += self.th_pred.th_dict['sm']
 
+        for c_name, c_val in self.param_names.items():
+            sigma += c_val * self.th_pred.th_dict['lin'][c_name]
+
+        if 'quad' in self.th_pred.th_dict:
+
+            quad_pred = self.th_pred.th_dict['quad']
+            for (c1, c2) in itertools.product(self.param_names.keys(), repeat=2):
+                c_name = '{}_{}'.format(c1, c2)
+                if c_name in quad_pred:
+                    sigma += self.param_names[c1] * self.param_names[c2] * quad_pred['{}_{}'.format(c1, c2)]
+
         nu_i = sigma * self.lumi
         log_like_i = self.n_i * np.log(nu_i) - nu_i
+
         return np.sum(log_like_i)
 
     def run_sampling(self):

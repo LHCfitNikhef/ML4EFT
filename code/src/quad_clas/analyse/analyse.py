@@ -20,6 +20,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from scipy import integrate
 import logging
+import itertools
 
 # import own pacakges
 from quad_clas.core import classifier as quad_clas
@@ -40,9 +41,10 @@ rc('text', usetex=True)
 
 class Analyse:
 
-    def __init__(self, path_to_models):
+    def __init__(self, path_to_models, order='quad'):
 
         self.path_to_models = path_to_models
+        self.order = order
         self.model_df = None
         self.models_evaluated_df = None
         self.coeff_truth = None
@@ -162,7 +164,7 @@ class Analyse:
 
         return good_model_idx
 
-    def load_models(self, c_train, model_path, order, rep=None, epoch=-1):
+    def load_models(self, model_path, rep=None, epoch=-1):
         """
 
         Parameters
@@ -182,7 +184,7 @@ class Analyse:
         -------
 
         """
-
+        
         # collect all replica paths when no specific replica is requested
         if rep is None:
             rep_paths = [os.path.join(model_path, mc_run) for mc_run in os.listdir(model_path) if
@@ -208,14 +210,16 @@ class Analyse:
             run_card = self.load_run_card(path_to_run_card)
             scaler = joblib.load(path_to_scaler)
 
-            if order == 'lin':
-                loaded_model = quad_clas.PredictorLinear(run_card['architecture'], c_train)
-            elif order == 'quad':
-                loaded_model = quad_clas.PredictorLinear(run_card['architecture'], c_train ** 2)
-            elif order == 'cross':
-                pass
+            coeff_train_values = np.array([i for i in run_card['coeff_train'].values()])
+            if not run_card['quadratic']:
+                c_train = np.sum(coeff_train_values) # linear
             else:
-                print("Please select one of ['lin', 'quad', 'cross'] as order in the runcard")
+                if 0 in coeff_train_values:  # c1 * c1 coefficient function
+                    c_train = np.sum(coeff_train_values) ** 2
+                else: # c1 * c2 coefficient function
+                    c_train = np.prod(coeff_train_values)
+
+            loaded_model = quad_clas.PredictorLinear(run_card['architecture'], c_train)
 
             # build path to model config file
             if epoch != -1:  # if specific epoch is requested
@@ -281,8 +285,10 @@ class Analyse:
 
         self.model_dict = defaultdict(dict)
         for order, dict_fo in self.path_to_models.items():
-            for c_name, [c_train, model_path] in dict_fo.items():
-                pretrained_models, models_idx, scalers, run_card, rep_paths = self.load_models(c_train, model_path, order, rep, epoch)
+            if self.order == 'lin' and order == 'quad': # skip quadratics when running linear
+                continue
+            for c_name, model_path in dict_fo.items():
+                pretrained_models, models_idx, scalers, run_card, rep_paths = self.load_models(model_path, rep, epoch)
                 self.model_dict[order][c_name] = {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
                                              'run_card': run_card, 'rep_paths': rep_paths}
 
@@ -538,8 +544,11 @@ class Analyse:
 
         if 'quad' in self.models_evaluated_df.index:
             quad_models = self.models_evaluated_df['models'].loc["quad"]
-            for c_name, nn_quad in quad_models.iteritems():
-                ratio += c[c_name] ** 2 * nn_quad
+
+            for (c1, c2) in itertools.product(c.keys(), repeat=2):
+                c_name = '{}_{}'.format(c1, c2)
+                if c_name in quad_models:
+                    ratio += c[c1] * c[c2] * quad_models['{}_{}'.format(c1, c2)]
 
         ratio = np.vstack(ratio)
 

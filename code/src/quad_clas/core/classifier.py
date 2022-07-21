@@ -84,9 +84,9 @@ class ConstraintActivation(CustomActivationFunction):
 
     def forward(self, x):
         if self.c > 0:
-            return torch.relu(x) - 1 / self.c + 1e-6
+            return torch.relu(x) - 1 / self.c + 1e-10
         else:
-            return - torch.relu(x) - 1 / self.c - 1e-6
+            return - torch.relu(x) - 1 / self.c - 1e-10
 
 
 class ConstraintActivationQuad(CustomActivationFunction):

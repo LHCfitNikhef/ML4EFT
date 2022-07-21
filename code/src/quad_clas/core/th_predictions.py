@@ -44,23 +44,31 @@ class TheoryPred:
                 xsec_sm = self.compute_th_pred(path_to_events=dict_fo)
                 self.th_dict[order] = xsec_sm
             else:
-                for c_name, [c_value, path_to_events] in dict_fo.items():
+                for c_name, path_to_events in dict_fo.items():
                     xsec_eft = self.compute_th_pred(path_to_events)
 
+                    # read EFT value at which the events have been generated
+                    with open(os.path.join(path_to_events, 'info.txt')) as f:
+                        c_value = np.array([int(c) for c in f.read().split()])
+
                     if order == 'lin':
-                        self.th_dict[order][c_name] = (xsec_eft - self.th_dict['sm']) / c_value
+                        self.th_dict[order][c_name] = (xsec_eft - self.th_dict['sm']) / c_value[0]
                     elif order == 'quad':
-                        self.th_dict[order][c_name] = (xsec_eft - self.th_dict['sm']) / c_value ** 2
+                        if 0 in c_value:
+                            c_value = np.sum(c_value) ** 2
+                        else:
+                            c_value = np.prod(c_value)
+                        self.th_dict[order][c_name] = (xsec_eft - self.th_dict['sm']) / c_value
 
                     if c_name not in self.c_names:
                         self.c_names.append(c_name)
 
         # add missing zeros
-        for c_name in self.c_names:
-            if c_name not in self.th_dict['lin'].keys():
-                self.th_dict['lin'][c_name] = 0
-            if c_name not in self.th_dict['quad'].keys():
-                self.th_dict['quad'][c_name] = 0
+        # for c_name in self.c_names:
+        #     if c_name not in self.th_dict['lin'].keys():
+        #         self.th_dict['lin'][c_name] = 0
+        #     if c_name not in self.th_dict['quad'].keys():
+        #         self.th_dict['quad'][c_name] = 0
 
     def compute_th_pred(self, path_to_events):
 
