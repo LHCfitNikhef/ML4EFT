@@ -72,6 +72,26 @@ class Analyse:
         return event_paths
 
     @staticmethod
+    def posterior_loader(path):
+        """
+        Loads posterior samples at ``path'' and converts it to a Pandas.DataFrame
+
+        Parameters
+        ----------
+        path: str
+            Location of posterior sample (.json file)
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Pandas DataFrame of the posterior samples
+        """
+        with open(path) as json_data:
+            samples = json.load(json_data)
+        df = pd.DataFrame(samples)
+        return df
+
+    @staticmethod
     def load_events(event_path):
         """
         Loads a Pandas DataFrame with MC events
@@ -357,16 +377,25 @@ class Analyse:
         for k, v in self.path_to_models[order].items():
             c[k] = v[0] if k == c_name else 0
 
-        ratio_truth_lin = self.likelihood_ratio_truth(df, c, features, process, order)
+        if c_name == 'ctgre' and order == 'lin':
+            cprime = {'ctgre': -10, 'cut': 0}
+        elif c_name == 'ctgre_ctgre' and order == 'quad':
+            cprime = {'ctgre': 10, 'cut': 0}
+            c_name = 'ctgre'
+        if c_name == 'cut_cut' and order == 'quad':
+            cprime = {'ctgre': 0, 'cut': 10}
+            c_name = 'cut'
+
+        ratio_truth_lin = self.likelihood_ratio_truth(df, cprime, features, process, order)
         # compute the mask once to select the physical region in phase space
         mask = ratio_truth_lin == 0
 
 
         if order == 'lin':  # only one of the c elements can be nonzero
-            coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / c[c_name])
+            coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / cprime[c_name])
             return coeff_lin
         elif order == 'quad':  # only one of the c elements can be nonzero
-            coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / c[c_name] ** 2)
+            coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / cprime[c_name] ** 2)
             return coeff_lin
         # elif order == 'cross':
         #     ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
@@ -403,7 +432,7 @@ class Analyse:
 
         y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
 
-        x_spacing, y_spacing = 1e-2, 0.01
+        x_spacing, y_spacing = 1e-1, 0.1
         mx_span = np.arange(mx_min, mx_max, x_spacing)
         y_span = np.arange(y_min, y_max, y_spacing)
 
@@ -417,8 +446,8 @@ class Analyse:
 
         # models
 
-        models_evaluated_df = self.evaluate_models(df, rep, epoch)
-        nn = models_evaluated_df.loc[order, c_name]['models']
+        self.evaluate_models(df, rep, epoch)
+        nn = self.models_evaluated_df.loc[order, c_name]['models']
         nn = np.vstack(nn)
         n_models = nn.shape[0]
 
@@ -540,7 +569,8 @@ class Analyse:
             lin_models = self.models_evaluated_df['models'].loc["lin"]
 
             for c_name, c_val in c.items():
-                ratio += c_val * lin_models[c_name]
+                if c_name in lin_models:
+                    ratio += c_val * lin_models[c_name]
 
         if 'quad' in self.models_evaluated_df.index:
             quad_models = self.models_evaluated_df['models'].loc["quad"]
@@ -899,7 +929,7 @@ class Analyse:
 
         if rep is not None:
             fig = ax.figure
-            rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
+            rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 30})
         else:
             fig = plt.figure(figsize=(10,8))
 

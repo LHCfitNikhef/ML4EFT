@@ -32,6 +32,7 @@ class TheoryPred:
         self.th_dict = defaultdict(dict)
 
         self.build_theory_pred_df()
+        self.c_names_unique = self.get_c_names_unique()
 
     def build_theory_pred_df(self):
         """
@@ -63,12 +64,18 @@ class TheoryPred:
                     if c_name not in self.c_names:
                         self.c_names.append(c_name)
 
-        # add missing zeros
-        # for c_name in self.c_names:
-        #     if c_name not in self.th_dict['lin'].keys():
-        #         self.th_dict['lin'][c_name] = 0
-        #     if c_name not in self.th_dict['quad'].keys():
-        #         self.th_dict['quad'][c_name] = 0
+    def get_c_names_unique(self):
+
+        c_names = []
+        if len(self.c_names) > 0:
+            for c_name in self.c_names:
+                if '_' in c_name:
+                    c_names.extend(c_name.split('_', 1))
+                else:
+                    c_names.append(c_name)
+        c_names = np.array(c_names)
+        return np.unique(c_names)
+
 
     def compute_th_pred(self, path_to_events):
 

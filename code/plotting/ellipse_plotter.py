@@ -13,63 +13,6 @@ import os
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 26})
 rc('text', usetex=True)
 
-
-def confidence_ellipse(x, y, ax, n_std=3.0, facecolor="none", **kwargs):
-    """
-    Create a plot of the covariance confidence ellipse of `x` and `y`
-    Parameters
-    ----------
-    x, y : array_like, shape (n, )
-        Input data.
-    ax : matplotlib.axes.Axes
-        The axes object to draw the ellipse into.
-    n_std : float
-        The number of standard deviations to determine the ellipse's radiuses.
-    Returns
-    -------
-    matplotlib.patches.Ellipse
-    Other parameters
-    ----------------
-    kwargs : `~matplotlib.patches.Patch` properties
-    """
-    if x.size != y.size:
-        raise ValueError("x and y must be the same size")
-
-    cov = np.cov(x, y)
-    pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
-    # Using a special case to obtain the eigenvalues of this
-    # two-dimensionl dataset.
-    ell_radius_x = np.sqrt(1 + pearson)
-    ell_radius_y = np.sqrt(1 - pearson)
-    ellipse = Ellipse(
-        (0, 0),
-        width=ell_radius_x * 2,
-        height=ell_radius_y * 2,
-        facecolor=facecolor,
-        **kwargs,
-    )
-
-    # Calculating the stdandard deviation of x from
-    # the squareroot of the variance and multiplying
-    # with the given number of standard deviations.
-    scale_x = np.sqrt(cov[0, 0]) * n_std
-    mean_x = np.mean(x)
-
-    # calculating the stdandard deviation of y ...
-    scale_y = np.sqrt(cov[1, 1]) * n_std
-    mean_y = np.mean(y)
-
-    transf = (
-        transforms.Affine2D()
-        .rotate_deg(45)
-        .scale(scale_x, scale_y)
-        .translate(mean_x, mean_y)
-    )
-
-    ellipse.set_transform(transf + ax.transData)
-    return ax.add_patch(ellipse)
-
-
 class EllipsePlotter:
     """
     Class to plot 2 dimensional confidence levels bounds
@@ -81,6 +24,62 @@ class EllipsePlotter:
 
     def __init__(self):
         pass
+
+    @staticmethod
+    def confidence_ellipse(x, y, ax, n_std=3.0, facecolor="none", **kwargs):
+        """
+        Create a plot of the covariance confidence ellipse of `x` and `y`
+        Parameters
+        ----------
+        x, y : array_like, shape (n, )
+            Input data.
+        ax : matplotlib.axes.Axes
+            The axes object to draw the ellipse into.
+        n_std : float
+            The number of standard deviations to determine the ellipse's radiuses.
+        Returns
+        -------
+        matplotlib.patches.Ellipse
+        Other parameters
+        ----------------
+        kwargs : `~matplotlib.patches.Patch` properties
+        """
+        if x.size != y.size:
+            raise ValueError("x and y must be the same size")
+
+        cov = np.cov(x, y)
+        pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
+        # Using a special case to obtain the eigenvalues of this
+        # two-dimensionl dataset.
+        ell_radius_x = np.sqrt(1 + pearson)
+        ell_radius_y = np.sqrt(1 - pearson)
+        ellipse = Ellipse(
+            (0, 0),
+            width=ell_radius_x * 2,
+            height=ell_radius_y * 2,
+            facecolor=facecolor,
+            **kwargs,
+        )
+
+        # Calculating the stdandard deviation of x from
+        # the squareroot of the variance and multiplying
+        # with the given number of standard deviations.
+        scale_x = np.sqrt(cov[0, 0]) * n_std
+        mean_x = np.mean(x)
+
+        # calculating the stdandard deviation of y ...
+        scale_y = np.sqrt(cov[1, 1]) * n_std
+        mean_y = np.mean(y)
+
+        transf = (
+            transforms.Affine2D()
+                .rotate_deg(45)
+                .scale(scale_x, scale_y)
+                .translate(mean_x, mean_y)
+        )
+
+        ellipse.set_transform(transf + ax.transData)
+        return ax.add_patch(ellipse)
 
     def get_coeffiecients_values(self, coeff, fit):
         """
@@ -149,7 +148,7 @@ class EllipsePlotter:
 
 
 
-                p2 = confidence_ellipse(
+                p2 = self.confidence_ellipse(
                     coeff1_values,
                     coeff2_values,
                     ax,
@@ -158,7 +157,7 @@ class EllipsePlotter:
                     facecolor=colors[i],
                     edgecolor=None,
                 )
-                p1 = confidence_ellipse(
+                p1 = self.confidence_ellipse(
                     coeff1_values,
                     coeff2_values,
                     ax,
@@ -168,7 +167,7 @@ class EllipsePlotter:
                 )
 
 
-                p3 = confidence_ellipse(
+                p3 = self.confidence_ellipse(
                     coeff1_values,
                     coeff2_values,
                     ax,
@@ -212,6 +211,7 @@ class EllipsePlotter:
 
         return ax, hndls
         #plt.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/15_07/ellipse_zh_llbb_68.pdf')
+
 
 def sample_loader(path):
     with open(path) as json_data:
@@ -287,9 +287,11 @@ root_pt = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_pt_z/"
 root_lin = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_lin"
 root_quad = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_quad"
 root_7 = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_7_feat/"
+root_7_quad = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_q_7"
 
 
-labels = [r"$p_T^Z\in[75, 150, 250, 400, \infty)\:\mathrm{GeV}:\mathrm{Quadratic}$", r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z):\mathrm{Quadratic}$"]#,
+labels = [r"$p_T^Z\in[75, 150, 250, 400, \infty)\:\mathrm{GeV}:\mathrm{Quadratic}$", r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z):\mathrm{Quadratic}$",
+          r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features}):\mathrm{Quadratic}$"]#,
          # r"$p_T^Z\in[75, 150, 250, 400, \infty)\:\mathrm{GeV}:\mathrm{Quadratic}$", r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z):\mathrm{Quadratic}$"]
           #r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features})$", r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features}\;\mathrm{global})$"]
 c1_old = "cHu"
@@ -307,6 +309,7 @@ for (c1, c2) in itertools.combinations(coeff_dict.keys(), 2):
     post_path_binned_quad = os.path.join(root_quad, 'binned', c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
     post_path_nn = os.path.join(root_pt, 'nn', c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
     post_path_nn_quad = os.path.join(root_quad, 'nn', c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
+    post_path_nn_quad_7 = os.path.join(root_7_quad, 'nn', c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
 
     #post_path_nn_7 = os.path.join(root_7, 'nn', c1 + '_' + c2, 'posterior_{}_{}.json'.format(c1, c2))
 
@@ -315,12 +318,13 @@ for (c1, c2) in itertools.combinations(coeff_dict.keys(), 2):
     df_binned_quad = sample_loader(post_path_binned_quad)
     #df_nn = sample_loader(post_path_nn)
     df_nn_quad = sample_loader(post_path_nn_quad)
+    df_nn_quad_7 = sample_loader(post_path_nn_quad_7)
     #df_nn_7 = sample_loader(post_path_nn_7)
     plotter = EllipsePlotter()
     # ax, hndls = plotter.plot(ax, [df_binned, df_nn, df_nn_7, df_nn_global], coeff1=c2, coeff2=c1, labels=labels, ax_labels=[coeff_dict[c2], coeff_dict[c1]])
     # ax, hndls = plotter.plot(ax, [df_binned_lin, df_nn, df_binned_quad, df_nn_quad], coeff1=c2, coeff2=c1, labels=labels,
     #                          ax_labels=[coeff_dict[c2], coeff_dict[c1]])
-    ax, hndls = plotter.plot(ax, [df_binned_quad, df_nn_quad], coeff1=c2, coeff2=c1,
+    ax, hndls = plotter.plot(ax, [df_binned_quad, df_nn_quad, df_nn_quad_7], coeff1=c2, coeff2=c1,
                              labels=labels,
                              ax_labels=[coeff_dict[c2], coeff_dict[c1]])
     if j!=1:
@@ -338,4 +342,4 @@ bbox = legend.get_window_extent(fig.canvas.get_renderer()).transformed(fig.trans
 
 plt.tight_layout()
 
-fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/21_07/zh_particle_quad_only.pdf')
+fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/21_07/zh_particle_quad_only_7.pdf')

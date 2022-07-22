@@ -41,10 +41,14 @@ class Optimize:
         self.config = config.copy()
         self.rep = rep
         self.coeff = coeff
+
         self.param_names = {}
 
         if self.rep is not None:
             self.config["results_path"] = os.path.join(self.config["results_path"], "r_{}".format(self.rep))
+
+        if "fit_id" in self.config.keys():
+            self.fit_id = self.config["fit_id"]
 
         if "order" in self.config.keys():
             self.order = self.config["order"]
@@ -122,7 +126,9 @@ class Optimize:
 
         if self.coeff is None:
             self.glob = True
-            self.coeff = self.th_pred.th_dict['lin'].keys() # coefficients to include in the fit
+
+            #self.coeff = self.th_pred.th_dict['lin'].keys()
+            self.coeff = self.th_pred.get_c_names_unique() # coefficients to include in the fit
         else:
             self.glob = False
 
@@ -132,7 +138,7 @@ class Optimize:
             for c in self.coeff:
                 self.suffix += c + '_'
             self.suffix = self.suffix[:-1]
-        self.output_path = os.path.join(self.config["results_path"], self.mode, self.suffix[1:])
+        self.output_path = os.path.join(self.config["results_path"], '{}_{}'.format(self.mode, self.fit_id), self.suffix[1:])
 
         Path(self.output_path).mkdir(parents=True, exist_ok=True)
 
@@ -215,7 +221,6 @@ class Optimize:
         return path_to_models
 
 
-
     def my_prior(self, cube):
         """
         Construct prior volume
@@ -243,18 +248,20 @@ class Optimize:
         for i, c_name in enumerate(self.coeff):
             self.param_names[c_name] = cube[i]
 
-
     def log_like_nn(self, cube):
 
         self.cube_to_dict(cube)
 
         # compute inclusive xsec at cube
         sigma = 0
-
         sigma += self.th_pred.th_dict['sm']
 
+        lin_models = self.th_pred.th_dict['lin']
         for c_name, c_val in self.param_names.items():
-            sigma += c_val * self.th_pred.th_dict['lin'][c_name]
+
+            # check if c_name has linear sensitivity
+            if c_name in lin_models:
+                sigma += c_val * self.th_pred.th_dict['lin'][c_name]
 
         if 'quad' in self.th_pred.th_dict:
 
@@ -302,11 +309,13 @@ class Optimize:
         # compute inclusive xsec at cube
 
         sigma = 0
-
         sigma += self.th_pred.th_dict['sm']
 
+        lin_pred = self.th_pred.th_dict['lin']
+
         for c_name, c_val in self.param_names.items():
-            sigma += c_val * self.th_pred.th_dict['lin'][c_name]
+            if c_name in lin_pred:
+                sigma += c_val * lin_pred[c_name]
 
         if 'quad' in self.th_pred.th_dict:
 
