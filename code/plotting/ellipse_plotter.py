@@ -286,6 +286,7 @@ fig = plt.figure(figsize=(n_cols * 4, n_rows * 4))
 root_pt = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_pt_z/"
 root_lin = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_lin"
 root_quad = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_quad"
+
 root_7 = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_7_feat/"
 root_7_quad = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_q_7"
 
