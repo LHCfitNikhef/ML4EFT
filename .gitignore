@@ -308,6 +308,7 @@ sphinx/_build/
 /output/contours/
 
 /models/*
+/output/*
 #!/models/tt
 #
 #/models/tt/*
