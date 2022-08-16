@@ -283,6 +283,8 @@ TSWLatexianTemp*
 *.sh.*
 
 #Directories
+sphinx/build/
+
 code/output/models/
 
 code/quad_clas/lhapdf_install_folder/
@@ -290,7 +292,6 @@ code/quad_clas/qc_results/trained_nn/
 code/quad_clas/temp/
 code/old/
 .idea/
-sphinx/_build/
 /code/notebooks/feynrules-current/
 /code/higgs21/
 /code/notebooks/FormCalc/*.gen

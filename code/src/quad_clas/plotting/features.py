@@ -17,7 +17,6 @@ def plot_features(df_sm, dfs_eft, features, labels, x_labels=None, y_labels=None
     # df_sm = df_sm.iloc[1:, :]
     # df_eft = df_eft.iloc[1:, :]
 
-
     for i, feature in enumerate(features):
         ax = plt.subplot(n_rows, n_cols, i + 1)
         hist_mg_sm, bins = np.histogram(df_sm[feature], bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 30), density=True)
