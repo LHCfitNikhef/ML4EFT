@@ -406,7 +406,7 @@ class Analyse:
         #                                          c))
         #     return coeff_cross
 
-    def accuracy_heatmap(self, c_name, order, process, cut=None, rep=None, epoch=-1, ax=None):
+    def accuracy_heatmap(self, c_name, order, process, cut=None, rep=None, epoch=-1, ax=None, text=None):
         """
         Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
 
@@ -432,7 +432,7 @@ class Analyse:
 
         y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
 
-        x_spacing, y_spacing = 1e-1, 0.1
+        x_spacing, y_spacing = 1e-2, 0.01
         mx_span = np.arange(mx_min, mx_max, x_spacing)
         y_span = np.arange(y_min, y_max, y_spacing)
 
@@ -461,6 +461,7 @@ class Analyse:
             self.coeff_truth = self.coeff_function_truth(df, c_name, features, process, order).reshape(
                 mx_grid.shape)
 
+
         # TODO: add option to overlay events as points on the heatmap
 
         xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
@@ -474,17 +475,18 @@ class Analyse:
             nn_unc = (nn_high - nn_low) / 2
             # median
             median_ratio = self.coeff_truth / nn_median
-            title = r'$\rm{Truth/NN\;(median)}$'
+            title = r'$\rm{Analytical/ML\;Model}$'
 
             fig_1, ax_1 = plt.subplots(figsize=(10, 8))
 
-            im_1 = self.plot_heatmap(ax_1, median_ratio,
+            im_1 = self.plot_heatmap(ax[0], median_ratio,
                                 xlabel=xlabel,
                                 ylabel=r'$\rm{Rapidity}$',
                                 title=title,
                                 extent=[mx_min, mx_max, y_min, y_max],
                                 cmap='seismic',
-                                bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05])
+                                bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05],
+                                text=text)
 
             # pull
 
@@ -492,13 +494,14 @@ class Analyse:
 
             pull = (self.coeff_truth - nn_median) / nn_unc
 
-            im_2 = self.plot_heatmap(ax_2, pull,
+            im_2 = self.plot_heatmap(ax[1], pull,
                                 xlabel=xlabel,
                                 ylabel=r'$\rm{Rapidity}$',
                                 title=r'$\rm{Pull}$',
                                 extent=[mx_min, mx_max, y_min, y_max],
                                 cmap='seismic',
-                                bounds=np.linspace(-1.5, 1.5, 10))
+                                bounds=np.linspace(-1.5, 1.5, 10),
+                                text=text)
 
             return fig_1, fig_2
         else:
@@ -600,9 +603,36 @@ class Analyse:
         decision_function: numpy.ndarray
             NN decision function
         """
-        ratio = self.likelihood_ratio_nn(df, c, epoch=epoch)
+        ratio = self.likelihood_ratio_nn(c, df, epoch=epoch)
         decision_function = 1 / (1 + ratio)
         return decision_function
+
+    def point_by_point_comp_med(self, df, c, features, process, order, ax, text=None):
+
+        r_nn = self.likelihood_ratio_nn(c, df)
+        tau_nn = np.log(r_nn)
+
+        r_truth = self.likelihood_ratio_truth(df, c, features, process, order)
+        tau_truth = np.log(r_truth)
+
+        fig = plt.figure(figsize=(8, 8))
+        x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
+
+        ax.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
+        ax.plot(x, x, linestyle='dashed', color='grey')
+        ax.set_xlabel(r'$\log r(x, c)^{\rm{Analytical}}$')
+        ax.set_ylabel(r'$\log r(x, c)^{\rm{ML}\;\rm{model}}$')
+        ax.set_xlim((np.min(x), np.max(x)))
+        ax.set_ylim((np.min(x), np.max(x)))
+
+        if text is not None:
+            ax.text(0.95, 0.1, text,
+                 horizontalalignment='right',
+                 verticalalignment='center',
+                 transform=ax.transAxes)
+
+        fig.tight_layout()
+
 
     def point_by_point_comp(self, df, c, features, process, order):
 
@@ -660,9 +690,9 @@ class Analyse:
 
         plt.tight_layout()
 
-        return fig1, fig2
+        return fig1, ax
 
-    def plot_loss_overview(self, c_name, order):
+    def plot_loss_overview(self, c_name, order, ax=None):
 
         if self.model_df is None:
             self.build_model_dict()
@@ -692,7 +722,7 @@ class Analyse:
         val_loss_best = np.array([loss[-patience] for loss in loss_val])
 
         for i in np.argsort(model_idx):
-            ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
+            #ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
             epochs = np.arange(len(loss_tr[i]))
 
             label_val = r'$L_{\mathrm{val}}$' if model_idx[i] == 0 else None
@@ -712,11 +742,14 @@ class Analyse:
             ax.set_ymargin(0.1)
             ax.set_xmargin(0)
 
-            ax.text(0.9, 0.9, r"$\mathrm{{rep}}\;{}$".format(model_idx[i]), horizontalalignment='right',
+            ax.text(0.95, 0.9, r"$\mathrm{{rep}}\;{}$".format(model_idx[i]), horizontalalignment='right',
                     verticalalignment='center',
                     transform=ax.transAxes)
 
             ax.set_xlim(left=10)
+
+            ax.set_xlabel(r'$\mathrm{Epoch}$')
+            ax.set_ylabel(r'$\mathrm{Loss}$')
 
             med_loss_tr = np.percentile(train_loss_best, 50)
             low_loss_tr = np.percentile(train_loss_best, 16)
@@ -739,20 +772,25 @@ class Analyse:
 
             signif = (train_loss_best[i] - med_loss_tr) / loss_sigma_tr
 
-            ax.text(0.9, 0.8, r"$Z={:.2f}$".format(signif), horizontalalignment='right',
-                    verticalalignment='center',
-                    transform=ax.transAxes)
+            # ax.text(0.9, 0.8, r"$Z={:.2f}$".format(signif), horizontalalignment='right',
+            #         verticalalignment='center',
+            #         transform=ax.transAxes)
 
             if model_idx[i] == 0:
                 ax.legend(loc="lower left", frameon=False)
 
+            break
+
         plt.tight_layout()
 
-        return fig, train_loss_best
+        #return fig, train_loss_best
 
-    def plot_accuracy_1d(self, c, process, order, cut, epoch=-1):
+    def plot_accuracy_1d(self, c, process, order, cut, epoch=-1, ax=None, text=None):
 
-        fig, ax = plt.subplots(figsize=(10, 6))
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(10, 6))
+        else:
+            fig = plt.subplots(figsize=(10, 6))
 
         x = np.linspace(cut, 3.0, 200)
         x = np.stack((np.zeros(len(x)), x), axis=-1)
@@ -769,22 +807,29 @@ class Analyse:
         f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
         f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
 
-        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r'$\rm{NN}$',
+        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r"$\mathrm{ML}\;\mathrm{model}\;(m_{t\bar{t}}, Y)$",
                         alpha=0.4)
 
-        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r'$\rm{Truth}$')
+        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r"$\mathrm{Analytical}\;(m_{t\bar{t}}, Y)$")
 
         # single replica
         # ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
 
-        plt.ylim((0, 1))
-        plt.xlim(np.min(x[:, 1]), np.max(x[:, 1]))
+        ax.set_ylim((0, 1))
+        ax.set_xlim(np.min(x[:, 1]), np.max(x[:, 1]))
 
-        plt.ylabel(r'$g\;(x, c)$')
+        ax.set_ylabel(r'$g\;(x, c)$')
         xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
-        plt.xlabel(xlabel)
-        plt.legend()
-        plt.tight_layout()
+        ax.set_xlabel(xlabel)
+
+        if text is not None:
+            ax.text(0.05, 0.1, text,
+                 horizontalalignment='left',
+                 verticalalignment='center',
+                 transform=ax.transAxes)
+
+        ax.legend(frameon=False)
+        #fig.tight_layout()
         return fig
 
     @staticmethod
@@ -888,7 +933,7 @@ class Analyse:
         return decision_function
 
     @staticmethod
-    def plot_heatmap(ax, data, xlabel, ylabel, title, extent, bounds, cmap='GnBu', rep=None):
+    def plot_heatmap(ax, data, xlabel, ylabel, title, extent, bounds, cmap='GnBu', rep=None, text=None):
         """
         Plot and return a heatmap of ``data``
 
@@ -914,6 +959,8 @@ class Analyse:
         fig: `matplotlib.figure.Figure`
         """
 
+        import matplotlib.ticker as tick
+
 
         # discrete colorbar
         cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
@@ -931,18 +978,25 @@ class Analyse:
             fig = ax.figure
             rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 30})
         else:
+            #pass
             fig = plt.figure(figsize=(10,8))
 
-        im = ax.imshow(data, extent=extent,
-                  origin='lower', aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), cmap=cmap_copy, norm=norm)
+        # im = ax.imshow(data, extent=extent,
+        #           origin='lower', aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), cmap=cmap_copy, norm=norm)
+
+        im = ax.imshow(data, extent=extent, origin='lower', aspect='auto', cmap=cmap_copy, norm=norm)
+
 
         if rep is not None:
             ax.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',
                      verticalalignment='top',
                      transform=ax.transAxes)
         else:
-            cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax)
+
+            cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax, format=tick.FormatStrFormatter(r'$%.2f$'))
             ax.set_title(title)
+            if text is not None:
+                ax.text(0.95, 0.1, text, horizontalalignment='right', verticalalignment='center', transform=ax.transAxes)
             plt.tight_layout()
 
         ax.set_xlabel(xlabel)
