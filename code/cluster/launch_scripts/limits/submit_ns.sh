@@ -31,7 +31,7 @@ function submit_job () {
 }
 
 # SETUP
-NCORES='4'
+NCORES='16'
 FID_ID=$PWD'/run_cards/NS_run_card_tt.json'
 
 # pair of operator fits

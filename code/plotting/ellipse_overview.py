@@ -88,8 +88,8 @@ def ellipse_overview(coeff_dict, labels, paths):
         for path in paths:
             dfs.append(Analyse.posterior_loader(path.format(c1, c2, c1, c2)))
 
-        ax, hndls = plotter.plot(ax, dfs, coeff1=c2, coeff2=c1,
-                                 ax_labels=[coeff_dict[c2], coeff_dict[c1]])
+        hndls = plotter.plot(ax, dfs, coeff1=c2, coeff2=c1,
+                                 ax_labels=[coeff_dict[c2], coeff_dict[c1]],  kde=True)
         if j!=1:
             ax.set_xlabel('')
         if not (i == n_cols * n_rows + 1 - j * n_cols):
@@ -108,12 +108,12 @@ def ellipse_overview(coeff_dict, labels, paths):
     return fig
 
 fig_1 = ellipse_overview(coeff_dict, labels_1, paths_plot_1)
-fig_2 = ellipse_overview(coeff_dict, labels_2, paths_plot_2)
-fig_3 = ellipse_overview(coeff_dict, labels_3, paths_plot_3)
-fig_4 = ellipse_overview(coeff_dict, labels_4, paths_plot_4)
+#fig_2 = ellipse_overview(coeff_dict, labels_2, paths_plot_2)
+#fig_3 = ellipse_overview(coeff_dict, labels_3, paths_plot_3)
+# fig_4 = ellipse_overview(coeff_dict, labels_4, paths_plot_4)
 
-fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/22_07/test_overview_1.pdf')
-fig_2.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/22_07/test_overview_2.pdf')
-fig_3.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/22_07/test_overview_3.pdf')
-fig_4.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/22_07/test_overview_4.pdf')
+fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde_7_feat.pdf')
+#fig_2.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_lin.pdf')
+#fig_3.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde.pdf')
+# fig_4.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/test_overview_4.pdf')
 

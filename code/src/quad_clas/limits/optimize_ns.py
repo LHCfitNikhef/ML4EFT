@@ -281,21 +281,32 @@ class Optimize:
 
     def log_like_truth(self, cube):
 
-        #self.cube_to_dict(cube)
-        for i, c_name in enumerate(self.th_pred.th_dict['lin'].keys()):
-            self.param_names[c_name] = cube[i]
+        self.cube_to_dict(cube)
 
-        # compute inclusive and differential xsec at cube
-        sigma = self.th_pred.th_dict['sm']
-        dsigma_dx = copy.deepcopy(self.dsigma_dx['sm'])
+        # compute inclusive xsec at cube
+        sigma = 0
+        sigma += self.th_pred.th_dict['sm']
 
-        for c_name, sigma_i in self.th_pred.th_dict['lin'].items():
-            sigma += self.param_names[c_name] * sigma_i
-            dsigma_dx += self.param_names[c_name] * self.dsigma_dx['lin'][c_name]
+        dsigma_dx = 0
+        dsigma_dx += self.dsigma_dx['sm']
 
-        for c_name, sigma_i in self.th_pred.th_dict['quad'].items():
-            sigma += self.param_names[c_name] ** 2 * sigma_i
-            dsigma_dx += self.param_names[c_name] ** 2 * self.dsigma_dx['quad'][c_name]
+        lin_models = self.th_pred.th_dict['lin']
+        for c_name, c_val in self.param_names.items():
+
+            # check if c_name has linear sensitivity
+            if c_name in lin_models:
+                sigma += c_val * self.th_pred.th_dict['lin'][c_name]
+                dsigma_dx += c_val * self.dsigma_dx['lin'][c_name]
+
+
+        if 'quad' in self.th_pred.th_dict:
+
+            quad_pred = self.th_pred.th_dict['quad']
+            for (c1, c2) in itertools.product(self.param_names.keys(), repeat=2):
+                c_name = '{}_{}'.format(c1, c2)
+                if c_name in quad_pred:
+                    sigma += self.param_names[c1] * self.param_names[c2] * quad_pred['{}_{}'.format(c1, c2)]
+                    dsigma_dx += self.param_names[c1] * self.param_names[c2] * self.dsigma_dx['quad']['{}_{}'.format(c1, c2)]
 
         nu = sigma * self.lumi
         log_like = -nu + np.sum(np.log(dsigma_dx / self.dsigma_dx['sm']))

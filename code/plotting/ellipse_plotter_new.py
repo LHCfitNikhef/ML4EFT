@@ -83,7 +83,19 @@ class EllipsePlotter:
         return ax.add_patch(ellipse)
 
     @staticmethod
-    def confidence_ellipse(x, y, ax, kde=False, facecolor="none", **kwargs):
+    def confidence_contour_kde(x, y, ax, hndls, facecolor="none"):
+
+        sns.kdeplot(x, y, levels=[0.05, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=0.3, color=facecolor)
+        sns.kdeplot(x, y, levels=[0.05], bw_adjust=1.2, ax=ax, alpha=1, color=facecolor)
+        #ax.scatter(x, y, s=4, alpha=0.2)
+        hndls.append((mpatches.Patch(ec=facecolor, fc=facecolor, fill=True, alpha=0.3),
+                      mpatches.Patch(ec=facecolor, fc=facecolor, fill=False, alpha=1.0)))
+
+        return hndls
+
+
+    @staticmethod
+    def confidence_ellipse(x, y, ax, facecolor="none", **kwargs):
         """
         Create a plot of the covariance confidence ellipse of `x` and `y`
         Parameters
@@ -112,13 +124,16 @@ class EllipsePlotter:
 
         eig_vec_max = eig_vec[:, np.argmax(eig_val)]
 
-        cos_th = eig_vec[np.argmax(eig_val), 0] / np.linalg.norm(eig_vec_max)
-        inclination = np.arccos(cos_th)
+        cos_th = eig_vec[0, np.argmax(eig_val)] / np.linalg.norm(eig_vec_max)
+        if eig_vec_max[1] > 0:
+            inclination = np.arccos(cos_th)
+        else:
+            inclination = - np.arccos(cos_th)
 
         eigval_sort = np.sort(eig_val)
 
-        ell_radius_x = np.sqrt(2.3 * eigval_sort[-1])
-        ell_radius_y = np.sqrt(2.3 * eigval_sort[-2])
+        ell_radius_x = np.sqrt(5.991 * eigval_sort[-1])
+        ell_radius_y = np.sqrt(5.991 * eigval_sort[-2])
 
         ellipse = Ellipse(
             (0, 0),
@@ -128,22 +143,15 @@ class EllipsePlotter:
             **kwargs
         )
 
-        if kde:
-            sns.kdeplot(x, y, levels=[0.32, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=0.3, color=facecolor)
-            sns.kdeplot(x, y, levels=[0.32], bw_adjust=1.2, ax=ax, alpha=1, color=facecolor)
-            ax.scatter(x, y, s=4, alpha=0.2)
-
-
-        mean_x = np.mean(x)
-        mean_y = np.mean(y)
+        mean_x = np.median(x)
+        mean_y = np.median(y)
 
         transf = (transforms.Affine2D().rotate(inclination).translate(mean_x, mean_y))
 
         ellipse.set_transform(transf + ax.transData)
 
-        ax.add_patch(ellipse)
+        return ax.add_patch(ellipse), inclination
 
-        return ax.add_patch(ellipse)
 
     def plot(self, ax, dfs, ax_labels, coeff1, coeff2, kde=None, labels=None):
         """
@@ -167,23 +175,43 @@ class EllipsePlotter:
 
             if coeff1_values is not None and coeff2_values is not None:
 
-                p1 = self.confidence_ellipse(
-                    coeff1_values,
-                    coeff2_values,
-                    ax,
-                    alpha=1,
-                    edgecolor=colors[i]
-                )
+                if not kde:
 
-                p2 = self.confidence_ellipse(
-                    coeff1_values,
-                    coeff2_values,
-                    ax,
-                    alpha=0.3,
-                    facecolor=colors[i],
-                    edgecolor=None,
-                    kde=kde[i]
-                )
+                    p1, inc = self.confidence_ellipse(
+                        coeff1_values,
+                        coeff2_values,
+                        ax,
+                        alpha=1,
+                        edgecolor=colors[i],
+                    )
+
+                    p2, _ = self.confidence_ellipse(
+                        coeff1_values,
+                        coeff2_values,
+                        ax,
+                        alpha=0.3,
+                        facecolor=colors[i],
+                        edgecolor=None,
+                    )
+
+                    ax.scatter(
+                        np.mean(coeff1_values, axis=0),
+                        np.mean(coeff2_values, axis=0),
+                        c=colors[i],
+                        s=3,
+                    )
+
+
+
+                    hndls.append((p1, p2))
+
+                else:
+                    hndls = self.confidence_contour_kde(coeff1_values,
+                        coeff2_values,
+                        ax,
+                        hndls,
+                        facecolor=colors[i])
+
 
                 # smefit
 
@@ -206,29 +234,22 @@ class EllipsePlotter:
                 # )
 
 
-                hndls.append((p1, p2))
+
                 # hndls.append((p3, p4))
 
-            ax.scatter(
-                np.mean(coeff1_values, axis=0),
-                np.mean(coeff2_values, axis=0),
-                c=colors[i],
-                s=3,
-            )
 
-
-            plt.xlabel(ax_labels[0], fontsize=33)
-            plt.ylabel(ax_labels[1], fontsize=33)
+            plt.xlabel(ax_labels[0])
+            plt.ylabel(ax_labels[1])
             plt.tick_params(which="both", direction="in", labelsize=22)
 
         ax.scatter(0, 0, c="k", marker="s", s=10, zorder=10)
 
         if labels is not None:
             ax.legend(
-                loc="upper right", handles=hndls, labels=labels, frameon=False, prop={"size": 15}
+                loc="lower left", handles=hndls, labels=labels, frameon=False, prop={"size": 26}
             )
-        #plt.title(r"${\rm 68\%\ Confidence\ Level\ Bounds}$", fontsize=15)
+        else:
+            return hndls
 
+        #plt.title(r"${\rm 68\%\ Confidence\ Level\ Bounds}$", fontsize=20)
 
-        return ax, hndls
-        #plt.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/15_07/ellipse_zh_llbb_68.pdf')
