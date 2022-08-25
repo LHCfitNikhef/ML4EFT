@@ -13,14 +13,17 @@ function submit_job () {
   COMMAND=$PWD'/lhe_to_pandas_'"${EVENT_DIR##*/}"'.sh'
 
   # write launch command
-  LAUNCH=$PY' '$PWD'/lhe_to_pandas.py '$EVENT_DIR' '$PROCESS' '$SAVE_LOCATION' '$REP
+
+  LAUNCH=$PY' '$PWD'/lhe_to_pandas_tt.py '$EVENT_DIR' '$PROCESS' '$SAVE_LOCATION' '$REP
 
   echo $LAUNCH >> $COMMAND
   chmod +x $COMMAND
   chmod +x $PWD'/lhe_to_pandas.py'
 
+  $COMMAND
+
   # submission
-  qsub -q smefit -W group_list=smefit -l nodes=1:ppn=1 -l pvmem=8000mb -l walltime=08:00:00 $COMMAND
+  #qsub -q smefit -W group_list=smefit -l nodes=1:ppn=1 -l pvmem=8000mb -l walltime=08:00:00 $COMMAND
   #rm $COMMAND
 
 }
