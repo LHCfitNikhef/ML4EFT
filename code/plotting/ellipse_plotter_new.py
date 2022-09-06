@@ -201,16 +201,19 @@ class EllipsePlotter:
                         s=3,
                     )
 
-
-
                     hndls.append((p1, p2))
 
                 else:
+
                     hndls = self.confidence_contour_kde(coeff1_values,
                         coeff2_values,
                         ax,
                         hndls,
                         facecolor=colors[i])
+
+                    # if coeff1 == 'cbHRe' or coeff2 == 'cbHRe':
+                    #     ax.scatter(np.random.choice(coeff1_values, 1000, replace=False),
+                    #                np.random.choice(coeff2_values, 1000, replace=False), alpha=0.3, color=colors[i], s=5)
 
 
                 # smefit
@@ -242,7 +245,8 @@ class EllipsePlotter:
             plt.ylabel(ax_labels[1])
             plt.tick_params(which="both", direction="in", labelsize=22)
 
-        ax.scatter(0, 0, c="k", marker="s", s=10, zorder=10)
+
+        hndls.append(ax.scatter(0, 0, c="k", marker="+", s=50, zorder=10))
 
         if labels is not None:
             ax.legend(

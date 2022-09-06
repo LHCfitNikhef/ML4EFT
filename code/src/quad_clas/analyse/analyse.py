@@ -371,11 +371,13 @@ class Analyse:
 
     def coeff_function_truth(self, df, c_name, features, process, order):
 
+        # why did I write this particular code? Keep just in case.
+
         # create c dict
 
-        c = {}
-        for k, v in self.path_to_models[order].items():
-            c[k] = v[0] if k == c_name else 0
+        # c = {}
+        # for k, v in self.path_to_models[order].items():
+        #     c[k] = v[0] if k == c_name else 0
 
         if c_name == 'ctgre' and order == 'lin':
             cprime = {'ctgre': -10, 'cut': 0}
@@ -386,9 +388,13 @@ class Analyse:
             cprime = {'ctgre': 0, 'cut': 10}
             c_name = 'cut'
 
+        # ratio_truth_lin = self.likelihood_ratio_truth(df, cprime, features, process, order)
+
         ratio_truth_lin = self.likelihood_ratio_truth(df, cprime, features, process, order)
         # compute the mask once to select the physical region in phase space
         mask = ratio_truth_lin == 0
+
+
 
 
         if order == 'lin':  # only one of the c elements can be nonzero
@@ -587,7 +593,7 @@ class Analyse:
 
         return ratio
 
-    def decision_function_nn(self, df, c, epoch=-1):
+    def decision_function_nn(self, c, df=None, epoch=-1):
         """
         Computes NN decision function
 
@@ -597,6 +603,8 @@ class Analyse:
             event info
         c: numpy.ndarray
             EFT point
+        epoch: int, optional
+            Use models at a specific epoch, set to -1 (best modeL) by default
 
         Returns
         -------
@@ -722,7 +730,7 @@ class Analyse:
         val_loss_best = np.array([loss[-patience] for loss in loss_val])
 
         for i in np.argsort(model_idx):
-            #ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
+            ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
             epochs = np.arange(len(loss_tr[i]))
 
             label_val = r'$L_{\mathrm{val}}$' if model_idx[i] == 0 else None
@@ -779,11 +787,11 @@ class Analyse:
             if model_idx[i] == 0:
                 ax.legend(loc="lower left", frameon=False)
 
-            break
+            #break
 
         plt.tight_layout()
 
-        #return fig, train_loss_best
+        return fig, train_loss_best
 
     def plot_accuracy_1d(self, c, process, order, cut, epoch=-1, ax=None, text=None):
 

@@ -20,7 +20,7 @@ rc('text', usetex=True)
 coeff_dict = {"cHu": r'$c_{\varphi u}$', "cHd": r'$c_{\varphi d}$', "cHj1": r'$c_{\varphi q}^{(1)}$', "cHj3": r'$c_{\varphi q}^{(3)}$',
               "cbHRe": r'$c_{b\varphi}$', "cHW": r'$c_{\varphi W}$', "cHWB": r'$c_{\varphi WB}$'}
 
-root_quad = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_quad"
+root_quad = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_q"
 root_7_quad = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_q_7"
 
 
@@ -37,6 +37,10 @@ post_path_binned_quad = os.path.join(root_quad, 'binned', '{}_{}', 'posterior_{}
 
 # nn: quadratic (7 features)
 post_path_nn_quad_7_feat = os.path.join(root_7_quad, 'nn','{}_{}', 'posterior_{}_{}.json')
+post_path_nn_quad_7_feat_300fb = os.path.join(root_7_quad, 'nn_lr3', '{}_{}', 'posterior_{}_{}.json')
+
+# nn: quadratic (7 features) global
+post_path_nn_quad_7_feat_glob = os.path.join(root_quad, 'nn_glob', 'posterior.json')
 
 # binned: linear (STXS)
 post_path_binned_lin = os.path.join(root_lin, 'binned', '{}_{}', 'posterior_{}_{}.json')
@@ -47,12 +51,19 @@ post_path_nn_lin = os.path.join(root_pt, 'nn', '{}_{}', 'posterior_{}_{}.json')
 # nn: linear (7 features)
 post_path_nn_7 = os.path.join(root_7, 'nn', '{}_{}', 'posterior_{}_{}.json')
 
+# high lumi plots
 
+nn_glob_quad_path = '/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob/posterior.json'
+nn_glob_ptz_quad_path = '/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob_pt_z_quad/posterior.json'
+binned_glob_quad_path = '/data/theorie/jthoeve/ns_samples/zh_llbb/binned_pt_z_quad/posterior.json'
+
+paths_plot_0 = [nn_glob_ptz_quad_path, nn_glob_quad_path]
 paths_plot_1 = [post_path_binned_quad, post_path_nn_quad, post_path_nn_quad_7_feat]
 paths_plot_2 = [post_path_binned_lin, post_path_nn_lin]
 paths_plot_3 = [post_path_binned_quad, post_path_nn_quad]
 paths_plot_4 = [post_path_binned_lin, post_path_binned_quad, post_path_nn_lin, post_path_nn_quad]
 
+labels_0 = [ r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z)$", r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features})$", r'$\mathrm{SM}$']
 labels_1 = [r"$p_T^Z\in[75, 150, 250, 400, \infty)\:\mathrm{GeV}:\mathrm{Quadratic}$", r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z):\mathrm{Quadratic}$",
           r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features}):\mathrm{Quadratic}$"]
 
@@ -99,7 +110,8 @@ def ellipse_overview(coeff_dict, labels, paths):
 
     legend = fig.legend(
             labels=labels, handles=hndls,
-            loc='upper center', frameon=False, fontsize=26)
+            loc='upper center', frameon=True, fontsize=26,
+    title=r"$\mathrm{Marginalised}\:95\:\%\:\mathrm{C.L.\:interval}\;\mathcal{O}\left(\Lambda^{-4}\right)$")
 
     bbox = legend.get_window_extent(fig.canvas.get_renderer()).transformed(fig.transFigure.inverted())
 
@@ -107,12 +119,14 @@ def ellipse_overview(coeff_dict, labels, paths):
 
     return fig
 
-fig_1 = ellipse_overview(coeff_dict, labels_1, paths_plot_1)
+fig_0 = ellipse_overview(coeff_dict, labels_0, paths_plot_0)
+#fig_1 = ellipse_overview(coeff_dict, labels_1, paths_plot_1)
 #fig_2 = ellipse_overview(coeff_dict, labels_2, paths_plot_2)
 #fig_3 = ellipse_overview(coeff_dict, labels_3, paths_plot_3)
 # fig_4 = ellipse_overview(coeff_dict, labels_4, paths_plot_4)
 
-fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde_7_feat.pdf')
+#fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde_7_feat.pdf')
+fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/06_09/zh_llbb_quad_glob_binned_vs_nn_ptz_test.pdf')
 #fig_2.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_lin.pdf')
 #fig_3.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde.pdf')
 # fig_4.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/test_overview_4.pdf')

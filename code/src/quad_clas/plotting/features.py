@@ -34,7 +34,8 @@ def plot_features(df_sm, dfs_eft, features, labels, x_labels=None, y_labels=None
 
             ax = plt.subplot(n_rows, n_cols, i + 1)
             hist_mg_eft, bins = np.histogram(df_eft[feature], bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 30), density=True)
-            plt.step(bins[:-1], (xsec_eft / xsec_sm) * hist_mg_eft, where='post', linewidth=.7)
+            #plt.step(bins[:-1], (xsec_eft / xsec_sm) * hist_mg_eft, where='post', linewidth=.7)
+            plt.step(bins[:-1], hist_mg_eft, where='post', linewidth=.7)
             plt.yscale('log')
             ax.yaxis.set_major_formatter(NullFormatter())
             ax.yaxis.set_minor_formatter(NullFormatter())

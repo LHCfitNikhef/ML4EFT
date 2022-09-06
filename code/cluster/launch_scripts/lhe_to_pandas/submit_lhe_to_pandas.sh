@@ -14,30 +14,28 @@ function submit_job () {
 
   # write launch command
 
-  LAUNCH=$PY' '$PWD'/lhe_to_pandas_tt.py '$EVENT_DIR' '$PROCESS' '$SAVE_LOCATION' '$REP
+  LAUNCH=$PY' '$PWD'/lhe_to_pandas_tt.py '$EVENT_DIR' '$PROCESS' '$SAVE_LOCATION
 
   echo $LAUNCH >> $COMMAND
   chmod +x $COMMAND
   chmod +x $PWD'/lhe_to_pandas.py'
 
-  $COMMAND
+  #$COMMAND
 
   # submission
-  #qsub -q smefit -W group_list=smefit -l nodes=1:ppn=1 -l pvmem=8000mb -l walltime=08:00:00 $COMMAND
-  #rm $COMMAND
+  qsub -q smefit -W group_list=smefit -l nodes=1:ppn=1 -l pvmem=8000mb -l walltime=08:00:00 $COMMAND
+  rm $COMMAND
 
 }
 
-while getopts ":r:f:s:p:h" opt; do
+while getopts ":f:s:p:h" opt; do
   case ${opt} in
-    r) echo "You chose 'r'=$OPTARG";NREP="$OPTARG";;
     f) echo "You chose 'f'=$OPTARG";ROOT="$OPTARG";;
     s) echo "You chose 's'=$OPTARG";SAVE_LOCATION="$OPTARG";;
     p) echo "You chose 'p'=$OPTARG";PROCESS="$OPTARG";;
     h)
       echo "Options:"
       echo "    -h      display this help message."
-      echo "    -r      number of replicas to convert."
       echo "    -f      path to lhe file"
       echo "    -s      path to output directory"
       exit 0
@@ -61,7 +59,7 @@ shift $((OPTIND -1))
 #    submit_job $dir $PROCESS $SAVE_LOCATION $NREP
 #done
 
-submit_job $ROOT $PROCESS $SAVE_LOCATION $NREP
+submit_job $ROOT $PROCESS $SAVE_LOCATION
 
 #submit_job "/data/theorie/jthoeve/ML4EFT_events/zh_sm" $PROCESS $SAVE_LOCATION $NREP
 

@@ -7,28 +7,16 @@ import torch
 import copy
 import sys
 
-from . import analyse
+
 from ..preproc import constants
 
 # constants
 mz = constants.mz
 mh = constants.mh
 
-def animate_learning_2d(mc_reps, path_to_model, network_size, c1, c2, lin=False, quad=False, cross=False, path_sm_data=None):
+def animate_learning_2d(df, analyser, mc_reps, path_to_model, network_size, c1, c2, lin=False, quad=False, cross=False, path_sm_data=None):
 
     # we first define our grid
-    s = 14 ** 2
-    epsilon = 1e-2
-    mvh_min, mvh_max = mz + mh + epsilon, 2
-    y_min, y_max = - np.log(np.sqrt(s) / mvh_min), np.log(np.sqrt(s) / mvh_min)
-
-    x_spacing, y_spacing = 1e-2, 0.01
-    mvh_span = np.arange(mvh_min, mvh_max, x_spacing)
-    y_span = np.arange(y_min, y_max, y_spacing)
-
-    mvh_grid, y_grid = np.meshgrid(mvh_span, y_span)
-    grid = np.c_[mvh_grid.ravel(), y_grid.ravel()]
-    grid_unscaled_tensor = torch.Tensor(grid)
 
     # compute truth
     #coeff_truth = coeff_function_truth(grid, np.array([c1, c2]), lin, quad, cross).reshape(mvh_grid.shape)
@@ -56,17 +44,20 @@ def animate_learning_2d(mc_reps, path_to_model, network_size, c1, c2, lin=False,
         #coeff_nn_low = np.percentile(coeff_nns, 16, axis=0)
         #coeff_nn_unc = (coeff_nn_high - coeff_nn_low) / 2
 
-    def reference():
-        mtt_min, mtt_max = mvh_min * 10**3, 2000.0
-        s = (14 * 10 ** 3) ** 2
+    def reference(df):
+
+
+        mtt_min, mtt_max = df['m_tt'].min(), df['m_tt'].max()
+        s = 14 ** 2
         reference.y_min, reference.y_max = - np.log(np.sqrt(s) / mtt_min), np.log(np.sqrt(s) / mtt_min)
-        x_spacing = 10
-        y_spacing = 0.01
+
         # First set up the figure, the axis, and the plot element we want to animate
-        reference.f_ana = analyse.coeff_function_truth(grid, np.array([c1, c2]), lin, quad, cross).reshape(mvh_grid.shape)
+        import pdb; pdb.set_trace()
+        reference.f_ana = analyser.coeff_function_truth(df, c_name, features, process='tt', order='quad')
+        reference.f_ana = analyser.coeff_function_truth(grid, np.array([c1, c2]), lin, quad, cross).reshape(mvh_grid.shape)
         reference.f_ana = np.ma.masked_where(reference.f_ana == 1.0, reference.f_ana)
 
-    reference()
+    reference(df)
 
     cmap = copy.copy(plt.get_cmap("seismic"))
     cmap.set_bad(color='#c8c9cc')

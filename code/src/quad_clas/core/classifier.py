@@ -84,9 +84,10 @@ class ConstraintActivation(CustomActivationFunction):
 
     def forward(self, x):
         if self.c > 0:
-            return torch.relu(x) - 1 / self.c + 1e-10
+            return torch.relu(x) - 1 / self.c + 1e-6 # change to 1e-10 for zh
         else:
-            return - torch.relu(x) - 1 / self.c - 1e-10
+
+            return - torch.relu(x) - 1 / self.c - 1e-6  #change to 1e-10 for zh
 
 
 class ConstraintActivationQuad(CustomActivationFunction):
@@ -686,7 +687,9 @@ class Fitter:
         """
 
         if self.loss_type == 'CE':
+
             if any(outputs >= 1) or any(outputs <= 0): # if r <= 0
+                import pdb; pdb.set_trace()
                 logging.info("Detected negative r")
                 relu = nn.ReLU()
                 # r = (1 - f) / f, give penalty if r < 0

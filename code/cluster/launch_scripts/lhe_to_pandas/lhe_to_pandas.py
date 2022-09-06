@@ -11,8 +11,8 @@ process = sys.argv[2]
 save_root = sys.argv[3]
 n_rep = sys.argv[4]
 
-def lhe_to_pandas(path_to_lhe):
 
+def lhe_to_pandas(path_to_lhe):
     lhe_init = pylhe.readLHEInit(path_to_lhe)
 
     xsec = 0
@@ -23,21 +23,26 @@ def lhe_to_pandas(path_to_lhe):
 
     for e in pylhe.readLHE(path_to_lhe):
         # create particle instances
+
+        incoming_part = []
         for part in e.particles:
-            if part.id in [11, 13]: # e^- or \mu^-
+            if part.status == -1.0:  # select incoming particles
+                incoming_part.append(lhe.Kinematics(part))
+            elif part.id in [11, 13]:  # e^- or \mu^-
                 l1 = lhe.Kinematics(part)
-            elif part.id in [-11, -13]: # e^+ or \mu^+
+            elif part.id in [-11, -13]:  # e^+ or \mu^+
                 l2 = lhe.Kinematics(part)
-            elif part.id == 23: # z boson
+            elif part.id == 23:  # z boson
                 z = lhe.Kinematics(part)
-            elif part.id == 5: # b
+            elif part.id == 5:  # b
                 b = lhe.Kinematics(part)
-            elif part.id == -5: #bbar
+            elif part.id == -5:  # bbar
                 bbar = lhe.Kinematics(part)
 
         # create particle systems
         bb = b + bbar
         ll = l1 + l2
+        qq = incoming_part[0] + incoming_part[1]  # 2 incoming particles
 
         # delta kinematics
         d_eta_b_bbar = lhe.get_deta(b.get_pseudorapidity(), bbar.get_pseudorapidity())
@@ -51,35 +56,40 @@ def lhe_to_pandas(path_to_lhe):
         d_R_b_bbar = np.sqrt(d_eta_b_bbar ** 2 + d_phi_b_bbar ** 2)
 
         # append kinematics
-        events.append([z.get_pt(),
-                       b.get_pt(),
-                       bbar.get_pt(),
-                       bb.get_inv_mass(),
-                       d_R_b_bbar,
-                       d_phi_b_bb,
-                       d_eta_z_bb,
-                       ll.get_inv_mass(),
-                       d_phi_l_b
-                       ])
+        events.append([
+            z.get_pt(),
+            b.get_pt(),
+            bbar.get_pt(),
+            bb.get_inv_mass(),
+            d_R_b_bbar,
+            d_phi_b_bb,
+            d_eta_z_bb,
+            ll.get_inv_mass(),
+            d_phi_l_b,
+            qq.get_pseudorapidity()
+        ])
 
     events.insert(0, [xsec] * len(events[0]))
-    df = pd.DataFrame(events, columns=['pt_z',
-                                       'pt_b',
-                                       'pt_bbar',
-                                       'm_bb',
-                                       'deltaR_bb',
-                                       'deltaPhi_b_bb',
-                                       'deltaEta_z_bb',
-                                       'm_ll',
-                                       'deltaPhi_l_b'])
+    df = pd.DataFrame(events, columns=[
+        'pt_z',
+        'pt_b',
+        'pt_bbar',
+        'm_bb',
+        'deltaR_bb',
+        'deltaPhi_b_bb',
+        'deltaEta_z_bb',
+        'm_ll',
+        'deltaPhi_l_b',
+        'eta_qq'])
 
     return df
+
 
 if os.path.basename(event_dir).startswith(process) is True:
 
     for r in range(int(n_rep)):
         print(r)
-        run_path = os.path.join(event_dir, "job{}".format(r+1), 'Events')
+        run_path = os.path.join(event_dir, "job{}".format(r + 1), 'Events')
 
         if len(os.listdir(run_path)) != 0:
             run_nrs = [int(runs.split("_", 1)[-1]) for runs in os.listdir(run_path)]
@@ -103,7 +113,5 @@ if os.path.basename(event_dir).startswith(process) is True:
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-
         print(r)
         df.to_pickle(os.path.join(save_dir, "events_{}.pkl.gz".format(r)), compression="infer")
-

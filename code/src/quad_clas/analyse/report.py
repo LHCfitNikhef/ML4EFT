@@ -11,11 +11,11 @@ import sys
 
 # generate report for
 order = "lin"
-c_name = "cHWB"
+c_name = "ctu8"
 
 yr = "2022"
-month = "07"
-day = "15"
+month = "09"
+day = "05"
 date = "{yr}_{m}_{d}".format(yr=yr, m=month, d=day)
 
 name = "model_cbhre_lin"
@@ -30,27 +30,37 @@ name = "model_cbhre_lin"
 #     "lin": {"cbhre": [-20, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/15/model_cbhre_lin"],
 #             "chw": [50, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/15/model_chw_lin"]}}
 
-path_to_models = {
-    "lin": {"cHu": [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHu"],
-    "cHd":  [-10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHd"],
-    "cHj1":  [-10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHj1"],
-    "cHj3":  [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHj3"],
-    "cbHRe":  [-10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cbHRe"],
-    "cHW":  [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHW"],
-    "cHWB":  [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHWB"]}}
+# path_to_models = {
+#     "lin": {"cHu": [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHu"],
+#     "cHd":  [-10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHd"],
+#     "cHj1":  [-10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHj1"],
+#     "cHj3":  [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHj3"],
+#     "cbHRe":  [-10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cbHRe"],
+#     "cHW":  [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHW"],
+#     "cHWB":  [10, "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/19/model_cHWB"]}}
+
+path_to_models = {"lin": {"cQd8": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb/2022/09/05/model_cQd8",
+                          "cQj18": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb/2022/09/05/model_cQj18",
+                          "cQj38": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb/2022/09/05/model_cQj38",
+                          "cQu8": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb/2022/09/05/model_cQu8",
+                          "ctd8": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb/2022/09/05/model_ctd8",
+                          "ctGRe": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb/2022/09/05/model_ctGRe",
+                          "ctj8": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb/2022/09/05/model_ctj8",
+                          "ctu8": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb/2022/09/05/model_ctu8"}
+}
 
 path_to_runcard = os.path.join(path_to_models[order][c_name][-1], 'mc_run_0', 'run_card.json')
 
 analyser = analyse.Analyse(path_to_models)
 analyser.build_model_dict()
-
-event_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l_mtt_05/sm/events_0.pkl.gz'
-events_sm = pd.read_pickle(event_path)
-events_sm = events_sm.iloc[1:,:]
-
-#events_sm = events_sm[(events_sm['m_tt'] > 0.5)]
-events_sm = events_sm.sample(5000, random_state=1)
-
+#
+# event_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l_mtt_05/sm/events_0.pkl.gz'
+# events_sm = pd.read_pickle(event_path)
+# events_sm = events_sm.iloc[1:,:]
+#
+# #events_sm = events_sm[(events_sm['m_tt'] > 0.5)]
+# events_sm = events_sm.sample(5000, random_state=1)
+#
 model_dir = os.path.dirname(analyser.model_df.loc[order, c_name]['rep_paths'][0])
 report_path = os.path.join(model_dir, 'report')
 if not os.path.exists(report_path):
@@ -64,6 +74,7 @@ if not os.path.exists(report_path):
 # fig2.savefig(os.path.join(report_path, 'pbp_med.pdf'))
 
 # # loss overview
+
 fig, losses = analyser.plot_loss_overview(c_name, order)
 fig.savefig(os.path.join(report_path, 'loss_{}_{}.pdf'.format(c_name, order)))
 sys.exit()
