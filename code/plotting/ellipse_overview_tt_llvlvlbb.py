@@ -19,18 +19,18 @@ rc('text', usetex=True)
 
 
 
-coeff_dict = {"cQd8": r'$c_{Qd}^{(8)}$', "cQj18": r'$c_{Qq}^{(1,8)}$', "cQj38": r'$c_{Qq}^{(3,8)}$', "cQu8": r'$c_{Qu}^{(8)}$', "ctd8": r'$c_{td}^{(8)}$', "ctGRe": r'$c_{tG}$',  "ctj8": r'$c_{qt}^{(8)}$', "ctu8": r'$c_{tu}^{(8)}$'}
+coeff_dict = {"cQj18": r'$c_{Qq}^{(1,8)}$', "cQj38": r'$c_{Qq}^{(3,8)}$', "cQu8": r'$c_{Qu}^{(8)}$', "ctGRe": r'$c_{tG}$',  "ctj8": r'$c_{qt}^{(8)}$', "ctu8": r'$c_{tu}^{(8)}$'}
 
 root_lin = "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/tt_dec/nn_full"
 
-# nn: linear (7 features)
-post_path_nn = os.path.join(root_lin, '{}_{}', 'posterior_{}_{}.json')
+
+post_path_binned = os.path.join("/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/binned_glob_mtt_lin/posterior.json")
 
 
-paths_plot_1 = [post_path_nn]
+paths_plot_1 = [post_path_binned]
 
 
-labels_1 = [r"$\mathrm{ML}\;\mathrm{model}\;(\mathrm{all\;features}):\mathrm{Linear}$"]
+labels_1 = [r"$\mathrm{Binned}$"]
 
 def ellipse_overview(coeff_dict, labels, paths):
 
@@ -39,10 +39,11 @@ def ellipse_overview(coeff_dict, labels, paths):
 
     fig = plt.figure(figsize=(n_cols * 4, n_rows * 4))
 
-    c1_old = "cQd8"
+    c1_old = "cQj18"
     i = n_cols * n_rows
     j = 1
     for (c1, c2) in itertools.combinations(coeff_dict.keys(), 2):
+
         if c1 != c1_old:
             i -= j
             j += 1
@@ -53,15 +54,13 @@ def ellipse_overview(coeff_dict, labels, paths):
 
         dfs = []
         for path in paths:
-            if os.path.isfile(path.format(c1, c2, c1, c2)):
-                dfs.append(Analyse.posterior_loader(path.format(c1, c2, c1, c2)))
-
-
-
-
+            # if os.path.isfile(path.format(c1, c2, c1, c2)):
+            #     dfs.append(Analyse.posterior_loader(path.format(c1, c2, c1, c2)))
+            if os.path.isfile(path):
+                dfs.append(Analyse.posterior_loader(path))
 
         hndls = plotter.plot(ax, dfs, coeff1=c2, coeff2=c1,
-                                 ax_labels=[coeff_dict[c2], coeff_dict[c1]],  kde=True)
+                                 ax_labels=[coeff_dict[c2], coeff_dict[c1]],  kde=False)
         if j!=1:
             ax.set_xlabel('')
         if not (i == n_cols * n_rows + 1 - j * n_cols):
@@ -80,12 +79,7 @@ def ellipse_overview(coeff_dict, labels, paths):
     return fig
 
 fig_1 = ellipse_overview(coeff_dict, labels_1, paths_plot_1)
-#fig_2 = ellipse_overview(coeff_dict, labels_2, paths_plot_2)
-#fig_3 = ellipse_overview(coeff_dict, labels_3, paths_plot_3)
-# fig_4 = ellipse_overview(coeff_dict, labels_4, paths_plot_4)
 
-fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/05_09/tt_contours.pdf')
-#fig_2.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_lin.pdf')
-#fig_3.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde.pdf')
-# fig_4.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/test_overview_4.pdf')
+
+fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/07_09/tt_contours.pdf')
 
