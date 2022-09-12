@@ -57,13 +57,13 @@ nn_glob_quad_path = '/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob/posterior.
 nn_glob_ptz_quad_path = '/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob_pt_z_quad/posterior.json'
 binned_glob_quad_path = '/data/theorie/jthoeve/ns_samples/zh_llbb/binned_pt_z_quad/posterior.json'
 
-paths_plot_0 = [binned_glob_quad_path, nn_glob_ptz_quad_path, nn_glob_quad_path]
+paths_plot_0 = [nn_glob_ptz_quad_path, nn_glob_quad_path]
 paths_plot_1 = [post_path_binned_quad, post_path_nn_quad, post_path_nn_quad_7_feat]
 paths_plot_2 = [post_path_binned_lin, post_path_nn_lin]
 paths_plot_3 = [post_path_binned_quad, post_path_nn_quad]
 paths_plot_4 = [post_path_binned_lin, post_path_binned_quad, post_path_nn_lin, post_path_nn_quad]
 
-labels_0 = [r"$p_T^Z\in[75, 150, 250, 400, \infty)\:\mathrm{GeV}$", r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z)$", r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features})$", r'$\mathrm{SM}$']
+labels_0 = [r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z)$", r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features})$", r'$\mathrm{SM}$']
 labels_1 = [r"$p_T^Z\in[75, 150, 250, 400, \infty)\:\mathrm{GeV}:\mathrm{Quadratic}$", r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z):\mathrm{Quadratic}$",
           r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features}):\mathrm{Quadratic}$"]
 

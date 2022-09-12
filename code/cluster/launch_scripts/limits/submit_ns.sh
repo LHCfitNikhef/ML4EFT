@@ -25,14 +25,14 @@ function submit_job () {
   chmod +x $PWD'/optimize_runner.py'
 
   # submission
-  qsub -q smefit -W group_list=smefit -l nodes=1:ppn=$NCORES -l pvmem=8000mb -l walltime=04:00:00 $COMMAND
+  qsub -q short7 -W group_list=theorie -l nodes=1:ppn=$NCORES -l pvmem=8000mb -l walltime=04:00:00 $COMMAND
   rm $COMMAND
 
 }
 
 # SETUP
 NCORES='16'
-FID_ID=$PWD'/run_cards/NS_run_card_zhllbb.json'
+FID_ID=$PWD'/run_cards/NS_run_card_tt_llvlvlbb.json'
 
 # pair of operator fits
 

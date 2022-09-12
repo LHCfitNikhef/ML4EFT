@@ -120,6 +120,8 @@ class Optimize:
             )
             sys.exit()
 
+
+
         self.th_pred = theory_pred.TheoryPred(self.path_to_theory_pred,
                                               kinematic=self.kinematic,
                                               bins=self.bins)

@@ -166,8 +166,8 @@ class EllipsePlotter:
         """
 
         hndls = []
-        #colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-        colors = ['C0', 'C1', 'C2']
+        colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+        #colors = ['C1', 'C2']
 
         for i, df in enumerate(dfs):
 
@@ -212,9 +212,9 @@ class EllipsePlotter:
                         hndls,
                         facecolor=colors[i])
 
-                    if i == 0 and (coeff1 == 'cbHRe' or coeff2 == 'cbHRe'):
-                        ax.scatter(np.random.choice(coeff1_values, 1000, replace=False),
-                                   np.random.choice(coeff2_values, 1000, replace=False), alpha=0.3, color=colors[i], s=5)
+                    # if i == 0 and (coeff1 == 'cbHRe' or coeff2 == 'cbHRe'):
+                    #     ax.scatter(np.random.choice(coeff1_values, 1000, replace=False),
+                    #                np.random.choice(coeff2_values, 1000, replace=False), alpha=0.3, color=colors[i], s=5)
 
 
                 # smefit

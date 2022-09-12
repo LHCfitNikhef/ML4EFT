@@ -238,6 +238,7 @@ class PreProcessing():
         #self.df_sm = df_sm_wo_xsec[(df_sm_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
         self.df_sm = df_sm_wo_xsec.sample(fitter.n_dat)
 
+
         # eft
 
         df_eft_full = pd.read_pickle(self.path['eft'], compression="infer")
@@ -254,6 +255,7 @@ class PreProcessing():
 
         # self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
         self.df_eft = df_eft_wo_xsec.sample(fitter.n_dat)
+
 
         #self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_zh'] > 0.25)].sample(self.n_dat)
 
@@ -483,6 +485,7 @@ class Fitter:
         scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
         df_sm_scaled, df_eft_scaled = preproc.feature_scaling(self, scaler_path)
 
+        self.n_dat = min(len(df_eft_scaled), len(df_sm_scaled))
 
         # We construct an eft and a sm data set for each value of c in c_values and make a list out of it
         # As of the new version of the code where only the sm and any non-zero point in EFT space are needed
@@ -689,7 +692,7 @@ class Fitter:
         if self.loss_type == 'CE':
 
             if any(outputs >= 1) or any(outputs <= 0): # if r <= 0
-                import pdb; pdb.set_trace()
+
                 logging.info("Detected negative r")
                 relu = nn.ReLU()
                 # r = (1 - f) / f, give penalty if r < 0

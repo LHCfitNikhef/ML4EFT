@@ -16,8 +16,8 @@ def lhe_to_pandas(path_to_lhe):
     lhe_init = pylhe.readLHEInit(path_to_lhe)
 
     xsec = 0
-    for process in lhe_init['procInfo']:
-        xsec += process['xSection']
+    for proc in lhe_init['procInfo']:
+        xsec += proc['xSection']
 
     events = []
 
@@ -127,8 +127,8 @@ if os.path.basename(event_dir).startswith(process) is True:
     # loop over all jobs
     for job in job_dirs:
 
-        #run_path = os.path.join(event_dir, job, 'Events')
-        run_path = "/data/theorie/jthoeve/ML4EFT_events/tt_sm/job54/Events"
+        run_path = os.path.join(event_dir, job, 'Events')
+
         # exclude non-job directories
         if not job.startswith('job'):
             continue
@@ -159,8 +159,10 @@ if os.path.basename(event_dir).startswith(process) is True:
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        df.to_pickle(os.path.join(save_dir, "events_{}.pkl.gz".format(54)), compression="infer")
-        break
+        df.to_pickle(os.path.join(save_dir, "events_{}.pkl.gz".format(rep_nr)), compression="infer")
+
         rep_nr += 1
+else:
+    sys.exit()
 
 
