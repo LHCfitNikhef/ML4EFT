@@ -1,7 +1,7 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-import quad_clas.core.truth.vh_prod as vh_prod
+import ml4eft.core.truth.vh_prod as vh_prod
 
 bins = np.linspace(0.3, 1, 10)
 n_dat = len(bins) - 1

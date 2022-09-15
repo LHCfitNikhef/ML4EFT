@@ -32,9 +32,14 @@ Welcome to ML4EFT's documentation!
    :hidden:
 
    modules/installation.rst
-   modules/quad_clas.rst
    modules/tutorial.rst
 
+.. autosummary::
+   :toctree: _autosummary
+   :template: custom-module-template.rst
+   :recursive:
+
+   ml4eft
 
 .. toctree::
    :maxdepth: 4

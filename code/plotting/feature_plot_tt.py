@@ -1,7 +1,7 @@
 # script that plots differential xsection distributions with
 # as input a pandas datafram obtained from a lhe file
 
-import quad_clas.plotting.features as features
+import ml4eft.plotting.features as features
 import pandas as pd
 import os
 

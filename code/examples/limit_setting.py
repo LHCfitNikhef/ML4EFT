@@ -1,7 +1,7 @@
 import numpy as np
-import quad_clas.core.classifier as classifier
-import quad_clas.analyse.confidence_intervals as conf_int
-import quad_clas.analyse.analyse as analyse
+import ml4eft.core.classifier as classifier
+import ml4eft.analyse.confidence_intervals as conf_int
+import ml4eft.analyse.analyse as analyse
 
 
 # Network's architecture of the pretrained models

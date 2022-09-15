@@ -1,0 +1,65 @@
+ml4eft.core.classifier.ConstraintActivation
+===========================================
+
+.. currentmodule:: ml4eft.core.classifier
+
+.. autoclass:: ConstraintActivation
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ConstraintActivation.__init__
+      ~ConstraintActivation.add_module
+      ~ConstraintActivation.apply
+      ~ConstraintActivation.bfloat16
+      ~ConstraintActivation.buffers
+      ~ConstraintActivation.children
+      ~ConstraintActivation.cpu
+      ~ConstraintActivation.cuda
+      ~ConstraintActivation.double
+      ~ConstraintActivation.eval
+      ~ConstraintActivation.extra_repr
+      ~ConstraintActivation.float
+      ~ConstraintActivation.forward
+      ~ConstraintActivation.half
+      ~ConstraintActivation.load_state_dict
+      ~ConstraintActivation.modules
+      ~ConstraintActivation.named_buffers
+      ~ConstraintActivation.named_children
+      ~ConstraintActivation.named_modules
+      ~ConstraintActivation.named_parameters
+      ~ConstraintActivation.parameters
+      ~ConstraintActivation.register_backward_hook
+      ~ConstraintActivation.register_buffer
+      ~ConstraintActivation.register_forward_hook
+      ~ConstraintActivation.register_forward_pre_hook
+      ~ConstraintActivation.register_parameter
+      ~ConstraintActivation.requires_grad_
+      ~ConstraintActivation.share_memory
+      ~ConstraintActivation.state_dict
+      ~ConstraintActivation.to
+      ~ConstraintActivation.train
+      ~ConstraintActivation.type
+      ~ConstraintActivation.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ConstraintActivation.T_destination
+      ~ConstraintActivation.dump_patches
+      ~ConstraintActivation.training
+   
+   

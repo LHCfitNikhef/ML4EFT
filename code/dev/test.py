@@ -1,6 +1,6 @@
 # %%
-from quad_clas.core.th_predictions import TheoryPred
-from quad_clas.plotting.plot_contours import plot_contours, plot_contours_binned
+from ml4eft.core.th_predictions import TheoryPred
+from ml4eft.plotting.plot_contours import plot_contours, plot_contours_binned
 import numpy as np
 
 # %%

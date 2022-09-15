@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import pandas as pd
 
-import quad_clas.analyse.analyse as analyse
+import ml4eft.analyse.analyse as analyse
 
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 19})
 rc('text', usetex=True)

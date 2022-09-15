@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import pandas as pd
 
-from quad_clas.core.truth import vh_prod, tt_prod
-import quad_clas.preproc.constants as constants
+from ml4eft.core.truth import vh_prod, tt_prod
+import ml4eft.preproc.constants as constants
 
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 14})
 rc('text', usetex=True)

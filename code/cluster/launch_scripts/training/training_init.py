@@ -1,5 +1,5 @@
 import sys
-import quad_clas.core.classifier as classifier
+import ml4eft.core.classifier as classifier
 
 # training settings
 

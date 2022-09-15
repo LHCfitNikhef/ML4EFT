@@ -8,8 +8,8 @@ import lhapdf
 import matplotlib.pyplot as plt
 from scipy import integrate
 #%%
-from quad_clas.core.truth import tt_prod as xsec
-from quad_clas.core.lhelib import lhe as lhe
+from ml4eft.core.truth import tt_prod as xsec
+from ml4eft.core.lhelib import lhe as lhe
 #%%
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 s = 14 ** 2 # Collider COM energy squared [TeV^2]

@@ -1,5 +1,5 @@
 #%%
-from quad_clas.core.truth import vh_prod
+from ml4eft.core.truth import vh_prod
 
 hats = 0.3 ** 2
 ptv = 0.1

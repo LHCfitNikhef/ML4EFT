@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import ellipse_plotter_new as ellipse
 
-import quad_clas.analyse.analyse as analyse
+import ml4eft.analyse.analyse as analyse
 
 path_bin_1 = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_tt/binned_mtt_05_inf/posterior.json'
 path_bin_2 = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/ns_tt/binned_mtt_05_10_inf/posterior.json'

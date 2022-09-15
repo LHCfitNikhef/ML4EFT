@@ -2,7 +2,7 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-import quad_clas.core.truth.vh_prod as vh_prod
+import ml4eft.core.truth.vh_prod as vh_prod
 from matplotlib.pyplot import cm
 
 # load data under the sm hypothesis

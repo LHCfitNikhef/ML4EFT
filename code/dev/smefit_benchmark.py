@@ -1,5 +1,5 @@
 #%%
-from quad_clas.core.th_predictions import TheoryPred
+from ml4eft.core.th_predictions import TheoryPred
 import numpy as np
 import pandas as pd
 #%% experimental data

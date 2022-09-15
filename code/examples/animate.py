@@ -1,11 +1,11 @@
 #%%
-import quad_clas.analyse.animate as animate
-import quad_clas.core.classifier as classifier
+import ml4eft.analyse.animate as animate
+import ml4eft.core.classifier as classifier
 import numpy as np
 import torch
-import quad_clas.analyse.analyse as analyse
+import ml4eft.analyse.analyse as analyse
 import os
-from quad_clas.preproc import constants
+from ml4eft.preproc import constants
 #%%
 
 # constants

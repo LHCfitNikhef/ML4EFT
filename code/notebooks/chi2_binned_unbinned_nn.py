@@ -2,8 +2,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import quad_clas.core.truth.vh_prod as vh_prod
-from quad_clas.core.classifier import PredictorCross, Classifier, PredictorQuadratic
+import ml4eft.core.truth.vh_prod as vh_prod
+from ml4eft.core.classifier import PredictorCross, Classifier, PredictorQuadratic
 import os
 import torch
 
