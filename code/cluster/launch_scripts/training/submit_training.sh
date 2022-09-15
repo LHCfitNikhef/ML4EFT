@@ -26,7 +26,7 @@ function submit_job () {
 
 # SETUP
 
-MCREPS=45
+MCREPS=25
 
 # zh -> llbb
 
@@ -40,7 +40,7 @@ MCREPS=45
 
 # tt -> llvlvlbb
 
-RUN_CARD_ROOT="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb/run_card_tt_llvlvlbb_"
+RUN_CARD_ROOT="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb_mtt/run_card_tt_llvlvlbb_"
 #coeff=( "ctd8" "cQd8" "cQj18" "cQj38" "cQu8" "ctGRe" "ctj8" "ctu8")
 
 coeff=( "cQd8_cQd8" "cQd8_cQj18" "cQd8_cQj38" "cQd8_ctd8" "cQd8_ctGRe" "cQd8_ctj8" "cQj18_cQj18" "cQj18_cQj38" "cQj18_cQu8" "cQj18_ctd8"

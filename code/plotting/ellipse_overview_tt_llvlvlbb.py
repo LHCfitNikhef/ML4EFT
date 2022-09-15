@@ -22,12 +22,14 @@ coeff_dict = {"ctd8": r'$c_{td}^{(8)}$', "cQd8": r'$c_{Qd}^{(8)}$', "cQj18": r'$
 # high lumi plots
 
 binned_path = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/binned_glob_mtt_quad/posterior.json'
+nn_path_mtt = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/nn_glob_quad_mtt/posterior.json'
 nn_path = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/nn_glob_quad/posterior.json'
 
-paths_plot_0 = [binned_path, nn_path]
+paths_plot_0 = [binned_path, nn_path_mtt, nn_path]
 
 
 labels_0 = [r"$m_{t\bar{t}}\in[1.45, 1.50, 1.60, 1.70, 2.00, \infty)\:\mathrm{GeV}$",
+            r"$\mathrm{ML}\;\mathrm{model}\;(m_{t\bar{t}})$",
             r"$\mathrm{ML}\;\mathrm{model}\;(18\;\mathrm{features})$", r'$\mathrm{SM}$']
 
 def ellipse_overview(coeff_dict, labels, paths):
@@ -98,5 +100,5 @@ fig_0 = ellipse_overview(coeff_dict, labels_0, paths_plot_0)
 
 
 
-fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/12_09/tt_llvlvlbb_quad_glob_nn_binned.pdf')
+fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/13_09/tt_llvlvlbb_quad_glob_nn_binned.pdf')
 
