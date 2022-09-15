@@ -32,6 +32,9 @@ mz = 91.188 * 10 ** -3  # z boson mass [TeV]
 mh = 0.125
 
 class MLP(nn.Module):
+    """ Multi Layer Perceptron that serves as building block for the binary classifier
+
+    """
 
     def __init__(self, architecture):
         """
@@ -59,6 +62,19 @@ class MLP(nn.Module):
             *layers)  # nn.Sequential summarizes a list of modules into a single module, applying them in sequence
 
     def forward(self, x):
+        """
+        Performs a forward pass of the MLP
+
+        Parameters
+        ----------
+        x: array_like
+            Input ``(N, ) torch.Tensor`` with ``N`` the number of input nodes
+
+        Returns
+        -------
+        out: torch.Tensor
+
+        """
         out = self.layers(x)
         return out
 
@@ -72,40 +88,77 @@ class CustomActivationFunction(nn.Module):
 
 
 class ConstraintActivation(CustomActivationFunction):
+    """Class to transform the classifier output to ensure a positive likelihood ratio
+
+    """
 
     def __init__(self, c):
+        """
+
+        Parameters
+        ----------
+        c: float
+            Traning parameter :math:`c^{(\mathrm{tr})}` at which the EFT data set is generated
+        """
         super().__init__()
         self.c = c
 
     def forward(self, x):
         if self.c > 0:
-            return torch.relu(x) - 1 / self.c + 1e-6 # change to 1e-10 for zh
+            return torch.relu(x) - 1 / self.c + 1e-6
         else:
 
-            return - torch.relu(x) - 1 / self.c - 1e-6  #change to 1e-10 for zh
+            return - torch.relu(x) - 1 / self.c - 1e-6
 
 
 class Classifier(nn.Module):
-    """
-    Returns the function f(x,c) from the paper (Wulzer et al.) in the linear case
+    """ The decssion function :math:`g(x, c)`
+
+    Implementation of the decision boundary `g(x, c)`
     """
 
     def __init__(self, architecture, c):
         super().__init__()
         self.c = c
-        self.n_alpha = MLP(architecture)
-        self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
+        self.NN = MLP(architecture)
+        self.NN.layers.add_module('constraint', ConstraintActivation(self.c))
 
     def forward(self, x):
+        """
 
-        # add final activation function to enforce positive r
+        Parameters
+        ----------
+        x: array_like
+            Input ``(N, ) torch.Tensor`` with ``N`` the number of input nodes
 
-        n_alpha_out = self.n_alpha(x)
-        return 1 / (1 + (1 + self.c * n_alpha_out))
+        Returns
+        -------
+        g: Torch.Tensor
+            decision boundary between two
+
+        """
+
+        NN_out = self.NN(x)
+        g = 1 / (1 + (1 + self.c * NN_out))
+        return g
 
 class PreProcessing():
 
+    """
+    A feature preprocessor and data loader
+    """
+
     def __init__(self, fitter, path):
+        """
+
+        Parameters
+        ----------
+        fitter: :py:class:`Fitter <ml4eft.core.classifier.Fitter>`
+            Fitter object
+        path: dict
+            Dictionary with paths to the SM and EFT dataset, e.g:
+            :code:`{'sm': <path_to_sm_dataset>, 'eft': <path_to_eft_dataset>}`
+        """
 
         self.path = path
 
@@ -119,7 +172,9 @@ class PreProcessing():
         self.load_data(fitter)
 
     def load_data(self, fitter):
-
+        """
+        Loads ``pandas.DataFrame`` into SM and EFT dataframes.
+        """
         # sm
 
         df_sm_full = pd.read_pickle(self.path['sm'], compression="infer")
@@ -127,22 +182,34 @@ class PreProcessing():
 
         # cross section before cuts
         self.xsec_sm = df_sm_full.iloc[0, 0]
-
         self.df_sm = df_sm_wo_xsec.sample(fitter.n_dat)
 
-
         # eft
-
         df_eft_full = pd.read_pickle(self.path['eft'], compression="infer")
         df_eft_wo_xsec = df_eft_full.iloc[1:, :]
 
         # cross section before cuts
         self.xsec_eft = df_eft_full.iloc[0, 0]
-
         self.df_eft = df_eft_wo_xsec.sample(fitter.n_dat)
 
 
     def feature_scaling(self, fitter, scaler_path):
+        """
+
+        Parameters
+        ----------
+        fitter: :py:class:`Fitter <ml4eft.core.classifier.Fitter>`
+            Fitter object
+        scaler_path: string
+            Path to where preprocessing scaler must be saved
+        Returns
+        -------
+        df_sm_scaled : pandas.DataFrame
+            Rescaled SM events
+
+        df_eft_scaled : pandas.DataFrame
+            Rescaled EFT events
+        """
 
         df = pd.concat([self.df_sm, self.df_eft])
 
@@ -163,12 +230,13 @@ class PreProcessing():
         return df_sm_scaled, df_eft_scaled
 
 class EventDataset(data.Dataset):
+    """
+
+    """
 
     def __init__(self, df, preproc, xsec, path, n_dat, features, hypothesis=0):
         """
-        Inputs:
-            c - value of the Wilson coefficient
-            hypothesis - 0 (False) if EFT and 1 (True) if SM
+
         """
         super().__init__()
 
@@ -201,16 +269,15 @@ class EventDataset(data.Dataset):
 
     def __getitem__(self, idx):
         """
-        Return a tuple (eft, sm) with info on the idx-th data point of the dataset
-        Outputs:
-            - data tuple: (eft event, sm event)
-            - label tuple: label = 0 for the eft, label = 1 for the sm
-            - weight tuple: weight per event
+        Gets item
         """
         data_sample, weight_sample, label_sample = self.events[idx], self.weights[idx], self.labels[idx]
         return data_sample, weight_sample, label_sample
 
 class Fitter:
+    """
+    T
+    """
 
     def __init__(self, json_path, mc_run, output_dir):
         # read the json run card

@@ -30,7 +30,7 @@ def get_nn_ratio(x, c1, c2, mc_run):
         mean, std = np.loadtxt(os.path.join(path_lin_1, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
 
         x_scaled = (x - mean) / std
-        n_lin_1_out = n_lin_1.n_alpha(x_scaled.float()) ** 2
+        n_lin_1_out = n_lin_1.NN(x_scaled.float()) ** 2
 
         #######
 
@@ -39,7 +39,7 @@ def get_nn_ratio(x, c1, c2, mc_run):
 
         mean, std = np.loadtxt(os.path.join(path_lin_2, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
         x_scaled = (x - mean) / std
-        n_lin_2_out = n_lin_2.n_alpha(x_scaled.float()) ** 2
+        n_lin_2_out = n_lin_2.NN(x_scaled.float()) ** 2
 
         ########
 

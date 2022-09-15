@@ -52,7 +52,7 @@ n_alphas = []
 for i in range(n_models):
     x_scaled = (x - means[i]) / std[i]
     with torch.no_grad():
-        n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(x_scaled).float()).numpy().flatten())
+        n_alphas.append(loaded_models_lin[i].NN(torch.tensor(x_scaled).float()).numpy().flatten())
 n_alphas = np.array(n_alphas)
 r = 1 + 2 * n_alphas
 #%%
@@ -82,7 +82,7 @@ def load_coefficients_nn(x, architecture, path_to_models, mc_reps, epoch=-1):
                 for i in range(mc_reps):
                     x_scaled = (x - means[i]) / std[i]
                     with torch.no_grad():
-                        n_alphas.append(loaded_models_lin[i].n_alpha(torch.tensor(x_scaled).float()).numpy().flatten())
+                        n_alphas.append(loaded_models_lin[i].NN(torch.tensor(x_scaled).float()).numpy().flatten())
                 n_alphas = np.array(n_alphas)
                 n_lin.append(n_alphas)
 

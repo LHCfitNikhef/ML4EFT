@@ -359,7 +359,7 @@ class Analyse:
                     features = dict_c['run_card']['features']
                     features_scaled = dict_c['scalers'][i].transform(df[features])
                     with torch.no_grad():
-                        model_ev = model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten()
+                        model_ev = model.NN(torch.tensor(features_scaled).float()).numpy().flatten()
                     models_evaluated[order][c_name]['models'][i] = model_ev
 
                 models_evaluated[order][c_name]['models'] = np.vstack(models_evaluated[order][c_name]['models'])
