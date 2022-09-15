@@ -239,7 +239,7 @@ class Analyse:
                 else: # c1 * c2 coefficient function
                     c_train = np.prod(coeff_train_values)
 
-            loaded_model = quad_clas.PredictorLinear(run_card['architecture'], c_train)
+            loaded_model = quad_clas.Classifier(run_card['architecture'], c_train)
 
             # build path to model config file
             if epoch != -1:  # if specific epoch is requested

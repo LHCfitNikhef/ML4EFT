@@ -90,18 +90,7 @@ class ConstraintActivation(CustomActivationFunction):
             return - torch.relu(x) - 1 / self.c - 1e-6  #change to 1e-10 for zh
 
 
-class ConstraintActivationQuad(CustomActivationFunction):
-
-    def __init__(self, c, nn_lin):
-        super().__init__()
-        self.c = c
-        self.nn_lin = nn_lin
-
-    def forward(self, x):
-        return torch.relu(x) - (1 + self.c * self.nn_lin) / self.c ** 2 + 1e-6
-
-
-class PredictorLinear(nn.Module):
+class Classifier(nn.Module):
     """
     Returns the function f(x,c) from the paper (Wulzer et al.) in the linear case
     """
@@ -147,14 +136,6 @@ class PreProcessing():
         # cross section before cuts
         self.xsec_sm = df_sm_full.iloc[0, 0]
 
-        # reweigh the cross section after cuts
-        #cuts = df_sm_wo_xsec['m_tt'] > fitter.threshold_cut
-        #cuts = df_sm_wo_xsec['m_zh'] > 0.25
-
-        #event_ratio_with_cut = len(df_sm_wo_xsec[cuts]) / len(df_sm_wo_xsec)
-        #self.xsec_sm *= event_ratio_with_cut
-
-        #self.df_sm = df_sm_wo_xsec[(df_sm_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
         self.df_sm = df_sm_wo_xsec.sample(fitter.n_dat)
 
 
@@ -166,32 +147,10 @@ class PreProcessing():
         # cross section before cuts
         self.xsec_eft = df_eft_full.iloc[0, 0]
 
-        # reweigh the cross section after cuts
-        #cuts = df_eft_wo_xsec['m_tt'] > fitter.threshold_cut
-        #cuts = df_eft_wo_xsec['m_zh'] > 0.25
-        #event_ratio_with_cut = len(df_eft_wo_xsec[cuts]) / len(df_eft_wo_xsec)
-        #self.xsec_eft *= event_ratio_with_cut
-
-        # self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_tt'] > fitter.threshold_cut)].sample(fitter.n_dat)
         self.df_eft = df_eft_wo_xsec.sample(fitter.n_dat)
 
 
-        #self.df_eft = df_eft_wo_xsec[(df_eft_wo_xsec['m_zh'] > 0.25)].sample(self.n_dat)
-
-
     def feature_scaling(self, fitter, scaler_path):
-
-        # add log features for pT
-        # self.df_sm['log_pt_z'] = np.log(self.df_sm['pt_z'])
-        # # self.df_sm['log_pt_b'] = np.log(self.df_sm['pt_b'])
-        # #
-        # self.df_eft['log_pt_z'] = np.log(self.df_eft['pt_z'])
-        # # self.df_eft['log_pt_b'] = np.log(self.df_eft['pt_b'])
-        #
-        # self.df_sm['log_m_zh'] = np.log(self.df_sm['m_zh'])
-        # self.df_eft['log_m_zh'] = np.log(self.df_eft['m_zh'])
-        # self.df_sm['log_m_tt'] = np.log(self.df_sm['m_tt'])
-        # self.df_eft['log_m_tt'] = np.log(self.df_eft['m_tt'])
 
         df = pd.concat([self.df_sm, self.df_eft])
 
@@ -206,19 +165,8 @@ class PreProcessing():
         df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=fitter.features)
         df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=fitter.features)
 
-        # import matplotlib.pyplot as plt
-        # bins = np.concatenate([np.array([-2]), np.linspace(-1, 1, 20), np.array([2])])
-        # kwargs = dict(histtype='stepfilled', alpha=0.3, density=False, bins=bins, ec="k")
-        # plt.hist(df_sm_scaled['m_tt'].values, **kwargs, label=r'$\rm{SM}$')
-        #
-        # plt.xlim(-1.2, 1.2)
-        # plt.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/07_06/feature_scaling_tt_v2.pdf')
-        # # plt.show()
-        # import pdb; pdb.set_trace()
-
         # save the scaler
         joblib.dump(self.scaler, scaler_path)
-        #dump(robsc, open(scaler_path, 'wb'))
 
         return df_sm_scaled, df_eft_scaled
 
@@ -361,14 +309,13 @@ class Fitter:
         # initialise all paths to None, unless we run at pure quadratic or cross term level
         self.path_lin_1 = self.path_lin_2 = self.path_quad_1 = self.path_quad_2 = None
 
-
         # build the paths to the eft event data and initialize the right model
         if self.quadratic:
             self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorLinear(self.network_size, self.coeff_train_value)
-        else:
+            self.model = Classifier(self.network_size, self.coeff_train_value)
+        else: # linear
             self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = PredictorLinear(self.network_size, self.coeff_train_value)
+            self.model = Classifier(self.network_size, self.coeff_train_value)
 
         # create log file with timestamp
         t = time.localtime()
@@ -429,7 +376,7 @@ class Fitter:
 
         data_all = [data_eft, data_sm]
 
-        # split each data set in training (50%) and validation (50%).
+        # split each data set in training and validation
         data_split = []
         for dataset in data_all:
             n_val_points = int(self.val_ratio * len(dataset))
@@ -449,11 +396,7 @@ class Fitter:
         # define the optimizer
         optimizer = optim.AdamW(self.model.parameters(), lr=self.lr)
 
-
-        #decay_rate = 0.96
-        #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer)
-
-        # we use PyTorche's dataloader object to allow for mini-batches. After each epoch, the minibatches reshuffle.
+        # Use PyTorche's DataLoader to allow for mini-batches. After each epoch, the minibatches reshuffle.
         # we create a dataloader object for each eft point + sm and put them all in one big list called train_data_loader
         # or val_data_loader
         train_data_loader = [
@@ -476,7 +419,6 @@ class Fitter:
         # by one whenever the the validation loss increases during an epoch
 
         overfit_counter = 0
-        neg_r_counter = 0
 
         # outer loop that runs over the number of epochs
         iterations = 0
@@ -495,20 +437,13 @@ class Fitter:
             torch.save(self.model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
 
             # compute validation loss
-            negative_r = False
             with torch.no_grad():
                 for minibatch in zip(*val_loader):
                     val_loss = torch.zeros(1)
                     for i, [event, weight, label] in enumerate(minibatch):
-                        if isinstance(self.model, PredictorLinear):
+                        if isinstance(self.model, Classifier):
                             output = self.model(event.float())
-                            if not negative_r:
-                                negative_r = any(output >= 1) or any(output <= 0)
-                        if isinstance(self.model, PredictorQuadratic):
-                            output = self.model(self, preproc, event.float())
-                        if isinstance(self.model, PredictorCross):
-                            output = self.model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
-                                           self.path_quad_2)
+
                         loss = self.loss_fn(output, label, weight)
                         val_loss += loss
                     assert val_loss.requires_grad is False
@@ -516,36 +451,23 @@ class Fitter:
                     loss_val += val_loss.item()
 
 
-            # the * denotes the unpacking operator. It passes all the list elements
-            # of train_loader as separate arguments to the zip function, e.g f(a[0], a[1]) = f(*a).
-            # Here we have zip(DataLoader_1, DataLoader_2, ..) which enables looping over our mini-batches.
+            # loop over the mini-batches.
             for j, minibatch in enumerate(zip(*train_loader)):
                 train_loss = torch.zeros(1)
                 # loop over all the datasets within the minibatch and compute their contribution to the loss
                 for i, [event, weight, label] in enumerate(minibatch): # i=0: eft, i=1: sm
-                    if isinstance(self.model, PredictorLinear):
+                    if isinstance(self.model, Classifier):
                         output = self.model(event.float())
-                        if not negative_r:
-                            negative_r = any(output >= 1) or any(output <= 0)
-                    if isinstance(self.model, PredictorQuadratic):
-                        output = self.model(self, preproc, event.float())
-                    if isinstance(self.model, PredictorCross):
-                        output = model(event.float(), self.c1, self.c2, self.path_lin_1, self.path_lin_2, self.path_quad_1,
-                                       self.path_quad_2, self.path_dict['mc_path'])
+
                     loss = self.loss_fn(output, label, weight)
                     train_loss += loss
 
-                # do gradient descent after each minibatch. Move to the next epoch when all minibatches are looped over.
+                # perform gradient descent after each minibatch. Move to the next epoch when all minibatches are looped over.
                 optimizer.zero_grad()
                 train_loss.backward()
                 optimizer.step()
 
                 loss_train += train_loss.item()
-
-            if negative_r:  # count how many epochs r < 0
-                neg_r_counter += 1
-
-            #scheduler.step(train_loss)
 
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
@@ -566,10 +488,8 @@ class Fitter:
             # validation loss increases during the epoch. If the counter increases for patience epochs straight
             # the training is stopped
 
-            if epoch > 20 and not negative_r:
-                delta = np.abs(loss_list_val[-1] - loss_list_val[-20])
-                no_improvement = loss_val > min(loss_list_val[neg_r_counter:]) or delta < self.delta_min
-                if no_improvement:
+            if epoch > 20:
+                if loss_val > min(loss_list_val):
                     overfit_counter += 1
                 else:
                     overfit_counter = 0
@@ -601,23 +521,10 @@ class Fitter:
 
     def loss_fn(self, outputs, labels, w_e):
 
-        """
-        :param outputs: outputs.shape = (batch_size, 1), output \in (0, 1)
-        :param labels: labels.shape = (batch_size, 1), labels \in {0, 1}
-        :param w_e: w_e.shape = (batch_size, 1), w_e \in [0, \infty)
-        :return: contribution to loss from a sample x ~ pdf(x|H_0,1)
-        """
-
         if self.loss_type == 'CE':
 
-            if any(outputs >= 1) or any(outputs <= 0): # if r <= 0
+            loss = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
 
-                logging.info("Detected negative r")
-                relu = nn.ReLU()
-                # r = (1 - f) / f, give penalty if r < 0
-                loss = self.lag_mult * relu((outputs - 1) / outputs)
-            else:
-                loss = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
         elif self.loss_type == 'QC':
             loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
 

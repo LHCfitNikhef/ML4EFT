@@ -5,7 +5,7 @@ import torch
 import os
 import json
 
-from ..core.classifier import PredictorCross, PredictorLinear, PredictorQuadratic
+from ..core.classifier import PredictorCross, Classifier, PredictorQuadratic
 from ..preproc import constants
 from ..analyse import analyse
 from ..core.truth import vh_prod
