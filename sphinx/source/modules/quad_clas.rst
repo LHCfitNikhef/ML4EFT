@@ -1,3 +1,5 @@
+.. _code:
+
 quad\_clas package
 ==================
 
@@ -12,10 +14,6 @@ Subpackages
    quad_clas.multinest
    quad_clas.preproc
 
-Module contents
+Meta
 ---------------
 
-.. automodule:: quad_clas
-   :members:
-   :undoc-members:
-   :show-inheritance:
