@@ -613,7 +613,30 @@ class Analyse:
             return im
 
     def plot_heatmap_overview(self, c_name, order, process, cut=None, reps=None, epoch=-1):
+        """
+        Produces an overview of heatmaps showing in each plot the ratio between the ML model prediction and
+        the analytical EFT ratio function :math:`r_{\sigma}^{(i)}` or :math:`r_{\sigma}^{(i, j)}`
 
+        Parameters
+        ----------
+        c_name: str
+            Name of EFT coefficient
+        order: str
+            Order in the EFT expansion
+        process: str
+            Specifies the process, choose between 'tt' and 'ZH'
+        cut: float, optional
+            Lower cut on the invariant mass
+        reps: int, optional
+            Number of replicas to include in the heatmap overview
+        epoch: int, optional
+            Specific epoch to plot at, takes the best models by default
+
+        Returns
+        -------
+        fig: matplotlib.pyplot.Figure
+
+        """
         from mpl_toolkits.axes_grid1 import AxesGrid
 
         rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
@@ -643,21 +666,22 @@ class Analyse:
 
     def likelihood_ratio_nn(self, c, df=None, epoch=-1):
         """
-           Computes NN likelihood ratio
+        Compute the Neural Network parameterised likelihood ratio
 
-           Parameters
-           ----------
-           df: pd.DataFrame
-               event info
-           c: numpy.ndarray
-               EFT point
+        Parameters
+        ----------
+        c: dict
+            Of the form {'c1': value, 'c2': value, ...}
+        df: pandas.DataFrame, optional
+            In case the loaded models have not been evaluated yet, one can pass ``df`` to evaluate the neural networks
+        epoch: int, optional
+            Specify an epoch if necessary, takes the best model by default
 
-           Returns
-           -------
-           ratio: numpy.ndarray
-               NN likelihood ratio
-           """
-
+        Returns
+        -------
+        ratio: array_like
+            likelihood ratio as ``(N,M) ndarray`` with ``N`` and ``M`` the number of replicas and events respectively
+        """
         # update evaluated models for a new df
         if df is not None:
             self.evaluate_models(df, epoch=epoch)
@@ -685,7 +709,7 @@ class Analyse:
 
     def decision_function_nn(self, c, df=None, epoch=-1):
         """
-        Computes NN decision function
+        Computes the Neural Network parameterised decision function :math:`g(x, c)`
 
         Parameters
         ----------
