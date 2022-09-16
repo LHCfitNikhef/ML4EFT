@@ -52,6 +52,11 @@ autosummary_generate = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
+autosummary_mock_imports = [
+    'ml4eft.preproc.constants',
+    'ml4eft.analyse.report'
+]
+
 # Bibtex
 # bibtex_bibfiles = ['EELS_ML.bib']
 # bibtex_default_style = 'unsrt'
@@ -102,7 +107,7 @@ extlinks = {}
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_rtd_theme'
 html_theme = 'sphinx_book_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,

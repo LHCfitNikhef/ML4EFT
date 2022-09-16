@@ -1,4 +1,4 @@
 Training Methodology
-==================
+====================
 
 Training methodology

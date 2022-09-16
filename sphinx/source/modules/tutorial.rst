@@ -1,5 +1,5 @@
 Tutorial
-============
+========
 
 An example of how the quad_clas is used:
 

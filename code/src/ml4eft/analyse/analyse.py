@@ -73,8 +73,7 @@ class Analyse:
 
     @staticmethod
     def posterior_loader(path):
-        """
-        Loads posterior samples at ``path'' and converts it to a Pandas.DataFrame
+        """Loads posterior samples at ``path`` and converts it to a Pandas.DataFrame
 
         Parameters
         ----------
@@ -83,8 +82,8 @@ class Analyse:
 
         Returns
         -------
-        df: pd.DataFrame
-            Pandas DataFrame of the posterior samples
+        df: pandas.DataFrame
+            Dataframe of the posterior samples
         """
         with open(path) as json_data:
             samples = json.load(json_data)
