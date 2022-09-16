@@ -1,7 +1,7 @@
-# This module contains all necessary functions to analyse and process the models
+"""
 
+"""
 
-# import standard packages
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib import rc
@@ -33,15 +33,63 @@ mh = constants.mh
 mt = constants.mt
 col_s = constants.col_s
 
-# matplotlib.use('PDF')
-# TODO: update to 50 for heatmap overview plot
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
 
 class Analyse:
+    """
+    Post-training analyser that loads and evaluates models
+    """
 
     def __init__(self, path_to_models, order='quad'):
+
+        """
+
+        Parameters
+        ----------
+        path_to_models: dict
+            Of the form {'lin': {'c1': ``<path_to_c1_models>``, 'c2': ``<path_to_c2_models>``}, 'quad': {'c1_c1': ``<path_to_c1_c1_models>``},
+            {'c1_c2': ``<path_to_c1_c2_models>``}, {'c2_c2': ``<path_to_c2_c2_models>``}}
+        order: str, default='quad'
+            The order in the EFT expansion (choose between either 'lin' or 'quad')
+
+        Examples
+        --------
+        Trained models can be loaded by creating an :class:`ml4eft.analyse.analyse.Analyse` object
+
+        >>> analyser = Analyse(path_to_models, 'quad')
+
+        Followed by constructing a model dictionary that contains all the models plus associated settings
+
+        >>> analyser.build_model_dict()
+        >>> analyser.model_df
+                        models              idx             scalers                                       run_card              rep_paths
+        lin  c1         [Classifier() ...   [rep_idx, ...]  [RobustScaler(quantile_range=(5,95)), ...]    {'name': 'c1', ...}   [<path_to_rep>, ...]
+             c2         [Classifier() ...   ...             ...                                           ...                   ...
+        quad c1_c1      [Classifier() ...   ...             ...                                           ...                   ...
+             c1_c2      [Classifier() ...   ...             ...                                           ...                   ...
+             c2_c2      [Classifier() ...   ...             ...                                           ...                   ...
+
+        Events and the inclusive cross-section can be loaded into a DataFrame by
+
+        >>> df, xsec = analyser.load_events('.../events_<rep>.pkl.gz')
+        >>> df
+                  sqrts_hat       pt_l1       pt_l2  pt_l_leading  pt_l_trailing   ...
+        1       1702.356400   20.532279  308.295118    308.295118      20.532279   ...
+        2       ...           ...        ...           ...             ...
+
+        To evaluate the models on the loaded DataFrame ``df``, use:
+
+        >>> analyser.evaluate_models(df)
+        >>> analyser.models_evaluated_df['models']
+        lin   c1            [[0.05130317, 0.05723376, 0.058220766, 0.04042...
+              c2            [[0.074420996, 0.10293982, 0.10705493, 0.05695...
+        quad  c1_c1         [[0.07958487, 0.13463444, 0.14215767, 0.049889...
+              c1_c2         [[0.0005354581, 0.00042073405, 0.0004430262, -...
+              c2_c2         [[0.00032746396, 0.00041523552, 0.00045115477,...
+
+        """
 
         self.path_to_models = path_to_models
         self.order = order
@@ -49,13 +97,11 @@ class Analyse:
         self.models_evaluated_df = None
         self.coeff_truth = None
 
-        # logging.basicConfig(filename=log_path + '/training_{}.log'.format(current_time), level=logging.INFO,
-        #                     format='%(asctime)s:%(levelname)s:%(message)s')
 
     @staticmethod
     def get_event_paths(root_path):
         """
-        Returns a list of paths to the MC DataFrames at ``root_path``
+        Returns a list of paths to the DataFrames at ``root_path``
 
         Parameters
         ----------
@@ -65,7 +111,14 @@ class Analyse:
         Returns
         -------
         event_paths: list
-            list of paths to the MC DataFrames at ``root_path``
+            list of paths to the DataFrames at stored at ``root_path``
+
+        Examples
+        --------
+        The paths to the event DataFrames stored at ``root_path`` can be loaded for 'n_rep' replicas by
+
+        >>> analyser.get_event_paths('/training_data/tt_llvlvlbb/tt_c1')
+        [/training_data/tt_llvlvlbb/tt_c1/events_0.pkl.gz', ... , /training_data/tt_llvlvlbb/tt_c1/events_<n_rep>.pkl.gz']
         """
         event_paths = [os.path.join(root_path, mc_run) for mc_run in
                        os.listdir(root_path) if mc_run.startswith('events_')]
@@ -73,17 +126,17 @@ class Analyse:
 
     @staticmethod
     def posterior_loader(path):
-        """Loads posterior samples at ``path`` and converts it to a Pandas.DataFrame
+        """Loads the posterior samples at ``path`` and converts it to a DataFrame
 
         Parameters
         ----------
         path: str
-            Location of posterior sample (.json file)
+            Location of posterior samples (.json file)
 
         Returns
         -------
         df: pandas.DataFrame
-            Dataframe of the posterior samples
+            DataFrame of the posterior samples
         """
         with open(path) as json_data:
             samples = json.load(json_data)
@@ -93,19 +146,19 @@ class Analyse:
     @staticmethod
     def load_events(event_path):
         """
-        Loads a Pandas DataFrame with MC events
+        Loads a event DataFrame and splits it into the events and the inclusive cross section
 
         Parameters
         ----------
         event_path: str
-            Path to DataFrame (including the xsec as first row)
+            Path to the DataFrame (including the xsec as first row)
 
         Returns
         -------
-        events: pd.DataFrame
-            Pandas DataFrame with events (xsec extracted)
+        events: pandas.DataFrame
+            DataFrame with events
         xsec: float
-            Inclusive xsec of the events
+            Inclusive cross-section of the events
         """
         event_df = pd.read_pickle(event_path)
         events = event_df.iloc[1:, :]
@@ -116,6 +169,7 @@ class Analyse:
     @staticmethod
     def load_loss(path_to_loss):
         """
+        Loades the losses per epoch into a list
 
         Parameters
         ----------
@@ -134,6 +188,8 @@ class Analyse:
     @staticmethod
     def load_run_card(path):
         """
+        Loads training run card
+
         Parameters
         ----------
         path: str
@@ -142,7 +198,7 @@ class Analyse:
         Returns
         -------
         run_card: dict
-            dictionary with all the hyperparameter settings
+            dict with all the hyperparameter settings
         """
         with open(path) as json_data:
             run_card = json.load(json_data)
@@ -157,12 +213,13 @@ class Analyse:
 
         Parameters
         ----------
-        losses: numpy.ndarray
+        losses: array_like
+            Losses of all the trained models
 
         Returns
         -------
         good_model_idx: numpy.ndarray
-            Array indices of the good models
+            Array indices of the 'good' models
         """
 
         kmeans = KMeans(n_clusters=2, random_state=0).fit(losses.reshape(-1, 1))
@@ -185,22 +242,33 @@ class Analyse:
 
     def load_models(self, model_path, rep=None, epoch=-1):
         """
+        Loads the trained models
 
         Parameters
         ----------
-        c_train: float
-            EFT value used during training
         model_path: str
             path to model directory
-        order: str
-            Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad`` or ``cross``.
-        reps: int, optional
-            Number of specific replicas to include
+        rep: int, optional
+            Load only a specific replica specified by ``rep``. Load all replicas by default.
         epoch: int, optional
-            Epoch number to load. Set to the best model by default.
+            Model at specific epoch to load. Set to the best model by default.
 
         Returns
         -------
+        models: array_like
+            ``(N,) ndarray`` containing the loaded neural networks
+
+        models_rep_nr: array_like
+            ``(N,) ndarray`` containing the replica numbers of the loaded neural networks
+
+        scalers: array_like
+            ``(N,) ndarray`` containing the preprocessing scalers of the loaded neural networks
+
+        run_card: dict
+            training run card of the trained models
+
+        rep_paths: array_like
+            ``(N,) ndarray`` with the paths to the neural networks
 
         """
         
@@ -290,7 +358,7 @@ class Analyse:
 
     def build_model_dict(self, rep=None, epoch=-1):
         """
-        Construct a model dictionary that stores all the info about the models
+        Constructs a DataFrame with loaded models plus associated info
 
         Parameters
         ----------
@@ -330,10 +398,6 @@ class Analyse:
         epoch: int, optional
             Epoch number to load. Set to the best model by default.
 
-        Returns
-        -------
-        models_evaluated:dict
-            Evaluated model dictionary
         """
 
         # load models if not done already
@@ -344,11 +408,6 @@ class Analyse:
 
 
         models_evaluated = copy.deepcopy(self.model_dict)
-
-        # models = models_evaluated.loc[:]['models'].values
-        # scalers = models_evaluated.loc[:]['scalers'].values
-        # feature_names = models_evaluated.loc[:]['run_card'].values[0]['features']
-        # features_scaled =
 
         for order, dict_fo in self.model_dict.items():
             for c_name, dict_c in dict_fo.items():
@@ -369,15 +428,28 @@ class Analyse:
                                                orient='index')
 
     def coeff_function_truth(self, df, c_name, features, process, order):
+        """
+        Evaluates the analytic EFT ratio functions :math:`r_{\sigma}^{(i)}` and :math:`r_{\sigma}^{(i,j)}`
 
-        # why did I write this particular code? Keep just in case.
+        Parameters
+        ----------
+        df: pandas.DataFrame
+            Events on which to evaluate :math:`r_{\sigma}^{(i)}` and :math:`r_{\sigma}^{(i,j)}`
+        c_name: str
+            Name of the EFT coefficient. Choose between 'ctgre', 'cut', 'cut_cut', 'ctgre_ctgre'
+        features: list
+            Kinematic features, options are ``m_tt``, ``y``
+        process: str
+            Supported options are 'tt' or 'ZH'
+        order: str
+            Order of the EFT expansion, choose between 'lin' and 'quad'
 
-        # create c dict
-
-        # c = {}
-        # for k, v in self.path_to_models[order].items():
-        #     c[k] = v[0] if k == c_name else 0
-
+        Returns
+        -------
+        coeff: array_like
+            ``(N,) ndarray`` with :math:`r_{\sigma}^{(i)}` or :math:`r_{\sigma}^{(i,j)}` evaluated on ``df`` depending
+            on the ``order``
+        """
         if c_name == 'ctgre' and order == 'lin':
             cprime = {'ctgre': -10, 'cut': 0}
         elif c_name == 'ctgre_ctgre' and order == 'quad':
@@ -393,37 +465,58 @@ class Analyse:
         # compute the mask once to select the physical region in phase space
         mask = ratio_truth_lin == 0
 
-
-
-
         if order == 'lin':  # only one of the c elements can be nonzero
-            coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / cprime[c_name])
-            return coeff_lin
+            coeff = np.ma.masked_where(mask, (ratio_truth_lin - 1) / cprime[c_name])
+            return coeff
         elif order == 'quad':  # only one of the c elements can be nonzero
-            coeff_lin = np.ma.masked_where(mask, (ratio_truth_lin - 1) / cprime[c_name] ** 2)
-            return coeff_lin
-        # elif order == 'cross':
-        #     ratio_truth_quad = likelihood_ratio_truth(x, c, quad=True)
-        #     ratio_truth_quad_1 = likelihood_ratio_truth(x, np.array([c1, 0]), quad=True)
-        #     ratio_truth_quad_2 = likelihood_ratio_truth(x, np.array([0, c2]), quad=True)
-        #     coeff_cross = np.ma.masked_where(mask,
-        #                                      (ratio_truth_quad - ratio_truth_quad_1 - ratio_truth_quad_2 + 1) / np.prod(
-        #                                          c))
-        #     return coeff_cross
+            coeff = np.ma.masked_where(mask, (ratio_truth_lin - 1) / cprime[c_name] ** 2)
+            return coeff
+
 
     def accuracy_heatmap(self, c_name, order, process, cut=None, rep=None, epoch=-1, ax=None, text=None):
         """
-        Compares the NN and true coefficient functions in the EFT expansion and plots their ratio and pull
+        Compares the NN and true EFT ratio functions and plots their ratio and pull
 
         Parameters
         ----------
+        c_name: str
+            Name of the EFT parameter, e.g. 'ctgre'
+        order: str
+            Order in the EFT expansion, options are 'lin' or 'quad'
+        process: str
+            Specifies the process. Currently supported is 'tt' and 'ZH'
+        cut: float, optional
+            Cut on the invariant mass
+        rep: int, optional
+            Request to plot for a specific replica
+        epoch: int, optional
+            Request to plot for a specific epoch.
+        ax: matplotlib.pyplot.axes, optional
+            Axes to plot on
+        text: str, optional
+            Add additional text on the heatmap such as the replica number
+
 
         Returns
         -------
+        matplotlib.figure.Figure
+            Heatmap of EFT ratio function
         `matplotlib.figure.Figure`
-            Heatmap of coefficient function ratio
-        `matplotlib.figure.Figure`
-            Heatmap of pull
+            Heatmap of associated pull
+
+        Examples
+        --------
+        For a single EFT coefficient :math:`c_{tG}` the likelihood ratio takes the form
+
+        .. math::
+
+            r_{\sigma}(x, c_{tG}) = 1 + c_{tG} r_{\sigma}^{(c_{tG})} + c_{tG}^2 r_{\sigma}^{(c_{tG}, c_{tG})}
+
+        To plot for example the accuracy of :math:`r_{\sigma}^{(c_{tG}, c_{tG})}` by plotting its ratio to the exact
+        result, one runs
+
+        >>> analyser.accuracy_heatmap('ctgre_ctgre', 'quad', 'tt')
+
         """
         s = constants.col_s ** 2
         epsilon = 1e-2
@@ -466,8 +559,6 @@ class Analyse:
             self.coeff_truth = self.coeff_function_truth(df, c_name, features, process, order).reshape(
                 mx_grid.shape)
 
-
-        # TODO: add option to overlay events as points on the heatmap
 
         xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
         if rep is None:
