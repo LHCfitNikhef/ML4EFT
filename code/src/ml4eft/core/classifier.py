@@ -80,6 +80,9 @@ class MLP(nn.Module):
 
 
 class CustomActivationFunction(nn.Module):
+    """
+    Class to construct custom activation functions
+    """
 
     def __init__(self):
         super().__init__()
@@ -231,11 +234,27 @@ class PreProcessing():
 
 class EventDataset(data.Dataset):
     """
-
+    Event loader
     """
 
-    def __init__(self, df, preproc, xsec, path, n_dat, features, hypothesis=0):
+    def __init__(self, df, xsec, path, n_dat, features, hypothesis=0):
         """
+        EventDataset constructor
+
+        Parameters
+        ----------
+        df: pandas.DataFrame
+            Event DataFrame
+        xsec: float
+            inclusive cross-section
+        path: str
+            Path to dataset
+        n_dat: int
+            Number of data points
+        features: array_like
+            List of features to train on
+        hypothesis: int
+            0 for EFT and 1 for SM
 
         """
         super().__init__()
@@ -244,7 +263,6 @@ class EventDataset(data.Dataset):
         self.xsec = xsec
         self.hypothesis = hypothesis
         self.features = features
-        self.preproc = preproc
 
         self.events = None
         self.weights = None
@@ -253,7 +271,14 @@ class EventDataset(data.Dataset):
         self.event_loader(path)
 
     def event_loader(self, path):
+        """
+        Set the weights of the evevnts, labels and convert the events to torch.Tensor,
 
+        Parameters
+        ----------
+        path: str
+            Path to dataset
+        """
         n_dat = len(self.df)
 
         self.weights = self.xsec * torch.ones(n_dat).unsqueeze(-1)
@@ -264,22 +289,31 @@ class EventDataset(data.Dataset):
 
     def __len__(self):
 
-        # Number of data points.
         return len(self.events)
 
     def __getitem__(self, idx):
-        """
-        Gets item
-        """
+
         data_sample, weight_sample, label_sample = self.events[idx], self.weights[idx], self.labels[idx]
         return data_sample, weight_sample, label_sample
 
 class Fitter:
     """
-    T
+    Training class
     """
 
     def __init__(self, json_path, mc_run, output_dir):
+        """
+        Fitter constructor
+
+        Parameters
+        ----------
+        json_path: str
+            Path to json run card
+        mc_run: int
+            Replica number
+        output_dir: str
+            Path to where the models should be stored
+        """
         # read the json run card
         with open(json_path) as json_data:
             self.run_options = json.load(json_data)
@@ -377,16 +411,26 @@ class Fitter:
         logging.info("All directories created, ready to load the data")
 
         # load the training and validation data
-        data_train, data_val, preproc = self.load_data()
+        data_train, data_val = self.load_data()
 
         # start the training
-        self.train_classifier(data_train, data_val, preproc)
+        self.train_classifier(data_train, data_val)
 
         # copy run card to the appropriate folder
         with open(mc_path + 'run_card.json', 'w') as outfile:
             json.dump(self.run_options, outfile)
 
     def load_data(self):
+        """
+        Constructs training and validation sets
+
+        Returns
+        -------
+        data_train: array_like
+            Training data set
+        data_val: array_like
+            Validation data set
+        """
 
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
@@ -410,7 +454,6 @@ class Fitter:
         # on multiple EFT points.
 
         data_eft = EventDataset(df_eft_scaled,
-                                preproc,
                                 xsec=preproc.xsec_eft,
                                 path=path_eft,
                                 n_dat=self.n_dat,
@@ -418,7 +461,6 @@ class Fitter:
                                 hypothesis=0)
 
         data_sm = EventDataset(df_sm_scaled,
-                               preproc,
                                xsec=preproc.xsec_sm,
                                path=path_sm,
                                n_dat=self.n_dat,
@@ -440,10 +482,19 @@ class Fitter:
             data_train.append(dataset[0])
             data_val.append(dataset[1])
 
-        return data_train, data_val, preproc
+        return data_train, data_val
 
-    def train_classifier(self, data_train, data_val, preproc):
+    def train_classifier(self, data_train, data_val):
+        """
+        Starts the training of the binary classifier
 
+        Parameters
+        ----------
+        data_train: array_like
+            Traning data set
+        data_val: array_like
+            Validation data set
+        """
         # define the optimizer
         optimizer = optim.AdamW(self.model.parameters(), lr=self.lr)
 
@@ -458,10 +509,22 @@ class Fitter:
             dataset_val in data_val]
 
         # call the training loop
-        self.training_loop(optimizer=optimizer, train_loader=train_data_loader, val_loader=val_data_loader, preproc=preproc)
+        self.training_loop(optimizer=optimizer, train_loader=train_data_loader, val_loader=val_data_loader)
 
-    def training_loop(self, optimizer, train_loader, val_loader, preproc):
+    def training_loop(self, optimizer, train_loader, val_loader):
+        """
+        Optimize the classifier with `optimizer` on the training data set `train_loader`. Keeps track of potential
+        overfitting through `val_loader`.
 
+        Parameters
+        ----------
+        optimizer: torch.optim
+            Optimizer, e.g. torch.optim.AdamW
+        train_loader: array_like
+            List of torch.utils.data.DataLoader objects, one for the SM and the EFT (training)
+        val_loader: array_like
+            List of torch.utils.data.DataLoader objects, one for the SM and the EFT (validation)
+        """
         path = self.path_dict['mc_path']
 
         loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
@@ -546,7 +609,7 @@ class Fitter:
                     overfit_counter = 0
 
             if overfit_counter == self.patience:
-                stopping_point = epoch - self.patience # TODO subtract an addition 0ne
+                stopping_point = epoch - self.patience
                 logging.info("Stopping point reached! Overfit counter = {}".format(overfit_counter))
                 shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
                 logging.info("Backwards stopping done")
@@ -571,7 +634,23 @@ class Fitter:
 
 
     def loss_fn(self, outputs, labels, w_e):
+        """
+        Loss function
 
+        Parameters
+        ----------
+        outputs: torch.Tensor
+            Output of the decision function
+        labels: torch.Tensor
+            Classification labels
+        w_e: torch.Tensor
+            Event weights
+
+        Returns
+        -------
+        torch.Tensor
+            Average loss of the mini-batch
+        """
         if self.loss_type == 'CE':
 
             loss = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
