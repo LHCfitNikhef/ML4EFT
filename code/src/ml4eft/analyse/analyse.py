@@ -1,5 +1,5 @@
 """
-
+Post-training analysing module to load, plot and evaluates models
 """
 
 import matplotlib as mpl
@@ -45,6 +45,7 @@ class Analyse:
     def __init__(self, path_to_models, order='quad'):
 
         """
+        Analyse constructor
 
         Parameters
         ----------

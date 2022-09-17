@@ -1,3 +1,7 @@
+"""
+Post-training animation module to animate training evolutions
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
@@ -17,24 +21,55 @@ mt = constants.mt
 
 
 class Animate:
+    """
+    Post-training animator that animates the evolution of models during training
+    """
 
     def __init__(self, c, frames):
+        """
+        Animate constructor
 
+        Parameters
+        ----------
+        c: dict
+            Of the form {'c1': value, 'c2': value}
+        frames: int
+            Number of frames (epochs) to animatie
+        """
         self.c = c
         self.frames = frames
 
 
     def make_animation_1d(self, analyser, df):
+        """
+        Returns a 1-dimensional animation of the EFT ratio functions, comparing the analytical result and the ML model
 
+        Parameters
+        ----------
+        analyser: :class:`ml4eft.analyse.analyse.Analyse`
+            Analyser object
+        df: pandas.DataFrame
+            phase space 1-d grid stored as a DataFrame
+
+
+        Returns
+        -------
+        anim: matplotlib.animation.FuncAnimation
+            matplotlib.animation.FuncAnimation object
+
+        Examples
+        --------
+        >>> anim = Animate(c={'ctgre': 2, 'cut': 0}, frames=200)
+        >>> anim_tt = anim.make_animation_1d(analyser, df)
+        >>> anim_tt
+
+        .. image:: ../images/anim_1d.gif
+
+        """
         g_ana = analyser.decision_function_truth(df, self.c, df.columns.values, process='tt', order='quad')
-        #f_ana_lin = analyse.decision_function_truth(df, self.c, n_kin=2, process='tt', lin=True, quad=False)
-        #f_ana_quad = analyse.decision_function_truth(df, self.c, quad=True)
+
 
         fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-
-        # make the first frame of the animation
-
-        #f_preds_lin_init = analyse.likelihood_ratio_nn(x, np.array([2]), path_to_models, architecture, epoch=1, lin=True)
 
 
         # load models and evaluate them
@@ -43,12 +78,6 @@ class Animate:
 
         # decission function at first epoch
         g_nn_init = analyser.decision_function_nn(self.c, epoch=1)
-
-        # f_preds_lin_init = analyse.decision_function_nn(df, self.c, self.c_train,
-        #                                                 self.path_to_models,
-        #                                                 epoch=1,
-        #                                                 lin=self.lin,
-        #                                                 quad=self.quad)
 
 
         # create empty line objects
@@ -125,7 +154,63 @@ class Animate:
         return anim
 
     def make_animation_2d(self, analyser, df, c_name, order, process, shape):
+        """
+        Returns a 2-dimensional animation of the EFT ratio functions, comparing the analytical result and the ML model
 
+        Parameters
+        ----------
+        analyser: :class:`ml4eft.analyse.analyse.Analyse`
+            Analyser object
+        df: pandas.DataFrame
+            phase space grid stored as a DataFrame
+        c_name: str
+            Name of EFT coefficient
+        order: str
+            Order of the EFT expansion, choose between 'lin' and 'quad'
+        process: str
+            Supported options are 'tt' or 'ZH'
+        shape: array_like
+            dimension of phase space grid passed as tuple
+
+        Returns
+        -------
+        anim: matplotlib.animation.FuncAnimation
+            matplotlib.animation.FuncAnimation object
+
+        Examples
+        --------
+
+        >>> import ml4eft.preproc.constants as constants
+        >>> mt = constants.mt
+
+        We create a grid in the :math:`(m_{tt}, Y)` phase-space
+
+        >>> s = 14 ** 2
+        >>> epsilon = 1e-2
+        >>> mtt_min, mtt_max = 0.5, 2
+        >>> y_min, y_max = - np.log(np.sqrt(s) / mtt_min), np.log(np.sqrt(s) / mtt_min)
+
+        >>> x_spacing, y_spacing = 1e-2, 0.01
+        >>> mtt_span = np.arange(mtt_min, mtt_max, x_spacing)
+        >>> y_span = np.arange(y_min, y_max, y_spacing)
+
+        >>> mtt_grid, y_grid = np.meshgrid(mtt_span, y_span)
+        >>> grid = np.c_[y_grid.ravel(), mtt_grid.ravel()]
+
+        Convert the numpy grid to a DataFrame
+
+        >>> df = pd.DataFrame(grid, columns=['y', 'm_tt'])
+
+        Create an Animate object and start the animation
+
+        >>> anim = Animate(c={'ctgre': 2, 'cut': 0}, frames=200)
+
+        >>> anim_tt = anim.make_animation_2d(analyser, df, 'ctgre_ctgre', 'quad', 'tt', mtt_grid.shape)
+        >>> anim_tt
+
+        .. image:: ../images/anim_2d.gif
+
+        """
         coeff_function_ana = analyser.coeff_function_truth(df, c_name, df.columns.values, process, order).reshape(shape)
         np.ma.masked_where(coeff_function_ana == 1.0, coeff_function_ana) # necessary?
 
