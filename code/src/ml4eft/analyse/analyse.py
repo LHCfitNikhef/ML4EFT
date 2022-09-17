@@ -28,7 +28,7 @@ from ml4eft.core.truth import tt_prod as axs
 from ml4eft.core.truth import vh_prod, tt_prod
 from ..preproc import constants
 
-mz = constants.mz # z boson mass [TeV]
+mz = constants.mz  # z boson mass [TeV]
 mh = constants.mh
 mt = constants.mt
 col_s = constants.col_s
@@ -96,7 +96,6 @@ class Analyse:
         self.model_df = None
         self.models_evaluated_df = None
         self.coeff_truth = None
-
 
     @staticmethod
     def get_event_paths(root_path):
@@ -231,7 +230,6 @@ class Analyse:
 
         # if relative std has not been reduced by a factor 10, select only models within +- 4 sigma
         if np.std(losses[good_model_idx]) / np.std(losses) > 0.1:
-
             sigma_loss = (np.nanpercentile(losses, 84) - np.nanpercentile(losses, 16)) / 2
             los_med = np.nanpercentile(losses, 50)
 
@@ -271,11 +269,11 @@ class Analyse:
             ``(N,) ndarray`` with the paths to the neural networks
 
         """
-        
+
         # collect all replica paths when no specific replica is requested
         if rep is None:
             rep_paths = [os.path.join(model_path, mc_run) for mc_run in os.listdir(model_path) if
-                          mc_run.startswith('mc_run')]
+                         mc_run.startswith('mc_run')]
         else:
             rep_paths = [os.path.join(model_path, 'mc_run_{}'.format(rep))]
 
@@ -288,7 +286,7 @@ class Analyse:
         for rep_path in rep_paths:
 
             path_to_run_card = os.path.join(rep_path, 'run_card.json')
-            if not os.path.isfile(path_to_run_card): # if model did not get trained, jump to the next one
+            if not os.path.isfile(path_to_run_card):  # if model did not get trained, jump to the next one
                 rep_paths.remove(rep_path)
                 continue
 
@@ -299,11 +297,11 @@ class Analyse:
 
             coeff_train_values = np.array([i for i in run_card['coeff_train'].values()])
             if not run_card['quadratic']:
-                c_train = np.sum(coeff_train_values) # linear
+                c_train = np.sum(coeff_train_values)  # linear
             else:
                 if 0 in coeff_train_values:  # c1 * c1 coefficient function
                     c_train = np.sum(coeff_train_values) ** 2
-                else: # c1 * c2 coefficient function
+                else:  # c1 * c2 coefficient function
                     c_train = np.prod(coeff_train_values)
 
             loaded_model = quad_clas.Classifier(run_card['architecture'], c_train)
@@ -372,12 +370,12 @@ class Analyse:
 
         self.model_dict = defaultdict(dict)
         for order, dict_fo in self.path_to_models.items():
-            if self.order == 'lin' and order == 'quad': # skip quadratics when running linear
+            if self.order == 'lin' and order == 'quad':  # skip quadratics when running linear
                 continue
             for c_name, model_path in dict_fo.items():
                 pretrained_models, models_idx, scalers, run_card, rep_paths = self.load_models(model_path, rep, epoch)
                 self.model_dict[order][c_name] = {'models': pretrained_models, 'idx': models_idx, 'scalers': scalers,
-                                             'run_card': run_card, 'rep_paths': rep_paths}
+                                                  'run_card': run_card, 'rep_paths': rep_paths}
 
         self.model_df = pd.DataFrame.from_dict({(i, j): self.model_dict[i][j]
                                                 for i in self.model_dict.keys()
@@ -406,7 +404,6 @@ class Analyse:
         if self.model_df is None:
             self.build_model_dict(rep, epoch)
 
-
         models_evaluated = copy.deepcopy(self.model_dict)
 
         for order, dict_fo in self.model_dict.items():
@@ -423,9 +420,9 @@ class Analyse:
                 models_evaluated[order][c_name]['models'] = np.vstack(models_evaluated[order][c_name]['models'])
 
         self.models_evaluated_df = pd.DataFrame.from_dict({(i, j): models_evaluated[i][j]
-                                                for i in models_evaluated.keys()
-                                                for j in models_evaluated[i].keys()},
-                                               orient='index')
+                                                           for i in models_evaluated.keys()
+                                                           for j in models_evaluated[i].keys()},
+                                                          orient='index')
 
     def coeff_function_truth(self, df, c_name, features, process, order):
         """
@@ -472,7 +469,6 @@ class Analyse:
             coeff = np.ma.masked_where(mask, (ratio_truth_lin - 1) / cprime[c_name] ** 2)
             return coeff
 
-
     def accuracy_heatmap(self, c_name, order, process, cut=None, rep=None, epoch=-1, ax=None, text=None):
         """
         Compares the NN and true EFT ratio functions and plots their ratio and pull
@@ -515,7 +511,14 @@ class Analyse:
         To plot for example the accuracy of :math:`r_{\sigma}^{(c_{tG}, c_{tG})}` by plotting its ratio to the exact
         result, one runs
 
-        >>> analyser.accuracy_heatmap('ctgre_ctgre', 'quad', 'tt')
+        >>> fig_med, fig_pull = analyser.accuracy_heatmap('ctgre_ctgre', 'quad', 'tt')
+        >>> fig_med
+
+        .. image:: ../images/heatmap_med.png
+
+        >>> fig_pull
+
+        .. image:: ../images/heatmap_pull.png
 
         """
         s = constants.col_s ** 2
@@ -559,7 +562,6 @@ class Analyse:
             self.coeff_truth = self.coeff_function_truth(df, c_name, features, process, order).reshape(
                 mx_grid.shape)
 
-
         xlabel = r'$m_{ZH}\;\rm{[TeV]}$' if process == 'ZH' else r'$m_{t\bar{t}}\;\rm{[TeV]}$'
         if rep is None:
 
@@ -576,13 +578,13 @@ class Analyse:
             fig_1, ax_1 = plt.subplots(figsize=(10, 8))
 
             im_1 = self.plot_heatmap(ax[0], median_ratio,
-                                xlabel=xlabel,
-                                ylabel=r'$\rm{Rapidity}$',
-                                title=title,
-                                extent=[mx_min, mx_max, y_min, y_max],
-                                cmap='seismic',
-                                bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05],
-                                text=text)
+                                     xlabel=xlabel,
+                                     ylabel=r'$\rm{Rapidity}$',
+                                     title=title,
+                                     extent=[mx_min, mx_max, y_min, y_max],
+                                     cmap='seismic',
+                                     bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05],
+                                     text=text)
 
             # pull
 
@@ -591,25 +593,25 @@ class Analyse:
             pull = (self.coeff_truth - nn_median) / nn_unc
 
             im_2 = self.plot_heatmap(ax[1], pull,
-                                xlabel=xlabel,
-                                ylabel=r'$\rm{Rapidity}$',
-                                title=r'$\rm{Pull}$',
-                                extent=[mx_min, mx_max, y_min, y_max],
-                                cmap='seismic',
-                                bounds=np.linspace(-1.5, 1.5, 10),
-                                text=text)
+                                     xlabel=xlabel,
+                                     ylabel=r'$\rm{Rapidity}$',
+                                     title=r'$\rm{Pull}$',
+                                     extent=[mx_min, mx_max, y_min, y_max],
+                                     cmap='seismic',
+                                     bounds=np.linspace(-1.5, 1.5, 10),
+                                     text=text)
 
             return fig_1, fig_2
         else:
             title = r"$\mathrm{{Truth/NN}}\;(\mathrm{{rep}}\;{})$".format(rep)
             im = self.plot_heatmap(ax, self.coeff_truth / nn[0],
-                              xlabel=xlabel,
-                              ylabel=r'$\rm{Rapidity}$',
-                              title=title,
-                              extent=[mx_min, mx_max, y_min, y_max],
-                              cmap='seismic',
-                              bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05],
-                              rep=rep)
+                                   xlabel=xlabel,
+                                   ylabel=r'$\rm{Rapidity}$',
+                                   title=title,
+                                   extent=[mx_min, mx_max, y_min, y_max],
+                                   cmap='seismic',
+                                   bounds=[0.95, 0.96, 0.97, 0.98, 1.02, 1.03, 1.04, 1.05],
+                                   rep=rep)
             return im
 
     def plot_heatmap_overview(self, c_name, order, process, cut=None, reps=None, epoch=-1):
@@ -634,7 +636,17 @@ class Analyse:
 
         Returns
         -------
-        fig: matplotlib.pyplot.Figure
+        fig: matplotlib.figure
+
+        Examples
+        --------
+        To produce a heatmap overview of the first 20 replicas, run
+
+        >>> analyser = Analyse(path_to_models, 'quad')
+        >>> fig = analyser.plot_heatmap_overview('ctgre_ctgre', 'quad', 'tt', cut=0.5, reps=np.arange(20))
+        >>> fig
+
+        .. image:: ../images/heatmap_overview.png
 
         """
         from mpl_toolkits.axes_grid1 import AxesGrid
@@ -730,7 +742,39 @@ class Analyse:
         return decision_function
 
     def point_by_point_comp_med(self, df, c, features, process, order, ax, text=None):
+        """
+        Produces a point by point comparison of the log-likelihood ratio between the (median) ML model and the analytical
+        (exact) model
 
+        Parameters
+        ----------
+        df: pandas.DataFrame
+            DataFrame with events
+        c: dict
+            Of the form {'c1': value, 'c2': value}
+        features: array_like
+            List of features to include in the comparison
+        process: str
+            Choose between ``tt`` or ``ZH``
+        order: str
+            Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad``.
+        ax: matplotlib.axes
+            Axes object to plot on
+        text: str
+            Additonal text to put on the plot
+
+        Examples
+        --------
+        >>> analyser = Analyse(path_to_models, 'quad')
+        >>> fig, ax = plt.subplots()
+
+        >>> events_sm = pd.read_pickle('<events_sm_0.pkl.gz>')
+        >>> analyser.point_by_point_comp_med(events_sm, {'ctgre': 2, 'cut': 0}, ['y', 'm_tt'], 'tt', 'lin')
+        >>> fig
+
+        .. image:: ../images/pbp-med.png
+
+        """
         r_nn = self.likelihood_ratio_nn(c, df)
         tau_nn = np.log(r_nn)
 
@@ -749,14 +793,42 @@ class Analyse:
 
         if text is not None:
             ax.text(0.95, 0.1, text,
-                 horizontalalignment='right',
-                 verticalalignment='center',
-                 transform=ax.transAxes)
+                    horizontalalignment='right',
+                    verticalalignment='center',
+                    transform=ax.transAxes)
 
         fig.tight_layout()
 
-
     def point_by_point_comp(self, df, c, features, process, order):
+        """
+       Produces a point by point comparison overview per replica of the log-likelihood ratio between the ML model
+       and the analytical (exact) model
+
+       Parameters
+       ----------
+       df: pandas.DataFrame
+           DataFrame with events
+       c: dict
+           Of the form {'c1': value, 'c2': value}
+       features: array_like
+           List of features to include in the comparison
+       process: str
+           Choose between ``tt`` or ``ZH``
+       order: str
+           Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad``.
+
+       Examples
+       --------
+       >>> analyser = Analyse(path_to_models, 'quad')
+       >>> fig, ax = plt.subplots()
+
+       >>> events_sm = pd.read_pickle('<events_sm_0.pkl.gz>')
+       >>> analyser.point_by_point_comp(events_sm, {'ctgre': -2, 'cut': 0}, ['y', 'm_tt'], 'tt', 'lin')
+       >>> fig
+
+       .. image:: ../images/pbp_overview.png
+
+       """
 
         r_nn = self.likelihood_ratio_nn(df, c)
         tau_nn = np.log(r_nn)
@@ -792,7 +864,6 @@ class Analyse:
             plt.xlim((np.min(x), np.max(x)))
             plt.ylim((np.min(x), np.max(x)))
 
-
         plt.tight_layout()
 
         # median
@@ -809,13 +880,42 @@ class Analyse:
         plt.xlim((np.min(x), np.max(x)))
         plt.ylim((np.min(x), np.max(x)))
 
-
         plt.tight_layout()
 
         return fig1, ax
 
     def plot_loss_overview(self, c_name, order, ax=None):
+        """
+        Plots the loss evolution per replica and returns an overview plot
 
+        Parameters
+        ----------
+        c_name: str
+            name of EFT parameter
+        order: str
+            Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad``.
+        ax: matplotlib.axes
+            Axes object to plot on
+
+        Returns
+        -------
+        fig: matplotlib.figure
+            Loss overview plot
+
+        train_loss_best: array_like
+            List of 'best' training losses
+
+        Examples
+        --------
+        To plot a loss overview corresponding to the training of :math:`r_{\sigma}^{(c_{tG}, c_{tG})}`, run
+
+        >>> analyser = Analyse(path_to_models, 'quad')
+        >>> fig, train_losses = analyser.plot_loss_overview('ctgre_ctgre', 'quad')
+        >>> fig
+
+        .. image:: ../images/loss_overview.png
+
+        """
         if self.model_df is None:
             self.build_model_dict()
 
@@ -901,14 +1001,47 @@ class Analyse:
             if model_idx[i] == 0:
                 ax.legend(loc="lower left", frameon=False)
 
-            #break
-
         plt.tight_layout()
 
         return fig, train_loss_best
 
     def plot_accuracy_1d(self, c, process, order, cut, epoch=-1, ax=None, text=None):
+        """
+        Plots the decision boundary :math:`g(x,c)` as predicted by the ML model and the analytical (exact) model along
+        1 dimension, i.e :x=math:`m_{tt}`
 
+        Parameters
+        ----------
+        c: dict
+            Of the form {'c1': value, 'c2': value}
+        process: str
+            Choose between ``tt`` or ``ZH``
+        order: str, optional
+            Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad``.
+        cut: float
+            Cut on the invariant mass
+        epoch: int, optional
+            Specific epoch to plot, set to the best models by default
+        ax: matplotlib.axes, optional
+            Plot on an already created axes object
+        text: str, optional
+            Additional text to show on the plot
+
+        Returns
+        -------
+        fig: matplotlib.figure
+            Plot comparing the decision boundary :math:`g(x,c)` as predicted by the ML model and the analytical (exact)
+            result
+
+        Examples
+        --------
+        >>> analyser = Analyse(path_to_models, 'quad')
+        >>> fig = analyser.plot_accuracy_1d(c={'ctgre': -2, 'cut': 0}, process='tt', order='quad', cut=0.5, text=r'$c=c_{tG}=2\;\mathrm{quadratic}$')
+        >>> fig
+
+        .. image:: ../images/decission_function_1d.png
+
+        """
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 6))
         else:
@@ -946,18 +1079,18 @@ class Analyse:
 
         if text is not None:
             ax.text(0.05, 0.1, text,
-                 horizontalalignment='left',
-                 verticalalignment='center',
-                 transform=ax.transAxes)
+                    horizontalalignment='left',
+                    verticalalignment='center',
+                    transform=ax.transAxes)
 
         ax.legend(frameon=False)
-        #fig.tight_layout()
+
         return fig
 
     @staticmethod
     def likelihood_ratio_truth(events, c, features, process, order=None):
         """
-        Computes the analytic likelihood ratio r(x, c)
+        Computes the analytic likelihood ratio :math:`r(x, c)`
 
         Parameters
         ----------
@@ -1083,86 +1216,34 @@ class Analyse:
 
         import matplotlib.ticker as tick
 
-
         # discrete colorbar
         cmap_copy = copy.copy(mpl.cm.get_cmap(cmap))
         norm = mpl.colors.BoundaryNorm(bounds, cmap_copy.N, extend='both')
         cmap_copy.set_bad(color='gainsboro')
 
-        # continuous colormap
-
-        # cmap = copy.copy(plt.get_cmap(cmap))
-        # cmap.set_bad(color='white')
-        # cmap.set_over("#FFAF33")
-        # cmap.set_under("#FFAF33")
-
         if rep is not None:
             fig = ax.figure
             rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 30})
         else:
-            #pass
-            fig = plt.figure(figsize=(10,8))
-
-        # im = ax.imshow(data, extent=extent,
-        #           origin='lower', aspect=(extent[1] - extent[0]) / (extent[-1] - extent[-2]), cmap=cmap_copy, norm=norm)
+            fig = plt.figure(figsize=(10, 8))
 
         im = ax.imshow(data, extent=extent, origin='lower', aspect='auto', cmap=cmap_copy, norm=norm)
 
-
         if rep is not None:
             ax.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',
-                     verticalalignment='top',
-                     transform=ax.transAxes)
+                    verticalalignment='top',
+                    transform=ax.transAxes)
         else:
 
-            cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax, format=tick.FormatStrFormatter(r'$%.2f$'))
+            cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax,
+                                format=tick.FormatStrFormatter(r'$%.2f$'))
             ax.set_title(title)
             if text is not None:
-                ax.text(0.95, 0.1, text, horizontalalignment='right', verticalalignment='center', transform=ax.transAxes)
+                ax.text(0.95, 0.1, text, horizontalalignment='right', verticalalignment='center',
+                        transform=ax.transAxes)
             plt.tight_layout()
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
         return im
-
-    def analytical_loss(self, c, features, process, order):
-
-        def integrand(y, m_x, c, features, process, order):
-
-            # convert features to pandas dataframe
-            df = pd.DataFrame({features[1]: [m_x], features[0]: [y]})
-            
-            # analytical decision function
-            g = self.decision_function_truth(df, c, features, process, order)
-            if process == 'tt':
-                c = np.array([c['ctgre'], c['cut']])
-                dsigma_dx_eft = tt_prod.dsigma_dmtt_dy(y, m_x, c, order)
-                dsigma_dx_sm = tt_prod.dsigma_dmtt_dy(y, m_x)
-
-            elif process == 'ZH':
-                c = np.array([c['cHW'], c['cHq3']])
-                dsigma_dx_eft = tt_prod.dsigma_dmvh_dy(y, m_x, c, order)
-                dsigma_dx_sm = tt_prod.dsigma_dmvh_dy(y, m_x)
-
-            return - dsigma_dx_eft * np.log(1 - g) - dsigma_dx_sm * np.log(g)
-
-        loss = integrate.dblquad(integrand, 0.5, 4.0, lambda m_x: -np.log(col_s / m_x),
-                                 lambda m_x: np.log(col_s / m_x), args=(c, features, process, order))
-
-        return loss[0]
-
-    def plot_loss_dist(self, losses, loss_ana):
-
-        fig, ax = plt.subplots(figsize=(10, 6))
-
-        kwargs = dict(histtype='stepfilled', alpha=0.3, density=False, bins=20, ec="k")
-        ax.hist(losses, **kwargs)
-        ax.axvline(loss_ana, linestyle='dotted')
-        return fig
-
-
-
-
-
-
