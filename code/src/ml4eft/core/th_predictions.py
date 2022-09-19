@@ -1,3 +1,5 @@
+"""Module to compute theory predictions in the SMEFT"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,21 +11,41 @@ from collections import defaultdict
 
 class TheoryPred:
     """
-    The theory prediction class that provides the theory predictions in the SMEFT
-
-    Parameters
-    ----------
-    coeff: dict
-        Dictionary of EFT parameter names and values corresponding to the event data
-    bins: array-like
-        Array with bin edges
-    event_path: str
-        path to event files
-    nreps: int, optional
-        Number of replicas to use, 50 by default. The SMEFT predictions are averages over the replicas.
+    SMEFT theory calculator
     """
 
     def __init__(self, path_to_theory_pred, kinematic=None, bins=None):
+        """
+        TheoryPred Constructor
+
+        Parameters
+        ----------
+        path_to_theory_pred: dict
+            Nested dictionary that contains the paths to the events in the SM and the EFT. It
+            must be of the form {'sm': ``<path_to_sm_data>``, 'lin': {'c1': ``<path_to_c1_data>``, 'c2': ``<path_to_c2_data>`` },
+            'quad': {'c1_c1': ``<path_to_c1_c1_data>``, 'c1_c2': ``<path_to_c1_c1_data>``, 'c2_c2': ``<path_to_c1_c1_data>``}}
+        kinematic: str, optional
+            Name of kinematic in which to bin. Only required for a binned analysis.
+        bins: array_like, optional
+            Bin values corresponding to the variable `kinematic`. Only required for a binned analysis.
+
+        Examples
+        --------
+        We consider :math:`pp \\rightarrow t\\bar{t} \\rightarrow \\ell^+\\ell^-\\nu_\\ell\\bar{\\nu}_\\ell b\\bar{b}` and compute
+        SMEFT theory predictions for :math:`c_{tG}` and :math:`c_{tu}^{(8)}` in the bins :math:`m_{tt}\in[1450, 1500, 1600, 1700, 2000, \infty)` GeV
+
+        Specify the binning (represent infinity by a large number) and initialise a TheoryPred object:
+
+        >>> bins = [1450, 1500, 1600, 1700, 2000, 10000]
+        >>> th_predictor = TheoryPred(path_to_theory_pred, kinematic="sqrts_hat", bins=bins)
+
+        SMEFT predictions can now be computed by
+
+        >>> th_predictor.build_theory_pred_df()
+        >>> th_predictor.th_dict
+        {'sm': array([0.00579859, 0.00844186, 0.00556653, 0.00799101, 0.00446887]), 'lin': {'ctGRe': array([-0.00176097, -0.00260213, -0.00173878, -0.00256058, -0.00140833]), 'ctu8': array([0.00039829, 0.0006311 , 0.00045633, 0.00075374, 0.0005058 ])},
+        'quad': {'ctu8_ctu8': array([0.00033827, 0.0005906 , 0.00048487, 0.00100111, 0.00123616]), 'ctGRe_ctGRe': array([0.00090503, 0.00139715, 0.00099753, 0.00164754, 0.0013285 ]), 'ctGRe_ctu8': array([-6.63046602e-05, -1.10171981e-04, -8.56486609e-05, -1.57056872e-04,-1.38448708e-04])}}
+        """
 
         self.path_to_theory_pred = path_to_theory_pred
         self.bins = bins
@@ -36,7 +58,7 @@ class TheoryPred:
 
     def build_theory_pred_df(self):
         """
-        Construct a theory prediction dictionary
+        Builds a SMEFT theory prediction dictionary
         """
 
         for order, dict_fo in self.path_to_theory_pred.items():
@@ -65,7 +87,14 @@ class TheoryPred:
                         self.c_names.append(c_name)
 
     def get_c_names_unique(self):
+        """
+        Returns a unique list of EFT parameters in which each parameter only appears once
 
+        Returns
+        -------
+        array_like
+            ```(N, ) ndarray``` array of unique EFT parameters present in `path_to_theory_pred`
+        """
         c_names = []
         if len(self.c_names) > 0:
             for c_name in self.c_names:
@@ -78,7 +107,20 @@ class TheoryPred:
 
 
     def compute_th_pred(self, path_to_events):
+        """
+        Computes cross-section in the SMEFT for a given binning if specified in `bins`. Otherwise it returns an
+        average of the total cross section averaged over the available replicas.
 
+        Parameters
+        ----------
+        path_to_events: str
+            Path to events, e.g. ``tt_llvlvlbb/tt_ctGRe``
+
+        Returns
+        -------
+        array_like
+            Cross section per bin averaged over the available replicas
+        """
         # path to events
         events_paths = analyse.Analyse.get_event_paths(path_to_events)
 
@@ -100,7 +142,19 @@ class TheoryPred:
         return np.mean(xsec_col, axis=0)
 
     def compute_diff_coefficients(self, optimizer):
+        """
+        Computes unbinned SMEFT theory predictions for the analytical models, i.e. :math:`t\\bar{t}` or :math:`ZH`
 
+        Parameters
+        ----------
+        optimizer: :class:`ml4eft.limits.optimize_ns.Optimize`
+            Optimizer object
+
+        Returns
+        -------
+        dict
+            unbinned SMEFT predictions
+        """
         events = optimizer.observed_data
         features = optimizer.th_features
         n_features = len(features)

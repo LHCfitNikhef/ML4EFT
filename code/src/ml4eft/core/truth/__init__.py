@@ -1,0 +1,1 @@
+"""Analytical differential cross-section module"""

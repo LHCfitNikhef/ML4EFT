@@ -1,6 +1,5 @@
-# Author: Jaco ter Hoeve
-# This files contains the analytical cross sections in the eft as obtained through FeynCalc
-#%%
+"""Module containing the analytical cross-sections top-quark pair production (parton level) in the SMEFT"""
+
 from __future__ import division
 import lhapdf
 import numpy as np
@@ -14,28 +13,45 @@ import pylhe
 from ml4eft.core.truth import vh_prod
 
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
-mt = 0.17276  # 172 #Top quark mass plot_mg5_ana_mttin GeV
-s = 14 ** 2  # (14*10**3)**2#GeV^2
+mt = 0.17276
+s = 14 ** 2
 Gf = 0.000011663787
-v = 1 / np.sqrt(Gf * np.sqrt(2)) * 10 ** -3  # 1/np.sqrt(Gf*np.sqrt(2))
+v = 1 / np.sqrt(Gf * np.sqrt(2)) * 10 ** -3
 asQCD = 0.1179
-LambdaSMEFT = 1  # 10**3
+LambdaSMEFT = 1
 pb_convert = 3.894E2
-yt = 1#0.9922828427689138
+yt = 1
 
 #matplotlib.use('PDF')
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
-# Partonic cross sections
-
 class crossSectionSMEFT:
     """
-    A class that contains all EFT cross sections...
+    Class containing the analytical differential cross-sections in the SMEFT
 
     """
 
-    def sigma_part_gg(self, hats, cuGRe, cuu, order):  # TODO: fix the gluon gluon contribution
+    def sigma_part_gg(self, hats, ctGRe, cut, order):
+        """
+        Gluon initiated contribution to the partonic cross-section of :math:`t\\bar{t}`-production
+
+        Parameters
+        ----------
+        hats: float
+            partonic center of mass energy squared
+        ctGRe: float
+            EFT parameter :math:`c_{tG}`
+        cut: float
+            EFT parameter :math:`c_{ut}`
+        order: str
+            Order of the EFT expansion, choose between 'lin' and 'quad', or leave `None` for just the SM
+
+        Returns
+        -------
+        float
+            Partonic cross-section
+        """
         if np.sqrt(hats) == 2 * mt:
             return 0
 
@@ -55,12 +71,32 @@ class crossSectionSMEFT:
         if order is None:
             return sm
         elif order == 'lin':
-            return sm + cuGRe * kappa_1
+            return sm + ctGRe * kappa_1
         elif order == 'quad':
-            return sm + cuGRe ** 2 * kappa_11
+            return sm + ctGRe ** 2 * kappa_11
 
 
-    def sigma_part_qq(self, hats, cuGRe, cuu, order):
+    def sigma_part_qq(self, hats, cuGRe, cut, order):
+        """
+        Quark-quark initiated contribution to the partonic cross-section of :math:`t\\bar{t}`-production
+
+        Parameters
+        ----------
+        hats: float
+            partonic center of mass energy squared
+        ctGRe: float
+            EFT parameter :math:`c_{tG}`
+        cut: float
+            EFT parameter :math:`c_{ut}`
+        order: str
+            Order of the EFT expansion, choose between 'lin' and 'quad', or leave `None` for just the SM
+
+        Returns
+        -------
+        float
+            Partonic cross-section
+        """
+
         if np.sqrt(hats) == 2 * mt:
             return 0
 
@@ -76,9 +112,29 @@ class crossSectionSMEFT:
         elif order == 'lin':
             return sm + cuGRe * kappa_1
         elif order == 'quad':
-            return sm + cuGRe ** 2 * kappa_11 + cuu ** 2 * kappa_22
+            return sm + cuGRe ** 2 * kappa_11 + cut ** 2 * kappa_22
 
-    def dsigma_part_qq_dpt(self, hats, pt, cuGRe, cuu, order):
+    def dsigma_part_qq_dpt(self, hats, pt, ctGRe, cut, order):
+        """
+        Quark-quark initiated contribution to the partonic cross-section of :math:`t\\bar{t}`-production, keeping
+        info about the scattering angle
+
+        Parameters
+        ----------
+        hats: float
+            partonic center of mass energy squared
+        ctGRe: float
+            EFT parameter :math:`c_{tG}`
+        cut: float
+            EFT parameter :math:`c_{ut}`
+        order: str
+            Order of the EFT expansion, choose between 'lin' and 'quad', or leave `None` for just the SM
+
+        Returns
+        -------
+        float
+            Partonic differential cross-section in :math:`p_T^t`
+        """
 
         # minimum energy required to generate an event with transverse momentum ptv
         s_min = 4 * mt ** 2 + 4 * pt ** 2
@@ -107,9 +163,9 @@ class crossSectionSMEFT:
             if order is None:
                 me_sq = me_sq_sm
             elif order == 'lin':
-                me_sq =  me_sq_sm + cuGRe * me_sq_kappa_1
+                me_sq = me_sq_sm + ctGRe * me_sq_kappa_1
             elif order == 'quad':
-                me_sq =  me_sq_sm + cuGRe ** 2 * me_sq_kappa_11 + cuu ** 2 * me_sq_kappa_22
+                me_sq = me_sq_sm + ctGRe ** 2 * me_sq_kappa_11 + cut ** 2 * me_sq_kappa_22
 
             return me_sq
 
@@ -124,7 +180,27 @@ class crossSectionSMEFT:
         return dsigma_dpT_1 + dsigma_dpT_2
 
 
-    def dsigma_part_gg_dpt(self, hats, pt, cuGRe, cuu, order):
+    def dsigma_part_gg_dpt(self, hats, pt, ctGRe, cut, order):
+        """
+        Gluon initiated contribution to the partonic cross-section of :math:`t\\bar{t}`-production, keeping
+        info about the scattering angle
+
+        Parameters
+        ----------
+        hats: float
+            partonic center of mass energy squared
+        ctGRe: float
+            EFT parameter :math:`c_{tG}`
+        cut: float
+            EFT parameter :math:`c_{ut}`
+        order: str
+            Order of the EFT expansion, choose between 'lin' and 'quad', or leave `None` for just the SM
+
+        Returns
+        -------
+        float
+            Partonic differential cross-section in :math:`p_T^t`
+        """
 
         # minimum energy required to generate an event with transverse momentum ptv
         s_min = 4 * mt ** 2 + 4 * pt ** 2
@@ -229,9 +305,9 @@ class crossSectionSMEFT:
             if order is None:
                 me_sq = me_sq_sm
             elif order == 'lin':
-                me_sq =  me_sq_sm + cuGRe * me_sq_kappa_1
+                me_sq = me_sq_sm + ctGRe * me_sq_kappa_1
             elif order == 'quad':
-                me_sq =  me_sq_sm + cuGRe ** 2 * me_sq_kappa_11
+                me_sq = me_sq_sm + ctGRe ** 2 * me_sq_kappa_11
 
             return me_sq
 
@@ -245,20 +321,36 @@ class crossSectionSMEFT:
 
         return dsigma_dpT_1 + dsigma_dpT_2
 
-
-
 xsec = crossSectionSMEFT()
 
 def weight(sqrts, mu, x1, x2, c, order):
     """
-    NP parameter: order in the EFT
-    order parameter: work at one specific order
-    """
+    Convolution of the partonic-cross section with the PDFs
 
-    cuGRe, cuu = c
+    Parameters
+    ----------
+    sqrts: float
+        partonic center of mass energy
+    mu: float
+        Factorization scale
+    x1: float 
+        Momentum fraction carried by parton 1
+    x2: float
+        Momentum fraction carried by parton 2
+    c: array_like
+        EFT parameters :math:`c_{tG}` and :math:`c_{ut}`
+    order: str 
+        Order of the EFT expansion, choose between 'lin' and 'quad', or leave `None` for just the SM
+
+    Returns
+    -------
+    float
+        Partonic cross-section convoluted with the PDFs
+    """
+    ctGRe, cut = c
     hats = sqrts ** 2
-    w_ii = (xsec.sigma_part_gg(hats, cuGRe, cuu, order)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
-    w_ii += (xsec.sigma_part_qq(hats, cuGRe, 0, order)) * (
+    w_e = (xsec.sigma_part_gg(hats, ctGRe, cut, order)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
+    w_e += (xsec.sigma_part_qq(hats, ctGRe, 0, order)) * (
                 p.xfxQ(1, x1, mu) * p.xfxQ(-1, x2, mu) +
                 p.xfxQ(1, x2, mu) * p.xfxQ(-1, x1, mu) +
                 p.xfxQ(3, x1, mu) * p.xfxQ(-3, x2, mu) +
@@ -267,20 +359,44 @@ def weight(sqrts, mu, x1, x2, c, order):
                 p.xfxQ(5, x2, mu) * p.xfxQ(-5, x1, mu)
     )
 
-    w_ii += (xsec.sigma_part_qq(hats, cuGRe, cuu, order)) * (
+    w_e += (xsec.sigma_part_qq(hats, ctGRe, cut, order)) * (
             p.xfxQ(2, x1, mu) * p.xfxQ(-2, x2, mu) +
             p.xfxQ(2, x2, mu) * p.xfxQ(-2, x1, mu) +
             p.xfxQ(4, x1, mu) * p.xfxQ(-4, x2, mu) +
             p.xfxQ(4, x2, mu) * p.xfxQ(-4, x1, mu)
     )
 
-    return w_ii
+    return w_e
 
 
 def weight_pt(sqrts, pt, mu, x1, x2, c, order):
     """
+    Convolution of the partonic-cross section with the PDFs, keeping info about the scattering angle
+
+    Parameters
+    ----------
+    sqrts: float
+        partonic center of mass energy
+    pt: float
+        Transverse momentum of the top
+    mu: float
+        Factorization scale
+    x1: float
+        Momentum fraction carried by parton 1
+    x2: float
+        Momentum fraction carried by parton 2
+    c: array_like
+        EFT parameters :math:`c_{tG}` and :math:`c_{ut}`
+    order: str
+        Order of the EFT expansion, choose between 'lin' and 'quad', or leave `None` for just the SM
+
+    Returns
+    -------
+    float
+        Partonic cross-section convoluted with the PDFs
     """
-    cuGRe, cuu = c
+   
+    ctGRe, cut = c
     hats = sqrts ** 2
     flavor_up = [2, 4]
     flavor_down = [1, 3, 5]
@@ -288,11 +404,11 @@ def weight_pt(sqrts, pt, mu, x1, x2, c, order):
     pdfs_up = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_up])
     pdfs_down = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_down])
 
-    weight = xsec.dsigma_part_gg_dpt(hats, pt, cuGRe, cuu, order) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
-    weight += (xsec.dsigma_part_qq_dpt(hats, pt, cuGRe, cuu, order)) * pdfs_up
-    weight += (xsec.dsigma_part_qq_dpt(hats, pt, cuGRe, 0, order)) * pdfs_down
+    w_e = xsec.dsigma_part_gg_dpt(hats, pt, ctGRe, cut, order) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
+    w_e += (xsec.dsigma_part_qq_dpt(hats, pt, ctGRe, cut, order)) * pdfs_up
+    w_e += (xsec.dsigma_part_qq_dpt(hats, pt, ctGRe, 0, order)) * pdfs_down
 
-    return weight
+    return w_e
 
 v_weight = np.vectorize(weight, otypes=[np.float])
 v_weight.excluded.add(4)
@@ -302,7 +418,25 @@ v_weight_pt.excluded.add(5)
 
 def dsigma_dmtt_dy_dpt(y, mtt, pt, c=None, order=None):
     """
-    Compute the doubly differential cross section in mtt and y at any order NP
+    Returns the triple differential cross-section in :math:`Y, m_{t\\bar{t}}, p_T^{t}`. Units are :math:`pb^{-1}`
+
+    Parameters
+    ----------
+    y: float
+        Rapidity of the top-quark pair
+    mtt: float
+        Invariant mass of the top-quark pair in TeV
+    pt: float
+        Transverse momentum of the top in TeV
+    c: array_like, optional
+        EFT parameters :math:`c_{tG}` and :math:`c_{ut}`. Set to zero (SM) by default.
+    order: str, optional
+        Order of the EFT expansion, choose between 'lin' and 'quad', or leave `None` for just the SM.
+
+    Returns
+    -------
+    float
+        Triple differential cross-section in :math:`Y, m_{t\\bar{t}}, p_T^{t}`
     """
     if c is None:
         c = np.zeros(2)
@@ -319,8 +453,24 @@ def dsigma_dmtt_dy_dpt(y, mtt, pt, c=None, order=None):
 
 def dsigma_dmtt_dy(y, mtt, c=None, order=None):
     """
-    Compute the doubly differential cross section in mtt and y at any order NP
-    """
+    Returns the double differential cross-section in :math:`Y, m_{t\\bar{t}}`. Units are :math:`pb^{-1}`
+
+    Parameters
+    ----------
+    y: float
+        Rapidity of the top-quark pair
+    mtt: float
+        Invariant mass of the top-quark pair in TeV
+    c: array_like, optional
+        EFT parameters :math:`c_{tG}` and :math:`c_{ut}`. Set to zero (SM) by default.
+    order: str, optinal
+        Order of the EFT expansion, choose between 'lin' and 'quad', or leave `None` for just the SM
+
+    Returns
+    -------
+    float
+        Double differential cross-section in :math:`Y, m_{t\\bar{t}}`
+   """
 
     if c is None:
         c = np.zeros(2)
@@ -337,197 +487,44 @@ def dsigma_dmtt_dy(y, mtt, c=None, order=None):
 dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float])
 dsigma_dmtt_dy_vec.excluded.add(2)
 
-
 def dsigma_dmtt(mtt, c, order):
+    """
+    Returns the single differential cross-section in :math:`m_{t\\bar{t}}`. Units are :math:`pb^{-1}`
+
+    Parameters
+    ----------
+    mtt: float
+        Invariant mass of the top-quark pair in TeV
+    c: array_like, optional
+        EFT parameters :math:`c_{tG}` and :math:`c_{ut}`. Set to zero (SM) by default.
+    order: str, optinal
+        Order of the EFT expansion, choose between 'lin' and 'quad', or leave `None` for just the SM
+
+    Returns
+    -------
+    float
+        Single differential cross-section in :math:`m_{t\\bar{t}}`
+   """
+
     y_min, y_max = -0.5 * np.log(s / mtt), 0.5 * np.log(s / mtt)
     dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, c, order), n=10)[0]
     return dsigma_dmtt
 
-#%%
-
-# remove below?
 
 
 
-def crossSection(binWidth, mtt_max, cuGRe, cuu):
-    """
-    Computes the analytical differential cross section in M(tt)
-
-    Parameters
-    ----------
-    binWidth: float
-        binwidth of the MG5 events
-    mtt_max: float
-        plot goes from [2*mt, mtt_max]
-    cuGRe: float
-        wilson coefficient cug
-    cuu: float
-        wilson coefficient cuu
-
-    Returns
-    -------
-    tuple
-        two array_like objects, mtt and dsigma/dmtt
-    """
-    x = np.arange(2 * mt + binWidth / 2, mtt_max, binWidth)
-    y = np.array([diffCross(mtt, cuGRe, cuu) for mtt in x])
-    return x, y
 
 
-def plotData(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
-    """
-    Create a plot that shows the mg5 histogram in m_tt on top of the analytical (exact) result.
-    This allows for a visual cross-check of the analytical result.
-    :param binWidth: binwidth in TeV
-    :param mtt_max: maximum m_tt in TeV
-    :param cuGRe: eft parameter cuGRe
-    :param cuu: eft parameter cuu
-    :param path_to_file: path to lhe file
-    :param save_path: path where the plot should be stored
-    """
-
-    # compute the analytical result
-    #x, y = crossSection(binWidth, mtt_max, cuGRe, cuu)
-    x, y_sm = crossSection(binWidth, mtt_max, 0, 0)
-
-    # load the madgraph result
-    data_madgraph = []
-    found_weight = False
-    for e in pylhe.readLHE(path_to_file):
-        data_madgraph.append(invariant_mass(e.particles[-1], e.particles[-2]) * 10 ** -3)
-        if found_weight == False:
-            weight = e.eventinfo.weight
-            found_weight = True
-
-    # make a histogram from the mg5 data
-    hist_mg, bins_mg = np.histogram(data_madgraph, bins=np.arange(2 * mt, np.max(data_madgraph), binWidth),
-                                    density=True)
-    hist_mg *= weight
-
-    # show analytical result and mg5 in one plot
-    fig = plt.figure(figsize=(10, 6))
-    ax1 = fig.add_axes([0.15, 0.35, 0.75, 0.55], xticklabels=[], xlim=(2 * mt, mtt_max))
-    #ax1.plot(x, y, '-', c='red', label=r'$\rm{Ana}$')
-    ax1.plot(x, y_sm, '-', c='orange', label=r'$\rm{SM}$')
-    ax1.step(bins_mg[:-1], hist_mg, where='post', label=r'$\rm{mg5}$')
-    ax1.text(0.05, 0.12, r'$\rm{cuu} = %.2f $' % cuu, fontsize=20, transform=ax1.transAxes)
-    ax1.text(0.05, 0.05, r'$\rm{cug} = %.2f $' % cuGRe, fontsize=20, transform=ax1.transAxes)
-    #plt.title('Analytic versus mg5 at ' + r'$ctg={}$'.format(cuGRe) + ' and ' + r'$cuu={}$'.format(cuu))
-
-    plt.yscale('log')
-    plt.ylabel(r'$d\sigma/dm_{tt}\;\mathrm{[pb\:TeV^{-1}]}$')
-    plt.legend(frameon=False, loc='best')
-
-    # add a subplot that shows the ratio analytical/madgraph
-    ax2 = fig.add_axes([0.15, 0.14, 0.75, 0.18], ylim=(0.9, 1.1))
-    ax2.scatter(x, hist_mg[:len(x)] / y_sm, s=10)
-    ax2.hlines(1, 2 * mt, mtt_max, colors='k', linestyles='dashed')
-
-    plt.ylabel(r'$\rm{num/ana}$')
-    plt.xlim((2 * mt, mtt_max))
-
-    # ax3 = fig.add_axes([0.15, 0.1, 0.75, 0.20], ylim = (0.8*(y/y_sm).min(), 1.1*(y/y_sm).max()))
-    # ax3.plot(x, y/y_sm, '-')
-
-    plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
-    # plt.ylabel('BSM/SM')
-    # plt.xlim((2*mt, mtt_max))
-
-    plt.show()
-    fig.savefig(save_path)
 
 
-def plot_xsec_ana(binWidth, mtt_max, cuGRe, cuu, path_to_file, save_path):
-    """
-    Create a plot that shows the mg5 histogram in m_tt on top of the analytical (exact) result.
-    This allows for a visual cross-check of the analytical result.
-    :param binWidth: binwidth in TeV
-    :param mtt_max: maximum m_tt in TeV
-    :param cuGRe: eft parameter cuGRe
-    :param cuu: eft parameter cuu
-    :param path_to_file: path to lhe file
-    :param save_path: path where the plot should be stored
-    """
-
-    # compute the analytical result
-    x, y = crossSection(binWidth, mtt_max, cuGRe, cuu)
-    _, y_sm = crossSection(binWidth, mtt_max, 0, 0)
 
 
-    # show analytical result and mg5 in one plot
-    fig, ax = plt.subplots(figsize=(10,8))
-    ax.plot(x, y, '-', c='C0', label=r'$\rm{EFT}$')
-    ax.plot(x, y_sm, '-', c='C1', label=r'$\rm{SM}$')
-    ax.text(0.05, 0.12, r'$\rm{cuu} = %.2f $' % cuu, fontsize=20, transform=ax.transAxes)
-    ax.text(0.05, 0.05, r'$\rm{cug} = %.2f $' % cuGRe, fontsize=20, transform=ax.transAxes)
-    #plt.title(r'$\rm{Analytic\;xsec\;in\;the\;EFT\;at\;cug=0.1\;and\;cuu=0}$')
-    plt.yscale('log')
-    plt.ylabel(r'$d\sigma/dm_{tt}\;\mathrm{[pb\:TeV^{-1}]}$')
-    plt.legend(frameon=False, loc='best')
-    plt.xlim((2 * mt, mtt_max))
-
-    # ax3 = fig.add_axes([0.15, 0.1, 0.75, 0.20], ylim = (0.8*(y/y_sm).min(), 1.1*(y/y_sm).max()))
-    # ax3.plot(x, y/y_sm, '-')
-
-    plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
-    # plt.ylabel('BSM/SM')
-    # plt.xlim((2*mt, mtt_max))
-
-    #plt.show()
-    fig.savefig(save_path)
 
 
-def plot_likelihood_ratio():
-    y_max = np.log(np.sqrt(s) / (2 * mt))
-    y_min = -y_max
-
-    # Important to include otypes = [np.float], else all the output is int by default
-    vlikelihood_ratio = np.vectorize(likelihood_ratio, otypes=[np.float])
-
-    fig = plt.figure()
-    mtt_max = 2.500
-    mtt_min = 2 * mt
-    x = np.arange(mtt_min, mtt_max, 10 ** -3)
-    y = np.arange(y_min, y_max, 0.01)
-
-    X, Y = np.meshgrid(x, y)
-    Z = vlikelihood_ratio(Y, X, 10.0, NP=1)
-
-    Z_mask = np.ma.masked_equal(Z, 0)
-    mean = Z_mask.mean()
-    std = Z_mask.std()
-
-    im = plt.imshow(Z, cmap=plt.cm.Blues, aspect=(mtt_max - mtt_min) / (y_max - y_min),
-                    extent=[mtt_min, mtt_max, y_min, y_max], vmin=mean - 3 * std, vmax=mean + 3 * std,
-                    interpolation='quadric', origin='lower')
-    plt.colorbar(im)
-
-    plt.ylabel(r'Rapidity $Y = \log\sqrt{x_1/x_2}$')
-    plt.xlabel(r'$m_{tt}\;\mathrm{[TeV]}$')
-    plt.title('Likelihood ratio')
-
-    # plt.title(r'$pdf(x|H_1(c=10^{%d}))$'%(-3+3))
-    plt.show()
-    fig.savefig('likelihood_ratio_EFT_Linear.pdf')
 
 
-def plot_likelihood_ratio_1D(x, cHW, cHq3, lin=False, quad=False):
-    y = [1 / (1 + likelihood_ratio_1D(x_i, cHW, cHq3, lin=lin, quad=quad)) for x_i in x]
-    return np.array(y)
 
 
-def f_analytic(mtt, y, cuGRe, cuu):
-    r = likelihood_ratio(y, mtt, cuGRe, cuu)
-    return 1/(1+r)
 
-def plot_f_ana(mtt_min, mtt_max, y_min, y_max, x_spacing, y_spacing, ctg, cuu):
-
-    # Important to include otypes = [np.float], else all the output is int by default
-    vf_ana = np.vectorize(f_analytic, otypes=[np.float])
-    x = np.arange(mtt_min*10**-3, mtt_max*10**-3, x_spacing*10**-3)
-    y = np.arange(y_min, y_max, y_spacing)
-    xx, yy = np.meshgrid(x, y)
-    Z = vf_ana(xx, yy, ctg, cuu)
-    return Z
 
 

@@ -1,3 +1,7 @@
+"""
+Optimizer module to compute confidence level intervals in the SMEFT
+"""
+
 import pymultinest
 import json
 import sys
@@ -26,26 +30,24 @@ np.random.seed(0)
 
 class Optimize:
     """
-    Parameters
-    ----------
-        config : dict
-            configuration dictionary
-        observed_data: numpy.ndarray()
-            Observed events (i.e. under the SM)
-        theory_pred: TheoryPred
-            instance of TheoryPred that contains the theory predictions
+    Optimizer to obtain confidence level intervals in the SMEFT using either binned or unbinned (ML level) observables
     """
 
-    def __init__(self, config, coeff=None, rep=None):
+    def __init__(self, config, coeff=None):
+        """
+        Optimize constructor
 
+        Parameters
+        ----------
+        config: dict
+            loaded json run card
+        coeff: array_like, optional
+            Subset of ``(N,) ndarray`` EFT parameter names to include in the fit. Takes all EFT parameters by default.
+        """
         self.config = config.copy()
-        self.rep = rep
         self.coeff = coeff
 
         self.param_names = {}
-
-        if self.rep is not None:
-            self.config["results_path"] = os.path.join(self.config["results_path"], "r_{}".format(self.rep))
 
         if "fit_id" in self.config.keys():
             self.fit_id = self.config["fit_id"]
@@ -187,15 +189,16 @@ class Optimize:
         Parameters
         ----------
         root: str
-            Path to the model or theory prediction directory
+            Path to the model root directory
+        order: str
+            Order of the EFT expansion, choose between 'lin' and 'quad'
         prefix: str
-            For models: prefix = models
-            For theory predictions: prefix = "process_id"
+            For models: `prefix` = ``models``, for theory predictions: `prefix` = ``process_id`
 
         Returns
         -------
         path_to_models: dict
-            Dictionary that holds the paths to the models per coefficient function
+            Dictionary containing the paths to the models for each EFT ratio function
         """
         path_to_models = {}
 
@@ -230,13 +233,13 @@ class Optimize:
 
         Parameters
         ----------
-        cube: numpy.ndarray, shape=(M,)
-            unit hypercube of dim M
+        cube: array_like,
+            ``(N, ) ndarray`` unit hypercube of dim ``N``
 
         Returns
         -------
-        cube: numpy.ndarray
-            hypercube prior
+        cube: array_like
+            prior volume
         """
 
         for i, c_name in enumerate(self.coeff):
@@ -246,13 +249,32 @@ class Optimize:
         return cube
 
     def cube_to_dict(self, cube):
+        """
+        Converts the prior volume ``(N, ) ndarray`` to a dict with the EFT parameter names as keys
 
-        # convert cube to dict
+        Parameters
+        ----------
+        cube: array_like
+            prior volume
+        """
+
         for i, c_name in enumerate(self.coeff):
             self.param_names[c_name] = cube[i]
 
     def log_like_nn(self, cube):
+        """
+        Implementaiton of the unbinned extended log-likelihood using the ML models
 
+        Parameters
+        ----------
+        cube: array_like
+            prior volume
+
+        Returns
+        -------
+        float
+            Extended-log likelihood using the ML models
+        """
         self.cube_to_dict(cube)
 
         # compute inclusive xsec at cube
@@ -283,6 +305,20 @@ class Optimize:
         return -nu + np.sum(log_r_med)
 
     def log_like_truth(self, cube):
+        """
+        Implementaiton of the unbinned extended log-likelihood using the analytical differential cross-sections at
+        the parton level
+
+        Parameters
+        ----------
+        cube: array_like
+            prior volume
+
+        Returns
+        -------
+        float
+            Extended-log likelihood using the analytical predictions
+        """
 
         self.cube_to_dict(cube)
 
@@ -317,6 +353,19 @@ class Optimize:
         return log_like
 
     def log_like_binned(self, cube):
+        """
+        Implementaiton of the binned Poissonian log-likelihood
+
+        Parameters
+        ----------
+        cube: array_like
+            prior volume
+
+        Returns
+        -------
+        float
+            Binned Poissonian log-likelihood
+        """
 
         self.cube_to_dict(cube)
 
@@ -345,7 +394,7 @@ class Optimize:
         return np.sum(log_like_i)
 
     def run_sampling(self):
-        """Run the minimisation with Nested Sampling"""
+        """Runs the minimisation with Nested Sampling"""
 
         # Prefix for results
         prefix = os.path.join(self.output_path, "1k-")
@@ -382,7 +431,7 @@ class Optimize:
         self.clean()
 
     def clean(self):
-        """ Remove raw NS output if you want to keep raw output, don't call this method"""
+        """ Removes raw NS output if no raw output is needed"""
 
         filelist = [
             f for f in os.listdir(self.output_path) if f.startswith("1k-")
@@ -393,12 +442,12 @@ class Optimize:
 
     def save(self, result):
         """
-        Save NS replicas to json inside a dictionary:
-        {coeff: [replicas values]}
+        Save NS replicas to json inside a dictionary of the form {'coeff': [replicas values]}
+
         Parameters
         ----------
-            result : dict
-                result dictionary
+        result : dict
+            result dictionary
         """
 
         vals = {}

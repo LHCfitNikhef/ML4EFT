@@ -54,7 +54,8 @@ templates_path = ['_templates']
 
 autosummary_mock_imports = [
     'ml4eft.preproc.constants',
-    'ml4eft.analyse.report'
+    'ml4eft.analyse.report',
+    'ml4eft.core.truth.vh_prod'
 ]
 
 # Bibtex
