@@ -27,12 +27,13 @@ Welcome to ML4EFT's documentation!
 
 
 .. toctree::
-   :maxdepth: 4
-   :caption: Code
+   :maxdepth: 2
+   :caption: Installation
    :hidden:
 
-   modules/installation.rst
-   modules/tutorial.rst
+   installation/instructions
+   installation/tutorial
+
 
 .. autosummary::
    :toctree: _autosummary

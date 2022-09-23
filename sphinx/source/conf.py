@@ -44,7 +44,9 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
-    "sphinx.ext.autosummary"]
+    "sphinx.ext.autosummary",
+    "nbsphinx",
+    "sphinx_gallery.load_style"]
 
 autodoc_default_flags = ['members']
 autosummary_generate = True

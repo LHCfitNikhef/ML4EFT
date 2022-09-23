@@ -6,7 +6,7 @@ from matplotlib.ticker import NullFormatter
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
-def plot_features(df_sm, dfs_eft, features, labels, x_labels=None, y_labels=None):
+def plot_features(df_sm, dfs_eft, features, legend_labels):
 
     n_cols = 5
     n_rows = int(np.ceil(len(features) / n_cols))
@@ -15,17 +15,13 @@ def plot_features(df_sm, dfs_eft, features, labels, x_labels=None, y_labels=None
     grid = plt.GridSpec(n_rows, n_cols, hspace=0.3, wspace=0.2)
 
 
-
-
-
-
     # xsec_eft = df_eft.iloc[0, 0]
     xsec_sm = df_sm.iloc[0, 0]
     #
     # df_sm = df_sm.iloc[1:, :]
     # df_eft = df_eft.iloc[1:, :]
 
-    for i, feature in enumerate(features):
+    for i, (feature, label)  in enumerate(features.items()):
 
         ax = fig.add_subplot(grid[i // n_cols, i % n_cols])
         #ax = plt.subplot(n_rows, n_cols, i + 1)
@@ -51,7 +47,7 @@ def plot_features(df_sm, dfs_eft, features, labels, x_labels=None, y_labels=None
         ax.yaxis.set_major_formatter(NullFormatter())
         ax.yaxis.set_minor_formatter(NullFormatter())
         ax.axes.yaxis.set_ticklabels([])
-        ax.set_xlabel(x_labels[i])
+        ax.set_xlabel(label)
 
 
 
@@ -63,7 +59,7 @@ def plot_features(df_sm, dfs_eft, features, labels, x_labels=None, y_labels=None
 
 
     legend = ax.legend(
-        labels=labels,
+        labels=legend_labels,
         bbox_to_anchor=(1.17, 0., 1, 1),
         fontsize=20,
         handlelength=1,

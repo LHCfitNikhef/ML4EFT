@@ -358,3 +358,4 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 
 /sphinx/source/_autosummary/
 /training_data/zh/
+/zenodo/*

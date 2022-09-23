@@ -19,6 +19,36 @@ class Kinematics(pylhe.LHEParticle):
         ----------
         particle: :class:`pylhe.LHEParticle`
             LHE particle object
+
+        Examples
+        --------
+        We consider :math:`pp\\rightarrow ZH \\rightarrow \ell^+\ell^-b\\bar{b}\;` as a simple example
+
+        >>> import pylhe
+        >>> lhe_init = pylhe.readLHEInit(path_to_lhe)
+
+        Loop over the events in the LHE file and append kinematics
+
+        >>> events = []
+        >>> for e in pylhe.readLHE(path_to_lhe):
+        ...     incoming_part = []
+        ...     # create particle instances
+        ...     for part in e.particles:
+        ...         if part.id in [11, 13]: # e^- or \mu^-
+        ...            l1 = lhe.Kinematics(part)
+        ...         elif part.id in [-11, -13]: # e^+ or \mu^+
+        ...            l2 = lhe.Kinematics(part)
+        ...         elif part.id == 5: # b
+        ...            b = lhe.Kinematics(part)
+        ...         elif part.id == -5: #bbar
+        ...            bbar = lhe.Kinematics(part)
+        ...
+        ...     # Particle systems can be created by adding the separate particle instances
+        ...     ll = l1 + l2 # dilepton system
+        ...     bb = b + bbar # b bbar sytem
+        ...     events.append([l1.get_pt(), l2.get_pt(), ll.get_invariant_mass()])
+
+        ``events`` now contains the requested kinematics for all events in the LHE file
         """
 
         if isinstance(particle, pylhe.LHEParticle):

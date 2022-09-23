@@ -24,6 +24,7 @@ import shutil
 import ml4eft.analyse.analyse as analyse
 from sklearn.preprocessing import StandardScaler, RobustScaler, QuantileTransformer
 import joblib
+import sys
 
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 rc('text', usetex=True)
@@ -301,7 +302,7 @@ class Fitter:
     Training class
     """
 
-    def __init__(self, json_path, mc_run, output_dir):
+    def __init__(self, json_path, mc_run, output_dir, print_log=False):
         """
         Fitter constructor
 
@@ -313,6 +314,9 @@ class Fitter:
             Replica number
         output_dir: str
             Path to where the models should be stored
+        print_log: bool, optional
+            Set to true to print training progress to stdout, otherwise it
+            prints to a log file only
         """
         # read the json run card
         with open(json_path) as json_data:
@@ -386,8 +390,6 @@ class Fitter:
 
         if not os.path.exists(mc_path):
             os.makedirs(mc_path)
-            os.makedirs(os.path.join(mc_path, 'plots'))
-            os.makedirs(os.path.join(mc_path, 'animation'))
             os.makedirs(log_path)
 
 
@@ -406,8 +408,22 @@ class Fitter:
         t = time.localtime()
         current_time = time.strftime("%H_%M_%S", t)
 
-        logging.basicConfig(filename=log_path + '/training_{}.log'.format(current_time), level=logging.INFO,
-                            format='%(asctime)s:%(levelname)s:%(message)s')
+        # print log to stdout when print_log is True, else only save to log file
+        if print_log:
+            handlers = [logging.FileHandler(log_path + '/training_{}.log'.format(current_time)),
+                        logging.StreamHandler(sys.stdout)
+                        ]
+        else:
+            handlers = [logging.FileHandler(log_path + '/training_{}.log'.format(current_time))]
+
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s [%(levelname)s] %(message)s",
+            handlers=handlers
+        )
+
+        # logging.basicConfig(filename=log_path + '/training_{}.log'.format(current_time), level=logging.INFO,
+        #                     format='%(asctime)s:%(levelname)s:%(message)s')
         logging.info("All directories created, ready to load the data")
 
         # load the training and validation data
@@ -586,8 +602,8 @@ class Fitter:
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
 
-            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}, Negative r: {neg_r}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, overfit=overfit_counter, neg_r=neg_r_counter)
+            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}". \
+                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, overfit=overfit_counter)
             logging.info(training_status)
 
             np.savetxt(path + 'loss.out', loss_list_train)
