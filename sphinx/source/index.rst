@@ -4,9 +4,11 @@
    contain the root `toctree` directive.
 
 
-Welcome to ML4EFT's documentation!
+
+ML4EFT
 ==================================
 
+ML4EFT is ...
 
 .. figure:: images/summary.png
     :width: 100%
@@ -49,9 +51,12 @@ Welcome to ML4EFT's documentation!
    results/overview.rst
 
 
+Project Description
+-------------------------
+
 [to be rephrased & edited] Optimizing theoretical interpretations of particle physics data demands identifying experimental observables with high sensitivity to the model parameters of interest. In particular, quantifying the optimal sensitivity that can be attained within a given process is instrumental to inform global fits of Standard Model (SM) parameters, such as those of parton distribution functions, as well as those in beyond the SM scenarios, such as the Wilson coefficients of the Standard Model Effective Field Theory (SMEFT). 
 
-With this motivation, here we develop a *general framework for the integration of unbinned observables in global fits of particle physics data,* (titled ML4EFT? quad_clas?) 
+With this motivation, here we develop a general framework for the integration of unbinned observables in global fits of particle physics data, titled *ml4eft*.
 
 Machine learning regression and classification techniques are deployed to parameterise high-dimensional likelihoods with the Monte Carlo replica method to assess methodological uncertainties. 
 
