@@ -99,7 +99,7 @@ class Optimize:
                 sys.exit()
         elif self.mode == "nn":
             if "path_to_models" in self.config.keys():
-                self.path_to_models = self.build_path_dict(self.config['path_to_models'], self.order, prefix='model')
+                self.path_to_models = analyse.Analyse.build_path_dict(self.config['path_to_models'], self.order, prefix='model')
                 self.nn_analyser = analyse.Analyse(self.path_to_models, self.order)
             else:
                 print(
@@ -115,7 +115,7 @@ class Optimize:
             self.th_features = self.config['th_features']
 
         if "path_to_theory_pred" in self.config.keys():
-            self.path_to_theory_pred = self.build_path_dict(self.config["path_to_theory_pred"], self.order, prefix=self.process)
+            self.path_to_theory_pred = analyse.Analyse.build_path_dict(self.config["path_to_theory_pred"], self.order, prefix=self.process)
         else:
             print(
                 "No path to theory predictions (path_to_theory_pred) specified. Please set in the in the input card. Aborting."
@@ -180,52 +180,6 @@ class Optimize:
 
         elif self.mode == "binned":
             self.n_i, _ = np.histogram(self.observed_data[self.kinematic].values, self.bins)
-
-    @staticmethod
-    def build_path_dict(root, order, prefix):
-        """
-        Construct path to model dictionary
-
-        Parameters
-        ----------
-        root: str
-            Path to the model root directory
-        order: str
-            Order of the EFT expansion, choose between 'lin' and 'quad'
-        prefix: str
-            For models: `prefix` = ``models``, for theory predictions: `prefix` = ``process_id`
-
-        Returns
-        -------
-        path_to_models: dict
-            Dictionary containing the paths to the models for each EFT ratio function
-        """
-        path_to_models = {}
-
-        if prefix != 'model':
-            path_to_models['sm'] = os.path.join(root, '{}_sm'.format(prefix))
-
-        path_to_models['lin'] = {}
-
-        if order == 'quad':
-            path_to_models['quad'] = {}
-
-        for model_dir in os.listdir(root):
-            if model_dir.startswith(prefix):
-                if 'sm' in model_dir: # sm has already been added
-                    continue
-                # linear
-                if model_dir.count('_') == 1:
-                    path_to_models['lin'].update({model_dir.split("{}_".format(prefix),1)[1]: os.path.join(root, model_dir)})
-
-                if model_dir.count('_') == 2 and order == 'quad':
-                    path_to_models['quad'].update(
-                        {model_dir.split("{}_".format(prefix), 1)[1]: os.path.join(root, model_dir)})
-            else:
-                continue
-
-        return path_to_models
-
 
     def my_prior(self, cube):
         """
