@@ -1,8 +1,8 @@
 #%%
-from quad_clas.analyse.animate_2d import animate_learning_2d
-from quad_clas.analyse.animate import Animate
-import quad_clas.analyse.analyse as analyse
-import quad_clas.preproc.constants as constants
+from ml4eft.analyse.animate_2d import animate_learning_2d
+from ml4eft.analyse.animate import Animate
+import ml4eft.analyse.analyse as analyse
+import ml4eft.preproc.constants as constants
 import numpy as np
 import pandas as pd
 import os

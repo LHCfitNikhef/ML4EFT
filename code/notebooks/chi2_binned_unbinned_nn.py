@@ -2,8 +2,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import quad_clas.core.truth.vh_prod as vh_prod
-from quad_clas.core.classifier import PredictorCross, PredictorLinear, PredictorQuadratic
+import ml4eft.core.truth.vh_prod as vh_prod
+from ml4eft.core.classifier import PredictorCross, Classifier, PredictorQuadratic
 import os
 import torch
 
@@ -24,22 +24,22 @@ def get_nn_ratio(x, c1, c2, mc_run):
     path_nn_cross = os.path.join(path_cross, 'mc_run_{}', 'trained_nn.pt')
 
     with torch.no_grad():
-        n_lin_1 = PredictorLinear(architecture)
+        n_lin_1 = Classifier(architecture)
         n_lin_1.load_state_dict(torch.load(path_nn_lin_1.format(mc_run)))
 
         mean, std = np.loadtxt(os.path.join(path_lin_1, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
 
         x_scaled = (x - mean) / std
-        n_lin_1_out = n_lin_1.n_alpha(x_scaled.float()) ** 2
+        n_lin_1_out = n_lin_1.NN(x_scaled.float()) ** 2
 
         #######
 
-        n_lin_2 = PredictorLinear(architecture)
+        n_lin_2 = Classifier(architecture)
         n_lin_2.load_state_dict(torch.load(path_nn_lin_2.format(mc_run)))
 
         mean, std = np.loadtxt(os.path.join(path_lin_2, 'mc_run_{}'.format(mc_run), 'scaling.dat'))
         x_scaled = (x - mean) / std
-        n_lin_2_out = n_lin_2.n_alpha(x_scaled.float()) ** 2
+        n_lin_2_out = n_lin_2.NN(x_scaled.float()) ** 2
 
         ########
 

@@ -2,9 +2,8 @@ import pylhe
 import pandas as pd
 import numpy as np
 import sys, os
-from pathlib import Path
 import subprocess
-import quad_clas.preproc.lhe_reader.compute_kinematics as lhe
+import ml4eft.preproc.lhe_reader as lhe
 
 event_dir = sys.argv[1]
 process = sys.argv[2]

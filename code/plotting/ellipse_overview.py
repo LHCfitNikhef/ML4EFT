@@ -9,7 +9,7 @@ import seaborn as sns
 import matplotlib.patches as mpatches
 import itertools
 import os
-from quad_clas.analyse.analyse import Analyse
+from ml4eft.analyse.analyse import Analyse
 from ellipse_plotter_new import EllipsePlotter
 
 

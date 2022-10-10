@@ -1,8 +1,0 @@
-{
-  "parameters": ["chw", "chq3"],
-  "nlive": 5000,
-  "n_params": 2,
-  "results_path": "/data/theorie/jthoeve/ML4EFT_higgs/output/contours/ns",
-  "max_val": -2,
-  "min_val": 2
-}

@@ -1,6 +1,6 @@
-from quad_clas.plotting.plot_contours import plot_contours
+from ml4eft.plotting.plot_contours import plot_contours
 import numpy as np
-from quad_clas.core.th_predictions import TheoryPred
+from ml4eft.core.th_predictions import TheoryPred
 
 c_x, c_y = np.load('/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/cbh_chw/nn/scan_domain.npy') #chw, chq3
 c_x_binned, c_y_binned = np.load('/Users/jaco/Documents/ML4EFT/output/contours/zh_llbb/cbh_chw/binned/binning_1/scan_domain.npy')

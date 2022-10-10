@@ -1,5 +1,5 @@
 import numpy as np
-import quad_clas.analyse.confidence_intervals as conf_int
+import ml4eft.analyse.confidence_intervals as conf_int
 import sys, os
 import pandas as pd
 

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 
 sys.path.append('/Users/jaco/Documents/ML4EFT/code')
-from quad_clas.core.truth import vh_prod
+from ml4eft.core.truth import vh_prod
 
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 14})
 rc('text', usetex=True)

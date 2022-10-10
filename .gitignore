@@ -24,9 +24,6 @@
 ## Generated if empty string is given at "Please type another file name for output:"
 .pdf
 
-## ignore pdf files
-*.pdf
-
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl
 *.bcf
@@ -359,4 +356,6 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 
 
 
-/training_data/
+/sphinx/source/_autosummary/
+/training_data/zh/
+/zenodo/*

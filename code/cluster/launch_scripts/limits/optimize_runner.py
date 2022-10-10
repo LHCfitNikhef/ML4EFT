@@ -2,8 +2,8 @@ import argparse
 import json
 import pandas as pd
 import numpy as np
-from quad_clas.core.th_predictions import TheoryPred
-from quad_clas.limits.optimize_ns import Optimize
+from ml4eft.core.th_predictions import TheoryPred
+from ml4eft.limits.optimize_ns import Optimize
 
 if __name__ == "__main__":
 

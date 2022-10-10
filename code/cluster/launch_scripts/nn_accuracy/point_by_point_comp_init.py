@@ -1,5 +1,5 @@
 import numpy as np
-import quad_clas.analyse.analyse as analyse
+import ml4eft.analyse.analyse as analyse
 import os
 import pandas as pd
 
