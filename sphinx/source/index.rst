@@ -33,12 +33,14 @@ global analyses of, for example, the Standard Model Effective Field Theory and P
 
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 6
    :caption: Code
    :hidden:
 
    modules/installation.rst
    modules/tutorial.rst
+   _autosummary/ml4eft.rst
+
 
 .. autosummary::
    :toctree: _autosummary
