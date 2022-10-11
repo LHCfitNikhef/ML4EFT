@@ -1,4 +1,13 @@
-Analysis of EFT constraints from :math:`t\bar{t}` production
+Inclusive top pair production at the particle level
 ============================================================
 
-Place contours etc here
+In this section we will present results and animations from ....
+
+Contents:
+-----------
+.. toctree::
+   :maxdepth: 5
+
+   ttbar_analysis_particle1
+   ttbar_analysis_particle2
+   ttbar_analysis_particle3
