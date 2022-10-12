@@ -14,6 +14,7 @@ and can be seamlessly integrated into
 global analyses of, for example, the Standard Model Effective Field Theory and Parton Distribution Functions.
 
 
+
 .. figure:: images/summary.png
     :width: 100%
     :class: align-center
@@ -56,6 +57,16 @@ global analyses of, for example, the Standard Model Effective Field Theory and P
    results/overview.rst
 
 
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Bibliography
+   :hidden:
+
+   bibliography.rst
+
+
+
 Project Description
 -------------------------
 Optimizing theoretical interpretations of particle physics data demands identifying experimental observables with high sensitivity to the model parameters of interest.
@@ -68,7 +79,7 @@ See the :ref:`Overview<overview>` section for more details of the ML4EFT framewo
 
 ML4EFT appears in the following paper:
 
-- *Unbinned measurements for global SMEFT fits from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:p:...
+- *Unbinned measurements for global SMEFT fits from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:`ML4EFT_temp_id`
  
 Here, we provide a proof-of-concept of the ML4EFT framework by constructing unbinned observables from pseudo-data of particle-level :math:`t\bar{t}` and :math:`hZ` production at the LHC 14 TeV,
 demonstrating the improved sensitivity that can be obtained relative to binned measurements. 
@@ -92,7 +103,7 @@ Citation policy
 ----------------------------------
 If you use the ML4EFT code in a scientific publication, please make sure to cite:
 
-- *Unbinned measurements for global SMEFT fits from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:p:...
+- *Unbinned measurements for global SMEFT fits from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:`ML4EFT_temp_id`
 
 Indices and tables
 ==================
