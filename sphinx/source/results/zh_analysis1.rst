@@ -1,7 +1,8 @@
-Pseudo-data generation and benchmarking
+Kinematic features
 ============================================================
 
-.. image:: ../images/tt_benchmark_parton.png
+.. image:: ../images/zh_lin_dist.png
 
-See also (link to truth predictions in code) for the specifics.
+.. image:: ../images/zh_quad_dist.png
+
 

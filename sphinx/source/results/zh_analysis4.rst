@@ -2,5 +2,5 @@ Plots
 ============================================================
 
 
-.. image:: ../images/cornerplots/zh_pairwise_lin_nn_binned.png
+.. image:: ../images/cornerplots/zh_glob_quad_nn.png
 
