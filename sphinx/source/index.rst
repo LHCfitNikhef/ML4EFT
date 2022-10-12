@@ -83,8 +83,8 @@ Results from this paper are presented in the :ref:`Results<results>` section, in
 Team Description
 ----------------------------------
 - Raquel Gomez Ambrosio *Universita degli Studi di Milano-Bicocca and INFN*
-- Maeve Madigan *University of Cambridge*
 - Jaco ter Hoeve, *VU Amsterdam and Nikhef Theory Group*
+- Maeve Madigan *University of Cambridge*
 - Juan Rojo, *VU Amsterdam and Nikhef Theory Group*
 - Veronica Sanz *Universidad de Valencia-CSIC and University of Sussex*
   
