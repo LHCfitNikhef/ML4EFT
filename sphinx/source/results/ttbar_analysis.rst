@@ -1,7 +1,11 @@
 Inclusive top pair production at the particle level
 ============================================================
 
-In this section we will present results and animations from ....
+We present here plots and animations related to Section 4.3 of :cite:`ML4EFT_temp_id`.
+
+We consider inclusive top quark pair production at the particle level i.e. including top quark
+decays in the dilepton channel: :math:`p p \rightarrow t \bar{t}, t \bar{t} \rightarrow b \bar{b} \ell^{+} \ell^{-} \nu_{\ell} \bar{\nu}_{\ell}`, at the LHC 14 TeV.
+
 
 Contents:
 -----------
