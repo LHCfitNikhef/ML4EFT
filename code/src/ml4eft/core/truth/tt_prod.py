@@ -76,7 +76,7 @@ class crossSectionSMEFT:
             return sm + ctGRe ** 2 * kappa_11
 
 
-    def sigma_part_qq(self, hats, cuGRe, cut, order):
+    def sigma_part_qq(self, hats, cuGRe, ctu8, order):
         """
         Quark-quark initiated contribution to the partonic cross-section of :math:`t\\bar{t}`-production
 
@@ -103,16 +103,17 @@ class crossSectionSMEFT:
         sqrt = np.sqrt(1 - 4 * mt ** 2 / hats)
         kappa_11 = sqrt * (8 * np.pi * v ** 2 * yt ** 2 * asQCD * (8 * mt ** 2 + hats)) / (
                     108 * np.pi * LambdaSMEFT ** 4 * hats)
-        kappa_22 = sqrt * ((hats - mt ** 2)) / (48 * np.pi * LambdaSMEFT ** 4 )
+        kappa_22 = sqrt * ((hats - mt ** 2)) / (216 * np.pi * LambdaSMEFT ** 4 )
         kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
+        kappa_2 = asQCD * sqrt * (2 * mt ** 2 + hats) / (27 * hats * LambdaSMEFT)
         sm = (8 * np.pi * asQCD ** 2 * (2 * mt ** 2 + hats) * sqrt) / (27 * hats ** 2)
 
         if order is None:
             return sm
         elif order == 'lin':
-            return sm + cuGRe * kappa_1
+            return sm + cuGRe * kappa_1 + ctu8 * kappa_2
         elif order == 'quad':
-            return sm + cuGRe ** 2 * kappa_11 + cut ** 2 * kappa_22
+            return sm + cuGRe ** 2 * kappa_11 + ctu8 ** 2 * kappa_22
 
     def dsigma_part_qq_dpt(self, hats, pt, ctGRe, cut, order):
         """
