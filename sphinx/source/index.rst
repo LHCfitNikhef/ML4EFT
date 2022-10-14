@@ -4,8 +4,15 @@
    contain the root `toctree` directive.
 
 
-Welcome to ML4EFT's documentation!
+
+ML4EFT
 ==================================
+
+ML4EFT is a general open-source framework for the integration of unbinned observables into global fits of particle physics data.
+It makes use of machine learning regression and classification techniques to parameterise high-dimensional likelihood ratios,
+and can be seamlessly integrated into
+global analyses of, for example, the Standard Model Effective Field Theory and Parton Distribution Functions.
+
 
 
 .. figure:: images/summary.png
@@ -27,12 +34,13 @@ Welcome to ML4EFT's documentation!
 
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Installation
+   :maxdepth: 6
+   :caption: Code
    :hidden:
 
-   installation/instructions
-   installation/tutorial
+   modules/installation.rst
+   modules/tutorial.rst
+   _autosummary/ml4eft.rst
 
 
 .. autosummary::
@@ -40,7 +48,6 @@ Welcome to ML4EFT's documentation!
    :template: custom-module-template.rst
    :recursive:
 
-   ml4eft
 
 .. toctree::
    :maxdepth: 4
@@ -50,22 +57,35 @@ Welcome to ML4EFT's documentation!
    results/overview.rst
 
 
-[to be rephrased & edited] Optimizing theoretical interpretations of particle physics data demands identifying experimental observables with high sensitivity to the model parameters of interest. In particular, quantifying the optimal sensitivity that can be attained within a given process is instrumental to inform global fits of Standard Model (SM) parameters, such as those of parton distribution functions, as well as those in beyond the SM scenarios, such as the Wilson coefficients of the Standard Model Effective Field Theory (SMEFT). 
 
-With this motivation, here we develop a *general framework for the integration of unbinned observables in global fits of particle physics data,* (titled ML4EFT? quad_clas?) 
+.. toctree::
+   :maxdepth: 1
+   :caption: Bibliography
+   :hidden:
 
-Machine learning regression and classification techniques are deployed to parameterise high-dimensional likelihoods with the Monte Carlo replica method to assess methodological uncertainties. 
-
-See the :ref:`Overview<overview>` section for more details.
+   bibliography.rst
 
 
-Publications & Results
-----------------------------------
-The ML4EFT code has been used in a recent study, Ref ..., in which, adopting the SMEFT as a proof-of-concept, we construct unbinned observables in top-quark pair and Higgs associated production at the LHC and demonstrate their impact once included in the SMEFiT global analysis of top, Higgs, and diboson data. 
 
-Results from this are detailed in the :ref:`Results<results>` section, including animations not present in the paper.
+Project Description
+-------------------------
+Optimizing theoretical interpretations of particle physics data demands identifying experimental observables with high sensitivity to the model parameters of interest.
+Such measurements not only lead to more stringent constraints on the model parameters, but also provide quantitative upper bounds indicating the maximum amount of physical information that can be extracted from a given process.
 
-The ML4EFT code is available in the :ref:`Code<code>` section.
+
+With this motivation, we have developed a machine learning framework which enables the integration of unbinned observables into global fits of particle physics data: **ML4EFT**.
+See the :ref:`Overview<overview>` section for more details of the ML4EFT framework, and the :ref:`Code<code>` section for the ML4EFT code documentation.
+
+
+ML4EFT appears in the following paper:
+
+- *Unbinned measurements for global SMEFT fits from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:`ML4EFT_temp_id`
+ 
+Here, we provide a proof-of-concept of the ML4EFT framework by constructing unbinned observables from pseudo-data of particle-level :math:`t\bar{t}` and :math:`hZ` production at the LHC 14 TeV,
+demonstrating the improved sensitivity that can be obtained relative to binned measurements. 
+Results from this paper are presented in the :ref:`Results<results>` section, including animations not present in the paper.
+
+
 
 
 
@@ -74,14 +94,16 @@ The ML4EFT code is available in the :ref:`Code<code>` section.
 Team Description
 ----------------------------------
 - Raquel Gomez Ambrosio *Universita degli Studi di Milano-Bicocca and INFN*
-- Maeve Madigan *University of Cambridge*
 - Jaco ter Hoeve, *VU Amsterdam and Nikhef Theory Group*
+- Maeve Madigan *University of Cambridge*
 - Juan Rojo, *VU Amsterdam and Nikhef Theory Group*
 - Veronica Sanz *Universidad de Valencia-CSIC and University of Sussex*
   
 Citation policy
 ----------------------------------
 If you use the ML4EFT code in a scientific publication, please make sure to cite:
+
+- *Unbinned measurements for global SMEFT fits from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:`ML4EFT_temp_id`
 
 Indices and tables
 ==================

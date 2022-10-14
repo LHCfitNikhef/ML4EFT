@@ -12,7 +12,6 @@ Contents:
 .. toctree::
    :maxdepth: 5
    
-   training
+   ttbar_analysis_parton
+   ttbar_analysis   
    zh_analysis
-   ttbar_analysis
-   global_fit

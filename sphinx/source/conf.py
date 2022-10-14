@@ -45,8 +45,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosummary",
-    "nbsphinx",
-    "sphinx_gallery.load_style"]
+    "sphinxcontrib.bibtex"]
 
 autodoc_default_flags = ['members']
 autosummary_generate = True
@@ -61,9 +60,9 @@ autosummary_mock_imports = [
 ]
 
 # Bibtex
-# bibtex_bibfiles = ['EELS_ML.bib']
-# bibtex_default_style = 'unsrt'
-# bibtex_reference_style = 'author_year'
+bibtex_bibfiles = ['ML4EFT.bib']
+bibtex_default_style = 'unsrt'
+bibtex_reference_style = 'author_year'
 
 # Markdown configuration
 numfig = True
