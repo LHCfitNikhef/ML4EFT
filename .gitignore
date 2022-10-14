@@ -302,8 +302,7 @@ code/old/
 /code/output/
 /plots/
 
-/training_data/events_high_stats/
-/training_data/pt_sm/
+/training_data/*
 /paper/ML4EFT_paper.pdf
 /madgraph_debug/
 /output/contours/
@@ -359,3 +358,4 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 /sphinx/source/_autosummary/
 /training_data/zh/
 /zenodo/*
+/observed_data/*
