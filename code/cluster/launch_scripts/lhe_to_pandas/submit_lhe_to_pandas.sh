@@ -13,11 +13,11 @@ function submit_job () {
 
   # write launch command
 
-  LAUNCH=$PY' '$PWD'/lhe_to_pandas_tt.py '$EVENT_DIR' '$PROCESS' '$SAVE_LOCATION
+  LAUNCH=$PY' '$PWD'/lhe_to_pandas_tt_parton.py '$EVENT_DIR' '$PROCESS' '$SAVE_LOCATION
 
   echo $LAUNCH >> $COMMAND
   chmod +x $COMMAND
-  chmod +x $PWD'/lhe_to_pandas_tt.py'
+  chmod +x $PWD'/lhe_to_pandas_tt_parton.py'
 
   #$COMMAND
 
@@ -49,10 +49,9 @@ shift $((OPTIND -1))
 
 #mkdir -p $SAVE_LOCATION
 
-for dir in $ROOT/*/     # list directories in the form "/tmp/dirname/"
+for dir in $ROOT/*/
 do
     dir=${dir%*/} # remove the trailing "/"
-    #echo $dir #$PROCESS $SAVE_LOCATION
     submit_job $dir $PROCESS $SAVE_LOCATION
 done
 

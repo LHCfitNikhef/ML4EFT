@@ -23,7 +23,7 @@ import logging
 import itertools
 
 # import own pacakges
-from ml4eft.core import classifier as quad_clas
+from ml4eft.core import classifier as classifier
 from ml4eft.core.truth import tt_prod as axs
 from ml4eft.core.truth import vh_prod, tt_prod
 from ..preproc import constants
@@ -351,7 +351,7 @@ class Analyse:
                 else:  # c1 * c2 coefficient function
                     c_train = np.prod(coeff_train_values)
 
-            loaded_model = quad_clas.Classifier(run_card['architecture'], c_train)
+            loaded_model = classifier.Classifier(run_card['architecture'], c_train)
 
             # build path to model config file
             if epoch != -1:  # if specific epoch is requested
@@ -399,6 +399,8 @@ class Analyse:
                 models_rep_nr.append(rep_nr)
             models_rep_nr = np.array(models_rep_nr)
 
+            rep_paths = np.array(rep_paths)[good_model_idx]
+
         return models, models_rep_nr, scalers, run_card, rep_paths
 
     def build_model_dict(self, rep=None, epoch=-1):
@@ -416,6 +418,7 @@ class Analyse:
         from collections import defaultdict
 
         self.model_dict = defaultdict(dict)
+
         for order, dict_fo in self.path_to_models.items():
             if self.order == 'lin' and order == 'quad':  # skip quadratics when running linear
                 continue
@@ -461,7 +464,7 @@ class Analyse:
                     features = dict_c['run_card']['features']
                     features_scaled = dict_c['scalers'][i].transform(df[features])
                     with torch.no_grad():
-                        model_ev = model.NN(torch.tensor(features_scaled).float()).numpy().flatten()
+                        model_ev = model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten()
                     models_evaluated[order][c_name]['models'][i] = model_ev
 
                 models_evaluated[order][c_name]['models'] = np.vstack(models_evaluated[order][c_name]['models'])

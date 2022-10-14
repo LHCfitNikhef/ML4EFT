@@ -3,7 +3,7 @@ import numpy as np
 import lhapdf
 from scipy import integrate
 
-p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
+p = lhapdf.mkPDF("NNPDF31_nnlo_as_0118", 0)
 s = 14 ** 2  # Collider COM energy squared [TeV^2]
 mu = 91.188  # fact. scale for pdfs = Mz
 mt = 0.17276  # top quark mass [TeV]

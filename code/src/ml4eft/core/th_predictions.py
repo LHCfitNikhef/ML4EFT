@@ -14,7 +14,7 @@ class TheoryPred:
     SMEFT theory calculator
     """
 
-    def __init__(self, path_to_theory_pred, kinematic=None, bins=None):
+    def __init__(self, path_to_theory_pred, bins=None):
         """
         TheoryPred Constructor
 
@@ -24,10 +24,8 @@ class TheoryPred:
             Nested dictionary that contains the paths to the events in the SM and the EFT. It
             must be of the form {'sm': ``<path_to_sm_data>``, 'lin': {'c1': ``<path_to_c1_data>``, 'c2': ``<path_to_c2_data>`` },
             'quad': {'c1_c1': ``<path_to_c1_c1_data>``, 'c1_c2': ``<path_to_c1_c1_data>``, 'c2_c2': ``<path_to_c1_c1_data>``}}
-        kinematic: str, optional
-            Name of kinematic in which to bin. Only required for a binned analysis.
-        bins: array_like, optional
-            Bin values corresponding to the variable `kinematic`. Only required for a binned analysis.
+        bins: dict, optional
+            Dictionary that specifies the binning per kinematic (keys)
 
         Examples
         --------
@@ -49,7 +47,6 @@ class TheoryPred:
 
         self.path_to_theory_pred = path_to_theory_pred
         self.bins = bins
-        self.kinematic = kinematic
         self.c_names = []
         self.th_dict = defaultdict(dict)
 
@@ -125,7 +122,7 @@ class TheoryPred:
         events_paths = analyse.Analyse.get_event_paths(path_to_events)
 
         # store the xsec per bin for all the replicas
-        xsec_col = []
+        xsec_collected = []
         for path in events_paths:
             events, tot_xsec = analyse.Analyse.load_events(event_path=path)
 
@@ -133,13 +130,22 @@ class TheoryPred:
                 xsec_i = tot_xsec
             else:
                 n_tot = len(events)
-                n_i, _ = np.histogram(events[self.kinematic], self.bins)
+                if len(self.bins) == 1:
+                    kin, = self.bins.keys()
+                    x = events[kin].values
+                    n_i, _, = np.histogram(x, self.bins[kin])
+                elif len(self.bins) == 2:
+                    kin_1, kin_2 = self.bins.keys()
+                    x = events[kin_1].values
+                    y = events[kin_2].values
+                    n_i, _, _ = np.histogram2d(x, y, bins=(self.bins[kin_1], self.bins[kin_2]))
                 xsec_i = (n_i / n_tot) * tot_xsec
 
-            xsec_col.append(xsec_i)
-        xsec_col = np.array(xsec_col)
+            xsec_collected.append(xsec_i)
+        xsec_collected = np.array(xsec_collected)
 
-        return np.mean(xsec_col, axis=0)
+        # average over the replicas
+        return np.mean(xsec_collected, axis=0)
 
     def compute_diff_coefficients(self, optimizer):
         """

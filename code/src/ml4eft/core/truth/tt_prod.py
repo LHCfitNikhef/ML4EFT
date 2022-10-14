@@ -12,6 +12,7 @@ import pylhe
 
 from ml4eft.core.truth import vh_prod
 
+#p = lhapdf.mkPDF("NNPDF31_nnlo_as_0118", 0)
 p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 mt = 0.17276
 s = 14 ** 2
@@ -73,10 +74,11 @@ class crossSectionSMEFT:
         elif order == 'lin':
             return sm + ctGRe * kappa_1
         elif order == 'quad':
-            return sm + ctGRe ** 2 * kappa_11
+            #return ctGRe ** 2 * kappa_11
+            return sm
 
 
-    def sigma_part_qq(self, hats, cuGRe, cut, order):
+    def sigma_part_qq(self, hats, cuGRe, ctu8, order):
         """
         Quark-quark initiated contribution to the partonic cross-section of :math:`t\\bar{t}`-production
 
@@ -103,16 +105,23 @@ class crossSectionSMEFT:
         sqrt = np.sqrt(1 - 4 * mt ** 2 / hats)
         kappa_11 = sqrt * (8 * np.pi * v ** 2 * yt ** 2 * asQCD * (8 * mt ** 2 + hats)) / (
                     108 * np.pi * LambdaSMEFT ** 4 * hats)
-        kappa_22 = sqrt * ((hats - mt ** 2)) / (48 * np.pi * LambdaSMEFT ** 4 )
+        
+        #kappa_22 = (2.0 / 9.0) * sqrt * (hats - mt ** 2) / (48 * np.pi * LambdaSMEFT ** 4)
+        #kappa_22 = sqrt * (hats - mt ** 2) / (48 * np.pi * LambdaSMEFT ** 4)
+        kappa_22 = (2.0 / 9.0) * (hats * sqrt - mt ** 2 * sqrt) / (12 * 4 * np.pi * LambdaSMEFT ** 4)
+
         kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
+        kappa_2 = asQCD * sqrt * (2 * mt ** 2 + hats) / (27 * hats * LambdaSMEFT ** 2)
         sm = (8 * np.pi * asQCD ** 2 * (2 * mt ** 2 + hats) * sqrt) / (27 * hats ** 2)
 
         if order is None:
             return sm
         elif order == 'lin':
-            return sm + cuGRe * kappa_1
+            return sm + cuGRe * kappa_1 + ctu8 * kappa_2
         elif order == 'quad':
-            return sm + cuGRe ** 2 * kappa_11 + cut ** 2 * kappa_22
+            #return sm + cuGRe ** 2 * kappa_11 + ctu8 ** 2 * kappa_22
+            #return kappa_22
+            return sm + ctu8 ** 2 * kappa_22
 
     def dsigma_part_qq_dpt(self, hats, pt, ctGRe, cut, order):
         """
@@ -349,7 +358,9 @@ def weight(sqrts, mu, x1, x2, c, order):
     """
     ctGRe, cut = c
     hats = sqrts ** 2
+
     w_e = (xsec.sigma_part_gg(hats, ctGRe, cut, order)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
+
     w_e += (xsec.sigma_part_qq(hats, ctGRe, 0, order)) * (
                 p.xfxQ(1, x1, mu) * p.xfxQ(-1, x2, mu) +
                 p.xfxQ(1, x2, mu) * p.xfxQ(-1, x1, mu) +

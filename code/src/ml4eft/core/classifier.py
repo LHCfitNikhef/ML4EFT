@@ -124,8 +124,8 @@ class Classifier(nn.Module):
     def __init__(self, architecture, c):
         super().__init__()
         self.c = c
-        self.NN = MLP(architecture)
-        self.NN.layers.add_module('constraint', ConstraintActivation(self.c))
+        self.n_alpha = MLP(architecture)
+        self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
 
     def forward(self, x):
         """
@@ -142,7 +142,7 @@ class Classifier(nn.Module):
 
         """
 
-        NN_out = self.NN(x)
+        NN_out = self.n_alpha(x)
         g = 1 / (1 + (1 + self.c * NN_out))
         return g
 
@@ -429,12 +429,12 @@ class Fitter:
         # load the training and validation data
         data_train, data_val = self.load_data()
 
-        # start the training
-        self.train_classifier(data_train, data_val)
-
         # copy run card to the appropriate folder
         with open(mc_path + 'run_card.json', 'w') as outfile:
             json.dump(self.run_options, outfile)
+
+        # start the training
+        self.train_classifier(data_train, data_val)
 
     def load_data(self):
         """

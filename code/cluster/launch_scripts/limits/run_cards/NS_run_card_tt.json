@@ -1,0 +1,18 @@
+{
+  "fit_id": "mtt_y_pt",
+  "mode": "nn",
+  "process": "tt",
+  "order": "quad",
+  "nlive": 500,
+  "results_path": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/tt_parton/",
+  "lumi": 30,
+  "observed_data_path": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l_mtt_05/tt_sm/events_0.pkl.gz",
+  "bins": [0.5, 1.0, 4.0],
+  "kinematic": "m_tt",
+  "path_to_models": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/28",
+  "path_to_theory_pred": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l_mtt_05",
+  "prior": {
+    "ctGRe":  [-1, 1],
+    "ctu1":  [-2, 2]},
+  "th_features": ["y", "m_tt", "pt_t"]
+}
