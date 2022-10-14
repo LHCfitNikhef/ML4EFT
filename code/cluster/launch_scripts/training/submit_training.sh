@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PY='/data/theorie/jthoeve/miniconda3/envs/eels_kk/bin/python'
+PY='/data/theorie/jthoeve/miniconda3/envs/ml4eft/bin/python'
 
 function submit_job () {
 
@@ -12,21 +12,21 @@ function submit_job () {
   COMMAND=$PWD'/launch_rep_'$COEFF'_'$REP'.sh'
 
   # write launch command
-  LAUNCH=$PY' '$PWD'/training_init.py '$RUN_CARD' '$REP
+  LAUNCH='export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/theorie/jthoeve/miniconda3/lib;'$PY' '$PWD'/training_init.py '$RUN_CARD' '$REP
 
   echo $LAUNCH >> $COMMAND
   chmod +x $COMMAND
   chmod +x $PWD'/training_init.py'
 
   # submission
-  qsub -q smefit -W group_list=smefit -l nodes=1:ppn=1 -l pvmem=4000mb $COMMAND
+  qsub -q short7 -W group_list=theorie -l nodes=1:ppn=1 -l pvmem=4000mb $COMMAND
   rm $COMMAND
 
 }
 
 # SETUP
 
-MCREPS=25
+MCREPS=1
 
 # zh -> llbb
 
@@ -40,8 +40,8 @@ MCREPS=25
 
 # tt -> llvlvlbb
 
-RUN_CARD_ROOT="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb_pt_ll/run_card_tt_llvlvlbb_"
-coeff=( "ctd8" "cQd8" "cQj18" "cQj38" "cQu8" "ctGRe" "ctj8" "ctu8" )
+RUN_CARD_ROOT="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb_pt_ll_eta_l/run_card_tt_llvlvlbb_"
+coeff=( "cQd8")
 #coeff=( "ctGRe")
 
 #coeff=( "cQd8_cQd8" "cQd8_cQj18" "cQd8_cQj38" "cQd8_ctd8" "cQd8_ctGRe" "cQd8_ctj8" "cQj18_cQj18" "cQj18_cQj38" "cQj18_cQu8" "cQj18_ctd8"
