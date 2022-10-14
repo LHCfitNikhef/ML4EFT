@@ -1,5 +1,5 @@
-Results from the ML model vs binning in :math:`p_{T}^{Z}`, :math:`O(\Lambda^{-4})`
-==================================================================================
+Results from the ML model vs binning in :math:`p_{T}^{Z}`, :math:`O(\Lambda^{-4})`, pair-wise fit
+==================================================================================================
 
 Figure 5.7 of :cite:`ML4EFT_temp_id`.
 

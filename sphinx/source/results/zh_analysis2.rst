@@ -1,5 +1,5 @@
-Results from the ML model vs binning in :math:`p_{T}^{Z}`, :math:`O(\Lambda^{-2})`
-==================================================================================
+Results from the ML model vs binning in :math:`p_{T}^{Z}`, :math:`O(\Lambda^{-2})`, pair-wise fit
+==================================================================================================
 Figure 5.6 of :cite:`ML4EFT_temp_id`.
 
 The pair-wise 95% CL contour ellipses obtained from two-parameter fits in the case of :math:`p p \rightarrow h Z \rightarrow b \bar{b} \ell^{+} \ell^{-}` at the linear level in the EFT expansion, 
