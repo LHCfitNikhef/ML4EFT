@@ -1,0 +1,1 @@
+/data/theorie/jthoeve/miniconda3/envs/eels_kk/bin/python /data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/lhe_to_pandas/lhe_to_pandas.py /data/theorie/jthoeve/ML4EFT_events/zh_cHu_cHj3 zh /data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh_llbb_final 50

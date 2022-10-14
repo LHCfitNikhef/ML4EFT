@@ -23,7 +23,7 @@ import logging
 import itertools
 
 # import own pacakges
-from ml4eft.core import classifier as quad_clas
+from ml4eft.core import classifier as classifier
 from ml4eft.core.truth import tt_prod as axs
 from ml4eft.core.truth import vh_prod, tt_prod
 from ..preproc import constants
@@ -124,6 +124,51 @@ class Analyse:
         event_paths = [os.path.join(root_path, mc_run) for mc_run in
                        os.listdir(root_path) if mc_run.startswith('events_')]
         return event_paths
+
+    @staticmethod
+    def build_path_dict(root, order, prefix):
+        """
+        Construct path to model dictionary
+
+        Parameters
+        ----------
+        root: str
+            Path to the model root directory
+        order: str
+            Order of the EFT expansion, choose between 'lin' and 'quad'
+        prefix: str
+            For models: `prefix` = ``models``, for theory predictions: `prefix` = ``process_id`
+
+        Returns
+        -------
+        path_to_models: dict
+            Dictionary containing the paths to the models for each EFT ratio function
+        """
+        path_to_models = {}
+
+        if prefix != 'model':
+            path_to_models['sm'] = os.path.join(root, '{}_sm'.format(prefix))
+
+        path_to_models['lin'] = {}
+
+        if order == 'quad':
+            path_to_models['quad'] = {}
+
+        for model_dir in os.listdir(root):
+            if model_dir.startswith(prefix):
+                if 'sm' in model_dir: # sm has already been added
+                    continue
+                # linear
+                if model_dir.count('_') == 1:
+                    path_to_models['lin'].update({model_dir.split("{}_".format(prefix),1)[1]: os.path.join(root, model_dir)})
+
+                if model_dir.count('_') == 2 and order == 'quad':
+                    path_to_models['quad'].update(
+                        {model_dir.split("{}_".format(prefix), 1)[1]: os.path.join(root, model_dir)})
+            else:
+                continue
+
+        return path_to_models
 
     @staticmethod
     def posterior_loader(path):
@@ -306,7 +351,7 @@ class Analyse:
                 else:  # c1 * c2 coefficient function
                     c_train = np.prod(coeff_train_values)
 
-            loaded_model = quad_clas.Classifier(run_card['architecture'], c_train)
+            loaded_model = classifier.Classifier(run_card['architecture'], c_train)
 
             # build path to model config file
             if epoch != -1:  # if specific epoch is requested
@@ -354,6 +399,8 @@ class Analyse:
                 models_rep_nr.append(rep_nr)
             models_rep_nr = np.array(models_rep_nr)
 
+            rep_paths = np.array(rep_paths)[good_model_idx]
+
         return models, models_rep_nr, scalers, run_card, rep_paths
 
     def build_model_dict(self, rep=None, epoch=-1):
@@ -371,6 +418,7 @@ class Analyse:
         from collections import defaultdict
 
         self.model_dict = defaultdict(dict)
+
         for order, dict_fo in self.path_to_models.items():
             if self.order == 'lin' and order == 'quad':  # skip quadratics when running linear
                 continue
@@ -416,7 +464,7 @@ class Analyse:
                     features = dict_c['run_card']['features']
                     features_scaled = dict_c['scalers'][i].transform(df[features])
                     with torch.no_grad():
-                        model_ev = model.NN(torch.tensor(features_scaled).float()).numpy().flatten()
+                        model_ev = model.n_alpha(torch.tensor(features_scaled).float()).numpy().flatten()
                     models_evaluated[order][c_name]['models'][i] = model_ev
 
                 models_evaluated[order][c_name]['models'] = np.vstack(models_evaluated[order][c_name]['models'])

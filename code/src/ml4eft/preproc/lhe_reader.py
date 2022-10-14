@@ -52,10 +52,10 @@ class Kinematics(pylhe.LHEParticle):
         """
 
         if isinstance(particle, pylhe.LHEParticle):
-            kwargs.__dict__.pop('event')
-            super().__init__(**kwargs.__dict__)
+            particle.__dict__.pop('event')
+            super().__init__(**particle.__dict__)
         else:
-            super().__init__(**kwargs)
+            super().__init__(**particle)
 
     def __add__(self, other):
         """

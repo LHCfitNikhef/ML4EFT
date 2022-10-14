@@ -90,16 +90,9 @@ class Optimize:
                     "No binning (bins) specified. Please set in the in the input card. Aborting."
                 )
                 sys.exit()
-            if "kinematic" in self.config.keys():
-                self.kinematic = self.config["kinematic"]
-            else:
-                print(
-                    "No bin variable (kinematic) specified. Please set in the in the input card. Aborting."
-                )
-                sys.exit()
         elif self.mode == "nn":
             if "path_to_models" in self.config.keys():
-                self.path_to_models = self.build_path_dict(self.config['path_to_models'], self.order, prefix='model')
+                self.path_to_models = analyse.Analyse.build_path_dict(self.config['path_to_models'], self.order, prefix='model')
                 self.nn_analyser = analyse.Analyse(self.path_to_models, self.order)
             else:
                 print(
@@ -115,17 +108,14 @@ class Optimize:
             self.th_features = self.config['th_features']
 
         if "path_to_theory_pred" in self.config.keys():
-            self.path_to_theory_pred = self.build_path_dict(self.config["path_to_theory_pred"], self.order, prefix=self.process)
+            self.path_to_theory_pred = analyse.Analyse.build_path_dict(self.config["path_to_theory_pred"], self.order, prefix=self.process)
         else:
             print(
                 "No path to theory predictions (path_to_theory_pred) specified. Please set in the in the input card. Aborting."
             )
             sys.exit()
 
-
-
         self.th_pred = theory_pred.TheoryPred(self.path_to_theory_pred,
-                                              kinematic=self.kinematic,
                                               bins=self.bins)
 
         if self.coeff is None:
@@ -142,7 +132,8 @@ class Optimize:
             for c in self.coeff:
                 self.suffix += c + '_'
             self.suffix = self.suffix[:-1]
-        self.output_path = os.path.join(self.config["results_path"], '{}_{}'.format(self.mode, self.fit_id), self.suffix[1:])
+        #self.output_path = os.path.join(self.config["results_path"], '{}_{}'.format(self.mode, self.fit_id), self.suffix[1:])
+        self.output_path = os.path.join(self.config["results_path"], '{}_{}'.format(self.mode, self.fit_id))
 
         Path(self.output_path).mkdir(parents=True, exist_ok=True)
 
@@ -158,17 +149,16 @@ class Optimize:
         sm_data, _ = analyse.Analyse.load_events(sm_data_path)
 
         # construct observed dataset
-        xsec_sm_tot = np.sum(self.th_pred.th_dict['sm'])  # sum over bins
+        xsec_sm_tot = np.sum(self.th_pred.th_dict['sm'])  # sum over bins # accurate without bins?
         nu_tot_sm = xsec_sm_tot * config['lumi']
         n_tot_sm = np.random.poisson(nu_tot_sm, 1)
 
         self.observed_data = sm_data.sample(int(n_tot_sm), random_state=1)
 
         if self.mode == "nn":
+
             # evaluated nn models on pseudo dataset
             self.nn_analyser.evaluate_models(self.observed_data)
-
-
             models_evaluated = self.nn_analyser.models_evaluated_df['models']
 
             # taken median over models
@@ -179,53 +169,15 @@ class Optimize:
             self.dsigma_dx = self.th_pred.compute_diff_coefficients(self)
 
         elif self.mode == "binned":
-            self.n_i, _ = np.histogram(self.observed_data[self.kinematic].values, self.bins)
-
-    @staticmethod
-    def build_path_dict(root, order, prefix):
-        """
-        Construct path to model dictionary
-
-        Parameters
-        ----------
-        root: str
-            Path to the model root directory
-        order: str
-            Order of the EFT expansion, choose between 'lin' and 'quad'
-        prefix: str
-            For models: `prefix` = ``models``, for theory predictions: `prefix` = ``process_id`
-
-        Returns
-        -------
-        path_to_models: dict
-            Dictionary containing the paths to the models for each EFT ratio function
-        """
-        path_to_models = {}
-
-        if prefix != 'model':
-            path_to_models['sm'] = os.path.join(root, '{}_sm'.format(prefix))
-
-        path_to_models['lin'] = {}
-
-        if order == 'quad':
-            path_to_models['quad'] = {}
-
-        for model_dir in os.listdir(root):
-            if model_dir.startswith(prefix):
-                if 'sm' in model_dir: # sm has already been added
-                    continue
-                # linear
-                if model_dir.count('_') == 1:
-                    path_to_models['lin'].update({model_dir.split("{}_".format(prefix),1)[1]: os.path.join(root, model_dir)})
-
-                if model_dir.count('_') == 2 and order == 'quad':
-                    path_to_models['quad'].update(
-                        {model_dir.split("{}_".format(prefix), 1)[1]: os.path.join(root, model_dir)})
-            else:
-                continue
-
-        return path_to_models
-
+            if len(self.bins) == 1:
+                kin, = self.bins.keys()
+                x = self.observed_data[kin].values
+                self.n_i, _, = np.histogram(x, self.bins[kin])
+            elif len(self.bins) == 2:
+                kin_1, kin_2 = self.bins.keys()
+                x = self.observed_data[kin_1].values
+                y = self.observed_data[kin_2].values
+                self.n_i, _, _ = np.histogram2d(x, y, bins=(self.bins[kin_1], self.bins[kin_2]))
 
     def my_prior(self, cube):
         """
@@ -301,7 +253,7 @@ class Optimize:
         # median likelihood ratio
         ratio_med = self.nn_analyser.likelihood_ratio_nn(self.param_names)
         log_r_med = np.log(ratio_med)
-
+        
         return -nu + np.sum(log_r_med)
 
     def log_like_truth(self, cube):
@@ -454,5 +406,9 @@ class Optimize:
         for i, (c, samples) in enumerate(zip(self.param_names.keys(), result['samples'].T)):
             vals[c] = samples.tolist()
 
-        with open(os.path.join(self.output_path, 'posterior' + self.suffix + '.json'), "w") as f:
+        # with open(os.path.join(self.output_path, 'posterior' + self.suffix + '.json'), "w") as f:
+        #     json.dump(vals, f)
+
+        with open(os.path.join(self.output_path, 'posterior.json'), "w") as f:
             json.dump(vals, f)
+
