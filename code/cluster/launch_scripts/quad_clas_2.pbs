@@ -1,6 +1,0 @@
-source /data/theorie/jthoeve/miniconda3/etc/profile.d/conda.sh
-conda activate eels_kk
-
-#lhapdf install NNPDF31_lo_as_0118
-
-python /data/theorie/jthoeve/ML4EFT/quad_clas/quad_classifier_cluster.py /data/theorie/jthoeve/ML4EFT/quad_clas/run_card_cluster_2.json ${ARG}

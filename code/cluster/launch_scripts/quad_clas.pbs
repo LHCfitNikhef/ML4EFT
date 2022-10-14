@@ -1,6 +1,0 @@
-source /data/theorie/jthoeve/miniconda3/etc/profile.d/conda.sh
-conda activate eels_kk
-
-python /data/theorie/jthoeve/ML4EFT_v2/quad_clas/core/quad_classifier_cluster.py /data/theorie/jthoeve/ML4EFT_v2/cluster/launch_scripts/run_card_cluster.json ${ARG}
-#python /data/theorie/jthoeve/ML4EFT/quad_clas/analyse.py /data/theorie/jthoeve/ML4EFT/quad_clas/run_card_cluster.json
-#python /data/theorie/jthoeve/ML4EFT/quad_clas/bounds.py
