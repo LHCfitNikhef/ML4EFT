@@ -497,14 +497,17 @@ class Analyse:
             ``(N,) ndarray`` with :math:`r_{\sigma}^{(i)}` or :math:`r_{\sigma}^{(i,j)}` evaluated on ``df`` depending
             on the ``order``
         """
-        if c_name == 'ctgre' and order == 'lin':
-            cprime = {'ctgre': -10, 'cut': 0}
-        elif c_name == 'ctgre_ctgre' and order == 'quad':
-            cprime = {'ctgre': 10, 'cut': 0}
-            c_name = 'ctgre'
-        if c_name == 'cut_cut' and order == 'quad':
-            cprime = {'ctgre': 0, 'cut': 10}
-            c_name = 'cut'
+
+        if c_name == 'ctGRe' and order == 'lin':
+            cprime = {'ctGRe': -10, 'ctu8': 0}
+        elif c_name == 'ctu8' and order == 'lin':
+            cprime = {'ctGRe': 0, 'ctu8': 10}
+        elif c_name == 'ctGRe_ctGRe' and order == 'quad':
+            cprime = {'ctGRe': 10, 'ctu8': 0}
+            c_name = 'ctGRe'
+        if c_name == 'ctu8_ctu8' and order == 'quad':
+            cprime = {'ctGRe': 0, 'ctu8': 10}
+            c_name = 'ctu8'
 
         # ratio_truth_lin = self.likelihood_ratio_truth(df, cprime, features, process, order)
 
@@ -519,7 +522,7 @@ class Analyse:
             coeff = np.ma.masked_where(mask, (ratio_truth_lin - 1) / cprime[c_name] ** 2)
             return coeff
 
-    def accuracy_heatmap(self, c_name, order, process, cut=None, rep=None, epoch=-1, ax=None, text=None):
+    def accuracy_heatmap(self, c_name, order, process, mx_cut=None, rep=None, epoch=-1, ax=None, text=None):
         """
         Compares the NN and true EFT ratio functions and plots their ratio and pull
 
@@ -531,8 +534,8 @@ class Analyse:
             Order in the EFT expansion, options are 'lin' or 'quad'
         process: str
             Specifies the process. Currently supported is 'tt' and 'ZH'
-        cut: float, optional
-            Cut on the invariant mass
+        mx_cut: list, optional
+            Plot range of the invariant mass
         rep: int, optional
             Request to plot for a specific replica
         epoch: int, optional
@@ -575,11 +578,16 @@ class Analyse:
         epsilon = 1e-2
 
         if process == 'ZH':
-            mx_min = mz + mh + epsilon if cut is None else cut
-            mx_max = 2
+            if mx_cut is None:
+                mx_min, mx_max = mz + mh + epsilon, 3
+            else:
+                mx_min, mx_max = mx_cut
+
         elif process == 'tt':
-            mx_min = 2 * mt + epsilon if cut is None else cut
-            mx_max = 2
+            if mx_cut is None:
+                mx_min, mx_max = 2 * mt + epsilon, 3
+            else:
+                mx_min, mx_max = mx_cut
 
         y_min, y_max = - np.log(np.sqrt(s) / mx_min), np.log(np.sqrt(s) / mx_min)
 
@@ -623,13 +631,13 @@ class Analyse:
             nn_unc = (nn_high - nn_low) / 2
             # median
             median_ratio = self.coeff_truth / nn_median
-            title = r'$\rm{Analytical/ML\;Model}$'
+            title = r'$\rm{Unbinned\;exact/Unbinned\;ML}$'
 
             fig_1, ax_1 = plt.subplots(figsize=(10, 8))
 
             im_1 = self.plot_heatmap(ax[0], median_ratio,
                                      xlabel=xlabel,
-                                     ylabel=r'$\rm{Rapidity}$',
+                                     ylabel=r'$y_{t\bar{t}}$',
                                      title=title,
                                      extent=[mx_min, mx_max, y_min, y_max],
                                      cmap='seismic',
@@ -644,19 +652,19 @@ class Analyse:
 
             im_2 = self.plot_heatmap(ax[1], pull,
                                      xlabel=xlabel,
-                                     ylabel=r'$\rm{Rapidity}$',
+                                     ylabel=r'$y_{t\bar{t}}$',
                                      title=r'$\rm{Pull}$',
                                      extent=[mx_min, mx_max, y_min, y_max],
                                      cmap='seismic',
                                      bounds=np.linspace(-1.5, 1.5, 10),
                                      text=text)
 
-            return fig_1, fig_2
+            return ax[0], ax[1]
         else:
             title = r"$\mathrm{{Truth/NN}}\;(\mathrm{{rep}}\;{})$".format(rep)
             im = self.plot_heatmap(ax, self.coeff_truth / nn[0],
                                    xlabel=xlabel,
-                                   ylabel=r'$\rm{Rapidity}$',
+                                   ylabel=r'$y_{t\bar{t}}$',
                                    title=title,
                                    extent=[mx_min, mx_max, y_min, y_max],
                                    cmap='seismic',
@@ -664,7 +672,7 @@ class Analyse:
                                    rep=rep)
             return im
 
-    def plot_heatmap_overview(self, c_name, order, process, cut=None, reps=None, epoch=-1):
+    def plot_heatmap_overview(self, c_name, order, process, mx_cut=None, reps=None, epoch=-1):
         """
         Produces an overview of heatmaps showing in each plot the ratio between the ML model prediction and
         the analytical EFT ratio function :math:`r_{\sigma}^{(i)}` or :math:`r_{\sigma}^{(i, j)}`
@@ -677,8 +685,8 @@ class Analyse:
             Order in the EFT expansion
         process: str
             Specifies the process, choose between 'tt' and 'ZH'
-        cut: float, optional
-            Lower cut on the invariant mass
+        mx_cut: float, optional
+            Plot range of the invariant mass
         reps: int, optional
             Number of replicas to include in the heatmap overview
         epoch: int, optional
@@ -719,7 +727,7 @@ class Analyse:
                         )
 
         for i, rep in enumerate(reps):
-            im = self.accuracy_heatmap(c_name, order, process, cut, rep, epoch, grid[i])
+            im = self.accuracy_heatmap(c_name, order, process, mx_cut, rep, epoch, grid[i])
 
         grid[-1].cax.colorbar(im)
         grid.cbar_axes[0].colorbar(im)
@@ -752,7 +760,6 @@ class Analyse:
 
         if 'lin' in self.models_evaluated_df.index:
             lin_models = self.models_evaluated_df['models'].loc["lin"]
-
             for c_name, c_val in c.items():
                 if c_name in lin_models:
                     ratio += c_val * lin_models[c_name]
@@ -777,7 +784,7 @@ class Analyse:
         ----------
         df: pd.DataFrame
             event info
-        c: numpy.ndarray
+        c: dict
             EFT point
         epoch: int, optional
             Use models at a specific epoch, set to -1 (best modeL) by default
@@ -836,8 +843,8 @@ class Analyse:
 
         ax.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
         ax.plot(x, x, linestyle='dashed', color='grey')
-        ax.set_xlabel(r'$\log r(x, c)^{\rm{Analytical}}$')
-        ax.set_ylabel(r'$\log r(x, c)^{\rm{ML}\;\rm{model}}$')
+        ax.set_xlabel(r'$\log r(x, c)^{\rm{Unbinned}\;\rm{exact}}$')
+        ax.set_ylabel(r'$\log r(x, c)^{\rm{Unbinned}\;\rm{ML}}$')
         ax.set_xlim((np.min(x), np.max(x)))
         ax.set_ylim((np.min(x), np.max(x)))
 
@@ -849,7 +856,7 @@ class Analyse:
 
         fig.tight_layout()
 
-    def point_by_point_comp(self, df, c, features, process, order):
+    def point_by_point_comp(self, df, c_name, c, features, process, order):
         """
        Produces a point by point comparison overview per replica of the log-likelihood ratio between the ML model
        and the analytical (exact) model
@@ -858,6 +865,8 @@ class Analyse:
        ----------
        df: pandas.DataFrame
            DataFrame with events
+       c_name: str
+            name of EFT ratio function to compare, e.g. ``c1_c2``
        c: dict
            Of the form {'c1': value, 'c2': value}
        features: array_like
@@ -880,7 +889,7 @@ class Analyse:
 
        """
 
-        r_nn = self.likelihood_ratio_nn(df, c)
+        r_nn = self.likelihood_ratio_nn(c, df=df)
         tau_nn = np.log(r_nn)
 
         r_truth = self.likelihood_ratio_truth(df, c, features, process, order)
@@ -895,9 +904,11 @@ class Analyse:
 
         x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
 
-        for k, v in c.items():
-            if v != 0:
-                model_idx = self.model_df.loc[order, k]['idx']
+        # for k, v in c.items():
+        #     if v != 0:
+        #         import pdb; pdb.set_trace()
+        #         model_idx = self.model_df.loc[order, k]['idx']
+        model_idx = self.model_df.loc[order, c_name]['idx']
 
         for i in np.argsort(model_idx):
             ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
@@ -925,14 +936,14 @@ class Analyse:
 
         plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
         plt.plot(x, x, linestyle='dashed', color='grey')
-        plt.xlabel(r'$\tau(x, c)^{\rm{truth}}$')
-        plt.ylabel(r'$\tau(x, c)^{\rm{NN}}$')
+        plt.xlabel(r'$\log r(x, c)^{\rm{Unbinned}\;\rm{exact}}$')
+        plt.ylabel(r'$\log r(x, c)^{\rm{Unbinned}\;\rm{ML}}$')
         plt.xlim((np.min(x), np.max(x)))
         plt.ylim((np.min(x), np.max(x)))
 
         plt.tight_layout()
 
-        return fig1, ax
+        return fig1, fig2
 
     def plot_loss_overview(self, c_name, order, ax=None):
         """
@@ -1055,7 +1066,7 @@ class Analyse:
 
         return fig, train_loss_best
 
-    def plot_accuracy_1d(self, c, process, order, cut, epoch=-1, ax=None, text=None):
+    def plot_accuracy_1d(self, c, process, order, mx_cut, epoch=-1, ax=None, text=None):
         """
         Plots the decision boundary :math:`g(x,c)` as predicted by the ML model and the analytical (exact) model along
         1 dimension, i.e :x=math:`m_{tt}`
@@ -1068,8 +1079,8 @@ class Analyse:
             Choose between ``tt`` or ``ZH``
         order: str, optional
             Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad``.
-        cut: float
-            Cut on the invariant mass
+        mx_cut: list
+            Plot range of the invariant mass
         epoch: int, optional
             Specific epoch to plot, set to the best models by default
         ax: matplotlib.axes, optional
@@ -1097,7 +1108,7 @@ class Analyse:
         else:
             fig = plt.subplots(figsize=(10, 6))
 
-        x = np.linspace(cut, 3.0, 200)
+        x = np.linspace(mx_cut[0], mx_cut[1], 200)
         x = np.stack((np.zeros(len(x)), x), axis=-1)
 
         if process == 'tt':
@@ -1107,15 +1118,15 @@ class Analyse:
 
         f_ana_lin = self.decision_function_truth(df, c, df.columns.values, process, order)
 
-        f_preds_nn = self.decision_function_nn(df, c, epoch=epoch)
+        f_preds_nn = self.decision_function_nn(c, df, epoch=epoch)
 
         f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
         f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
 
-        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r"$\mathrm{ML}\;\mathrm{model}\;(m_{t\bar{t}}, Y)$",
+        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r"$\mathrm{Unbinned}\;\mathrm{ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$",
                         alpha=0.4)
 
-        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r"$\mathrm{Analytical}\;(m_{t\bar{t}}, Y)$")
+        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r"$\mathrm{Unbinned}\;\mathrm{exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$")
 
         # single replica
         # ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
@@ -1134,6 +1145,7 @@ class Analyse:
                     transform=ax.transAxes)
 
         ax.legend(frameon=False)
+        plt.tight_layout()
 
         return fig
 
@@ -1186,7 +1198,7 @@ class Analyse:
                 raise NotImplementedError("No more than three features are currently supported")
 
         if process == 'tt':
-            c = np.array([c['ctgre'], c['cut']])
+            c = np.array([c['ctGRe'], c['ctu8']])
             if n_features == 1:
                 dsigma_0 = [tt_prod.dsigma_dmtt(*x[features], c, order) for _, x in events.iterrows()]  # EFT
                 dsigma_1 = [tt_prod.dsigma_dmtt(*x[features]) for _, x in
@@ -1277,7 +1289,7 @@ class Analyse:
         else:
             fig = plt.figure(figsize=(10, 8))
 
-        im = ax.imshow(data, extent=extent, origin='lower', aspect='auto', cmap=cmap_copy, norm=norm)
+        im = ax.imshow(data, extent=extent, origin='lower', aspect=(extent[1]-extent[0])/(extent[3] - extent[2]), cmap=cmap_copy, norm=norm)
 
         if rep is not None:
             ax.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',

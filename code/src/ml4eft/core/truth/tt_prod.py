@@ -74,8 +74,8 @@ class crossSectionSMEFT:
         elif order == 'lin':
             return sm + ctGRe * kappa_1
         elif order == 'quad':
-            #return ctGRe ** 2 * kappa_11
-            return sm
+            return sm + ctGRe ** 2 * kappa_11
+
 
 
     def sigma_part_qq(self, hats, cuGRe, ctu8, order):
@@ -119,9 +119,9 @@ class crossSectionSMEFT:
         elif order == 'lin':
             return sm + cuGRe * kappa_1 + ctu8 * kappa_2
         elif order == 'quad':
-            #return sm + cuGRe ** 2 * kappa_11 + ctu8 ** 2 * kappa_22
+            return sm + cuGRe ** 2 * kappa_11 + ctu8 ** 2 * kappa_22
             #return kappa_22
-            return sm + ctu8 ** 2 * kappa_22
+            #return sm + ctu8 ** 2 * kappa_22
 
     def dsigma_part_qq_dpt(self, hats, pt, ctGRe, cut, order):
         """

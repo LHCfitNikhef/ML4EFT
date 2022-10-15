@@ -93,7 +93,7 @@ df_ctgre_ctgre = pd.read_pickle('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/trainin
 
 plot_benchmark(ax_0, ax_0_sub, df_ctu8, np.array([0, 10]), 'lin', min=1.45, max=3.0, text=r'$c_{tu}^{(8)}=10\;(\rm{SM + lin})$')
 plot_benchmark(ax_1, ax_1_sub, df_ctu8_ctu8, np.array([0, 10]), 'quad', min=1.45, max=3.0, text=r'$c_{tu}^{(8)}=10\;(\rm{SM + quad})$')
-plot_benchmark(ax_2, ax_2_sub, df_ctgre, np.array([-10, 0]), 'lin', min=1.45, max=3.0, text=r'$c_{tG}=10\;(\rm{SM + lin})$')
+plot_benchmark(ax_2, ax_2_sub, df_ctgre, np.array([-10, 0]), 'lin', min=1.45, max=3.0, text=r'$c_{tG}=-10\;(\rm{SM + lin})$')
 plot_benchmark(ax_3, ax_3_sub, df_ctgre_ctgre, np.array([-10, 0]), 'quad', min=1.45, max=3.0, text=r'$c_{tG}=10\;(\rm{SM + quad})$')
 
 fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/14_10/tt_benchmark_parton.pdf')

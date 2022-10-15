@@ -19,14 +19,20 @@ function submit_job () {
   chmod +x $PWD'/training_init.py'
 
   # submission
-  qsub -q short7 -W group_list=theorie -l nodes=1:ppn=1 -l pvmem=4000mb $COMMAND
+  qsub -q smefit -W group_list=smefit -l nodes=1:ppn=1 -l pvmem=4000mb $COMMAND
   rm $COMMAND
 
 }
 
 # SETUP
 
-MCREPS=1
+MCREPS=50
+
+# tt (parton)
+
+RUN_CARD_ROOT="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt/run_card_tt_parton_"
+
+coeff=( "ctGRe" "ctu8" "ctGRe_ctGRe" "ctu8_ctu8")
 
 # zh -> llbb
 
@@ -40,9 +46,7 @@ MCREPS=1
 
 # tt -> llvlvlbb
 
-RUN_CARD_ROOT="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb_pt_ll_eta_l/run_card_tt_llvlvlbb_"
-coeff=( "cQd8")
-#coeff=( "ctGRe")
+#RUN_CARD_ROOT="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb_pt_ll_eta_l/run_card_tt_llvlvlbb_"
 
 #coeff=( "cQd8_cQd8" "cQd8_cQj18" "cQd8_cQj38" "cQd8_ctd8" "cQd8_ctGRe" "cQd8_ctj8" "cQj18_cQj18" "cQj18_cQj38" "cQj18_cQu8" "cQj18_ctd8"
 #"cQj18_ctGRe" "cQj18_ctj8" "cQj18_ctu8" "cQj38_cQj38" "cQj38_cQu8" "cQj38_ctd8" "cQj38_ctGRe" "cQj38_ctj8" "cQj38_ctu8" "cQu8_cQu8" "cQu8_ctGRe"

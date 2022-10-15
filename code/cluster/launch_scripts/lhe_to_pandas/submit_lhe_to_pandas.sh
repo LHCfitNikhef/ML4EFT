@@ -52,7 +52,11 @@ shift $((OPTIND -1))
 for dir in $ROOT/*/
 do
     dir=${dir%*/} # remove the trailing "/"
-    submit_job $dir $PROCESS $SAVE_LOCATION
+    if  [[ $(basename $dir) == $PROCESS* ]];
+    then
+      submit_job $dir $PROCESS $SAVE_LOCATION
+    fi
+
 done
 
 #submit_job $ROOT $PROCESS $SAVE_LOCATION

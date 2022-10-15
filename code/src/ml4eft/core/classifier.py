@@ -331,8 +331,6 @@ class Fitter:
         self.loss_type = self.run_options['loss_type']
         self.scaler_type = self.run_options['scaler_type']
         self.patience = self.run_options['patience']
-        self.threshold_cut = self.run_options['threshold_cut']
-        self.delta_min = self.run_options['delta_min']
         self.val_ratio = self.run_options['val_ratio']
         self.pretrained_models_path = self.run_options['pretrained_models'] if 'pretrained_models' in self.run_options else None
         self.n_dat = self.run_options['n_dat']
