@@ -1,18 +1,49 @@
 {
-  "fit_id": "mtt_y_pt",
-  "mode": "nn",
-  "process": "tt",
-  "order": "quad",
+  "fit_id": "glob_lin_mtt",
+  "mode": "truth",
+  "process": "ttparton",
+  "order": "lin",
   "nlive": 500,
-  "results_path": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/output/tt_parton/",
-  "lumi": 30,
-  "observed_data_path": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l_mtt_05/tt_sm/events_0.pkl.gz",
-  "bins": [0.5, 1.0, 4.0],
-  "kinematic": "m_tt",
-  "path_to_models": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/28",
-  "path_to_theory_pred": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/topU3l_mtt_05",
+  "results_path": "/data/theorie/jthoeve/ns_samples/tt_parton",
+  "lumi": 2571,
+  "observed_data_path": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/observed_data/tt_parton_sm/events_0.pkl.gz",
+  "bins": {
+    "m_tt": [
+      1.450,
+      1.50,
+      1.70,
+      1.90,
+      2.10,
+      2.50,
+      10
+    ],
+    "y": [
+      -1.5,
+      -1.2,
+      -0.9,
+      -0.6,
+      -0.3,
+      0,
+      0.3,
+      0.6,
+      0.9,
+      1.2,
+      1.5
+    ]
+  },
+  "path_to_models": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_mtt/2022/10/16",
+  "path_to_theory_pred": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/mtt_145",
   "prior": {
-    "ctGRe":  [-1, 1],
-    "ctu1":  [-2, 2]},
-  "th_features": ["y", "m_tt", "pt_t"]
+    "ctGRe": [
+      -1,
+      1
+    ],
+    "ctu8": [
+      -1,
+      1
+    ]
+  },
+  "th_features": [
+    "m_tt"
+  ]
 }

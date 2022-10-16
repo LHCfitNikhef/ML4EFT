@@ -498,7 +498,7 @@ def dsigma_dmtt_dy(y, mtt, c=None, order=None):
 dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float])
 dsigma_dmtt_dy_vec.excluded.add(2)
 
-def dsigma_dmtt(mtt, c, order):
+def dsigma_dmtt(mtt, c=None, order=None):
     """
     Returns the single differential cross-section in :math:`m_{t\\bar{t}}`. Units are :math:`pb^{-1}`
 

@@ -171,6 +171,7 @@ class EllipsePlotter:
 
         for i, df in enumerate(dfs):
 
+
             coeff1_values = df[coeff1].values
             coeff2_values = df[coeff2].values
 
@@ -212,9 +213,9 @@ class EllipsePlotter:
                         hndls,
                         facecolor=colors[i])
 
-                    if i == 0:
-                        ax.scatter(np.random.choice(coeff1_values, 1000, replace=False),
-                                   np.random.choice(coeff2_values, 1000, replace=False), alpha=0.3, color=colors[i], s=5)
+                    # if i == 0:
+                    #     ax.scatter(np.random.choice(coeff1_values, 1000, replace=False),
+                    #                np.random.choice(coeff2_values, 1000, replace=False), alpha=0.3, color=colors[i], s=5)
 
 
                 # smefit
@@ -242,8 +243,8 @@ class EllipsePlotter:
                 # hndls.append((p3, p4))
 
 
-            plt.xlabel(ax_labels[0])
-            plt.ylabel(ax_labels[1])
+            plt.xlabel(ax_labels[0], fontsize=35)
+            plt.ylabel(ax_labels[1], fontsize=35)
             plt.tick_params(which="both", direction="in", labelsize=22)
 
 
@@ -251,7 +252,7 @@ class EllipsePlotter:
 
         if labels is not None:
             ax.legend(
-                loc="lower left", handles=hndls, labels=labels, frameon=False, prop={"size": 26}
+                loc="upper left", handles=hndls, labels=labels, frameon=False, prop={"size": 24}
             )
         else:
             return hndls

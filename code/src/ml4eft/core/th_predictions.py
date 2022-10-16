@@ -201,8 +201,7 @@ class TheoryPred:
             dsigma_dx_eft = {'lin': np.stack((dsigma_dx_c1_lin_coef, dsigma_dx_c2_lin_coef))}
 
 
-        elif optimizer.process == 'tt':
-
+        elif optimizer.process == 'ttparton':
             if n_features == 1:
                 dsigma_dx = tt_prod.dsigma_dmtt
             if n_features == 2:
@@ -215,8 +214,8 @@ class TheoryPred:
             dsigma_dx_c1 = np.array([dsigma_dx(*row[features], [-10, 0], "lin") for _, row
                                      in events.iterrows()])
 
-            # dsigma_dx_c2 = np.array(
-            #     [dsigma_dx(*row[features], [0, 10], "lin") for _, row in events.iterrows()])
+            dsigma_dx_c2 = np.array(
+                [dsigma_dx(*row[features], [0, 10], "lin") for _, row in events.iterrows()])
 
             dsigma_dx_c1_quad = np.array(
                 [dsigma_dx(*row[features], [-10, 0], "quad") for _, row in events.iterrows()])
@@ -226,15 +225,15 @@ class TheoryPred:
 
             dsigma_dx_c1_lin_coef = (dsigma_dx_c1 - dsigma_dx_sm) / (-10)
 
-            #dsigma_dx_c2_lin_coef = (dsigma_dx_c2 - dsigma_dx_sm) / 10
+            dsigma_dx_c2_lin_coef = (dsigma_dx_c2 - dsigma_dx_sm) / 10
 
             dsigma_dx_c1_quad_coef = (dsigma_dx_c1_quad - dsigma_dx_sm) / 100
 
             dsigma_dx_c2_quad_coef = (dsigma_dx_c2_quad - dsigma_dx_sm) / 100
 
             dsigma_dx = {'sm': dsigma_dx_sm,
-                         'lin': {'ctGRe': dsigma_dx_c1_lin_coef},
-                         'quad': {'ctGRe_ctGRe': dsigma_dx_c1_quad_coef, 'ctu1_ctu1': dsigma_dx_c2_quad_coef}}
+                         'lin': {'ctGRe': dsigma_dx_c1_lin_coef, 'ctu8': dsigma_dx_c2_lin_coef},
+                         'quad': {'ctGRe_ctGRe': dsigma_dx_c1_quad_coef, 'ctu8_ctu8': dsigma_dx_c2_quad_coef}}
 
         return dsigma_dx
 

@@ -1066,7 +1066,7 @@ class Analyse:
 
         return fig, train_loss_best
 
-    def plot_accuracy_1d(self, c, process, order, mx_cut, epoch=-1, ax=None, text=None):
+    def plot_accuracy_1d(self, c, c_name, process, order, mx_cut, epoch=-1, ax=None, text=None):
         """
         Plots the decision boundary :math:`g(x,c)` as predicted by the ML model and the analytical (exact) model along
         1 dimension, i.e :x=math:`m_{tt}`
@@ -1116,17 +1116,18 @@ class Analyse:
         elif process == 'ZH':
             df = pd.DataFrame(x, columns=['y', 'm_zh'])
 
-        f_ana_lin = self.decision_function_truth(df, c, df.columns.values, process, order)
+        features = self.model_df['run_card'][order][c_name]['features']
 
+        f_ana_lin = self.decision_function_truth(df, c, features, process, order)
         f_preds_nn = self.decision_function_nn(c, df, epoch=epoch)
 
         f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
         f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
 
-        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r"$\mathrm{Unbinned}\;\mathrm{ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$",
+        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r"$\mathrm{Unbinned}\;\mathrm{ML}\;(m_{t\bar{t}})$",
                         alpha=0.4)
 
-        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r"$\mathrm{Unbinned}\;\mathrm{exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$")
+        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r"$\mathrm{Unbinned}\;\mathrm{exact}\;(m_{t\bar{t}})$")
 
         # single replica
         # ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')

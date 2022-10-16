@@ -1,6 +1,6 @@
 {
-  "fit_id": "glob_etalptll_l",
-  "mode": "binned",
+  "fit_id": "test",
+  "mode": "nn",
   "process": "tt",
   "order": "lin",
   "nlive": 50,

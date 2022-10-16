@@ -11,19 +11,20 @@ import PyPDF2
 import sys
 
 # generate report for
-order = "lin"
-c_name = "ctGRe"
-c_value = [-2, 0]
-c_latex = r'$c=c_{{tG}}={}\;(\mathrm{{linear}})$'.format(c_value[0])
+order = "quad"
+c_name = "ctu8_ctu8"
+c_value = [0, 2]
+c_latex = r'$c=c_{{tu}}^{{(8)}}={}\;(\mathrm{{quadratic}})$'.format(c_value[1])
+#c_latex = r'$c=c_{{tG}}={}\;(\mathrm{{quadratic}})$'.format(c_value[0])
 
 yr = "2022"
 month = "10"
-day = "15"
+day = "16"
 date = "{yr}_{m}_{d}".format(yr=yr, m=month, d=day)
 
-name = "model_ctGRe_lin"
+name = "model_ctu8_quad_mtt"
 
-path_to_models_root = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/10/15'
+path_to_models_root = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_mtt/2022/10/16'
 path_to_models = analyse.Analyse.build_path_dict(path_to_models_root, order, prefix='model')
 
 if order == "quad":
@@ -35,7 +36,7 @@ path_to_runcard = os.path.join(path_to_models[order][c_name], 'mc_run_0', 'run_c
 analyser = analyse.Analyse(path_to_models)
 analyser.build_model_dict()
 
-event_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/mtt_145/tt_parton_sm/events_0.pkl.gz'
+event_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/observed_data/tt_parton_sm/events_0.pkl.gz'
 events_sm = pd.read_pickle(event_path)
 events_sm = events_sm.iloc[1:,:]
 
@@ -47,7 +48,7 @@ if not os.path.exists(report_path):
     os.makedirs(report_path)
 
 # # pbp comparison
-fig1, fig2 = analyser.point_by_point_comp(events_sm, c_name, {'ctGRe': c_value[0], 'ctu8': c_value[1]}, ['y', 'm_tt'], 'tt', order)
+fig1, fig2 = analyser.point_by_point_comp(events_sm, c_name, {'ctGRe': c_value[0], 'ctu8': c_value[1]}, ['m_tt'], 'tt', order)
 fig1.savefig(os.path.join(report_path, 'pbp_rep.pdf'))
 fig2.savefig(os.path.join(report_path, 'pbp_med.pdf'))
 
@@ -55,6 +56,7 @@ fig2.savefig(os.path.join(report_path, 'pbp_med.pdf'))
 
 fig, losses = analyser.plot_loss_overview(c_name, order)
 fig.savefig(os.path.join(report_path, 'loss_overview.pdf'))
+
 
 #fig.savefig(os.path.join(report_path, 'loss_overview.pdf'))
 
@@ -65,19 +67,19 @@ fig.savefig(os.path.join(report_path, 'loss_overview.pdf'))
 
 
 # 1d accuracy
-fig = analyser.plot_accuracy_1d(c={'ctGRe': c_value[0], 'ctu8': c_value[1]}, mx_cut=[1.45, 3.0], process='tt', order=order, epoch=-1, text=c_latex)
+fig = analyser.plot_accuracy_1d(c={'ctGRe': c_value[0], 'ctu8': c_value[1]}, c_name=c_name, mx_cut=[1.45, 3.0], process='tt', order=order, epoch=-1, text=c_latex)
 fig.savefig(os.path.join(report_path, '1d_accuracy.pdf'))
 
 # heatmap med and pull
-fig1, ax_1 = plt.subplots(figsize=(10, 8))
-fig2, ax_2 = plt.subplots(figsize=(10, 8))
-ax_1, ax_2 = analyser.accuracy_heatmap(c_name, order, 'tt', mx_cut=[1.45, 3.0], ax=[ax_1, ax_2])
-fig1.savefig(os.path.join(report_path, 'heatmap_med.pdf'))
-fig2.savefig(os.path.join(report_path, 'heatmap_pull.pdf'))
-
-# heatmap overview plot
-fig = analyser.plot_heatmap_overview(c_name, order, 'tt', mx_cut=[1.45, 3.0], reps=np.arange(20))
-fig.savefig(os.path.join(report_path, 'heatmap_overview.pdf'))
+# fig1, ax_1 = plt.subplots(figsize=(10, 8))
+# fig2, ax_2 = plt.subplots(figsize=(10, 8))
+# ax_1, ax_2 = analyser.accuracy_heatmap(c_name, order, 'tt', mx_cut=[1.45, 3.0], ax=[ax_1, ax_2])
+# fig1.savefig(os.path.join(report_path, 'heatmap_med.pdf'))
+# fig2.savefig(os.path.join(report_path, 'heatmap_pull.pdf'))
+#
+# # heatmap overview plot
+# fig = analyser.plot_heatmap_overview(c_name, order, 'tt', mx_cut=[1.45, 3.0], reps=np.arange(20))
+# fig.savefig(os.path.join(report_path, 'heatmap_overview.pdf'))
 
 
 L = [
@@ -154,8 +156,9 @@ def PDFmerge(pdfs, output):
 
 def main():
     # pdf files to merge
-    pdfs = ['my_report.pdf', 'pbp_med.pdf', 'pbp_rep.pdf', 'loss_overview.pdf', '1d_accuracy.pdf', 'heatmap_med.pdf',
-            'heatmap_pull.pdf', 'heatmap_overview.pdf']
+    # pdfs = ['my_report.pdf', 'pbp_med.pdf', 'pbp_rep.pdf', 'loss_overview.pdf', '1d_accuracy.pdf', 'heatmap_med.pdf',
+    #         'heatmap_pull.pdf', 'heatmap_overview.pdf']
+    pdfs = ['my_report.pdf', 'pbp_med.pdf', 'pbp_rep.pdf', 'loss_overview.pdf', '1d_accuracy.pdf']
     pdfs = [os.path.join(report_path, pdf_i) for pdf_i in pdfs]
 
     # output pdf file name
