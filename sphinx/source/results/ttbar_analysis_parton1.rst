@@ -10,4 +10,3 @@ Technical details of the analytical calculation can be found in the code documen
 :doc:`ml4eft.core.truth <../_autosummary/ml4eft.core.truth>`
 
 .. image:: ../images/tt_benchmark_parton.png
-
