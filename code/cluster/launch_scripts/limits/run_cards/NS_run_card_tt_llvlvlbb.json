@@ -1,9 +1,9 @@
 {
-  "fit_id": "test",
+  "fit_id": "glob_all_lin_5c",
   "mode": "nn",
   "process": "tt",
   "order": "lin",
-  "nlive": 50,
+  "nlive": 500,
   "results_path": "/data/theorie/jthoeve/ns_samples/tt_llvlvlbb",
   "lumi": 3e5,
   "observed_data_path": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/observed_data/tt_llvlvlbb_sm/events_0.pkl.gz",
@@ -39,40 +39,40 @@
       2.5
     ]
   },
-  "path_to_models": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb_pt_ll/2022/10/2022/10/06",
+  "path_to_models": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb/2022/09/12",
   "path_to_theory_pred": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt_llvlvlbb",
   "prior": {
     "ctGRe": [
-      -50,
-      50
+      -2,
+      2
     ],
     "cQj18": [
-      -50,
-      50
-    ],
-    "cQj38": [
-      -50,
-      50
+      -2,
+      2
     ],
     "ctj8": [
-      -50,
-      50
-    ],
-    "ctu8": [
-      -50,
-      50
+      -2,
+      2
     ],
     "cQu8": [
-      -50,
-      50
+      -2,
+      2
     ],
     "cQd8": [
-      -50,
-      50
+      -2,
+      2
     ],
     "ctd8": [
-      -50,
-      50
+      -2,
+      2
+    ],
+    "cQj38": [
+      -2,
+      2
+    ],
+    "ctu8": [
+      -2,
+      2
     ]
   },
   "th_features": [

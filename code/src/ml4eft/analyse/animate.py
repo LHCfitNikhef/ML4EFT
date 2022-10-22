@@ -66,11 +66,9 @@ class Animate:
         .. image:: ../images/anim_1d.gif
 
         """
+
         g_ana = analyser.decision_function_truth(df, self.c, df.columns.values, process='tt', order='quad')
-
-
         fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
-
 
         # load models and evaluate them
         analyser.build_model_dict(epoch=1)
@@ -79,11 +77,9 @@ class Animate:
         # decission function at first epoch
         g_nn_init = analyser.decision_function_nn(self.c, epoch=1)
 
-
         # create empty line objects
         lines = []
         n_reps = g_nn_init.shape[0]
-
 
         for i in range(0, n_reps):
             # only attach a label to the first replica to avoid a busy legend
@@ -97,23 +93,19 @@ class Animate:
         g_preds_init_up = np.percentile(g_nn_init, 84, axis=0)
         g_preds_init_down = np.percentile(g_nn_init, 16, axis=0)
 
-
         fill = ax.fill_between(df['m_tt'], g_preds_init_up, g_preds_init_down, color='C0', alpha=0.3,
                                label=r"$\mathrm{ML}\;\mathrm{model}\;1\sigma\mathrm{-band}\;(m_{t\bar{t}}, Y)$")
 
         ax.plot(df['m_tt'], g_ana, '--', c='red', label=r"$\mathrm{Analytical}\;(m_{t\bar{t}}, Y)$")
-        #ax.plot(x[:, 0], f_ana_lin, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-4}\right)$')
-        #ax.plot(x[:, 0], f_ana_quad, '--', c='red', label=r'$\rm{Truth}\;\mathcal{O}\left(\Lambda^{-4}\right)$')
+
         epoch_text = ax.text(0.02, 0.92, '', transform=ax.transAxes, fontsize=15)
 
         plt.legend(loc='upper right', fontsize=15, frameon=False)
         plt.ylim((0, 1))
+        plt.xlim((1.5, df['m_tt'].max()))
 
-        #plt.xlim(np.min(x[:, 0]), 0.5)
-        plt.xlim(0.5, df['m_tt'].max())
-        #plt.xlim(np.min(x[:, 0]), np.max(x[:, 0]))
         plt.ylabel(r'$g\;(x, c)$')
-        #plt.xlabel(r'$m_{ZH}\;[\mathrm{TeV}]$')
+
         plt.xlabel(r'$m_{t\bar{t}}\;[\mathrm{TeV}]$')
         plt.tight_layout()
 
@@ -136,7 +128,6 @@ class Animate:
                 line.set_data(df['m_tt'], g_preds_nn[rep_nr, :])
 
             epoch_text.set_text(r'$\rm{epoch\;%d}$' % i)
-
 
             g_pred_up = np.percentile(g_preds_nn, 84, axis=0)
             g_pred_down = np.percentile(g_preds_nn, 16, axis=0)

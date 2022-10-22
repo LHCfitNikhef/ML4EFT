@@ -115,8 +115,10 @@ class Optimize:
             )
             sys.exit()
 
+
         self.th_pred = theory_pred.TheoryPred(self.path_to_theory_pred,
                                               bins=self.bins)
+
 
         if self.coeff is None:
             self.glob = True
@@ -161,9 +163,12 @@ class Optimize:
             self.nn_analyser.evaluate_models(self.observed_data)
             models_evaluated = self.nn_analyser.models_evaluated_df['models']
 
+            #import pdb; pdb.set_trace()
+            # n_dat = len(self.nn_analyser.models_evaluated_df['models']['lin', 'cQj38'])
+            # fraction_cQj38 = np.sum(self.nn_analyser.models_evaluated_df['models']['lin', 'cQj38'] < 0) / n_dat
+
             # taken median over models
-            self.nn_analyser.models_evaluated_df['models'] = models_evaluated.apply(lambda row:
-                                                                                    np.median(row, axis=0))
+            self.nn_analyser.models_evaluated_df['models'] = models_evaluated.apply(lambda row: np.median(row, axis=0))
 
         if self.mode == "truth":
             self.dsigma_dx = self.th_pred.compute_diff_coefficients(self)
@@ -235,7 +240,6 @@ class Optimize:
 
         lin_models = self.th_pred.th_dict['lin']
         for c_name, c_val in self.param_names.items():
-
             # check if c_name has linear sensitivity
             if c_name in lin_models:
                 sigma += c_val * self.th_pred.th_dict['lin'][c_name]

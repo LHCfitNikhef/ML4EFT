@@ -302,7 +302,7 @@ class Fitter:
     Training class
     """
 
-    def __init__(self, json_path, mc_run, output_dir, print_log=False):
+    def __init__(self, json_path, mc_run, c_name, output_dir, print_log=False):
         """
         Fitter constructor
 
@@ -312,6 +312,8 @@ class Fitter:
             Path to json run card
         mc_run: int
             Replica number
+        c_name: str
+            EFT coefficient for which to learn the ratio function
         output_dir: str
             Path to where the models should be stored
         print_log: bool, optional
@@ -319,20 +321,24 @@ class Fitter:
             prints to a log file only
         """
         # read the json run card
+
+
         with open(json_path) as json_data:
             self.run_options = json.load(json_data)
 
-        self.run = self.run_options['name']
+        self.c_name = c_name
         self.process_id = self.run_options["process_id"]
         self.lr = self.run_options["lr"]
         self.n_batches = self.run_options["n_batches"]
-        self.quadratic = self.run_options['quadratic']
+
 
         self.loss_type = self.run_options['loss_type']
         self.scaler_type = self.run_options['scaler_type']
         self.patience = self.run_options['patience']
         self.val_ratio = self.run_options['val_ratio']
-        self.pretrained_models_path = self.run_options['pretrained_models'] if 'pretrained_models' in self.run_options else None
+
+        self.c_train = self.run_options["c_train"]
+
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
         self.features = self.run_options['features']
@@ -342,41 +348,21 @@ class Fitter:
 
         # perhaps use a dict instead
         # c_train values
-        coeff_train_values = np.array([dummy for dummy in self.run_options['coeff_train'].values()])
 
+
+        self.quadratic = True if '_' in self.c_name else False
         if self.quadratic:
-
-            if 0 in coeff_train_values: # c1 * c1 coefficient function
-                self.coeff_train_value = np.sum(coeff_train_values) ** 2
-                for key, value in self.run_options['coeff_train'].items():
-                    if value != 0:
-                        self.coeff_train_key = key + '_' + key
-
-            else: # c1 * c2 coefficient function
-                self.coeff_train_value = np.prod(coeff_train_values)
-
-                self.coeff_train_key = ''
-                for key, value in self.run_options['coeff_train'].items():
-                    self.coeff_train_key += key + '_'
-                self.coeff_train_key = self.coeff_train_key[:-1]
-
+            c1, c2 = self.c_name.split('_')
+            self.c_train_value = self.c_train[c1] * self.c_train[c2]
         else:
-            # linear and quadratic terms depend only on a single coefficient
-            self.coeff_train_value = np.sum(coeff_train_values)
-            for key, value in self.run_options['coeff_train'].items():
-                if value != 0:
-                    self.coeff_train_key = key
-                    break
-                else:
-                    continue
-
+            self.c_train_value = self.c_train[self.c_name]
 
         self.mc_run = mc_run
 
         output_dir = os.path.join(output_dir, time.strftime("%Y/%m/%d"))
         os.makedirs(output_dir, exist_ok=True)
 
-        model_path = os.path.join(output_dir, 'model_{}'.format(self.run))
+        model_path = os.path.join(output_dir, 'model_{}'.format(self.c_name))
         mc_path = os.path.join(model_path, 'mc_run_{}/'.format(self.mc_run))
         log_path = os.path.join(mc_path, 'logs')
 
@@ -397,10 +383,10 @@ class Fitter:
         # build the paths to the eft event data and initialize the right model
         if self.quadratic:
             self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = Classifier(self.network_size, self.coeff_train_value)
+            self.model = Classifier(self.network_size, self.c_train_value)
         else: # linear
             self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = Classifier(self.network_size, self.coeff_train_value)
+            self.model = Classifier(self.network_size, self.c_train_value)
 
         # create log file with timestamp
         t = time.localtime()
@@ -428,6 +414,7 @@ class Fitter:
         data_train, data_val = self.load_data()
 
         # copy run card to the appropriate folder
+
         with open(mc_path + 'run_card.json', 'w') as outfile:
             json.dump(self.run_options, outfile)
 
@@ -449,7 +436,7 @@ class Fitter:
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
         path_sm = os.path.join(self.event_data_path, self.process_id + '_sm/events_{}.pkl.gz'.format(self.mc_run))
-        path_eft = os.path.join(self.event_data_path, self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.coeff_train_key, mc_run=self.mc_run))
+        path_eft = os.path.join(self.event_data_path, self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.c_name, mc_run=self.mc_run))
 
         path_dict = {'sm': path_sm, 'eft': path_eft}
 

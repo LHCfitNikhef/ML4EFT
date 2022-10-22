@@ -1,11 +1,10 @@
 #%%
-from ml4eft.analyse.animate_2d import animate_learning_2d
 from ml4eft.analyse.animate import Animate
 import ml4eft.analyse.analyse as analyse
 import ml4eft.preproc.constants as constants
 import numpy as np
 import pandas as pd
-import os
+import os, sys
 #%%
 # 1D
 
@@ -17,37 +16,31 @@ import os
 
 # tt
 #
-save_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/30_08'
 
-path_to_models = {
-    'quad': {'ctgre_ctgre': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/22/model_ctGRe_ctGRe',
-             'cut_cut': '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt/2022/06/22/model_ctu1_ctu1'}}
+order = 'quad'
+save_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_10'
+
+path_to_models_root = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_mtt_y/2022/10/15'
+path_to_models = analyse.Analyse.build_path_dict(path_to_models_root, order, prefix='model')
+
+if order == "quad":
+    del path_to_models['lin']
 
 analyser = analyse.Analyse(path_to_models)
 
+x = np.linspace(1.45, 3.0, 200)
+x = np.stack((np.zeros(len(x)), x), axis=-1)
 
 
-#
-# c = {'ctgre': 2, 'cut': 0}
-#
-# x = np.linspace(0.5, 3.0, 200)
-# x = np.stack((np.zeros(len(x)), x), axis=-1)
-#
-#
-# df = pd.DataFrame(x, columns=['y', 'm_tt'])
-#
-#
-#
-#
-# #%%
-# anim = Animate(c={'ctgre': 2, 'cut': 0}, frames=200)
-# anim_tt = anim.make_animation_1d(analyser, df)
-#
-# anim_tt.save(os.path.join(save_path, 'anim.gif'))
+df = pd.DataFrame(x, columns=['y', 'm_tt'])
 
+anim = Animate(c={'ctGRe': 0, 'ctu8': 2}, frames=10)
+anim_tt = anim.make_animation_1d(analyser, df)
 
+anim_tt.save(os.path.join(save_path, 'anim_ctu8_ctu8.gif'))
 
-#%%
+sys.exit()
+
 # 2D
 
 # first create a grid in phase space

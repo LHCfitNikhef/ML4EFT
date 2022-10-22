@@ -34,7 +34,7 @@ mt = constants.mt
 col_s = constants.col_s
 
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
-rc('text', usetex=True)
+rc('text', usetex=False)
 
 
 class Analyse:
@@ -333,25 +333,27 @@ class Analyse:
         for rep_path in rep_paths:
 
             path_to_run_card = os.path.join(rep_path, 'run_card.json')
-            if not os.path.isfile(path_to_run_card):  # if model did not get trained, jump to the next one
+            path_to_scaler = os.path.join(rep_path, 'scaler.gz')
+
+            if not os.path.isfile(path_to_scaler):  # if model did not get trained, jump to the next one
                 rep_paths.remove(rep_path)
                 continue
-
-            path_to_scaler = os.path.join(rep_path, 'scaler.gz')
 
             run_card = self.load_run_card(path_to_run_card)
             scaler = joblib.load(path_to_scaler)
 
-            coeff_train_values = np.array([i for i in run_card['coeff_train'].values()])
-            if not run_card['quadratic']:
-                c_train = np.sum(coeff_train_values)  # linear
-            else:
-                if 0 in coeff_train_values:  # c1 * c1 coefficient function
-                    c_train = np.sum(coeff_train_values) ** 2
-                else:  # c1 * c2 coefficient function
-                    c_train = np.prod(coeff_train_values)
+            model_name = os.path.basename(model_path)
+            c_name = model_name.split('model_')[1]
+            c_train = run_card['c_train']
 
-            loaded_model = classifier.Classifier(run_card['architecture'], c_train)
+            quadratic = True if '_' in c_name else False
+            if quadratic:
+                c1, c2 = c_name.split('_')
+                c_train_value = c_train[c1] * c_train[c2]
+            else:
+                c_train_value = c_train[c_name]
+
+            loaded_model = classifier.Classifier(run_card['architecture'], c_train_value)
 
             # build path to model config file
             if epoch != -1:  # if specific epoch is requested
@@ -832,7 +834,7 @@ class Analyse:
         .. image:: ../images/pbp-med.png
 
         """
-        r_nn = self.likelihood_ratio_nn(c, df)
+        r_nn = self.likelihood_ratio_nn(c, df=df)
         tau_nn = np.log(r_nn)
 
         r_truth = self.likelihood_ratio_truth(df, c, features, process, order)
@@ -841,7 +843,7 @@ class Analyse:
         fig = plt.figure(figsize=(8, 8))
         x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
 
-        ax.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
+        ax.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='red')
         ax.plot(x, x, linestyle='dashed', color='grey')
         ax.set_xlabel(r'$\log r(x, c)^{\rm{Unbinned}\;\rm{exact}}$')
         ax.set_ylabel(r'$\log r(x, c)^{\rm{Unbinned}\;\rm{ML}}$')
@@ -945,7 +947,7 @@ class Analyse:
 
         return fig1, fig2
 
-    def plot_loss_overview(self, c_name, order, ax=None):
+    def plot_loss_overview(self, c_name, order, ax=None, rep=None):
         """
         Plots the loss evolution per replica and returns an overview plot
 
@@ -955,8 +957,10 @@ class Analyse:
             name of EFT parameter
         order: str
             Specifies the order in the EFT expansion. Must be one of ``lin``, ``quad``.
-        ax: matplotlib.axes
+        ax: matplotlib.axes, optional
             Axes object to plot on
+        rep: int, optional
+            Specific replica to plot
 
         Returns
         -------
@@ -1005,11 +1009,17 @@ class Analyse:
         val_loss_best = np.array([loss[-patience] for loss in loss_val])
 
         for i in np.argsort(model_idx):
-            ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
+
+            if rep is not None:
+                if model_idx[i] != rep:
+                    continue
+            else:
+                ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
+
             epochs = np.arange(len(loss_tr[i]))
 
-            label_val = r'$L_{\mathrm{val}}$' if model_idx[i] == 0 else None
-            label_train = r'$L_{\mathrm{tr}}$' if model_idx[i] == 0 else None
+            label_val = r'$L_{\mathrm{val}}$' if model_idx[i] == rep else None
+            label_train = r'$L_{\mathrm{tr}}$' if model_idx[i] == rep else None
 
             loss_train_rep = np.array(loss_tr[i])
             loss_val_rep = np.array(loss_val[i])
@@ -1019,9 +1029,9 @@ class Analyse:
             ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
 
             # ax.set_yscale('log')
-            ax.yaxis.set_major_formatter(NullFormatter())
-            ax.yaxis.set_minor_formatter(NullFormatter())
-            ax.axes.yaxis.set_ticklabels([])
+            # ax.yaxis.set_major_formatter(NullFormatter())
+            # ax.yaxis.set_minor_formatter(NullFormatter())
+            # ax.axes.yaxis.set_ticklabels([])
             ax.set_ymargin(0.1)
             ax.set_xmargin(0)
 
@@ -1029,7 +1039,7 @@ class Analyse:
                     verticalalignment='center',
                     transform=ax.transAxes)
 
-            ax.set_xlim(left=10)
+            ax.set_xlim(left=50)
 
             ax.set_xlabel(r'$\mathrm{Epoch}$')
             ax.set_ylabel(r'$\mathrm{Loss}$')
@@ -1116,18 +1126,19 @@ class Analyse:
         elif process == 'ZH':
             df = pd.DataFrame(x, columns=['y', 'm_zh'])
 
-        features = self.model_df['run_card'][order][c_name]['features']
+        features = self.model_df['run_card'][order][c_name]['features'] # TODO: order not correct
 
-        f_ana_lin = self.decision_function_truth(df, c, features, process, order)
+
+        f_ana_lin = self.decision_function_truth(df, c, df.columns.values, process, order)
         f_preds_nn = self.decision_function_nn(c, df, epoch=epoch)
 
         f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
         f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
 
-        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r"$\mathrm{Unbinned}\;\mathrm{ML}\;(m_{t\bar{t}})$",
+        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r"$\mathrm{Unbinned}\;\mathrm{ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$",
                         alpha=0.4)
 
-        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r"$\mathrm{Unbinned}\;\mathrm{exact}\;(m_{t\bar{t}})$")
+        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r"$\mathrm{Unbinned}\;\mathrm{exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$")
 
         # single replica
         # ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
@@ -1290,7 +1301,7 @@ class Analyse:
         else:
             fig = plt.figure(figsize=(10, 8))
 
-        im = ax.imshow(data, extent=extent, origin='lower', aspect=(extent[1]-extent[0])/(extent[3] - extent[2]), cmap=cmap_copy, norm=norm)
+        im = ax.imshow(data, extent=extent, origin='lower', aspect=(extent[1]-extent[0])/(extent[3] - extent[2]) * 10 / 8, cmap=cmap_copy, norm=norm)
 
         if rep is not None:
             ax.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',
@@ -1300,9 +1311,9 @@ class Analyse:
 
             cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax,
                                 format=tick.FormatStrFormatter(r'$%.2f$'))
-            ax.set_title(title)
+            ax.set_title(title, fontsize=15)
             if text is not None:
-                ax.text(0.95, 0.1, text, horizontalalignment='right', verticalalignment='center',
+                ax.text(0.95, 0.05, text, horizontalalignment='right', verticalalignment='center',
                         transform=ax.transAxes)
             plt.tight_layout()
 

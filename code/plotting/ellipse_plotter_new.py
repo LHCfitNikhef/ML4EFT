@@ -85,10 +85,10 @@ class EllipsePlotter:
     @staticmethod
     def confidence_contour_kde(x, y, ax, hndls, facecolor="none"):
 
-        sns.kdeplot(x, y, levels=[0.05, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=0.3, color=facecolor)
+        sns.kdeplot(x, y, levels=[0.05, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=0.25, color=facecolor)
         sns.kdeplot(x, y, levels=[0.05], bw_adjust=1.2, ax=ax, alpha=1, color=facecolor)
         #ax.scatter(x, y, s=4, alpha=0.2)
-        hndls.append((mpatches.Patch(ec=facecolor, fc=facecolor, fill=True, alpha=0.3),
+        hndls.append((mpatches.Patch(ec=facecolor, fc=facecolor, fill=True, alpha=0.25),
                       mpatches.Patch(ec=facecolor, fc=facecolor, fill=False, alpha=1.0)))
 
         return hndls
@@ -153,7 +153,7 @@ class EllipsePlotter:
         return ax.add_patch(ellipse), inclination
 
 
-    def plot(self, ax, dfs, ax_labels, coeff1, coeff2, kde=None, labels=None):
+    def plot(self, ax, dfs, ax_labels, coeff1, coeff2, kde=None, labels=None, loc="best"):
         """
         Plot the 2 standard deviation ellipse of two parameters
         (used for 2 parameter fits)
@@ -166,8 +166,9 @@ class EllipsePlotter:
         """
 
         hndls = []
-        colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-        #colors = ['C1', 'C2']
+        #colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+        colors = ['C0', 'C1', 'C2', 'C4']
+        alpha = [0.25, 0.25, 0.25, 0.25]
 
         for i, df in enumerate(dfs):
 
@@ -191,7 +192,7 @@ class EllipsePlotter:
                         coeff1_values,
                         coeff2_values,
                         ax,
-                        alpha=0.3,
+                        alpha=alpha[i],
                         facecolor=colors[i],
                         edgecolor=None,
                     )
@@ -252,7 +253,7 @@ class EllipsePlotter:
 
         if labels is not None:
             ax.legend(
-                loc="upper left", handles=hndls, labels=labels, frameon=False, prop={"size": 24}
+                loc=loc, handles=hndls, labels=labels, frameon=False, prop={"size": 24}
             )
         else:
             return hndls

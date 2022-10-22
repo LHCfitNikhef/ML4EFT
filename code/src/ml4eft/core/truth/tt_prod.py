@@ -518,7 +518,7 @@ def dsigma_dmtt(mtt, c=None, order=None):
    """
 
     y_min, y_max = -0.5 * np.log(s / mtt), 0.5 * np.log(s / mtt)
-    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, c, order), n=10)[0]
+    dsigma_dmtt = integrate.fixed_quad(dsigma_dmtt_dy_vec, y_min, y_max, args=(mtt, c, order), n=100)[0]
     return dsigma_dmtt
 
 

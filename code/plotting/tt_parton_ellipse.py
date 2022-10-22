@@ -20,94 +20,83 @@ coeff_dict = {"ctGRe": r'$c_{tG}$', "ctu8": r'$c_{tu}^{(8)}$'}
 # LINEAR
 
 samples_nn_lin_mtt_y = '/data/theorie/jthoeve/ns_samples/tt_parton/nn_glob_lin_mtt_y/posterior.json'
-samples_nn_lin_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/nn_glob_quad_mtt/posterior.json'
+samples_nn_lin_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/nn_glob_lin_mtt/posterior.json'
 
-samples_binned_lin_mtt_y = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt_y/posterior.json'
-samples_binned_lin_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt/posterior.json'
+samples_binned_lin_mtt_y_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt_y_c/posterior.json'
+samples_binned_lin_mtt_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt_c/posterior.json'
+samples_binned_lin_mtt_y_f = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt_y_f/posterior.json'
+samples_binned_lin_mtt_f = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt_f/posterior.json'
 
 samples_truth_lin_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/truth_glob_lin_mtt/posterior.json'
 samples_truth_lin_mtt_y = '/data/theorie/jthoeve/ns_samples/tt_parton/truth_glob_lin_mtt_y/posterior.json'
 
 # QUADRATIC
-
+samples_nn_quad_mtt_y_ptt = '/data/theorie/jthoeve/ns_samples/tt_parton/nn_glob_quad_all/posterior.json'
 samples_nn_quad_mtt_y = '/data/theorie/jthoeve/ns_samples/tt_parton/nn_glob_quad_mtt_y/posterior.json'
 samples_nn_quad_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/nn_glob_quad_mtt/posterior.json'
 
-samples_binned_quad_mtt_y = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_quad_mtt_y/posterior.json'
-samples_binned_quad_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_quad_mtt/posterior.json'
+samples_binned_quad_mtt_y_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_quad_mtt_y_c/posterior.json'
+samples_binned_quad_mtt_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_quad_mtt_c/posterior.json'
+samples_binned_quad_mtt_y_f = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_quad_mtt_y_f/posterior.json'
+samples_binned_quad_mtt_f = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_quad_mtt_f/posterior.json'
 
 samples_truth_quad_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/truth_glob_quad_mtt/posterior.json'
 samples_truth_quad_mtt_y = '/data/theorie/jthoeve/ns_samples/tt_parton/truth_glob_quad_mtt_y/posterior.json'
 
 # PLOT 1
 
-df_plot_1 = [Analyse.posterior_loader(samples_nn_lin_mtt_y),
-
-             Analyse.posterior_loader(samples_binned_lin_mtt_y),
-
+df_plot_1 = [Analyse.posterior_loader(samples_binned_lin_mtt_y_c),
+             Analyse.posterior_loader(samples_binned_lin_mtt_y_f),
              Analyse.posterior_loader(samples_truth_lin_mtt_y),
+             Analyse.posterior_loader(samples_nn_lin_mtt_y)
              ]
 
-labels_plot_1 = [r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
-
-                 r'$\mathrm{Binned}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
-
+labels_plot_1 = [r'$\mathrm{Binning}\:1\;(m_{t\bar{t}}, y_{t\bar{t}})$',
+                 r'$\mathrm{Binning}\:2\;(m_{t\bar{t}}, y_{t\bar{t}})$',
                  r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
-
+                 r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
                  r'$\mathrm{SM}$']
 
 # PLOT 2
 
-df_plot_2 = [Analyse.posterior_loader(samples_nn_quad_mtt_y),
-
-             Analyse.posterior_loader(samples_binned_quad_mtt_y),
-
+df_plot_2 = [Analyse.posterior_loader(samples_binned_quad_mtt_y_c),
+             Analyse.posterior_loader(samples_binned_quad_mtt_y_f),
              Analyse.posterior_loader(samples_truth_quad_mtt_y),
-
+             Analyse.posterior_loader(samples_nn_quad_mtt_y)
              ]
 
-labels_plot_2 = [r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
-
-                 r'$\mathrm{Binned}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
-
+labels_plot_2 = [r'$\mathrm{Binning}\:1\;(m_{t\bar{t}}, y_{t\bar{t}})$',
+                 r'$\mathrm{Binning}\:2\;(m_{t\bar{t}}, y_{t\bar{t}})$',
                  r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
-
+                 r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
                  r'$\mathrm{SM}$']
 
 # PLOT 3
 
-df_plot_3 = [
-    Analyse.posterior_loader(samples_nn_lin_mtt),
+df_plot_3 = [Analyse.posterior_loader(samples_binned_lin_mtt_c),
+             Analyse.posterior_loader(samples_binned_lin_mtt_f),
+             Analyse.posterior_loader(samples_truth_lin_mtt),
+             Analyse.posterior_loader(samples_nn_lin_mtt)]
 
-    Analyse.posterior_loader(samples_binned_lin_mtt),
-
-    Analyse.posterior_loader(samples_truth_lin_mtt)]
-
-labels_plot_3 = [
-    r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}})$',
-
-    r'$\mathrm{Binned}\;(m_{t\bar{t}})$',
-
-    r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}})$',
-    r'$\mathrm{SM}$']
+labels_plot_3 = [r'$\mathrm{Binning}\:1\;(m_{t\bar{t}})$',
+                 r'$\mathrm{Binning}\:2\;(m_{t\bar{t}})$',
+                 r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}})$',
+                 r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}})$',
+                 r'$\mathrm{SM}$']
 
 # PLOT 4
 
-df_plot_4 = [
-    Analyse.posterior_loader(samples_nn_quad_mtt),
+df_plot_4 = [Analyse.posterior_loader(samples_binned_quad_mtt_c),
+             Analyse.posterior_loader(samples_binned_quad_mtt_f),
+             Analyse.posterior_loader(samples_truth_quad_mtt),
+             Analyse.posterior_loader(samples_nn_quad_mtt)
+             ]
 
-    Analyse.posterior_loader(samples_binned_quad_mtt),
-
-    Analyse.posterior_loader(samples_truth_quad_mtt)
-]
-
-labels_plot_4 = [
-    r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}})$',
-
-    r'$\mathrm{Binned}\;(m_{t\bar{t}})$',
-
-    r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}})$',
-    r'$\mathrm{SM}$']
+labels_plot_4 = [r'$\mathrm{Binning}\:1\;(m_{t\bar{t}})$',
+                 r'$\mathrm{Binning}\:2\;(m_{t\bar{t}})$',
+                 r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}})$',
+                 r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}})$',
+                 r'$\mathrm{SM}$']
 
 dfs = [df_plot_1, df_plot_2, df_plot_3, df_plot_4]
 labels = [labels_plot_1, labels_plot_2, labels_plot_3, labels_plot_4]
@@ -134,9 +123,16 @@ for i, df in enumerate(dfs):
     col_idx = i % 2
     ax = fig.add_subplot(grid[row_idx, col_idx])
 
-    plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
-                 ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
-                 labels=labels[i])
+    if col_idx == 1:
+        ax.set_xlim(-0.22, 0.3)
+
+        plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
+                     ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
+                     labels=labels[i], loc="lower right")
+    else:
+        plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
+                     ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
+                     labels=labels[i], loc="upper left")
 
     if col_idx == 1:
         ax.set(ylabel=None)
@@ -146,4 +142,4 @@ for i, df in enumerate(dfs):
 
 grid.tight_layout(fig)
 
-fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/16_10/tt_parton_ellipse_quad_binned_2x2.pdf')
+fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_10/tt_parton_ellipse_2x2_v2.pdf')
