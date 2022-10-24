@@ -1,11 +1,22 @@
 .. _results:
 
-Results
-=======
+Unbinned multivariate observables for global SMEFT analyses from machine learning
+===================================================================================
+
+
+The ML4EFT code is used in the following publication:
+
+- *Unbinned multivariate observables for global SMEFT analyses from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica, :cite:`ML4EFT_temp_id`.
+
+We present the results of this paper here, including additional plots and animations not present in the paper, 
+as well as links to the trained neural networks and associated training reports.
+
+The results are divided into three sections, corresponding to the three physical processes under consideration: parton level top pair production,
+particle level top pair production in the dilepton channel and Higgs production in association with a Z boson in the :math:`\ell^{+} \ell^{-} b \bar{b}` final state.
+Click on the links below for more details.
 
 
 
-In this section we will present results and animations from ....
 
 Contents:
 -----------

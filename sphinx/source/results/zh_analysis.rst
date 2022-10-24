@@ -28,9 +28,10 @@ used in the neural network training can be found in the :ref:`next<kinematics_zh
    * - all (7)
      - `models <https://www.dropbox.com/s/f8ouvyz117c07ao/zh_particle_7_feat.tar.gz?dl=0>`_
 
+Results
+----------------------
+Plots and animations are available at the following links:
 
-Contents:
------------
 .. toctree::
    :maxdepth: 6
 
