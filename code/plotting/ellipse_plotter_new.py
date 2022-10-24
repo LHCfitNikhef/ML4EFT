@@ -208,11 +208,20 @@ class EllipsePlotter:
 
                 else:
 
+                    if i == 0:
+                        if (coeff1 == 'cbHRe' and coeff2 == 'cHj3') or (coeff2 == 'cbHRe' and coeff1 == 'cHj3'):
+                            ax.scatter(np.random.choice(coeff1_values, 1000, replace=False),
+                            np.random.choice(coeff2_values, 1000, replace=False), alpha=0.3, color=colors[i], s=5)
+                            ax.set_xlim((-0.2, 1.0))
+                            continue
+
                     hndls = self.confidence_contour_kde(coeff1_values,
                         coeff2_values,
                         ax,
                         hndls,
                         facecolor=colors[i])
+
+
 
                     # if i == 0:
                     #     ax.scatter(np.random.choice(coeff1_values, 1000, replace=False),

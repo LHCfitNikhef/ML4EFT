@@ -26,7 +26,7 @@ function submit_job () {
 
 # SETUP
 
-MCREPS=50
+MCREPS=25
 
 # tt (parton)
 
@@ -47,7 +47,7 @@ MCREPS=50
 
 # tt -> llvlvlbb
 
-RUN_CARD="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb/run_card_tt_llvlvlbb_ptll.json"
+RUN_CARD="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb/run_card_tt_llvlvlbb_all.json"
 
 coeff=( "cQd8" "cQj18" "cQj38" "cQu8" "ctd8" "ctGRe" "ctj8" "ctu8" "cQd8_cQd8" "cQd8_cQj18" "cQd8_cQj38" "cQd8_ctd8" "cQd8_ctGRe" "cQd8_ctj8" "cQj18_cQj18" "cQj18_cQj38" "cQj18_cQu8" "cQj18_ctd8"
 "cQj18_ctGRe" "cQj18_ctj8" "cQj18_ctu8" "cQj38_cQj38" "cQj38_cQu8" "cQj38_ctd8" "cQj38_ctGRe" "cQj38_ctj8" "cQj38_ctu8" "cQu8_cQu8" "cQu8_ctGRe"

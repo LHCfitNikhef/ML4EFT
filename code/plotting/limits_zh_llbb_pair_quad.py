@@ -22,12 +22,12 @@ coeff_dict = {"cHu": r'$c_{\varphi u}$', "cHd": r'$c_{\varphi d}$', "cHj1": r'$c
 
 
 # nn: quadratic (all features)
-nn_pair_all_300 = os.path.join('/data/theorie/jthoeve/ns_samples/zh_llbb/nn_pair_all_lin', '{}_{}', 'posterior_{}_{}.json')
+nn_pair_all_300 = os.path.join('/data/theorie/jthoeve/ns_samples/zh_llbb/nn_pair_all_quad', '{}_{}', 'posterior_{}_{}.json')
 
 # nn: quadratic (pt_z)
-nn_pair_pt_z_300 = os.path.join('/data/theorie/jthoeve/ns_samples/zh_llbb/nn_pair_ptz_lin', '{}_{}', 'posterior_{}_{}.json')
+nn_pair_pt_z_300 = os.path.join('/data/theorie/jthoeve/ns_samples/zh_llbb/nn_pair_ptz_quad', '{}_{}', 'posterior_{}_{}.json')
 
-binned_pair_pt_z = os.path.join('/data/theorie/jthoeve/ns_samples/zh_llbb/binned_pair_ptz_lin', '{}_{}', 'posterior_{}_{}.json')
+binned_pair_pt_z = os.path.join('/data/theorie/jthoeve/ns_samples/zh_llbb/binned_pair_ptz_quad', '{}_{}', 'posterior_{}_{}.json')
 
 paths_plot_0 = [binned_pair_pt_z, nn_pair_pt_z_300, nn_pair_all_300]
 
@@ -67,7 +67,7 @@ def ellipse_overview(coeff_dict, labels, paths):
             dfs.append(Analyse.posterior_loader(path.format(c1, c2, c1, c2)))
 
         hndls = plotter.plot(ax, dfs, coeff1=c2, coeff2=c1,
-                                 ax_labels=[coeff_dict[c2], coeff_dict[c1]],  kde=False)
+                                 ax_labels=[coeff_dict[c2], coeff_dict[c1]],  kde=True)
         if row_idx != -1:
             ax.set(xlabel=None)
         #     ax.tick_params(
@@ -92,7 +92,7 @@ def ellipse_overview(coeff_dict, labels, paths):
         handletextpad=1,
         title_fontsize=24)
 
-    fig.suptitle(r"$\mathrm{Pairwise}\:95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-2}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$", y=0.92)
+    fig.suptitle(r"$\mathrm{Pairwise}\:95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-4}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$", y=0.92)
 
 
     bbox = legend.get_window_extent(fig.canvas.get_renderer()).transformed(fig.transFigure.inverted())
@@ -108,7 +108,7 @@ fig_0 = ellipse_overview(coeff_dict, labels_0, paths_plot_0)
 # fig_4 = ellipse_overview(coeff_dict, labels_4, paths_plot_4)
 
 #fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde_7_feat.pdf')
-fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/23_10/zh_llbb_nn_lin_pairwise.pdf')
+fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/23_10/zh_llbb_nn_quad_pairwise.pdf')
 #fig_2.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_lin.pdf')
 #fig_3.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde.pdf')
 # fig_4.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/test_overview_4.pdf')

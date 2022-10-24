@@ -2,12 +2,12 @@ import os
 from ml4eft.analyse.analyse import Analyse
 
 
-report_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb_pt_ll_eta_l_v9/2022/10/19/losses'
-path_to_models_root = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb_pt_ll_eta_l_v9/2022/10/19'
-order = 'lin'
+report_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/10/22/losses'
+path_to_models_root = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/10/22/'
+order = 'quad'
 
 models_paths_dict = Analyse.build_path_dict(root=path_to_models_root,
-                        order='lin',
+                        order='quad',
                         prefix='model')
 
 analyser = Analyse(models_paths_dict, order)

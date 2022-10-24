@@ -14,6 +14,7 @@ function submit_job () {
   COEFF4=$6
   COEFF5=$7
 #  COEFF6=$8
+#  COEFF7=$9
 
   # create bash file to submit
   COMMAND=$PWD'/launch_ns.sh'
@@ -36,8 +37,8 @@ function submit_job () {
 
 # SETUP
 NCORES='16'
-FID_ID=$PWD'/run_cards/NS_run_card_tt_llvlvlbb.json'
-#FID_ID=$PWD'/run_cards/NS_run_card_zhllbb.json'
+#FID_ID=$PWD'/run_cards/NS_run_card_tt_llvlvlbb.json'
+FID_ID=$PWD'/run_cards/NS_run_card_zhllbb.json'
 
 # pair of operator fits
 
@@ -57,8 +58,8 @@ FID_ID=$PWD'/run_cards/NS_run_card_tt_llvlvlbb.json'
 
 # global fit
 
-submit_job $NCORES $FID_ID cQj18 cQu8 ctd8 ctj8 ctGRe
 #submit_job $NCORES $FID_ID
+submit_job $NCORES $FID_ID cHu cHj3 cbHRe cHWB cHW
 
 
 

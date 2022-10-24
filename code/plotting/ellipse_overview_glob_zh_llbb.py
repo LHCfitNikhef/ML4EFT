@@ -20,15 +20,19 @@ rc('text', usetex=True)
 coeff_dict = {"cHu": r'$c_{\varphi u}$', "cHd": r'$c_{\varphi d}$', "cHj1": r'$c_{\varphi q}^{(1)}$', "cHj3": r'$c_{\varphi q}^{(3)}$',
               "cbHRe": r'$c_{b\varphi}$', "cHW": r'$c_{\varphi W}$', "cHWB": r'$c_{\varphi WB}$'}
 
-nn_glob_all_quad = os.path.join('/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob_all_quad', 'posterior.json')
+#nn_glob_all_quad = os.path.join('/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob_all_quad', 'posterior.json')
 nn_glob_ptz_quad = os.path.join('/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob_ptz_quad', 'posterior.json')
 
+nn_glob_all_quad = '/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob_all_quad2/posterior.json'
+
+
+
 #binned_glob_ptz_lin = '/data/theorie/jthoeve/ns_samples/zh_llbb/binned_glob_ptz_lin/posterior.json'
-binned_glob_ptz_quad = '/data/theorie/jthoeve/ns_samples/zh_llbb/binned_glob_ptz_q_v5/posterior.json'
+binned_glob_ptz_quad = '/data/theorie/jthoeve/ns_samples/zh_llbb/binned_glob_ptz_q_v6/posterior.json'
 binned_glob_deltaRbb_lin = '/data/theorie/jthoeve/ns_samples/zh_llbb/binned_glob_deltaRbb_lin/posterior.json'
 paths_plot_0 = [binned_glob_ptz_quad, nn_glob_ptz_quad, nn_glob_all_quad]
 
-labels_0 = [r"$p_T^Z\:\mathrm{(fine\:binning)}$", r"$\mathrm{ML}\;\mathrm{model}\;(p_T^Z)$", r"$\mathrm{ML}\;\mathrm{model}\;(7\;\mathrm{features})$", r'$\mathrm{SM}$']
+labels_0 = [r"$p_T^Z\in [75, 150, 250, 400, \infty)\:[\mathrm{GeV}]$", r"$\mathrm{Unbinned}\;\mathrm{ML}\;(p_T^Z)$", r"$\mathrm{Unbinned}\;\mathrm{ML}\;(7\;\mathrm{features})$", r'$\mathrm{SM}$']
 #labels_0 = [r"$p_T^Z\in [75, 150, 250, 400, \infty)\:[\mathrm{GeV}]$", r"$\Delta R(b_1, b_2) \in [0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 3.0]$", r'$\mathrm{SM}$']
 
 
@@ -87,7 +91,7 @@ def ellipse_overview(coeff_dict, labels, paths):
         handletextpad=1,
         title_fontsize=24)
 
-    fig.suptitle(r"$\mathrm{Marginalised}\:95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-2}\right)\mathrm{at\:}L=300\:\mathrm{fb}^{-1}$", y=0.92)
+    fig.suptitle(r"$\mathrm{Marginalised}\:95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-4}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$", y=0.92)
 
 
     bbox = legend.get_window_extent(fig.canvas.get_renderer()).transformed(fig.transFigure.inverted())
@@ -103,7 +107,7 @@ fig_0 = ellipse_overview(coeff_dict, labels_0, paths_plot_0)
 # fig_4 = ellipse_overview(coeff_dict, labels_4, paths_plot_4)
 
 #fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde_7_feat.pdf')
-fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/28_09/zh_llbb_glob_quad_binned_fine.pdf')
+fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_10/zh_llbb_glob_quad_nn_binned.pdf')
 #fig_2.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_lin.pdf')
 #fig_3.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/zh_particle_quad_kde.pdf')
 # fig_4.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/18_08/test_overview_4.pdf')

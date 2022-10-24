@@ -159,6 +159,8 @@ class Optimize:
 
         if self.mode == "nn":
 
+
+
             # evaluated nn models on pseudo dataset
             self.nn_analyser.evaluate_models(self.observed_data)
             models_evaluated = self.nn_analyser.models_evaluated_df['models']

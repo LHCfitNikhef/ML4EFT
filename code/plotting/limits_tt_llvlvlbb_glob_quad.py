@@ -18,13 +18,15 @@ rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 26})
 rc('text', usetex=True)
 
 
-coeff_dict = {"ctd8": r'$c_{td}^{(8)}$', "cQd8": r'$c_{Qd}^{(8)}$', "cQj18": r'$c_{Qq}^{(1,8)}$', "cQj38": r'$c_{Qq}^{(3,8)}$', "cQu8": r'$c_{Qu}^{(8)}$', "ctGRe": r'$c_{tG}$',  "ctj8": r'$c_{qt}^{(8)}$', "ctu8": r'$c_{tu}^{(8)}$'}
+coeff_dict = {"ctd8": r'$c_{td}^{(8)}$', "ctGRe": r'$c_{tG}$', "cQd8": r'$c_{Qd}^{(8)}$', "cQj18": r'$c_{Qq}^{(1,8)}$', "cQj38": r'$c_{Qq}^{(3,8)}$', "cQu8": r'$c_{Qu}^{(8)}$',  "ctj8": r'$c_{qt}^{(8)}$', "ctu8": r'$c_{tu}^{(8)}$'}
 
 # QUADRATIC
 
 samples_binned_quad_ptll_etal = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/binned_glob_etalptll_q2/posterior.json'
-samples_nn_quad_ptll_etal = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/nn_glob_ptll_etal_q_v2/posterior.json'
-samples_nn_quad_all = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/nn_glob_all_quad/posterior.json'
+samples_nn_quad_ptll_etal = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/nn_glob_ptll_etal_q_v3/posterior.json'
+samples_nn_quad_all = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/nn_glob_all_quad_v8/posterior.json'
+
+samples_nn_quad_ptll = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/nn_glob_ptll_quad_v2/posterior.json'
 
 paths_plot_0 = [samples_binned_quad_ptll_etal, samples_nn_quad_ptll_etal]
 
@@ -44,6 +46,21 @@ paths_plot_2 = [samples_nn_quad_ptll_etal, samples_nn_quad_all]
 labels_2 = [r"$\mathrm{Unbinned}\;\mathrm{ML}\;(p_T^{\ell\bar{\ell}}, \eta_\ell)$",
             r"$\mathrm{Unbinned}\;\mathrm{ML}\;(18\;\mathrm{features})$",
             r'$\mathrm{SM}$']
+
+paths_plot_3 = [samples_nn_quad_ptll, samples_nn_quad_ptll_etal]
+
+labels_3 = [r"$\mathrm{Unbinned}\;\mathrm{ML}\;(p_T^{\ell\bar{\ell}})$",
+            r"$\mathrm{Unbinned}\;\mathrm{ML}\;(p_T^{\ell\bar{\ell}}, \eta_\ell)$",
+            r'$\mathrm{SM}$']
+
+paths_plot_4 = [samples_nn_quad_ptll, samples_nn_quad_all]
+
+labels_4 = [r"$\mathrm{Unbinned}\;\mathrm{ML}\;(p_T^{\ell\bar{\ell}})$",
+            r"$\mathrm{Unbinned}\;\mathrm{ML}\;(18\;\mathrm{features})$",
+            r'$\mathrm{SM}$']
+
+
+
 
 def ellipse_overview(coeff_dict, labels, paths):
 
@@ -105,10 +122,17 @@ def ellipse_overview(coeff_dict, labels, paths):
 
     bbox = legend.get_window_extent(fig.canvas.get_renderer()).transformed(fig.transFigure.inverted())
 
-
-
     return fig
 
-fig_0 = ellipse_overview(coeff_dict, labels_2, paths_plot_2)
-fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_10/tt_glob_quad_nn_all.pdf')
+# fig_0 = ellipse_overview(coeff_dict, labels_0, paths_plot_0)
+# fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/23_10/tt_glob_quad_binned_nn_ptll_etal.pdf')
+#
+# fig_1 = ellipse_overview(coeff_dict, labels_1, paths_plot_1)
+# fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/23_10/tt_glob_quad_binned_nn_all.pdf')
+#
+# fig_2 = ellipse_overview(coeff_dict, labels_2, paths_plot_2)
+# fig_2.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/23_10/tt_glob_quad_nn_all.pdf')
+
+fig_4 = ellipse_overview(coeff_dict, labels_4, paths_plot_4)
+fig_4.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/23_10/tt_glob_quad_nn_ptll_all.pdf')
 

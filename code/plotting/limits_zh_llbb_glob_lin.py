@@ -12,29 +12,25 @@ import os
 from ml4eft.analyse.analyse import Analyse
 from ellipse_plotter_new import EllipsePlotter
 
+
+
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 26})
 rc('text', usetex=True)
 
-coeff_dict = {"ctd8": r'$c_{td}^{(8)}$', "cQj18": r'$c_{Qq}^{(1,8)}$', "cQu8": r'$c_{Qu}^{(8)}$', "ctj8": r'$c_{qt}^{(8)}$', "ctGRe": r'$c_{tG}$'}
+coeff_dict = {"cHu": r'$c_{\varphi u}$', "cHj3": r'$c_{\varphi q}^{(3)}$',
+              "cbHRe": r'$c_{b\varphi}$', "cHWB": r'$c_{\varphi WB}$', "cHW": r'$c_{\varphi W}$'}
 
 
-binned_path_ptll_etal = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/binned_glob_etalptll_l2/posterior.json'
-nn_path_pt_ll_eta_l = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/nn_glob_ptll_etal_lin2/posterior.json'
-nn_path_all = '/data/theorie/jthoeve/ns_samples/tt_llvlvlbb/nn_glob_all_lin_5c/posterior.json'
+nn_glob_all_lin = '/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob_all_lin_5c/posterior.json'
+nn_glob_ptz_lin = '/data/theorie/jthoeve/ns_samples/zh_llbb/nn_glob_ptz_lin_5c/posterior.json'
+
+binned_glob_ptz_lin = '/data/theorie/jthoeve/ns_samples/zh_llbb/binned_glob_ptz_lin2/posterior.json'
+
+paths_plot_0 = [nn_glob_ptz_lin, nn_glob_all_lin]
+
+labels_0 = [r"$\mathrm{Unbinned}\;\mathrm{ML}\;(p_T^Z)$", r"$\mathrm{Unbinned}\;\mathrm{ML}\;(7\;\mathrm{features})$", r'$\mathrm{SM}$']
 
 
-paths_plot_0 = [binned_path_ptll_etal, nn_path_pt_ll_eta_l, nn_path_all]
-
-labels_0 = [r"$\mathrm{Binned}\;(p_T^{\ell\bar{\ell}}, \eta_\ell)$",
-            r"$\mathrm{Unbinned}\;\mathrm{ML}\;(p_T^{\ell\bar{\ell}}, \eta_\ell)$",
-            r"$\mathrm{Unbinned}\;\mathrm{ML}\;(18\;\mathrm{features})$",
-            r'$\mathrm{SM}$']
-
-paths_plot_1 = [binned_path_ptll_etal, nn_path_pt_ll_eta_l]
-
-labels_1 = [r"$\mathrm{Binned}\;(p_T^{\ell\bar{\ell}}, \eta_\ell)$",
-            r"$\mathrm{Unbinned}\;\mathrm{ML}\;(p_T^{\ell\bar{\ell}}, \eta_\ell)$",
-            r'$\mathrm{SM}$']
 
 def ellipse_overview(coeff_dict, labels, paths):
 
@@ -45,7 +41,7 @@ def ellipse_overview(coeff_dict, labels, paths):
 
     grid = plt.GridSpec(n_rows, n_cols, hspace=0.1, wspace=0.1)
 
-    c1_old = "ctd8"
+    c1_old = "cHu"
 
     row_idx = -1
     col_idx = -1
@@ -63,7 +59,7 @@ def ellipse_overview(coeff_dict, labels, paths):
 
         dfs = []
         for path in paths:
-            dfs.append(Analyse.posterior_loader(path.format(c1, c2, c1, c2)))
+            dfs.append(Analyse.posterior_loader(path))
 
         hndls = plotter.plot(ax, dfs, coeff1=c2, coeff2=c1,
                                  ax_labels=[coeff_dict[c2], coeff_dict[c1]],  kde=False)
@@ -101,8 +97,7 @@ def ellipse_overview(coeff_dict, labels, paths):
     return fig
 
 fig_0 = ellipse_overview(coeff_dict, labels_0, paths_plot_0)
-fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/23_10/tt_glob_lin_binned_nn_all_v2.pdf')
 
-fig_1 = ellipse_overview(coeff_dict, labels_1, paths_plot_1)
-fig_1.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/23_10/tt_glob_lin_binned_nn_ptll_etal.pdf')
 
+
+fig_0.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/23_10/zh_llbb_glob_lin_nn_5c.pdf')
