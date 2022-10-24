@@ -67,7 +67,7 @@ With this motivation, we have developed a machine learning framework which enabl
 
 ML4EFT appears in the following paper:
 
-- *Unbinned measurements for global SMEFT fits from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:`ML4EFT_temp_id`
+- *Unbinned multivariate observables for global SMEFT analyses from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:`ML4EFT_temp_id`
  
 Here, we provide a proof-of-concept of the ML4EFT framework by constructing unbinned observables from pseudo-data of particle-level :math:`t\bar{t}` and :math:`hZ` production at the LHC 14 TeV,
 demonstrating the improved sensitivity that can be obtained relative to binned measurements. 
@@ -91,7 +91,7 @@ Citation policy
 ----------------------------------
 If you use the ML4EFT code in a scientific publication, please make sure to cite:
 
-- *Unbinned measurements for global SMEFT fits from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:`ML4EFT_temp_id`
+- *Unbinned multivariate observables for global SMEFT analyses from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica :cite:`ML4EFT_temp_id`
 
 Indices and tables
 ==================
