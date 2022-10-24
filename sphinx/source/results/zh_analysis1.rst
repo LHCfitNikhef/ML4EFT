@@ -21,7 +21,7 @@ Secondly, we include both linear and quadratic contributions:
 
 The kinematic features are defined as follows:
 
-.. list-table:: Definitions of the kinematic features displayed in the figure above.
+.. list-table:: Definitions of the kinematic features displayed in the figures above.
    :widths: 25 50
    :header-rows: 1
 
