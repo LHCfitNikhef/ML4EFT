@@ -6,8 +6,12 @@ We present here plots and animations related to Section 4.2 of :cite:`ML4EFT_tem
 We consider inclusive top quark pair production with stable tops, :math:`p p \rightarrow t \bar{t}`, at the LHC 14 TeV,
 benchmarking the neural network parametrisation of the likelihood ratio against the analytical calculation.
 
-Training reports
-----------------
+Models and training reports
+---------------------------
+
+Trained models of top-quark pair production with two features, the invariant mass :math:`m_{t\bar{t}}` and the rapidity :math:`y_{t\bar{t}}`,
+are available `here <https://www.dropbox.com/s/hbq29u6vqadfscf/tt_parton_mtt_y.tar.gz?dl=0>`_. See Table 1 for the corresponding
+training reports.
 
 .. list-table:: Training reports per EFT ratio function for top-quark pair production at the parton level with :math:`c_{tG}` and :math:`c_{tu}^{(8)}`,
                 trained on two features, the invariant mass :math:`m_{t\bar{t}}` and the rapidity :math:`y_{t\bar{t}}` of the top-quark pair.
@@ -24,6 +28,10 @@ Training reports
      - `report <https://www.dropbox.com/s/5qmp39gzun0z1g4/report_2022_10_15_model_ctGRe_lin.pdf?dl=0>`_
    * - ``ctGRe_ctGRe``
      - `report <https://www.dropbox.com/s/tgk8kd7z4s8zj7m/report_2022_10_15_model_ctGRe_quad.pdf?dl=0>`_
+
+Trained models of top-quark pair production on a single feature, the invariant mass :math:`m_{t\bar{t}}`,
+are available `here <https://www.dropbox.com/s/467rbwodz6lh21p/tt_parton_mtt.tar.gz?dl=0>`_. See Table 2 for the corresponding
+training reports.
 
 
 .. list-table:: Training reports per EFT ratio function for top-quark pair production at the parton level with :math:`c_{tG}` and :math:`c_{tu}^{(8)}`,
