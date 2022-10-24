@@ -28,6 +28,5 @@ between the ML model and exact calculation.
 
 
    
-.. image:: ../images/tt_parton_contours.png
-
+.. image:: ../images/tt_parton_2x2.png
 
