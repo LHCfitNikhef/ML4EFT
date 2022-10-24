@@ -1,5 +1,5 @@
 Inclusive top pair production at the particle level
-============================================================
+===================================================
 
 We present here plots and animations related to Section 4.3 of :cite:`ML4EFT_temp_id`.
 
