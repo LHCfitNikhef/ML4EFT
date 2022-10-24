@@ -10,9 +10,9 @@ In the case of top quark pair production in the dileptonic decay channel,
         p p \rightarrow t \bar{t}, t \bar{t} \rightarrow b \bar{b} \ell^{+} \ell^{-} \nu_{\ell} \bar{\nu}_{\ell} \, ,
 
 one has access to
-a large set of final state kinematical features.  
+a large set of final state kinematic features.  
 
-We display here the kinematical features used as inputs to the neural network, 
+We display here the kinematic features used as inputs to the neural network, 
 calculated both in the SM and at representative points in the SMEFT parameter space.
 Both linear and quadratic contributions from the SMEFT operators are included.
 

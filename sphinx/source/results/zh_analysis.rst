@@ -1,12 +1,21 @@
 Higgs production in association with a Z boson
 ==============================================
-We present here plots and animations related to Section 5.3 of :cite:`ML4EFT_temp_id`,
-in which we consider Higgs production in association with a Z boson in the
-:math:`p p \rightarrow Z h \rightarrow \ell^{+} \ell^{-} \bar{b} b` final state,
+
+We present here plots and animations related to Section 4.4 and 5.3 of :cite:`ML4EFT_temp_id`.
+
+We consider Higgs production in association with a Z boson in the 
+:math:`Z h \rightarrow \ell^{+} \ell^{-} \bar{b} b` final state,
 at the LHC 14 TeV.
 
 Models
 ------
+Trained models for :math:`p p \rightarrow Z h \rightarrow \ell^{+} \ell^{-} \bar{b} b`
+are presented in Table 1.
+The models are trained on either a single feature, :math:`p_{T}^{Z}` (calculated as
+the :math:`p_{T}` of the final-state leptons),
+or the full set of 7 kinematic features.  More details about the kinematic features
+used in the neural network training can be found in the :ref:`next<kinematics_zh>` section.
+
 
 .. list-table:: Trained models for Higgs production in association with a Z boson
    :widths: 25 25
@@ -24,7 +33,6 @@ Contents:
 -----------
 .. toctree::
    :maxdepth: 6
-   :hidden:
 
    zh_analysis1
    zh_analysis2
