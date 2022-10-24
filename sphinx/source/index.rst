@@ -24,16 +24,6 @@ global analyses of, for example, the Standard Model Effective Field Theory and P
     *Caption*
 
 .. toctree::
-   :maxdepth: 5
-   :caption: Overview
-   :hidden:
-
-   overview/features.rst
-   overview/quadratic_classifier.rst
-   overview/mlspecs.rst
-
-
-.. toctree::
    :maxdepth: 6
    :caption: Code
    :hidden:
@@ -74,8 +64,6 @@ Such measurements not only lead to more stringent constraints on the model param
 
 
 With this motivation, we have developed a machine learning framework which enables the integration of unbinned observables into global fits of particle physics data: **ML4EFT**.
-See the :ref:`Overview<overview>` section for more details of the ML4EFT framework, and the :ref:`Code<code>` section for the ML4EFT code documentation.
-
 
 ML4EFT appears in the following paper:
 
@@ -84,7 +72,7 @@ ML4EFT appears in the following paper:
 Here, we provide a proof-of-concept of the ML4EFT framework by constructing unbinned observables from pseudo-data of particle-level :math:`t\bar{t}` and :math:`hZ` production at the LHC 14 TeV,
 demonstrating the improved sensitivity that can be obtained relative to binned measurements. 
 Results from this paper are presented in the :ref:`Results<results>` section, including animations not present in the paper.
-
+See Ref :cite:`ML4EFT_temp_id` for more details of the ML4EFT framework, and the :ref:`Code<code>` section for the ML4EFT code documentation.
 
 
 

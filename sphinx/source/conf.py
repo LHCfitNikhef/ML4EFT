@@ -25,7 +25,7 @@ copyright = '2022, ML4EFT developer team'
 author = 'R. Gomez Ambrosio, J. ter Hoeve, M. Madigan, J. Rojo, V. Sanz'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
+release = ''
 
 # -- General configuration ---------------------------------------------------
 
