@@ -1,4 +1,0 @@
-Training Methodology
-====================
-
-Training methodology
