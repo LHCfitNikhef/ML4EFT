@@ -1,5 +1,5 @@
 Higgs production in association with a Z boson
-==============================================
+==================================================
 
 We present here plots and animations related to Section 4.4 and 5.3 of :cite:`ML4EFT_temp_id`.
 
@@ -8,7 +8,7 @@ We consider Higgs production in association with a Z boson in the
 at the LHC 14 TeV.
 
 Models
-------
+---------
 Trained models for :math:`p p \rightarrow Z h \rightarrow \ell^{+} \ell^{-} \bar{b} b`
 are presented in Table 1.
 The models are trained on either a single feature, :math:`p_{T}^{Z}` (calculated as

@@ -6,7 +6,7 @@ Unbinned multivariate observables for global SMEFT analyses from machine learnin
 
 The ML4EFT code is used in the following publication:
 
-- *Unbinned multivariate observables for global SMEFT analyses from machine learning*, Gomez Ambrosio, Raquel and ter Hoeve, Jaco, and Madigan, Maeve and Rojo, Juan and Sanz, Veronica, :cite:`ML4EFT_temp_id`.
+- *Unbinned multivariate observables for global SMEFT analyses from machine learning*, Raquel Gomez Ambrosio, Jaco ter Hoeve, Maeve Madigan, Juan Rojo and Veronica Sanz :cite:`ML4EFT_temp_id`
 
 We present the results of this paper here, including additional plots and animations not present in the paper, 
 as well as links to the trained neural networks and associated training reports.

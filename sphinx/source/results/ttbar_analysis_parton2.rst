@@ -6,7 +6,7 @@ network architecture and settings are presented in Section 3.3 of :cite:`ML4EFT_
 
 
 Overview
----------
+-----------
 First, we present an overview of the training of the neural network associated to the quadratic contribution of the 
 chromomagnetic operator :math:`C_{tG}`, trained on two features, :math:`m_{t \bar{t}}` and :math:`y_{t \bar{t}}`.
 
@@ -22,7 +22,7 @@ From left to right and top to bottom we display:
 
 
 Animation of the progression of the Truth/NN comparison with training
--------------------------------------------------------------
+----------------------------------------------------------------------
 The following animation shows the evolution of the median of the ratio between the ML model and the analytical calculation in the :math:`(m_{t \bar{t}}, y_{t \bar{t}})` feature space
 with the neural network training.
 
@@ -30,7 +30,7 @@ with the neural network training.
 
 
 Animation of the training of the decision boundary function
--------------------------------------------
+------------------------------------------------------------
 The following animation shows the evolution of the per-replica decision boundary function :math:`g(x,c)`, this time trained on :math:`m_{t \bar{t}}` only.  
 The uncertainty on :math:`g(x,c)` is obtained from the spread of replicas.
 We compare this to the exact calculation of :math:`g(x,c)`, shown in red.

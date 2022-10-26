@@ -1,5 +1,5 @@
 Tutorial
-========
+==========
 
 An example of how the ML4EFT is used:
 

@@ -1,5 +1,5 @@
 Inclusive top pair production at the parton level
-=================================================
+===================================================
 
 We present here the plots and animations related to Sections 4.2 and 5.1 of :cite:`ML4EFT_temp_id`.
 
@@ -18,7 +18,7 @@ as defined in :cite:`Brivio:2020onw` in the topU3l flavour scheme:
 
 
 Models and training reports
----------------------------
+-----------------------------
 
 Trained models of top-quark pair production with two features, the invariant mass :math:`m_{t\bar{t}}` and the rapidity :math:`y_{t\bar{t}}`,
 are available `here <https://www.dropbox.com/s/hbq29u6vqadfscf/tt_parton_mtt_y.tar.gz?dl=0>`_. See Table 1 for the
