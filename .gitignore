@@ -282,9 +282,6 @@ TSWLatexianTemp*
 # stoomboot output files
 *.sh.*
 
-#Directories
-sphinx/build/
-
 
 .idea/
 /code/notebooks/feynrules-current/
