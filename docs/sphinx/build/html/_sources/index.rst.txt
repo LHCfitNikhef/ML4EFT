@@ -30,14 +30,13 @@ global analyses of, for example, the Standard Model Effective Field Theory and P
 
    modules/installation.rst
    modules/tutorial.rst
-   _autosummary/ml4eft.rst
-
 
 .. autosummary::
    :toctree: _autosummary
    :template: custom-module-template.rst
    :recursive:
 
+   ml4eft
 
 .. toctree::
    :maxdepth: 4

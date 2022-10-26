@@ -1,0 +1,849 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>ml4eft.analyse.animate.Animate &#8212; ML4EFT  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ml4eft.core" href="ml4eft.core.html" />
+    <link rel="prev" title="ml4eft.analyse.animate" href="ml4eft.analyse.animate.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      
+      
+      <h1 class="site-logo" id="site-title">ML4EFT  documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Code
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../modules/tutorial.html">
+   Tutorial
+  </a>
+ </li>
+</ul>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="ml4eft.html">
+   ml4eft
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="ml4eft.analyse.html">
+     ml4eft.analyse
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="ml4eft.analyse.analyse.html">
+       ml4eft.analyse.analyse
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+      <label for="toctree-checkbox-3">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.analyse.analyse.Analyse.html">
+         ml4eft.analyse.analyse.Analyse
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 current active has-children">
+      <a class="reference internal" href="ml4eft.analyse.animate.html">
+       ml4eft.analyse.animate
+      </a>
+      <input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+      <label for="toctree-checkbox-4">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul class="current">
+       <li class="toctree-l4 current active">
+        <a class="current reference internal" href="#">
+         ml4eft.analyse.animate.Animate
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="ml4eft.core.html">
+     ml4eft.core
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="ml4eft.core.classifier.html">
+       ml4eft.core.classifier
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+      <label for="toctree-checkbox-6">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.core.classifier.Classifier.html">
+         ml4eft.core.classifier.Classifier
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.core.classifier.ConstraintActivation.html">
+         ml4eft.core.classifier.ConstraintActivation
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.core.classifier.CustomActivationFunction.html">
+         ml4eft.core.classifier.CustomActivationFunction
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.core.classifier.EventDataset.html">
+         ml4eft.core.classifier.EventDataset
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.core.classifier.Fitter.html">
+         ml4eft.core.classifier.Fitter
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.core.classifier.MLP.html">
+         ml4eft.core.classifier.MLP
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.core.classifier.PreProcessing.html">
+         ml4eft.core.classifier.PreProcessing
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="ml4eft.core.th_predictions.html">
+       ml4eft.core.th_predictions
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+      <label for="toctree-checkbox-7">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.core.th_predictions.TheoryPred.html">
+         ml4eft.core.th_predictions.TheoryPred
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="ml4eft.core.truth.html">
+       ml4eft.core.truth
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+      <label for="toctree-checkbox-8">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.core.truth.tt_prod.html">
+         ml4eft.core.truth.tt_prod
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="ml4eft.limits.html">
+     ml4eft.limits
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+    <label for="toctree-checkbox-9">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="ml4eft.limits.optimize_ns.html">
+       ml4eft.limits.optimize_ns
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+      <label for="toctree-checkbox-10">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.limits.optimize_ns.Optimize.html">
+         ml4eft.limits.optimize_ns.Optimize
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="ml4eft.plotting.html">
+     ml4eft.plotting
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+    <label for="toctree-checkbox-11">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="ml4eft.plotting.features.html">
+       ml4eft.plotting.features
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+      <label for="toctree-checkbox-12">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.plotting.features.plot_features.html">
+         ml4eft.plotting.features.plot_features
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="ml4eft.plotting.plot_contours.html">
+       ml4eft.plotting.plot_contours
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/>
+      <label for="toctree-checkbox-13">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.plotting.plot_contours.col_cycler.html">
+         ml4eft.plotting.plot_contours.col_cycler
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.plotting.plot_contours.combine_likelihood_binned.html">
+         ml4eft.plotting.plot_contours.combine_likelihood_binned
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.plotting.plot_contours.combine_qc.html">
+         ml4eft.plotting.plot_contours.combine_qc
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.plotting.plot_contours.combine_qc_reps.html">
+         ml4eft.plotting.plot_contours.combine_qc_reps
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.plotting.plot_contours.plot_contours.html">
+         ml4eft.plotting.plot_contours.plot_contours
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.plotting.plot_contours.plot_contours_binned.html">
+         ml4eft.plotting.plot_contours.plot_contours_binned
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="ml4eft.preproc.html">
+     ml4eft.preproc
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/>
+    <label for="toctree-checkbox-14">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="ml4eft.preproc.lhe_reader.html">
+       ml4eft.preproc.lhe_reader
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/>
+      <label for="toctree-checkbox-15">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.preproc.lhe_reader.get_deta.html">
+         ml4eft.preproc.lhe_reader.get_deta
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.preproc.lhe_reader.get_dphi.html">
+         ml4eft.preproc.lhe_reader.get_dphi
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="ml4eft.preproc.lhe_reader.Kinematics.html">
+         ml4eft.preproc.lhe_reader.Kinematics
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Results
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../results/overview.html">
+   Unbinned multivariate observables for global SMEFT analyses from machine learning
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/>
+  <label for="toctree-checkbox-16">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../results/ttbar_analysis_parton.html">
+     Inclusive top pair production at the parton level
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/>
+    <label for="toctree-checkbox-17">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_parton1.html">
+       Pseudo-data generation and benchmarking
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_parton2.html">
+       Neural network training
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_parton3.html">
+       Constraints on the SMEFT
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../results/ttbar_analysis.html">
+     Inclusive top pair production at the particle level
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/>
+    <label for="toctree-checkbox-18">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle1.html">
+       Kinematic features used as inputs to the neural network
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle2.html">
+       Results from the ML model vs binning in two features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle3.html">
+       Results from the ML model trained on two features vs all features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle4.html">
+       Results from the ML model vs binning in two features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle5.html">
+       Results from the ML model training on two features vs all features,
+       <span class="math notranslate nohighlight">
+        \(O(Λ^{-4})\)
+       </span>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../results/zh_analysis.html">
+     Higgs production in association with a Z boson
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/>
+    <label for="toctree-checkbox-19">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/zh_analysis1.html">
+       Kinematic features used as inputs to the neural network
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/zh_analysis2.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+       , pair-wise fit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/zh_analysis3.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+       , pair-wise fit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/zh_analysis4.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+       , fully marginalised
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../_sources/_autosummary/ml4eft.analyse.animate.Animate.rst.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.rst</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>ml4eft.analyse.animate.Animate</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section id="ml4eft-analyse-animate-animate">
+<h1>ml4eft.analyse.animate.Animate<a class="headerlink" href="#ml4eft-analyse-animate-animate" title="Permalink to this headline">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ml4eft.analyse.animate.Animate">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">ml4eft.analyse.animate.</span></span><span class="sig-name descname"><span class="pre">Animate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ml4eft/analyse/animate.html#Animate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ml4eft.analyse.animate.Animate" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Post-training animator that animates the evolution of models during training</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ml4eft.analyse.animate.Animate.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ml4eft/analyse/animate.html#Animate.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ml4eft.analyse.animate.Animate.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Animate constructor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Of the form {‘c1’: value, ‘c2’: value}</p></li>
+<li><p><strong>frames</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Number of frames (epochs) to animatie</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ml4eft.analyse.animate.Animate.__init__" title="ml4eft.analyse.animate.Animate.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(c, frames)</p></td>
+<td><p>Animate constructor</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ml4eft.analyse.animate.Animate.make_animation_1d" title="ml4eft.analyse.animate.Animate.make_animation_1d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_animation_1d</span></code></a>(analyser, df)</p></td>
+<td><p>Returns a 1-dimensional animation of the EFT ratio functions, comparing the analytical result and the ML model</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ml4eft.analyse.animate.Animate.make_animation_2d" title="ml4eft.analyse.animate.Animate.make_animation_2d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_animation_2d</span></code></a>(analyser, df, c_name, ...)</p></td>
+<td><p>Returns a 2-dimensional animation of the EFT ratio functions, comparing the analytical result and the ML model</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="ml4eft.analyse.animate.Animate.make_animation_1d">
+<span class="sig-name descname"><span class="pre">make_animation_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analyser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ml4eft/analyse/animate.html#Animate.make_animation_1d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ml4eft.analyse.animate.Animate.make_animation_1d" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns a 1-dimensional animation of the EFT ratio functions, comparing the analytical result and the ML model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>analyser</strong> (<a class="reference internal" href="ml4eft.analyse.analyse.Analyse.html#ml4eft.analyse.analyse.Analyse" title="ml4eft.analyse.analyse.Analyse"><code class="xref py py-class docutils literal notranslate"><span class="pre">ml4eft.analyse.analyse.Analyse</span></code></a>) – Analyser object</p></li>
+<li><p><strong>df</strong> (<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.1)"><em>pandas.DataFrame</em></a>) – phase space 1-d grid stored as a DataFrame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>anim</strong> – matplotlib.animation.FuncAnimation object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.FuncAnimation.html#matplotlib.animation.FuncAnimation" title="(in Matplotlib v3.6.0)">matplotlib.animation.FuncAnimation</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">anim</span> <span class="o">=</span> <span class="n">Animate</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;ctgre&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;cut&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span> <span class="n">frames</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">anim_tt</span> <span class="o">=</span> <span class="n">anim</span><span class="o">.</span><span class="n">make_animation_1d</span><span class="p">(</span><span class="n">analyser</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">anim_tt</span>
+</pre></div>
+</div>
+<img alt="../_images/anim_1d.gif" src="../_images/anim_1d.gif" />
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ml4eft.analyse.animate.Animate.make_animation_2d">
+<span class="sig-name descname"><span class="pre">make_animation_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analyser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ml4eft/analyse/animate.html#Animate.make_animation_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ml4eft.analyse.animate.Animate.make_animation_2d" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns a 2-dimensional animation of the EFT ratio functions, comparing the analytical result and the ML model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>analyser</strong> (<a class="reference internal" href="ml4eft.analyse.analyse.Analyse.html#ml4eft.analyse.analyse.Analyse" title="ml4eft.analyse.analyse.Analyse"><code class="xref py py-class docutils literal notranslate"><span class="pre">ml4eft.analyse.analyse.Analyse</span></code></a>) – Analyser object</p></li>
+<li><p><strong>df</strong> (<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.1)"><em>pandas.DataFrame</em></a>) – phase space grid stored as a DataFrame</p></li>
+<li><p><strong>c_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Name of EFT coefficient</p></li>
+<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Order of the EFT expansion, choose between ‘lin’ and ‘quad’</p></li>
+<li><p><strong>process</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Supported options are ‘tt’ or ‘ZH’</p></li>
+<li><p><strong>shape</strong> (<em>array_like</em>) – dimension of phase space grid passed as tuple</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>anim</strong> – matplotlib.animation.FuncAnimation object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.FuncAnimation.html#matplotlib.animation.FuncAnimation" title="(in Matplotlib v3.6.0)">matplotlib.animation.FuncAnimation</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">ml4eft.preproc.constants</span> <span class="k">as</span> <span class="nn">constants</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mt</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">mt</span>
+</pre></div>
+</div>
+<p>We create a grid in the <span class="math notranslate nohighlight">\((m_{tt}, Y)\)</span> phase-space</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="mi">14</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">mtt_min</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">mtt_min</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x_spacing</span><span class="p">,</span> <span class="n">y_spacing</span> <span class="o">=</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="mf">0.01</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mtt_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">mtt_min</span><span class="p">,</span> <span class="n">mtt_max</span><span class="p">,</span> <span class="n">x_spacing</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">y_spacing</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mtt_grid</span><span class="p">,</span> <span class="n">y_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">mtt_span</span><span class="p">,</span> <span class="n">y_span</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">y_grid</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">mtt_grid</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]</span>
+</pre></div>
+</div>
+<p>Convert the numpy grid to a DataFrame</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;m_tt&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Create an Animate object and start the animation</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">anim</span> <span class="o">=</span> <span class="n">Animate</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;ctgre&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;cut&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span> <span class="n">frames</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">anim_tt</span> <span class="o">=</span> <span class="n">anim</span><span class="o">.</span><span class="n">make_animation_2d</span><span class="p">(</span><span class="n">analyser</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="s1">&#39;ctgre_ctgre&#39;</span><span class="p">,</span> <span class="s1">&#39;quad&#39;</span><span class="p">,</span> <span class="s1">&#39;tt&#39;</span><span class="p">,</span> <span class="n">mtt_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">anim_tt</span>
+</pre></div>
+</div>
+<img alt="../_images/anim_2d.gif" src="../_images/anim_2d.gif" />
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="ml4eft.analyse.animate.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">ml4eft.analyse.animate</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="ml4eft.core.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">ml4eft.core</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By R. Gomez Ambrosio, J. ter Hoeve, M. Madigan, J. Rojo, V. Sanz<br/>
+  
+      &copy; Copyright 2022, ML4EFT developer team.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

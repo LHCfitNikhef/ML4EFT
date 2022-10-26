@@ -1,0 +1,1079 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ml4eft.limits.optimize_ns &#8212; ML4EFT  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../../../index.html">
+      
+      
+      
+      <h1 class="site-logo" id="site-title">ML4EFT  documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Code
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../modules/tutorial.html">
+   Tutorial
+  </a>
+ </li>
+</ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../../_autosummary/ml4eft.html">
+   ml4eft
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.html">
+     ml4eft.analyse
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.analyse.html">
+       ml4eft.analyse.analyse
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+      <label for="toctree-checkbox-3">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.analyse.Analyse.html">
+         ml4eft.analyse.analyse.Analyse
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.animate.html">
+       ml4eft.analyse.animate
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+      <label for="toctree-checkbox-4">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.animate.Animate.html">
+         ml4eft.analyse.animate.Animate
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.core.html">
+     ml4eft.core
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.html">
+       ml4eft.core.classifier
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+      <label for="toctree-checkbox-6">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.Classifier.html">
+         ml4eft.core.classifier.Classifier
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.ConstraintActivation.html">
+         ml4eft.core.classifier.ConstraintActivation
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.CustomActivationFunction.html">
+         ml4eft.core.classifier.CustomActivationFunction
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.EventDataset.html">
+         ml4eft.core.classifier.EventDataset
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.Fitter.html">
+         ml4eft.core.classifier.Fitter
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.MLP.html">
+         ml4eft.core.classifier.MLP
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.PreProcessing.html">
+         ml4eft.core.classifier.PreProcessing
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.core.th_predictions.html">
+       ml4eft.core.th_predictions
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+      <label for="toctree-checkbox-7">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.th_predictions.TheoryPred.html">
+         ml4eft.core.th_predictions.TheoryPred
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.core.truth.html">
+       ml4eft.core.truth
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+      <label for="toctree-checkbox-8">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.truth.tt_prod.html">
+         ml4eft.core.truth.tt_prod
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.limits.html">
+     ml4eft.limits
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+    <label for="toctree-checkbox-9">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.limits.optimize_ns.html">
+       ml4eft.limits.optimize_ns
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+      <label for="toctree-checkbox-10">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html">
+         ml4eft.limits.optimize_ns.Optimize
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.html">
+     ml4eft.plotting
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+    <label for="toctree-checkbox-11">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.features.html">
+       ml4eft.plotting.features
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+      <label for="toctree-checkbox-12">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.features.plot_features.html">
+         ml4eft.plotting.features.plot_features
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.plot_contours.html">
+       ml4eft.plotting.plot_contours
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/>
+      <label for="toctree-checkbox-13">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.plot_contours.col_cycler.html">
+         ml4eft.plotting.plot_contours.col_cycler
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.plot_contours.combine_likelihood_binned.html">
+         ml4eft.plotting.plot_contours.combine_likelihood_binned
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.plot_contours.combine_qc.html">
+         ml4eft.plotting.plot_contours.combine_qc
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.plot_contours.combine_qc_reps.html">
+         ml4eft.plotting.plot_contours.combine_qc_reps
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.plot_contours.plot_contours.html">
+         ml4eft.plotting.plot_contours.plot_contours
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.plot_contours.plot_contours_binned.html">
+         ml4eft.plotting.plot_contours.plot_contours_binned
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.html">
+     ml4eft.preproc
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/>
+    <label for="toctree-checkbox-14">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.lhe_reader.html">
+       ml4eft.preproc.lhe_reader
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/>
+      <label for="toctree-checkbox-15">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.lhe_reader.get_deta.html">
+         ml4eft.preproc.lhe_reader.get_deta
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.lhe_reader.get_dphi.html">
+         ml4eft.preproc.lhe_reader.get_dphi
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html">
+         ml4eft.preproc.lhe_reader.Kinematics
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Results
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../../results/overview.html">
+   Unbinned multivariate observables for global SMEFT analyses from machine learning
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/>
+  <label for="toctree-checkbox-16">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../results/ttbar_analysis_parton.html">
+     Inclusive top pair production at the parton level
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/>
+    <label for="toctree-checkbox-17">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_parton1.html">
+       Pseudo-data generation and benchmarking
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_parton2.html">
+       Neural network training
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_parton3.html">
+       Constraints on the SMEFT
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../results/ttbar_analysis.html">
+     Inclusive top pair production at the particle level
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/>
+    <label for="toctree-checkbox-18">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle1.html">
+       Kinematic features used as inputs to the neural network
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle2.html">
+       Results from the ML model vs binning in two features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle3.html">
+       Results from the ML model trained on two features vs all features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle4.html">
+       Results from the ML model vs binning in two features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle5.html">
+       Results from the ML model training on two features vs all features,
+       <span class="math notranslate nohighlight">
+        \(O(Λ^{-4})\)
+       </span>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../results/zh_analysis.html">
+     Higgs production in association with a Z boson
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/>
+    <label for="toctree-checkbox-19">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/zh_analysis1.html">
+       Kinematic features used as inputs to the neural network
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/zh_analysis2.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+       , pair-wise fit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/zh_analysis3.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+       , pair-wise fit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/zh_analysis4.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+       , fully marginalised
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1></h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <h1>Source code for ml4eft.limits.optimize_ns</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Optimizer module to compute confidence level intervals in the SMEFT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pymultinest</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">import</span> <span class="nn">ml4eft.analyse.analyse</span> <span class="k">as</span> <span class="nn">analyse</span>
+<span class="kn">import</span> <span class="nn">ml4eft.core.th_predictions</span> <span class="k">as</span> <span class="nn">theory_pred</span>
+<span class="kn">from</span> <span class="nn">ml4eft.core.truth</span> <span class="kn">import</span> <span class="n">vh_prod</span>
+<span class="kn">from</span> <span class="nn">ml4eft.preproc</span> <span class="kn">import</span> <span class="n">constants</span>
+
+<span class="kn">from</span> <span class="nn">ml4eft.core.th_predictions</span> <span class="kn">import</span> <span class="n">TheoryPred</span>
+
+<span class="n">mz</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">mz</span>
+<span class="n">mh</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">mh</span>
+
+<span class="c1"># fix randomness</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Optimize"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize">[docs]</a><span class="k">class</span> <span class="nc">Optimize</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optimizer to obtain confidence level intervals in the SMEFT using either binned or unbinned (ML level) observables</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Optimize.__init__"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">coeff</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Optimize constructor</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config: dict</span>
+<span class="sd">            loaded json run card</span>
+<span class="sd">        coeff: array_like, optional</span>
+<span class="sd">            Subset of ``(N,) ndarray`` EFT parameter names to include in the fit. Takes all EFT parameters by default.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span> <span class="o">=</span> <span class="n">coeff</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="s2">&quot;fit_id&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;fit_id&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;order&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;order&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;prior&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;prior&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;process&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;process&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;mode&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;No mode (mode) selected, please specify one in the input card. Aborting.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s2">&quot;nlive&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">live_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;nlive&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;Number of live points (nlive) not set in the input card. Using default: 500&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">live_points</span> <span class="o">=</span> <span class="mi">500</span>
+
+        <span class="k">if</span> <span class="s2">&quot;lumi&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lumi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;lumi&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;Luminosity (lumi) not set in the input card. Using default: 5e3 pb^-1&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;binned&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;bins&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;bins&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;No binning (bins) specified. Please set in the in the input card. Aborting.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;nn&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;path_to_models&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">path_to_models</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;path_to_models&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_to_models</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;No path tot model (path_to_models) specified. Please set in the in the input card. Aborting.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">bins</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kinematic</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;truth&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bins</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kinematic</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">th_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;th_features&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;path_to_theory_pred&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path_to_theory_pred</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;path_to_theory_pred&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;No path to theory predictions (path_to_theory_pred) specified. Please set in the in the input card. Aborting.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span> <span class="o">=</span> <span class="n">theory_pred</span><span class="o">.</span><span class="n">TheoryPred</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_to_theory_pred</span><span class="p">,</span>
+                                              <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">glob</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1">#self.coeff = self.th_pred.th_dict[&#39;lin&#39;].keys()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">get_c_names_unique</span><span class="p">()</span> <span class="c1"># coefficients to include in the fit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">glob</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">glob</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span> <span class="o">+=</span> <span class="s1">&#39;_&#39;</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span> <span class="o">+=</span> <span class="n">c</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1">#self.output_path = os.path.join(self.config[&quot;results_path&quot;], &#39;{}_{}&#39;.format(self.mode, self.fit_id), self.suffix[1:])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;results_path&quot;</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_id</span><span class="p">))</span>
+
+        <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># store input card as reference</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;input_card.json&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_data</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">json_data</span><span class="p">)</span>
+
+        <span class="c1"># nr of dof</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeff</span><span class="p">)</span>
+
+        <span class="c1"># load dataset (pseudo data)</span>
+        <span class="n">sm_data_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;observed_data_path&#39;</span><span class="p">]</span>
+        <span class="n">sm_data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">load_events</span><span class="p">(</span><span class="n">sm_data_path</span><span class="p">)</span>
+
+        <span class="c1"># construct observed dataset</span>
+        <span class="n">xsec_sm_tot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;sm&#39;</span><span class="p">])</span>  <span class="c1"># sum over bins # accurate without bins?</span>
+        <span class="n">nu_tot_sm</span> <span class="o">=</span> <span class="n">xsec_sm_tot</span> <span class="o">*</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;lumi&#39;</span><span class="p">]</span>
+        <span class="n">n_tot_sm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">nu_tot_sm</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">observed_data</span> <span class="o">=</span> <span class="n">sm_data</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n_tot_sm</span><span class="p">),</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;nn&quot;</span><span class="p">:</span>
+
+
+
+            <span class="c1"># evaluated nn models on pseudo dataset</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_data</span><span class="p">)</span>
+            <span class="n">models_evaluated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span>
+
+            <span class="c1">#import pdb; pdb.set_trace()</span>
+            <span class="c1"># n_dat = len(self.nn_analyser.models_evaluated_df[&#39;models&#39;][&#39;lin&#39;, &#39;cQj38&#39;])</span>
+            <span class="c1"># fraction_cQj38 = np.sum(self.nn_analyser.models_evaluated_df[&#39;models&#39;][&#39;lin&#39;, &#39;cQj38&#39;] &lt; 0) / n_dat</span>
+
+            <span class="c1"># taken median over models</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">models_evaluated</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;truth&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">compute_diff_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;binned&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">kin</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observed_data</span><span class="p">[</span><span class="n">kin</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_i</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">[</span><span class="n">kin</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">kin_1</span><span class="p">,</span> <span class="n">kin_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observed_data</span><span class="p">[</span><span class="n">kin_1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observed_data</span><span class="p">[</span><span class="n">kin_2</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_i</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">[</span><span class="n">kin_1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">[</span><span class="n">kin_2</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="Optimize.my_prior"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.my_prior">[docs]</a>    <span class="k">def</span> <span class="nf">my_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct prior volume</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cube: array_like,</span>
+<span class="sd">            ``(N, ) ndarray`` unit hypercube of dim ``N``</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cube: array_like</span>
+<span class="sd">            prior volume</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeff</span><span class="p">):</span>
+            <span class="n">prior_min</span><span class="p">,</span> <span class="n">prior_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_range</span><span class="p">[</span><span class="n">c_name</span><span class="p">]</span>
+            <span class="n">cube</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cube</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">prior_max</span> <span class="o">-</span> <span class="n">prior_min</span><span class="p">)</span> <span class="o">+</span> <span class="n">prior_min</span>
+
+        <span class="k">return</span> <span class="n">cube</span></div>
+
+<div class="viewcode-block" id="Optimize.cube_to_dict"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.cube_to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">cube_to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts the prior volume ``(N, ) ndarray`` to a dict with the EFT parameter names as keys</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cube: array_like</span>
+<span class="sd">            prior volume</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeff</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cube</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Optimize.log_like_nn"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.log_like_nn">[docs]</a>    <span class="k">def</span> <span class="nf">log_like_nn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Implementaiton of the unbinned extended log-likelihood using the ML models</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cube: array_like</span>
+<span class="sd">            prior volume</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Extended-log likelihood using the ML models</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cube_to_dict</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span>
+
+        <span class="c1"># compute inclusive xsec at cube</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">sigma</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;sm&#39;</span><span class="p">]</span>
+
+        <span class="n">lin_models</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">c_name</span><span class="p">,</span> <span class="n">c_val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># check if c_name has linear sensitivity</span>
+            <span class="k">if</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="n">lin_models</span><span class="p">:</span>
+                <span class="n">sigma</span> <span class="o">+=</span> <span class="n">c_val</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">][</span><span class="n">c_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;quad&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">:</span>
+
+            <span class="n">quad_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;quad&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+                <span class="n">c_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="n">quad_pred</span><span class="p">:</span>
+                    <span class="n">sigma</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">*</span> <span class="n">quad_pred</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
+
+        <span class="n">nu</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lumi</span>
+
+        <span class="c1"># median likelihood ratio</span>
+        <span class="n">ratio_med</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">likelihood_ratio_nn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">)</span>
+        <span class="n">log_r_med</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ratio_med</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="o">-</span><span class="n">nu</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">log_r_med</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Optimize.log_like_truth"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.log_like_truth">[docs]</a>    <span class="k">def</span> <span class="nf">log_like_truth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Implementaiton of the unbinned extended log-likelihood using the analytical differential cross-sections at</span>
+<span class="sd">        the parton level</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cube: array_like</span>
+<span class="sd">            prior volume</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Extended-log likelihood using the analytical predictions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cube_to_dict</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span>
+
+        <span class="c1"># compute inclusive xsec at cube</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">sigma</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;sm&#39;</span><span class="p">]</span>
+
+        <span class="n">dsigma_dx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">dsigma_dx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span><span class="p">[</span><span class="s1">&#39;sm&#39;</span><span class="p">]</span>
+
+        <span class="n">lin_models</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">c_name</span><span class="p">,</span> <span class="n">c_val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="c1"># check if c_name has linear sensitivity</span>
+            <span class="k">if</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="n">lin_models</span><span class="p">:</span>
+                <span class="n">sigma</span> <span class="o">+=</span> <span class="n">c_val</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">][</span><span class="n">c_name</span><span class="p">]</span>
+                <span class="n">dsigma_dx</span> <span class="o">+=</span> <span class="n">c_val</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">][</span><span class="n">c_name</span><span class="p">]</span>
+
+
+        <span class="k">if</span> <span class="s1">&#39;quad&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">:</span>
+
+            <span class="n">quad_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;quad&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+                <span class="n">c_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="n">quad_pred</span><span class="p">:</span>
+                    <span class="n">sigma</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">*</span> <span class="n">quad_pred</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
+                    <span class="n">dsigma_dx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span><span class="p">[</span><span class="s1">&#39;quad&#39;</span><span class="p">][</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
+
+        <span class="n">nu</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lumi</span>
+        <span class="n">log_like</span> <span class="o">=</span> <span class="o">-</span><span class="n">nu</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dsigma_dx</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span><span class="p">[</span><span class="s1">&#39;sm&#39;</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">log_like</span></div>
+
+<div class="viewcode-block" id="Optimize.log_like_binned"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.log_like_binned">[docs]</a>    <span class="k">def</span> <span class="nf">log_like_binned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Implementaiton of the binned Poissonian log-likelihood</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cube: array_like</span>
+<span class="sd">            prior volume</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Binned Poissonian log-likelihood</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cube_to_dict</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span>
+
+        <span class="c1"># compute inclusive xsec at cube</span>
+
+        <span class="n">sigma</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">sigma</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;sm&#39;</span><span class="p">]</span>
+
+        <span class="n">lin_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">c_name</span><span class="p">,</span> <span class="n">c_val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="n">lin_pred</span><span class="p">:</span>
+                <span class="n">sigma</span> <span class="o">+=</span> <span class="n">c_val</span> <span class="o">*</span> <span class="n">lin_pred</span><span class="p">[</span><span class="n">c_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;quad&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">:</span>
+
+            <span class="n">quad_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;quad&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+                <span class="n">c_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="n">quad_pred</span><span class="p">:</span>
+                    <span class="n">sigma</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">*</span> <span class="n">quad_pred</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
+
+        <span class="n">nu_i</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lumi</span>
+        <span class="n">log_like_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_i</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">nu_i</span><span class="p">)</span> <span class="o">-</span> <span class="n">nu_i</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">log_like_i</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Optimize.run_sampling"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.run_sampling">[docs]</a>    <span class="k">def</span> <span class="nf">run_sampling</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Runs the minimisation with Nested Sampling&quot;&quot;&quot;</span>
+
+        <span class="c1"># Prefix for results</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="s2">&quot;1k-&quot;</span><span class="p">)</span>
+
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;nn&quot;</span><span class="p">:</span>
+            <span class="n">log_likelihood</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_like_nn</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;truth&quot;</span><span class="p">:</span>
+            <span class="n">log_likelihood</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_like_truth</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;binned&quot;</span><span class="p">:</span>
+            <span class="n">log_likelihood</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_like_binned</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">pymultinest</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">LogLikelihood</span><span class="o">=</span><span class="n">log_likelihood</span><span class="p">,</span>
+                                   <span class="n">Prior</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">my_prior</span><span class="p">,</span>
+                                   <span class="n">n_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_params</span><span class="p">,</span>
+                                   <span class="n">outputfiles_basename</span><span class="o">=</span><span class="n">prefix</span><span class="p">,</span>
+                                   <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                   <span class="n">n_live_points</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">live_points</span><span class="p">,</span>
+                                   <span class="n">const_efficiency_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                   <span class="n">importance_nested_sampling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                   <span class="n">sampling_efficiency</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+                                   <span class="n">evidence_tolerance</span><span class="o">=</span><span class="mf">0.5</span>
+                                   <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;NS done!&quot;</span><span class="p">)</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time = &quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span>
+
+        <span class="c1"># export the posterior samples to json</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="c1"># remove ns raw output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Optimize.clean"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.clean">[docs]</a>    <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Removes raw NS output if no raw output is needed&quot;&quot;&quot;</span>
+
+        <span class="n">filelist</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;1k-&quot;</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">filelist</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Optimize.save"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save NS replicas to json inside a dictionary of the form {&#39;coeff&#39;: [replicas values]}</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : dict</span>
+<span class="sd">            result dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">vals</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">samples</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)):</span>
+            <span class="n">vals</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="c1"># with open(os.path.join(self.output_path, &#39;posterior&#39; + self.suffix + &#39;.json&#39;), &quot;w&quot;) as f:</span>
+        <span class="c1">#     json.dump(vals, f)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;posterior.json&#39;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div></div>
+
+</pre></div>
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By R. Gomez Ambrosio, J. ter Hoeve, M. Madigan, J. Rojo, V. Sanz<br/>
+  
+      &copy; Copyright 2022, ML4EFT developer team.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

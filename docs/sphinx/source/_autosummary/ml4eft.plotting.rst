@@ -1,0 +1,34 @@
+ml4eft.plotting
+===============
+
+.. automodule:: ml4eft.plotting
+  
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   ml4eft.plotting.features
+   ml4eft.plotting.plot_contours
+   ml4eft.plotting.plot_contours_ns
+
