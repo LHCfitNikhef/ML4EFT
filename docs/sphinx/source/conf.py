@@ -13,10 +13,8 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../code/src/'))
+sys.path.insert(0, os.path.abspath('../../../code/src/'))
 # import pathlib
-
-# source_dir = pathlib.Path('../../EELS_KK/pyfiles').parent
 
 # -- Project information -----------------------------------------------------
 
