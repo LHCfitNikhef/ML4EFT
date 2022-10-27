@@ -1,4 +1,4 @@
-ml4eft.core.classifier.MLP
+﻿ml4eft.core.classifier.MLP
 ==========================
 
 .. currentmodule:: ml4eft.core.classifier
@@ -29,6 +29,10 @@ ml4eft.core.classifier.MLP
       ~MLP.extra_repr
       ~MLP.float
       ~MLP.forward
+      ~MLP.get_buffer
+      ~MLP.get_extra_state
+      ~MLP.get_parameter
+      ~MLP.get_submodule
       ~MLP.half
       ~MLP.load_state_dict
       ~MLP.modules
@@ -41,13 +45,18 @@ ml4eft.core.classifier.MLP
       ~MLP.register_buffer
       ~MLP.register_forward_hook
       ~MLP.register_forward_pre_hook
+      ~MLP.register_full_backward_hook
+      ~MLP.register_module
       ~MLP.register_parameter
       ~MLP.requires_grad_
+      ~MLP.set_extra_state
       ~MLP.share_memory
       ~MLP.state_dict
       ~MLP.to
+      ~MLP.to_empty
       ~MLP.train
       ~MLP.type
+      ~MLP.xpu
       ~MLP.zero_grad
    
    
