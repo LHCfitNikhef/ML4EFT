@@ -346,10 +346,6 @@ class Fitter:
             self.run_options['output_size']]
         self.event_data_path = self.run_options['event_data']  # path to training data
 
-        # perhaps use a dict instead
-        # c_train values
-
-
         self.quadratic = True if '_' in self.c_name else False
         if self.quadratic:
             c1, c2 = self.c_name.split('_')
@@ -406,8 +402,6 @@ class Fitter:
             handlers=handlers
         )
 
-        # logging.basicConfig(filename=log_path + '/training_{}.log'.format(current_time), level=logging.INFO,
-        #                     format='%(asctime)s:%(levelname)s:%(message)s')
         logging.info("All directories created, ready to load the data")
 
         # load the training and validation data
