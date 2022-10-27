@@ -8,7 +8,7 @@
 ML4EFT
 ==================================
 
-ML4EFT is a general open-source framework for the integration of unbinned observables into global fits of particle physics data.
+ML4EFT is a general open-source framework for the integration of unbinned multivariate observables into global fits of particle physics data.
 It makes use of machine learning regression and classification techniques to parameterise high-dimensional likelihood ratios,
 and can be seamlessly integrated into
 global analyses of, for example, the Standard Model Effective Field Theory and Parton Distribution Functions.
@@ -62,9 +62,9 @@ Optimizing theoretical interpretations of particle physics data demands identify
 Such measurements not only lead to more stringent constraints on the model parameters, but also provide quantitative upper bounds indicating the maximum amount of physical information that can be extracted from a given process.
 
 
-With this motivation, we have developed a machine learning framework which enables the integration of unbinned observables into global fits of particle physics data: **ML4EFT**.
+With this motivation, we have developed a machine learning framework which enables the integration of unbinned multivariate observables into global fits of particle physics data: **ML4EFT**.
 
-ML4EFT appears in the following paper:
+ML4EFT is described in the following paper:
 
 - *Unbinned multivariate observables for global SMEFT analyses from machine learning*, Raquel Gomez Ambrosio, Jaco ter Hoeve, Maeve Madigan, Juan Rojo and Veronica Sanz :cite:`ML4EFT_temp_id`
  
