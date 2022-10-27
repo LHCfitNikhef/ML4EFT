@@ -34,6 +34,7 @@
       ~CustomActivationFunction.get_parameter
       ~CustomActivationFunction.get_submodule
       ~CustomActivationFunction.half
+      ~CustomActivationFunction.ipu
       ~CustomActivationFunction.load_state_dict
       ~CustomActivationFunction.modules
       ~CustomActivationFunction.named_buffers
@@ -46,6 +47,7 @@
       ~CustomActivationFunction.register_forward_hook
       ~CustomActivationFunction.register_forward_pre_hook
       ~CustomActivationFunction.register_full_backward_hook
+      ~CustomActivationFunction.register_load_state_dict_post_hook
       ~CustomActivationFunction.register_module
       ~CustomActivationFunction.register_parameter
       ~CustomActivationFunction.requires_grad_

@@ -34,6 +34,7 @@
       ~MLP.get_parameter
       ~MLP.get_submodule
       ~MLP.half
+      ~MLP.ipu
       ~MLP.load_state_dict
       ~MLP.modules
       ~MLP.named_buffers
@@ -46,6 +47,7 @@
       ~MLP.register_forward_hook
       ~MLP.register_forward_pre_hook
       ~MLP.register_full_backward_hook
+      ~MLP.register_load_state_dict_post_hook
       ~MLP.register_module
       ~MLP.register_parameter
       ~MLP.requires_grad_

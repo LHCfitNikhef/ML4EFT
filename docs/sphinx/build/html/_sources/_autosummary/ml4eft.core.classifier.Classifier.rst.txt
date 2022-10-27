@@ -34,6 +34,7 @@
       ~Classifier.get_parameter
       ~Classifier.get_submodule
       ~Classifier.half
+      ~Classifier.ipu
       ~Classifier.load_state_dict
       ~Classifier.modules
       ~Classifier.named_buffers
@@ -46,6 +47,7 @@
       ~Classifier.register_forward_hook
       ~Classifier.register_forward_pre_hook
       ~Classifier.register_full_backward_hook
+      ~Classifier.register_load_state_dict_post_hook
       ~Classifier.register_module
       ~Classifier.register_parameter
       ~Classifier.requires_grad_

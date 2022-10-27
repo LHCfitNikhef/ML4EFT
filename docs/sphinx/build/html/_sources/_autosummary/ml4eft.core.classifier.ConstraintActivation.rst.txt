@@ -34,6 +34,7 @@
       ~ConstraintActivation.get_parameter
       ~ConstraintActivation.get_submodule
       ~ConstraintActivation.half
+      ~ConstraintActivation.ipu
       ~ConstraintActivation.load_state_dict
       ~ConstraintActivation.modules
       ~ConstraintActivation.named_buffers
@@ -46,6 +47,7 @@
       ~ConstraintActivation.register_forward_hook
       ~ConstraintActivation.register_forward_pre_hook
       ~ConstraintActivation.register_full_backward_hook
+      ~ConstraintActivation.register_load_state_dict_post_hook
       ~ConstraintActivation.register_module
       ~ConstraintActivation.register_parameter
       ~ConstraintActivation.requires_grad_

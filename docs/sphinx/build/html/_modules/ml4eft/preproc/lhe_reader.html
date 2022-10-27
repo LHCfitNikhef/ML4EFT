@@ -1,0 +1,864 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ml4eft.preproc.lhe_reader &#8212; ML4EFT  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../../../index.html">
+      
+      
+      
+      <h1 class="site-logo" id="site-title">ML4EFT  documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Code
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../modules/tutorial.html">
+   Tutorial
+  </a>
+ </li>
+</ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../../_autosummary/ml4eft.html">
+   ml4eft
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.html">
+     ml4eft.analyse
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.analyse.html">
+       ml4eft.analyse.analyse
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+      <label for="toctree-checkbox-3">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.analyse.Analyse.html">
+         ml4eft.analyse.analyse.Analyse
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.animate.html">
+       ml4eft.analyse.animate
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+      <label for="toctree-checkbox-4">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.analyse.animate.Animate.html">
+         ml4eft.analyse.animate.Animate
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.core.html">
+     ml4eft.core
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.html">
+       ml4eft.core.classifier
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+      <label for="toctree-checkbox-6">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.Classifier.html">
+         ml4eft.core.classifier.Classifier
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.ConstraintActivation.html">
+         ml4eft.core.classifier.ConstraintActivation
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.CustomActivationFunction.html">
+         ml4eft.core.classifier.CustomActivationFunction
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.EventDataset.html">
+         ml4eft.core.classifier.EventDataset
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.Fitter.html">
+         ml4eft.core.classifier.Fitter
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.MLP.html">
+         ml4eft.core.classifier.MLP
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.classifier.PreProcessing.html">
+         ml4eft.core.classifier.PreProcessing
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.core.th_predictions.html">
+       ml4eft.core.th_predictions
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+      <label for="toctree-checkbox-7">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.th_predictions.TheoryPred.html">
+         ml4eft.core.th_predictions.TheoryPred
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.core.truth.html">
+       ml4eft.core.truth
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+      <label for="toctree-checkbox-8">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.core.truth.tt_prod.html">
+         ml4eft.core.truth.tt_prod
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.limits.html">
+     ml4eft.limits
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+    <label for="toctree-checkbox-9">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.limits.optimize_ns.html">
+       ml4eft.limits.optimize_ns
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+      <label for="toctree-checkbox-10">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html">
+         ml4eft.limits.optimize_ns.Optimize
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.html">
+     ml4eft.plotting
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+    <label for="toctree-checkbox-11">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.features.html">
+       ml4eft.plotting.features
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+      <label for="toctree-checkbox-12">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.plotting.features.plot_features.html">
+         ml4eft.plotting.features.plot_features
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.html">
+     ml4eft.preproc
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/>
+    <label for="toctree-checkbox-13">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.lhe_reader.html">
+       ml4eft.preproc.lhe_reader
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/>
+      <label for="toctree-checkbox-14">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.lhe_reader.get_deta.html">
+         ml4eft.preproc.lhe_reader.get_deta
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.lhe_reader.get_dphi.html">
+         ml4eft.preproc.lhe_reader.get_dphi
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html">
+         ml4eft.preproc.lhe_reader.Kinematics
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Results
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../../results/overview.html">
+   Unbinned multivariate observables for global SMEFT analyses from machine learning
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/>
+  <label for="toctree-checkbox-15">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../results/ttbar_analysis_parton.html">
+     Inclusive top pair production at the parton level
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/>
+    <label for="toctree-checkbox-16">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_parton1.html">
+       Pseudo-data generation and benchmarking
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_parton2.html">
+       Neural network training
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_parton3.html">
+       Constraints on the SMEFT
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../results/ttbar_analysis.html">
+     Inclusive top pair production at the particle level
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/>
+    <label for="toctree-checkbox-17">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle1.html">
+       Kinematic features used as inputs to the neural network
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle2.html">
+       Results from the ML model vs binning in two features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle3.html">
+       Results from the ML model trained on two features vs all features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle4.html">
+       Results from the ML model vs binning in two features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/ttbar_analysis_particle5.html">
+       Results from the ML model training on two features vs all features,
+       <span class="math notranslate nohighlight">
+        \(O(Λ^{-4})\)
+       </span>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../../results/zh_analysis.html">
+     Higgs production in association with a Z boson
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/>
+    <label for="toctree-checkbox-18">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/zh_analysis1.html">
+       Kinematic features used as inputs to the neural network
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/zh_analysis2.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+       , pair-wise fit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/zh_analysis3.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+       , pair-wise fit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../../results/zh_analysis4.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+       , fully marginalised
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Bibliography
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../zrefs.html">
+   Bibliography
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1></h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <h1>Source code for ml4eft.preproc.lhe_reader</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module to compute kinematic variables from a LHE file</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pylhe</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="Kinematics"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics">[docs]</a><span class="k">class</span> <span class="nc">Kinematics</span><span class="p">(</span><span class="n">pylhe</span><span class="o">.</span><span class="n">LHEParticle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    LHE kinematics class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="Kinematics.__init__"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads and combines particles as read from a LHE file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        particle: :class:`pylhe.LHEParticle`</span>
+<span class="sd">            LHE particle object</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        We consider :math:`pp\\rightarrow ZH \\rightarrow \ell^+\ell^-b\\bar{b}\;` as a simple example</span>
+
+<span class="sd">        &gt;&gt;&gt; import pylhe</span>
+<span class="sd">        &gt;&gt;&gt; lhe_init = pylhe.readLHEInit(path_to_lhe)</span>
+
+<span class="sd">        Loop over the events in the LHE file and append kinematics</span>
+
+<span class="sd">        &gt;&gt;&gt; events = []</span>
+<span class="sd">        &gt;&gt;&gt; for e in pylhe.readLHE(path_to_lhe):</span>
+<span class="sd">        ...     incoming_part = []</span>
+<span class="sd">        ...     # create particle instances</span>
+<span class="sd">        ...     for part in e.particles:</span>
+<span class="sd">        ...         if part.id in [11, 13]: # e^- or \mu^-</span>
+<span class="sd">        ...            l1 = lhe.Kinematics(part)</span>
+<span class="sd">        ...         elif part.id in [-11, -13]: # e^+ or \mu^+</span>
+<span class="sd">        ...            l2 = lhe.Kinematics(part)</span>
+<span class="sd">        ...         elif part.id == 5: # b</span>
+<span class="sd">        ...            b = lhe.Kinematics(part)</span>
+<span class="sd">        ...         elif part.id == -5: #bbar</span>
+<span class="sd">        ...            bbar = lhe.Kinematics(part)</span>
+<span class="sd">        ...</span>
+<span class="sd">        ...     # Particle systems can be created by adding the separate particle instances</span>
+<span class="sd">        ...     ll = l1 + l2 # dilepton system</span>
+<span class="sd">        ...     bb = b + bbar # b bbar sytem</span>
+<span class="sd">        ...     events.append([l1.get_pt(), l2.get_pt(), ll.get_invariant_mass()])</span>
+
+<span class="sd">        ``events`` now contains the requested kinematics for all events in the LHE file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">pylhe</span><span class="o">.</span><span class="n">LHEParticle</span><span class="p">):</span>
+            <span class="n">particle</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;event&#39;</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">particle</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">particle</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the system of two :class:`pylhe.LHEParticle` objects</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other: :class:`ml4eft.preproc.compute_kinematics.Kinematics`</span>
+<span class="sd">            Kinematics object to combine</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`ml4eft.preproc.compute_kinematic.Kinematics`</span>
+<span class="sd">            Kinematics object of the combined system</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">e</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="s1">&#39;px&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">px</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">px</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="s1">&#39;py&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">py</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">py</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="s1">&#39;pz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pz</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">pz</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_system</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Kinematics.add_system"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.add_system">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">add_system</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a class instance of :class:`pylhe.LHEParticle`</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dict: dict</span>
+<span class="sd">            Combined particle dictionary</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`ml4eft.preproc.lhe_reader.Kinematics`</span>
+<span class="sd">            Kinematics object of the combined system</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Kinematics.get_inv_mass"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_inv_mass">[docs]</a>    <span class="k">def</span> <span class="nf">get_inv_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the invariant mass in GeV</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Invariant mass in GeV</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span> <span class="k">if</span> <span class="n">mu</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">mu</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">mu</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">,</span> <span class="s1">&#39;py&#39;</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="Kinematics.get_pt"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_pt">[docs]</a>    <span class="k">def</span> <span class="nf">get_pt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the transverse momentum in GeV</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Transverse momentum in GeV</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;py&#39;</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Kinematics.get_p"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_p">[docs]</a>    <span class="k">def</span> <span class="nf">get_p</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the magnitude of the 3-momentum</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Magnitude of the 3-momentum</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;py&#39;</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Kinematics.get_phi"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_phi">[docs]</a>    <span class="k">def</span> <span class="nf">get_phi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the azimuthal angle in radians with respect to the x-axis</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        phi: float</span>
+<span class="sd">            Azimuthal angle with respect to the y-axis in the transverse plane</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p_x</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">)</span>
+        <span class="n">p_y</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;py&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">p_x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">p_y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">p_x</span> <span class="o">/</span> <span class="n">p_y</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">p_y</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">p_x</span> <span class="o">/</span> <span class="n">p_y</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">p_x</span> <span class="o">/</span> <span class="n">p_y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">phi</span></div>
+
+<div class="viewcode-block" id="Kinematics.get_theta"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_theta">[docs]</a>    <span class="k">def</span> <span class="nf">get_theta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the scattering angle in radians with respect to the beam-axis</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Scattering angle with respect to the beam-axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cos_theta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_p</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">cos_theta</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Kinematics.get_pseudorapidity"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_pseudorapidity">[docs]</a>    <span class="k">def</span> <span class="nf">get_pseudorapidity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the pseudorapidity :math:`\eta`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        eta: float</span>
+<span class="sd">            Pseudorapidity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_theta</span><span class="p">()</span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">theta</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">eta</span></div>
+
+<div class="viewcode-block" id="Kinematics.get_rapidity"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_rapidity">[docs]</a>    <span class="k">def</span> <span class="nf">get_rapidity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the rapidity :math:`Y`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        y: float</span>
+<span class="sd">            Rapidity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">q0</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">)</span>   <span class="c1"># energy of the top quark pair in the pp COM frame</span>
+        <span class="n">q3</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="n">q0</span> <span class="o">+</span> <span class="n">q3</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">q0</span> <span class="o">-</span> <span class="n">q3</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">y</span></div></div>
+
+
+<div class="viewcode-block" id="get_deta"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.get_deta.html#ml4eft.preproc.lhe_reader.get_deta">[docs]</a><span class="k">def</span> <span class="nf">get_deta</span><span class="p">(</span><span class="n">eta1</span><span class="p">,</span> <span class="n">eta2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the absolute difference in pseudorapidity</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    eta1: float</span>
+<span class="sd">        Pseudorapidity of particle 1</span>
+<span class="sd">    eta2: float</span>
+<span class="sd">        Pseudorapidity of particle 2</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Absolute difference in pseudorapidity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eta1</span> <span class="o">-</span> <span class="n">eta2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_dphi"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.get_dphi.html#ml4eft.preproc.lhe_reader.get_dphi">[docs]</a><span class="k">def</span> <span class="nf">get_dphi</span><span class="p">(</span><span class="n">phi1</span><span class="p">,</span> <span class="n">phi2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the absolute difference in azimuthal angle</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phi1: float</span>
+<span class="sd">        Azimuthal angle of particle 1</span>
+<span class="sd">    phi2: float</span>
+<span class="sd">        Azimuthal angle of particle 2</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Absolute difference in azimuthal angle (shortest)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dphi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">phi1</span> <span class="o">-</span> <span class="n">phi2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dphi</span> <span class="k">if</span> <span class="n">dphi</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="k">else</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">dphi</span></div>
+
+
+</pre></div>
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By R. Gomez Ambrosio, J. ter Hoeve, M. Madigan, J. Rojo, V. Sanz<br/>
+  
+      &copy; Copyright 2022, ML4EFT developer team.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>
