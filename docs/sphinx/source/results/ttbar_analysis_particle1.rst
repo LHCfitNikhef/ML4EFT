@@ -14,11 +14,12 @@ a large set of final state kinematic features.
 
 We display here the kinematic features used as inputs to the neural network, 
 calculated both in the SM and at representative points in the SMEFT parameter space.
-Both linear and quadratic contributions from the SMEFT operators are included.
 
+In these plots, only quadratic EFT corrections are added to the SM distributions, 
+since in our approach the learning of the linear and of the quadratic EFT cross-sections is 
+decoupled. All distributions are normalised to the fiducial SM cross-section.
 
-
-.. image:: ../images/tt_lin_dist.png
+.. image:: ../images/features_tt_quad.png
 
 
 The kinematic features are defined as follows:
