@@ -52,8 +52,7 @@ global analyses of, for example, the Standard Model Effective Field Theory and P
    :caption: Bibliography
    :hidden:
 
-   bibliography.rst
-
+   zrefs.rst     
 
 
 Project Description
