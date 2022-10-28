@@ -31,6 +31,7 @@
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/doctools.js"></script>
     <script src="../../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -86,7 +87,12 @@
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="../../../modules/tutorial.html">
+  <a class="reference internal" href="../../../installation/instructions.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../installation/training.html">
    Tutorial
   </a>
  </li>
@@ -626,6 +632,7 @@ title="Fullscreen mode"
                                         <span class="n">bins</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">df_sm</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">df_sm</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">30</span><span class="p">),</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
+
         <span class="k">for</span> <span class="n">df_eft</span> <span class="ow">in</span> <span class="n">dfs_eft</span><span class="p">:</span>
 
 
@@ -633,17 +640,19 @@ title="Fullscreen mode"
                                              <span class="n">bins</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">df_sm</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">df_sm</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">30</span><span class="p">),</span>
                                              <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-            <span class="n">ax</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">((</span><span class="n">hist_mg_eft</span><span class="o">/</span><span class="n">hist_mg_sm</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">.7</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">hist_mg_eft</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">.7</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">hist_mg_sm</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
 
 
 
 
-        <span class="c1">#ax.set_yscale(&#39;log&#39;)</span>
-        <span class="c1"># ax.yaxis.set_major_formatter(NullFormatter())</span>
-        <span class="c1"># ax.yaxis.set_minor_formatter(NullFormatter())</span>
-        <span class="c1">#ax.axes.yaxis.set_ticklabels([])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">NullFormatter</span><span class="p">())</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_minor_formatter</span><span class="p">(</span><span class="n">NullFormatter</span><span class="p">())</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">([])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
 
 
 

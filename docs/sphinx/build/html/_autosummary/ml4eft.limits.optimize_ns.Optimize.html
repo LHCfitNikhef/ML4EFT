@@ -32,6 +32,7 @@
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="ml4eft.plotting" href="ml4eft.plotting.html" />
@@ -89,7 +90,12 @@
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="../modules/tutorial.html">
+  <a class="reference internal" href="../installation/instructions.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../installation/training.html">
    Tutorial
   </a>
  </li>
@@ -644,7 +650,7 @@ title="Print to PDF"
 <h1>ml4eft.limits.optimize_ns.Optimize<a class="headerlink" href="#ml4eft-limits-optimize-ns-optimize" title="Permalink to this headline">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="ml4eft.limits.optimize_ns.Optimize">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ml4eft.limits.optimize_ns.</span></span><span class="sig-name descname"><span class="pre">Optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ml4eft/limits/optimize_ns.html#Optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ml4eft.limits.optimize_ns.Optimize" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">ml4eft.limits.optimize_ns.</span></span><span class="sig-name descname"><span class="pre">Optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ml4eft/limits/optimize_ns.html#Optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ml4eft.limits.optimize_ns.Optimize" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Optimizer to obtain confidence level intervals in the SMEFT using either binned or unbinned (ML level) observables</p>
 <dl class="py method">

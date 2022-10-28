@@ -1,4 +1,4 @@
-﻿ml4eft.core.classifier.CustomActivationFunction
+ml4eft.core.classifier.CustomActivationFunction
 ===============================================
 
 .. currentmodule:: ml4eft.core.classifier
@@ -29,12 +29,7 @@
       ~CustomActivationFunction.extra_repr
       ~CustomActivationFunction.float
       ~CustomActivationFunction.forward
-      ~CustomActivationFunction.get_buffer
-      ~CustomActivationFunction.get_extra_state
-      ~CustomActivationFunction.get_parameter
-      ~CustomActivationFunction.get_submodule
       ~CustomActivationFunction.half
-      ~CustomActivationFunction.ipu
       ~CustomActivationFunction.load_state_dict
       ~CustomActivationFunction.modules
       ~CustomActivationFunction.named_buffers
@@ -46,19 +41,13 @@
       ~CustomActivationFunction.register_buffer
       ~CustomActivationFunction.register_forward_hook
       ~CustomActivationFunction.register_forward_pre_hook
-      ~CustomActivationFunction.register_full_backward_hook
-      ~CustomActivationFunction.register_load_state_dict_post_hook
-      ~CustomActivationFunction.register_module
       ~CustomActivationFunction.register_parameter
       ~CustomActivationFunction.requires_grad_
-      ~CustomActivationFunction.set_extra_state
       ~CustomActivationFunction.share_memory
       ~CustomActivationFunction.state_dict
       ~CustomActivationFunction.to
-      ~CustomActivationFunction.to_empty
       ~CustomActivationFunction.train
       ~CustomActivationFunction.type
-      ~CustomActivationFunction.xpu
       ~CustomActivationFunction.zero_grad
    
    

@@ -31,6 +31,7 @@
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/doctools.js"></script>
     <script src="../../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -86,7 +87,12 @@
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="../../../modules/tutorial.html">
+  <a class="reference internal" href="../../../installation/instructions.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../../installation/training.html">
    Tutorial
   </a>
  </li>
@@ -636,7 +642,7 @@ title="Fullscreen mode"
 <span class="sd">    Post-training analyser that loads and evaluates models</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Analyse.__init__"><a class="viewcode-back" href="../../../_autosummary/ml4eft.analyse.analyse.Analyse.html#ml4eft.analyse.analyse.Analyse.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_to_models</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;quad&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="Analyse.__init__"><a class="viewcode-back" href="../../../_autosummary/ml4eft.analyse.analyse.Analyse.html#ml4eft.analyse.analyse.Analyse.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_to_models</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;quad&#39;</span><span class="p">,</span> <span class="nb">all</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Analyse constructor</span>
@@ -691,7 +697,8 @@ title="Fullscreen mode"
         <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">order</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_df</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">models_evaluated_df</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">coeff_truth</span> <span class="o">=</span> <span class="kc">None</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeff_truth</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="Analyse.get_event_paths"><a class="viewcode-back" href="../../../_autosummary/ml4eft.analyse.analyse.Analyse.html#ml4eft.analyse.analyse.Analyse.get_event_paths">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_event_paths</span><span class="p">(</span><span class="n">root_path</span><span class="p">):</span>
@@ -846,8 +853,7 @@ title="Fullscreen mode"
 
         <span class="k">return</span> <span class="n">run_card</span></div>
 
-<div class="viewcode-block" id="Analyse.filter_out_models"><a class="viewcode-back" href="../../../_autosummary/ml4eft.analyse.analyse.Analyse.html#ml4eft.analyse.analyse.Analyse.filter_out_models">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">filter_out_models</span><span class="p">(</span><span class="n">losses</span><span class="p">):</span>
+<div class="viewcode-block" id="Analyse.filter_out_models"><a class="viewcode-back" href="../../../_autosummary/ml4eft.analyse.analyse.Analyse.html#ml4eft.analyse.analyse.Analyse.filter_out_models">[docs]</a>    <span class="k">def</span> <span class="nf">filter_out_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">losses</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Filter out the badly trained models based on kmeans clustering.</span>
 
@@ -862,7 +868,12 @@ title="Fullscreen mode"
 <span class="sd">            Array indices of the &#39;good&#39; models</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">losses</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">all</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">losses</span><span class="o">.</span><span class="n">flatten</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_clusters</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">losses</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
         <span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span>
         <span class="n">cluster_nr_low_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">kmeans</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="p">)</span>
 
@@ -1541,7 +1552,7 @@ title="Fullscreen mode"
 
         <span class="k">return</span> <span class="n">fig1</span><span class="p">,</span> <span class="n">fig2</span></div>
 
-<div class="viewcode-block" id="Analyse.plot_loss_overview"><a class="viewcode-back" href="../../../_autosummary/ml4eft.analyse.analyse.Analyse.html#ml4eft.analyse.analyse.Analyse.plot_loss_overview">[docs]</a>    <span class="k">def</span> <span class="nf">plot_loss_overview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_name</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rep</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Analyse.plot_loss_overview"><a class="viewcode-back" href="../../../_autosummary/ml4eft.analyse.analyse.Analyse.html#ml4eft.analyse.analyse.Analyse.plot_loss_overview">[docs]</a>    <span class="k">def</span> <span class="nf">plot_loss_overview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_name</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plots the loss evolution per replica and returns an overview plot</span>
 
@@ -1612,14 +1623,25 @@ title="Fullscreen mode"
 
             <span class="n">epochs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">loss_tr</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
 
-            <span class="n">label_val</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$L_{\mathrm</span><span class="si">{val}</span><span class="s1">}$&#39;</span> <span class="k">if</span> <span class="n">model_idx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">rep</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="n">label_train</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$L_{\mathrm</span><span class="si">{tr}</span><span class="s1">}$&#39;</span> <span class="k">if</span> <span class="n">model_idx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">rep</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">label_val</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$L_{\mathrm</span><span class="si">{val}</span><span class="s1">}$&#39;</span> <span class="k">if</span> <span class="n">model_idx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">label_train</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$L_{\mathrm</span><span class="si">{tr}</span><span class="s1">}$&#39;</span> <span class="k">if</span> <span class="n">model_idx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
 
             <span class="n">loss_train_rep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">loss_tr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
             <span class="n">loss_val_rep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">loss_val</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">loss_train_rep</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label_train</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">loss_val_rep</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label_val</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">xlim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">loss_train_rep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">loss_val_rep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">loss_sigma_val</span><span class="p">,</span> <span class="n">loss_sigma_tr</span><span class="p">),</span>
+                            <span class="nb">max</span><span class="p">(</span><span class="n">loss_train_rep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">loss_val_rep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">loss_sigma_val</span><span class="p">,</span> <span class="n">loss_sigma_tr</span><span class="p">))</span>
+
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">loss_train_rep</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label_train</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">loss_val_rep</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label_val</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">[</span><span class="n">xlim</span><span class="p">:],</span> <span class="n">loss_train_rep</span><span class="p">[</span><span class="n">xlim</span><span class="p">:],</span> <span class="n">label</span><span class="o">=</span><span class="n">label_train</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">[</span><span class="n">xlim</span><span class="p">:],</span> <span class="n">loss_val_rep</span><span class="p">[</span><span class="n">xlim</span><span class="p">:],</span> <span class="n">label</span><span class="o">=</span><span class="n">label_val</span><span class="p">)</span>
+
+
             <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">epochs</span><span class="p">[</span><span class="o">-</span><span class="n">patience</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
 
             <span class="c1"># ax.set_yscale(&#39;log&#39;)</span>
@@ -1633,7 +1655,8 @@ title="Fullscreen mode"
                     <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
                     <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
 
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+
 
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\mathrm</span><span class="si">{Epoch}</span><span class="s1">$&#39;</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\mathrm</span><span class="si">{Loss}</span><span class="s1">$&#39;</span><span class="p">)</span>
@@ -1654,14 +1677,8 @@ title="Fullscreen mode"
             <span class="c1">#             min(loss_train_rep[-1], loss_val_rep[-1]) + 2 * max(loss_sigma_val, loss_sigma_tr))</span>
 
             <span class="c1"># everything visible (not the same scale)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">loss_train_rep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">loss_val_rep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">loss_sigma_val</span><span class="p">,</span> <span class="n">loss_sigma_tr</span><span class="p">),</span>
-                        <span class="nb">max</span><span class="p">(</span><span class="n">loss_train_rep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">loss_val_rep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">loss_sigma_val</span><span class="p">,</span> <span class="n">loss_sigma_tr</span><span class="p">))</span>
 
-            <span class="n">signif</span> <span class="o">=</span> <span class="p">(</span><span class="n">train_loss_best</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">med_loss_tr</span><span class="p">)</span> <span class="o">/</span> <span class="n">loss_sigma_tr</span>
 
-            <span class="c1"># ax.text(0.9, 0.8, r&quot;$Z={:.2f}$&quot;.format(signif), horizontalalignment=&#39;right&#39;,</span>
-            <span class="c1">#         verticalalignment=&#39;center&#39;,</span>
-            <span class="c1">#         transform=ax.transAxes)</span>
 
             <span class="k">if</span> <span class="n">model_idx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower left&quot;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>

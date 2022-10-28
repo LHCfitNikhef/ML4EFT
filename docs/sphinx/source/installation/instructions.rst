@@ -7,7 +7,7 @@ To install the ML4EFT code, all one need to do is open up a terminal and run
 
 .. code-block::
 
-   pip install ML4EFT
+   pip install ml4eft
 
 *add link to PyPi here once it's added*
 

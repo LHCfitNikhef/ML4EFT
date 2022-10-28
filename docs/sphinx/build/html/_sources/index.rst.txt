@@ -28,8 +28,8 @@ global analyses of, for example, the Standard Model Effective Field Theory and P
    :caption: Code
    :hidden:
 
-   modules/installation.rst
-   modules/tutorial.rst
+   installation/instructions.rst
+   installation/tutorial
 
 .. autosummary::
    :toctree: _autosummary

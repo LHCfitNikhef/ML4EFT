@@ -1,10 +1,9 @@
-Tutorials
-=========
 
 .. toctree::
+    :maxdepth: 2
+    :caption: Tutorial
 
-    tutorials/training
-    tutorials/limits
+    training
 
 
 

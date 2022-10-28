@@ -1,0 +1,1690 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Tutorial &#8212; ML4EFT  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ml4eft" href="../_autosummary/ml4eft.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="tutorial.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      
+      
+      <h1 class="site-logo" id="site-title">ML4EFT  documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Code
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="instructions.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Tutorial
+  </a>
+ </li>
+</ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../_autosummary/ml4eft.html">
+   ml4eft
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../_autosummary/ml4eft.analyse.html">
+     ml4eft.analyse
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../_autosummary/ml4eft.analyse.analyse.html">
+       ml4eft.analyse.analyse
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+      <label for="toctree-checkbox-3">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.analyse.analyse.Analyse.html">
+         ml4eft.analyse.analyse.Analyse
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../_autosummary/ml4eft.analyse.animate.html">
+       ml4eft.analyse.animate
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+      <label for="toctree-checkbox-4">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.analyse.animate.Animate.html">
+         ml4eft.analyse.animate.Animate
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../_autosummary/ml4eft.core.html">
+     ml4eft.core
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../_autosummary/ml4eft.core.classifier.html">
+       ml4eft.core.classifier
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+      <label for="toctree-checkbox-6">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.core.classifier.Classifier.html">
+         ml4eft.core.classifier.Classifier
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.core.classifier.ConstraintActivation.html">
+         ml4eft.core.classifier.ConstraintActivation
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.core.classifier.CustomActivationFunction.html">
+         ml4eft.core.classifier.CustomActivationFunction
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.core.classifier.EventDataset.html">
+         ml4eft.core.classifier.EventDataset
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.core.classifier.Fitter.html">
+         ml4eft.core.classifier.Fitter
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.core.classifier.MLP.html">
+         ml4eft.core.classifier.MLP
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.core.classifier.PreProcessing.html">
+         ml4eft.core.classifier.PreProcessing
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../_autosummary/ml4eft.core.th_predictions.html">
+       ml4eft.core.th_predictions
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+      <label for="toctree-checkbox-7">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.core.th_predictions.TheoryPred.html">
+         ml4eft.core.th_predictions.TheoryPred
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../_autosummary/ml4eft.core.truth.html">
+       ml4eft.core.truth
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+      <label for="toctree-checkbox-8">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.core.truth.tt_prod.html">
+         ml4eft.core.truth.tt_prod
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../_autosummary/ml4eft.limits.html">
+     ml4eft.limits
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+    <label for="toctree-checkbox-9">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../_autosummary/ml4eft.limits.optimize_ns.html">
+       ml4eft.limits.optimize_ns
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+      <label for="toctree-checkbox-10">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.limits.optimize_ns.Optimize.html">
+         ml4eft.limits.optimize_ns.Optimize
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../_autosummary/ml4eft.plotting.html">
+     ml4eft.plotting
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+    <label for="toctree-checkbox-11">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../_autosummary/ml4eft.plotting.features.html">
+       ml4eft.plotting.features
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+      <label for="toctree-checkbox-12">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.plotting.features.plot_features.html">
+         ml4eft.plotting.features.plot_features
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../_autosummary/ml4eft.preproc.html">
+     ml4eft.preproc
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/>
+    <label for="toctree-checkbox-13">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../_autosummary/ml4eft.preproc.lhe_reader.html">
+       ml4eft.preproc.lhe_reader
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/>
+      <label for="toctree-checkbox-14">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.preproc.lhe_reader.get_deta.html">
+         ml4eft.preproc.lhe_reader.get_deta
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.preproc.lhe_reader.get_dphi.html">
+         ml4eft.preproc.lhe_reader.get_dphi
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html">
+         ml4eft.preproc.lhe_reader.Kinematics
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Results
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../results/overview.html">
+   Unbinned multivariate observables for global SMEFT analyses from machine learning
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/>
+  <label for="toctree-checkbox-15">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../results/ttbar_analysis_parton.html">
+     Inclusive top pair production at the parton level
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/>
+    <label for="toctree-checkbox-16">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_parton1.html">
+       Pseudo-data generation and benchmarking
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_parton2.html">
+       Neural network training
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_parton3.html">
+       Constraints on the SMEFT
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../results/ttbar_analysis.html">
+     Inclusive top pair production at the particle level
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/>
+    <label for="toctree-checkbox-17">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle1.html">
+       Kinematic features used as inputs to the neural network
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle2.html">
+       Results from the ML model vs binning in two features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle3.html">
+       Results from the ML model trained on two features vs all features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle4.html">
+       Results from the ML model vs binning in two features,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/ttbar_analysis_particle5.html">
+       Results from the ML model training on two features vs all features,
+       <span class="math notranslate nohighlight">
+        \(O(Λ^{-4})\)
+       </span>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../results/zh_analysis.html">
+     Higgs production in association with a Z boson
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/>
+    <label for="toctree-checkbox-18">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/zh_analysis1.html">
+       Kinematic features used as inputs to the neural network
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/zh_analysis2.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-2})\)
+       </span>
+       , pair-wise fit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/zh_analysis3.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+       , pair-wise fit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../results/zh_analysis4.html">
+       Results from the ML model vs binning in
+       <span class="math notranslate nohighlight">
+        \(p_{T}^{Z}\)
+       </span>
+       ,
+       <span class="math notranslate nohighlight">
+        \(O(\Lambda^{-4})\)
+       </span>
+       , fully marginalised
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Bibliography
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../zrefs.html">
+   Bibliography
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../_sources/installation/training.ipynb.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.ipynb</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#">
+   Tutorial
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Learning-unbinned-observables">
+     Learning unbinned observables
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Loading-the-training-data">
+   Loading the training data
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Training-unbinned-observables">
+     Training unbinned observables
+    </a>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Loading-models">
+     Loading models
+    </a>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Pretrained-models">
+     Pretrained models
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#18-features">
+       18 features
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Tutorial</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#">
+   Tutorial
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Learning-unbinned-observables">
+     Learning unbinned observables
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Loading-the-training-data">
+   Loading the training data
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Training-unbinned-observables">
+     Training unbinned observables
+    </a>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Loading-models">
+     Loading models
+    </a>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Pretrained-models">
+     Pretrained models
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#18-features">
+       18 features
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<section id="Tutorial">
+<h1>Tutorial<a class="headerlink" href="#Tutorial" title="Permalink to this headline">#</a></h1>
+<section id="Learning-unbinned-observables">
+<h2>Learning unbinned observables<a class="headerlink" href="#Learning-unbinned-observables" title="Permalink to this headline">#</a></h2>
+<p><a class="reference external" href="https://colab.research.google.com/github/LHCfitNikhef/ML4EFT/blob/website_clean_code/sphinx/source/installation/tutorials/training.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>The goal of this tutorial is to demonstrate how to obtain unbinned multivariate observables from machine learning. We consider inclusive top quark pair production at the particle level i.e. including top quark decays in the dilepton channel: <span class="math notranslate nohighlight">\(p p \rightarrow t \bar{t}, t \bar{t} \rightarrow b \bar{b} \ell^{+} \ell^{-} \nu_{\ell} \bar{\nu}_{\ell}\)</span>, at the LHC 14 TeV, in the presence of the following dimension-six operators:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split} \begin{align}\mathcal{O}_{tG} &amp;= ig_s(\bar{Q}\tau^{\mu\nu}T_A t)\tilde{\varphi}G_{\mu\nu}^A + \mathrm{h.c.}\\
+\mathcal{O}_{tq}^{8} &amp;= \sum\limits_{i=1,2}c_{qu}^{8(ii33)},
+\end{align}\end{split}\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{O}_{qu}^{8(ijkl)} = (\bar{q}_i\gamma^\mu T^A q_j)(\bar{u}_k\gamma_\mu T^A u_l).\]</div>
+<p>We will train models on either a pair of features, or the full set of kinematic features that are available in the final state. This tutorial is split into three parts. First, we show how to load the training data that got generated under the SM and the EFT hypotheses and how to plot their corresponding distributions for various kinematic features. The last two parts are about learning unbinned observables that depend on either the transverse momentum of the lepton-pair,
+<span class="math notranslate nohighlight">\(p_T^{\ell\bar{\ell}}\)</span>, and the pseudorapidity of the lepton, <span class="math notranslate nohighlight">\(\eta_\ell\)</span>, or on 18 features following a fully multivariate unbinned approach.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">wget</span>
+<span class="kn">import</span> <span class="nn">tarfile</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">ml4eft.core.classifier</span> <span class="k">as</span> <span class="nn">classifier</span>
+<span class="kn">import</span> <span class="nn">ml4eft.analyse.analyse</span> <span class="k">as</span> <span class="nn">analyse</span>
+<span class="kn">import</span> <span class="nn">ml4eft.plotting.features</span> <span class="k">as</span> <span class="nn">features</span>
+<span class="kn">from</span> <span class="nn">ml4eft.analyse.analyse</span> <span class="kn">import</span> <span class="n">Analyse</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Loading-the-training-data">
+<h1>Loading the training data<a class="headerlink" href="#Loading-the-training-data" title="Permalink to this headline">#</a></h1>
+<p>We define two helper functions that serve to download and untar remote files:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">file_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">download_dir</span><span class="o">=</span><span class="s1">&#39;./downloads&#39;</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">download_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
+
+    <span class="n">file</span> <span class="o">=</span> <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">download_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">file</span>
+
+<span class="k">def</span> <span class="nf">untar</span><span class="p">(</span><span class="n">path_to_tar</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s1">&#39;./downloads&#39;</span><span class="p">):</span>
+
+    <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path_to_tar</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+
+<span class="n">download_dir</span> <span class="o">=</span> <span class="s1">&#39;./downloads&#39;</span>
+</pre></div>
+</div>
+</div>
+<p>For simplicity, we will focus on a single replica here, but the method can be easily applied to <span class="math notranslate nohighlight">\(n_{\mathrm{rep}} &gt; 1\)</span> replicas in case one has a cluster available. Training data can be downloaded as follows and contains 100K events with 18 particle level features each:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">training_data_url</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/z16fz2ggbn244pl/training_data.tar.gz?dl=0&#39;</span>
+<span class="n">training_data</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">training_data_url</span><span class="p">);</span>
+<span class="n">data_train_loc</span> <span class="o">=</span> <span class="n">training_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.tar&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">untar</span><span class="p">(</span><span class="n">training_data</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+100% [....................................................] 86621208 / 86621208
+</pre></div></div>
+</div>
+<p>The events are stored as pandas dataframes that we will now load</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># load eft events</span>
+<span class="n">coeff</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ctGRe&quot;</span><span class="p">,</span> <span class="s2">&quot;ctj8&quot;</span><span class="p">]</span>
+<span class="n">events_eft</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coeff</span><span class="p">:</span>
+    <span class="n">path_to_events</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_train_loc</span><span class="p">,</span> <span class="s1">&#39;tt_</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">/events_0.pkl.gz&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+    <span class="n">events</span><span class="p">,</span> <span class="n">xsec</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">load_events</span><span class="p">(</span><span class="n">path_to_events</span><span class="p">)</span>
+    <span class="n">events_eft</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
+
+<span class="c1"># load sm events</span>
+<span class="n">events_sm</span><span class="p">,</span> <span class="n">xsec_sm</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">load_events</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">download_dir</span><span class="p">,</span> <span class="s1">&#39;training_data/tt_sm/events_0.pkl.gz&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<p>Let’s plot the distribution of the training we have just loaded. We will plot the SM and the SM complemented with quadratic corrections induced by <span class="math notranslate nohighlight">\(\mathcal{O}_{tG}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{O}_{tq}^{(8)}\)</span>. The cell directly below is just for plotting purposes to denote the axes and legend labels.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">feature_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pt_l1&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\ell}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pt_l2&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\bar{\ell}}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pt_l_leading&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\ell}\;(\mathrm</span><span class="si">{leading}</span><span class="s1">)\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pt_l_trailing&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\ell}\;(\mathrm</span><span class="si">{trailing}</span><span class="s1">)\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;eta_l1&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_\ell$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;eta_l2&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_{\bar{\ell}}$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;eta_l_leading&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_\ell\;(\mathrm</span><span class="si">{leading}</span><span class="s1">)$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;eta_l_trailing&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_\ell\;(\mathrm</span><span class="si">{trailing}</span><span class="s1">)$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pt_ll&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\ell\bar{\ell}}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;m_ll&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$m_{\ell\bar{\ell}}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;DeltaPhi_ll&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\Delta\phi(\ell, \bar{\ell})$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;DeltaEta_ll&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\Delta\eta(\ell, \bar{\ell})$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pt_b_leading&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^</span><span class="si">{b}</span><span class="s1">\;(\mathrm</span><span class="si">{leading}</span><span class="s1">)\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pt_b_trailing&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^</span><span class="si">{b}</span><span class="s1">\;(\mathrm</span><span class="si">{trailing}</span><span class="s1">)\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;eta_b_leading&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_</span><span class="si">{b}</span><span class="s1">\;(\mathrm</span><span class="si">{leading}</span><span class="s1">)$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;eta_b_trailing&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_</span><span class="si">{b}</span><span class="s1">\;(\mathrm</span><span class="si">{trailing}</span><span class="s1">)$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pt_bb&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{b\bar</span><span class="si">{b}</span><span class="s1">}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;m_bb&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$m_{b\bar</span><span class="si">{b}</span><span class="s1">}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span>
+         <span class="p">}</span>
+
+<span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">r</span><span class="s1">&#39;$c_</span><span class="si">{tG}</span><span class="s1">=10$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$c_</span><span class="si">{qt}</span><span class="s1">^{(8)}=10$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$\mathrm</span><span class="si">{SM}</span><span class="s1">$&#39;</span><span class="p">]</span>
+
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">plot_features</span><span class="p">(</span><span class="n">events_sm</span><span class="p">,</span> <span class="n">events_eft</span><span class="p">,</span> <span class="n">feature_dict</span><span class="p">,</span> <span class="n">legend_labels</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/installation_training_13_0.png" src="../_images/installation_training_13_0.png" />
+</div>
+</div>
+<p>Looking at the distribution of the 18 features plotted above, we notice some clear departures away from the SM in nearly all kinematic features. We thus expect a full multivariate analysis to pay off compared to a simple binned analysis in one or two kinematics. The latter is also inherently bound by the curse of dimensionality: a binned analysis would require populating a 18-dim feature space through Monte Carlo, which is simply impossible since the number of simulated events required to
+populate a 18-dim feature space scales exponentially with the number of dimensions!</p>
+<section id="Training-unbinned-observables">
+<h2>Training unbinned observables<a class="headerlink" href="#Training-unbinned-observables" title="Permalink to this headline">#</a></h2>
+<p>Having loaded the training data, we now move on to the actual training. To this end, we download our training runcard that contains information regarding the setup, such as the architecture, number of mini-batches, epochs and data points, etc…</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">path_to_runcard</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/v4ulo6icveh63fw/run_card_tt_llvlvlbb.json?dl=0&#39;</span>
+<span class="n">runcard</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">path_to_runcard</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+100% [..............................................................] 781 / 781
+</pre></div></div>
+</div>
+<p>Let us open the training runcard to see the possible options that can be set</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">runcard</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_runcard</span><span class="p">:</span>
+    <span class="n">json_runcard_loaded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_runcard</span><span class="p">)</span>
+
+<span class="n">json_runcard_loaded</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;process_id&#39;: &#39;tt&#39;,
+ &#39;epochs&#39;: 2000,
+ &#39;lr&#39;: 0.0001,
+ &#39;n_batches&#39;: 50,
+ &#39;output_size&#39;: 1,
+ &#39;hidden_sizes&#39;: [100, 100, 100],
+ &#39;n_dat&#39;: 100000,
+ &#39;event_data&#39;: &#39;./downloads/training_data/&#39;,
+ &#39;features&#39;: [&#39;pt_l1&#39;,
+  &#39;pt_l2&#39;,
+  &#39;pt_l_leading&#39;,
+  &#39;pt_l_trailing&#39;,
+  &#39;eta_l1&#39;,
+  &#39;eta_l2&#39;,
+  &#39;eta_l_leading&#39;,
+  &#39;eta_l_trailing&#39;,
+  &#39;pt_ll&#39;,
+  &#39;m_ll&#39;,
+  &#39;DeltaPhi_ll&#39;,
+  &#39;DeltaEta_ll&#39;,
+  &#39;pt_b_leading&#39;,
+  &#39;pt_b_trailing&#39;,
+  &#39;eta_b_leading&#39;,
+  &#39;eta_b_trailing&#39;,
+  &#39;pt_bb&#39;,
+  &#39;m_bb&#39;],
+ &#39;loss_type&#39;: &#39;CE&#39;,
+ &#39;scaler_type&#39;: &#39;robust&#39;,
+ &#39;patience&#39;: 200,
+ &#39;val_ratio&#39;: 0.2,
+ &#39;c_train&#39;: {&#39;cQd8&#39;: 10,
+  &#39;cQj18&#39;: 10,
+  &#39;cQj38&#39;: 10,
+  &#39;cQu8&#39;: 10,
+  &#39;ctd8&#39;: 10,
+  &#39;ctGRe&#39;: -10,
+  &#39;ctj8&#39;: 10,
+  &#39;ctu8&#39;: 10}}
+</pre></div></div>
+</div>
+<p>The features on which we would like to train can be specified after the <code class="docutils literal notranslate"><span class="pre">features</span></code> key. We will train on all available features and keep it as it is. Feel free to change the settings, for instance by following the syntax below</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;epochs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;n_batches&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;patience&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1"># needs to be bigger than number of epochs</span>
+</pre></div>
+</div>
+</div>
+<p>In case you have modified some settings, it is important to write them back to the original file:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">runcard</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">runcard_updated</span><span class="p">:</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">json_runcard_loaded</span><span class="p">,</span> <span class="n">runcard_updated</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Once you are happy with the settings, the training can be launched as</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">output_dir</span> <span class="o">=</span> <span class="s1">&#39;./models&#39;</span>
+<span class="n">c_name</span> <span class="o">=</span> <span class="s1">&#39;ctGRe&#39;</span>
+
+<span class="n">fitter</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">Fitter</span><span class="p">(</span><span class="n">json_path</span> <span class="o">=</span> <span class="n">runcard</span><span class="p">,</span>
+                           <span class="n">mc_run</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                           <span class="n">c_name</span> <span class="o">=</span> <span class="n">c_name</span><span class="p">,</span>
+                           <span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_dir</span><span class="p">,</span>
+                           <span class="n">print_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+2022-10-28 16:34:54,082 [INFO] All directories created, ready to load the data
+2022-10-28 16:34:54,459 [INFO] Dataset loaded from ./downloads/training_data/tt_ctGRe/events_0.pkl.gz
+2022-10-28 16:34:54,469 [INFO] Dataset loaded from ./downloads/training_data/tt_sm/events_0.pkl.gz
+2022-10-28 16:34:56,870 [INFO] Epoch 1, Training loss 18.902219593524933, Validation loss 69.91038143634796, Overfit counter = 0
+2022-10-28 16:34:59,260 [INFO] Epoch 2, Training loss 7.347292244434357, Validation loss 8.02843028306961, Overfit counter = 0
+2022-10-28 16:35:01,591 [INFO] Epoch 3, Training loss 5.885509043931961, Validation loss 6.604433611035347, Overfit counter = 0
+2022-10-28 16:35:03,995 [INFO] Epoch 4, Training loss 4.904211044311523, Validation loss 5.2463508695364, Overfit counter = 0
+2022-10-28 16:35:06,385 [INFO] Epoch 5, Training loss 4.452874734997749, Validation loss 4.6248762384057045, Overfit counter = 0
+2022-10-28 16:35:08,966 [INFO] Epoch 6, Training loss 4.2284610122442245, Validation loss 4.310291536152363, Overfit counter = 0
+2022-10-28 16:35:11,502 [INFO] Epoch 7, Training loss 4.131236217916012, Validation loss 4.1593205109238625, Overfit counter = 0
+2022-10-28 16:35:14,039 [INFO] Epoch 8, Training loss 4.103682294487953, Validation loss 4.111822567880154, Overfit counter = 0
+2022-10-28 16:35:16,515 [INFO] Epoch 9, Training loss 4.093126103281975, Validation loss 4.096851445734501, Overfit counter = 0
+2022-10-28 16:35:19,058 [INFO] Epoch 10, Training loss 4.08655060082674, Validation loss 4.089238442480564, Overfit counter = 0
+2022-10-28 16:35:21,583 [INFO] Epoch 11, Training loss 4.0810868218541145, Validation loss 4.083417072892189, Overfit counter = 0
+2022-10-28 16:35:24,222 [INFO] Epoch 12, Training loss 4.076269581913948, Validation loss 4.078438363969326, Overfit counter = 0
+2022-10-28 16:35:26,699 [INFO] Epoch 13, Training loss 4.071833945810795, Validation loss 4.073818504810333, Overfit counter = 0
+2022-10-28 16:35:29,224 [INFO] Epoch 14, Training loss 4.067843355238438, Validation loss 4.0696225836873055, Overfit counter = 0
+2022-10-28 16:35:31,927 [INFO] Epoch 15, Training loss 4.064311251044273, Validation loss 4.065904811024666, Overfit counter = 0
+2022-10-28 16:35:34,533 [INFO] Epoch 16, Training loss 4.060957454144955, Validation loss 4.0625583454966545, Overfit counter = 0
+2022-10-28 16:35:37,158 [INFO] Epoch 17, Training loss 4.056907273828983, Validation loss 4.058852061629295, Overfit counter = 0
+2022-10-28 16:35:39,851 [INFO] Epoch 18, Training loss 4.053087629377842, Validation loss 4.054487831890583, Overfit counter = 0
+2022-10-28 16:35:42,583 [INFO] Epoch 19, Training loss 4.049676440656185, Validation loss 4.05080222338438, Overfit counter = 0
+2022-10-28 16:35:45,215 [INFO] Epoch 20, Training loss 4.046823874115944, Validation loss 4.0475045666098595, Overfit counter = 0
+2022-10-28 16:35:47,831 [INFO] Epoch 21, Training loss 4.0443898141384125, Validation loss 4.044615224003792, Overfit counter = 0
+2022-10-28 16:35:50,569 [INFO] Epoch 22, Training loss 4.042216785252094, Validation loss 4.042022101581097, Overfit counter = 0
+2022-10-28 16:35:53,736 [INFO] Epoch 23, Training loss 4.04115853458643, Validation loss 4.039691522717476, Overfit counter = 0
+2022-10-28 16:35:57,166 [INFO] Epoch 24, Training loss 4.039157465100288, Validation loss 4.037211626768112, Overfit counter = 0
+2022-10-28 16:36:00,499 [INFO] Epoch 25, Training loss 4.037634260952473, Validation loss 4.034820169210434, Overfit counter = 0
+2022-10-28 16:36:03,755 [INFO] Epoch 26, Training loss 4.0368435978889465, Validation loss 4.0332823023200035, Overfit counter = 0
+2022-10-28 16:36:06,713 [INFO] Epoch 27, Training loss 4.036062374711037, Validation loss 4.032890662550926, Overfit counter = 0
+2022-10-28 16:36:09,336 [INFO] Epoch 28, Training loss 4.0353061109781265, Validation loss 4.031892493367195, Overfit counter = 0
+2022-10-28 16:36:11,997 [INFO] Epoch 29, Training loss 4.034753546118736, Validation loss 4.031272426247597, Overfit counter = 0
+2022-10-28 16:36:14,706 [INFO] Epoch 30, Training loss 4.034248448908329, Validation loss 4.030841127038002, Overfit counter = 0
+2022-10-28 16:36:17,351 [INFO] Epoch 31, Training loss 4.0338641703128815, Validation loss 4.030291013419628, Overfit counter = 0
+2022-10-28 16:36:19,995 [INFO] Epoch 32, Training loss 4.033515229821205, Validation loss 4.029871508479118, Overfit counter = 0
+2022-10-28 16:36:22,659 [INFO] Epoch 33, Training loss 4.033099427819252, Validation loss 4.02972487360239, Overfit counter = 0
+2022-10-28 16:36:25,304 [INFO] Epoch 34, Training loss 4.0325915440917015, Validation loss 4.029337614774704, Overfit counter = 0
+2022-10-28 16:36:27,925 [INFO] Epoch 35, Training loss 4.032626092433929, Validation loss 4.028886340558529, Overfit counter = 0
+2022-10-28 16:36:30,466 [INFO] Epoch 36, Training loss 4.03222282230854, Validation loss 4.029434405267239, Overfit counter = 0
+2022-10-28 16:36:33,101 [INFO] Epoch 37, Training loss 4.031624518334866, Validation loss 4.028657965362072, Overfit counter = 1
+2022-10-28 16:36:35,740 [INFO] Epoch 38, Training loss 4.031307354569435, Validation loss 4.028409399092197, Overfit counter = 0
+2022-10-28 16:36:38,372 [INFO] Epoch 39, Training loss 4.03096330165863, Validation loss 4.028002977371216, Overfit counter = 0
+2022-10-28 16:36:40,977 [INFO] Epoch 40, Training loss 4.030616320669651, Validation loss 4.027626022696495, Overfit counter = 0
+2022-10-28 16:36:43,508 [INFO] Epoch 41, Training loss 4.030275121331215, Validation loss 4.027450203895569, Overfit counter = 0
+2022-10-28 16:36:46,103 [INFO] Epoch 42, Training loss 4.030018888413906, Validation loss 4.027120567858219, Overfit counter = 0
+2022-10-28 16:36:48,692 [INFO] Epoch 43, Training loss 4.029755391180515, Validation loss 4.02679555863142, Overfit counter = 0
+2022-10-28 16:36:51,284 [INFO] Epoch 44, Training loss 4.029450610280037, Validation loss 4.0267003029584885, Overfit counter = 0
+2022-10-28 16:36:53,845 [INFO] Epoch 45, Training loss 4.029202505946159, Validation loss 4.026440784335136, Overfit counter = 0
+2022-10-28 16:36:56,404 [INFO] Epoch 46, Training loss 4.028933137655258, Validation loss 4.02640713006258, Overfit counter = 0
+2022-10-28 16:36:59,032 [INFO] Epoch 47, Training loss 4.028695814311504, Validation loss 4.026003673672676, Overfit counter = 0
+2022-10-28 16:37:01,574 [INFO] Epoch 48, Training loss 4.028450533747673, Validation loss 4.02595105022192, Overfit counter = 0
+2022-10-28 16:37:04,114 [INFO] Epoch 49, Training loss 4.02816391736269, Validation loss 4.025821693241596, Overfit counter = 0
+2022-10-28 16:37:06,681 [INFO] Epoch 50, Training loss 4.027905210852623, Validation loss 4.02552979439497, Overfit counter = 0
+2022-10-28 16:37:09,262 [INFO] Epoch 51, Training loss 4.027684196829796, Validation loss 4.025394134223461, Overfit counter = 0
+2022-10-28 16:37:11,877 [INFO] Epoch 52, Training loss 4.027446798980236, Validation loss 4.025138460099697, Overfit counter = 0
+2022-10-28 16:37:14,436 [INFO] Epoch 53, Training loss 4.0271605253219604, Validation loss 4.025079920887947, Overfit counter = 0
+2022-10-28 16:37:16,968 [INFO] Epoch 54, Training loss 4.027002699673176, Validation loss 4.024849154055119, Overfit counter = 0
+2022-10-28 16:37:19,477 [INFO] Epoch 55, Training loss 4.026734083890915, Validation loss 4.025207221508026, Overfit counter = 0
+2022-10-28 16:37:22,004 [INFO] Epoch 56, Training loss 4.026469863951206, Validation loss 4.024599239230156, Overfit counter = 1
+2022-10-28 16:37:24,611 [INFO] Epoch 57, Training loss 4.026208356022835, Validation loss 4.0245527774095535, Overfit counter = 0
+2022-10-28 16:37:27,138 [INFO] Epoch 58, Training loss 4.026083245873451, Validation loss 4.024448953568935, Overfit counter = 0
+2022-10-28 16:37:29,736 [INFO] Epoch 59, Training loss 4.02580027282238, Validation loss 4.024451375007629, Overfit counter = 0
+2022-10-28 16:37:32,427 [INFO] Epoch 60, Training loss 4.0255164578557014, Validation loss 4.024283230304718, Overfit counter = 1
+2022-10-28 16:37:35,003 [INFO] Epoch 61, Training loss 4.025316648185253, Validation loss 4.024177812039852, Overfit counter = 0
+2022-10-28 16:37:37,575 [INFO] Epoch 62, Training loss 4.025175280869007, Validation loss 4.023889645934105, Overfit counter = 0
+2022-10-28 16:37:40,086 [INFO] Epoch 63, Training loss 4.024998515844345, Validation loss 4.023937284946442, Overfit counter = 0
+2022-10-28 16:37:42,600 [INFO] Epoch 64, Training loss 4.02464697510004, Validation loss 4.023954376578331, Overfit counter = 1
+2022-10-28 16:37:45,143 [INFO] Epoch 65, Training loss 4.024477832019329, Validation loss 4.023694470524788, Overfit counter = 2
+2022-10-28 16:37:47,728 [INFO] Epoch 66, Training loss 4.024219550192356, Validation loss 4.0237066596746445, Overfit counter = 0
+2022-10-28 16:37:50,368 [INFO] Epoch 67, Training loss 4.024054899811745, Validation loss 4.023655869066715, Overfit counter = 1
+2022-10-28 16:37:52,948 [INFO] Epoch 68, Training loss 4.023775406181812, Validation loss 4.023552246391773, Overfit counter = 0
+2022-10-28 16:37:55,494 [INFO] Epoch 69, Training loss 4.023513801395893, Validation loss 4.023153737187386, Overfit counter = 0
+2022-10-28 16:37:58,137 [INFO] Epoch 70, Training loss 4.0233002081513405, Validation loss 4.02326624840498, Overfit counter = 0
+2022-10-28 16:38:00,844 [INFO] Epoch 71, Training loss 4.023091346025467, Validation loss 4.022999972105026, Overfit counter = 1
+2022-10-28 16:38:03,501 [INFO] Epoch 72, Training loss 4.022891156375408, Validation loss 4.02297531068325, Overfit counter = 0
+2022-10-28 16:38:06,010 [INFO] Epoch 73, Training loss 4.022682063281536, Validation loss 4.022925943136215, Overfit counter = 0
+2022-10-28 16:38:08,591 [INFO] Epoch 74, Training loss 4.022422432899475, Validation loss 4.02269796282053, Overfit counter = 0
+2022-10-28 16:38:11,229 [INFO] Epoch 75, Training loss 4.022177018225193, Validation loss 4.02258088439703, Overfit counter = 0
+2022-10-28 16:38:13,807 [INFO] Epoch 76, Training loss 4.022002503275871, Validation loss 4.02260023355484, Overfit counter = 0
+2022-10-28 16:38:16,365 [INFO] Epoch 77, Training loss 4.021772086620331, Validation loss 4.0225018709897995, Overfit counter = 1
+2022-10-28 16:38:18,952 [INFO] Epoch 78, Training loss 4.021674819290638, Validation loss 4.022661060094833, Overfit counter = 0
+2022-10-28 16:38:21,483 [INFO] Epoch 79, Training loss 4.021268732845783, Validation loss 4.022414714097977, Overfit counter = 1
+2022-10-28 16:38:23,980 [INFO] Epoch 80, Training loss 4.020928591489792, Validation loss 4.02230042219162, Overfit counter = 0
+2022-10-28 16:38:26,549 [INFO] Epoch 81, Training loss 4.020661778748035, Validation loss 4.02216724306345, Overfit counter = 0
+2022-10-28 16:38:29,184 [INFO] Epoch 82, Training loss 4.02048921585083, Validation loss 4.0220398008823395, Overfit counter = 0
+2022-10-28 16:38:31,769 [INFO] Epoch 83, Training loss 4.020158410072327, Validation loss 4.0222268253564835, Overfit counter = 0
+2022-10-28 16:38:34,340 [INFO] Epoch 84, Training loss 4.019948333501816, Validation loss 4.021899536252022, Overfit counter = 1
+2022-10-28 16:38:36,919 [INFO] Epoch 85, Training loss 4.019752651453018, Validation loss 4.021703585982323, Overfit counter = 0
+2022-10-28 16:38:39,415 [INFO] Epoch 86, Training loss 4.019520245492458, Validation loss 4.021780535578728, Overfit counter = 0
+2022-10-28 16:38:41,992 [INFO] Epoch 87, Training loss 4.019325494766235, Validation loss 4.0220137014985085, Overfit counter = 1
+2022-10-28 16:38:44,497 [INFO] Epoch 88, Training loss 4.019104644656181, Validation loss 4.021810099482536, Overfit counter = 2
+2022-10-28 16:38:47,072 [INFO] Epoch 89, Training loss 4.018792651593685, Validation loss 4.021538496017456, Overfit counter = 3
+2022-10-28 16:38:49,690 [INFO] Epoch 90, Training loss 4.018493689596653, Validation loss 4.021583095192909, Overfit counter = 0
+2022-10-28 16:38:52,258 [INFO] Epoch 91, Training loss 4.018292553722858, Validation loss 4.021547198295593, Overfit counter = 1
+2022-10-28 16:38:54,847 [INFO] Epoch 92, Training loss 4.018118232488632, Validation loss 4.021450385451317, Overfit counter = 2
+2022-10-28 16:38:57,386 [INFO] Epoch 93, Training loss 4.017816834151745, Validation loss 4.021393425762653, Overfit counter = 0
+2022-10-28 16:38:59,935 [INFO] Epoch 94, Training loss 4.0176922753453255, Validation loss 4.02138402312994, Overfit counter = 0
+2022-10-28 16:39:02,509 [INFO] Epoch 95, Training loss 4.017434559762478, Validation loss 4.021261505782604, Overfit counter = 0
+2022-10-28 16:39:05,089 [INFO] Epoch 96, Training loss 4.017132267355919, Validation loss 4.021533966064453, Overfit counter = 0
+2022-10-28 16:39:07,718 [INFO] Epoch 97, Training loss 4.016906462609768, Validation loss 4.020955130457878, Overfit counter = 1
+2022-10-28 16:39:10,268 [INFO] Epoch 98, Training loss 4.016648150980473, Validation loss 4.021143481135368, Overfit counter = 0
+2022-10-28 16:39:12,935 [INFO] Epoch 99, Training loss 4.016435466706753, Validation loss 4.021337643265724, Overfit counter = 1
+2022-10-28 16:39:15,623 [INFO] Epoch 100, Training loss 4.016142077744007, Validation loss 4.021115943789482, Overfit counter = 2
+2022-10-28 16:39:15,627 [INFO] Finished training
+</pre></div></div>
+</div>
+<p>In this runcard, <code class="docutils literal notranslate"><span class="pre">mc_run</span></code> specifies the replica number (must match with <code class="docutils literal notranslate"><span class="pre">events_&lt;mc_run&gt;.pkl.gz</span></code>), and <code class="docutils literal notranslate"><span class="pre">c_name</span></code> denotes the NN that will be trained. Possible options here are for instance <code class="docutils literal notranslate"><span class="pre">ctGRe_ctGRe</span></code>, <code class="docutils literal notranslate"><span class="pre">ctj8_ctj8</span></code> in case of a quadratic coefficient function, or <code class="docutils literal notranslate"><span class="pre">ctGRe</span></code> in case one wants to train the linear term in the likelihood ratio accomponying <span class="math notranslate nohighlight">\(c_{tG}\)</span>.</p>
+</section>
+<section id="Loading-models">
+<h2>Loading models<a class="headerlink" href="#Loading-models" title="Permalink to this headline">#</a></h2>
+<p>Trained models can be loaded into an <code class="docutils literal notranslate"><span class="pre">Analyse</span></code> object to make them accesible for later use</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">path_to_models_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;./models&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y/%m/</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">))</span>
+<span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;lin&#39;</span> <span class="c1"># or quad when quadratic models have been trained</span>
+
+<span class="n">models_paths_dict</span> <span class="o">=</span> <span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_root</span><span class="p">,</span>
+                        <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
+                        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+
+<span class="n">analyser</span> <span class="o">=</span> <span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="nb">all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The loss profile of the models we have just trained can be plotted via</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">fig</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">analyser</span><span class="o">.</span><span class="n">plot_loss_overview</span><span class="p">(</span><span class="n">c_name</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/installation_training_31_0.png" src="../_images/installation_training_31_0.png" />
+</div>
+</div>
+</section>
+<section id="Pretrained-models">
+<h2>Pretrained models<a class="headerlink" href="#Pretrained-models" title="Permalink to this headline">#</a></h2>
+<p>We have provided a set of pretrained models that can be directly loaded and analysed. Lets download them. We will consider models that have been trained on 2 features <span class="math notranslate nohighlight">\(p_T^{\ell\bar{\ell}}\)</span> and <span class="math notranslate nohighlight">\(\eta_\ell\)</span> first.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">models_2_feat_url</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/dy7ni8t4g8x68u0/tt_particle_ptll_etal.tar.gz?dl=0&#39;</span>
+<span class="n">pretrained_models_2_feat</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">models_2_feat_url</span><span class="p">);</span>
+<span class="n">untar</span><span class="p">(</span><span class="n">pretrained_models_2_feat</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s1">&#39;./downloads/models/tt_llvlvlbb_2_feat&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+100% [....................................................] 53293644 / 53293644
+</pre></div></div>
+</div>
+<p>Like before, we load the models into a <code class="docutils literal notranslate"><span class="pre">Analyse</span></code> object:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">path_to_models_2_feat_root</span> <span class="o">=</span> <span class="s1">&#39;./downloads/models/tt_llvlvlbb_2_feat&#39;</span>
+<span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;quad&#39;</span>
+
+<span class="n">models_paths_dict_2_feat</span> <span class="o">=</span> <span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_2_feat_root</span><span class="p">,</span>
+                        <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
+                        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+
+<span class="n">analyser_2_feat</span> <span class="o">=</span> <span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict_2_feat</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Given some “observed” data (not used during training) drawn from the SM, we can evaluate the NNs on this data through the following syntax:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">observed_data_url</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/igjt97vfaxdn9y1/events_0.pkl.gz?dl=0&#39;</span>
+<span class="n">observed_data</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">observed_data_url</span><span class="p">,</span> <span class="s1">&#39;./downloads/observed_data&#39;</span><span class="p">);</span>
+
+<span class="n">events_sm</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">load_events</span><span class="p">(</span><span class="s1">&#39;./downloads/observed_data/events_0.pkl.gz&#39;</span><span class="p">)</span>
+
+<span class="c1"># evaluate pretrained NNs on observed data</span>
+<span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="n">events_sm</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The output of all NN replicas for all coefficients is stored inside a pandas dataframe that can be called like</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">models_evaluated_2_feat</span> <span class="o">=</span> <span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<p>To see for instance the output associated to the NN associated to <span class="math notranslate nohighlight">\(c_{tG}\)</span> at the linear level, one can run</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">models_evaluated_2_feat</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">][</span><span class="s1">&#39;lin&#39;</span><span class="p">,</span> <span class="s1">&#39;ctGRe&#39;</span><span class="p">];</span>
+</pre></div>
+</div>
+</div>
+<p>We can also plot the (median) NNs as 2-dimensional surfaces in the 2-dim feature space <span class="math notranslate nohighlight">\((p_{T}^{\ell, \bar{\ell}}, \eta_\ell)\)</span>:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># create the 2-dim grid in feature space</span>
+<span class="n">eta_l_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">pt_ll_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">450</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="n">eta_l_grid</span><span class="p">,</span> <span class="n">pt_ll_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">eta_l_span</span><span class="p">,</span> <span class="n">pt_ll_span</span><span class="p">)</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">eta_l_grid</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">pt_ll_grid</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;pt_ll&#39;</span><span class="p">:</span> <span class="n">grid</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;eta_l1&#39;</span><span class="p">:</span> <span class="n">grid</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]})</span>
+
+<span class="c1"># evaluate the NNs on this grid and</span>
+<span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="n">models_evaluated</span> <span class="o">=</span> <span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span>
+<span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">models_evaluated</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="n">nn_cQj38</span> <span class="o">=</span> <span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">][</span><span class="s1">&#39;lin&#39;</span><span class="p">,</span> <span class="s1">&#39;cQj38&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">eta_l_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># make a 3D interactive plot</span>
+
+<span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\eta_\ell$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$p_T^{\ell\bar{\ell}}\;\mathrm{[GeV]}$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\mathrm</span><span class="si">{NN}</span><span class="s1">^</span><span class="si">{cQj38}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">eta_l_grid</span><span class="p">,</span> <span class="n">pt_ll_grid</span><span class="p">,</span> <span class="n">nn_cQj38</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;mpl_toolkits.mplot3d.art3d.Poly3DCollection at 0x7fbfe845e250&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/installation_training_45_1.png" src="../_images/installation_training_45_1.png" />
+</div>
+</div>
+<section id="18-features">
+<h3>18 features<a class="headerlink" href="#18-features" title="Permalink to this headline">#</a></h3>
+<p>The fully multivariate models are also available, and can be loaded exactly like before</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># download the models</span>
+<span class="n">models_18_feat_url</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/xu6o2fxqtw6l8e9/tt_particle_18_feat.tar.gz?dl=0&#39;</span>
+<span class="n">pretrained_models_18_feat</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">models_18_feat_url</span><span class="p">);</span>
+<span class="n">untar</span><span class="p">(</span><span class="n">pretrained_models_18_feat</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s1">&#39;./downloads/models/tt_llvlvlbb_18_feat&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+100% [..................................................] 101051331 / 101051331
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># load the models</span>
+<span class="n">path_to_models_18_feat_root</span> <span class="o">=</span> <span class="s1">&#39;./downloads/models/tt_llvlvlbb_18_feat&#39;</span>
+<span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;quad&#39;</span>
+
+<span class="n">models_paths_dict_18_feat</span> <span class="o">=</span> <span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_18_feat_root</span><span class="p">,</span>
+                        <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
+                        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+
+<span class="n">analyser_18_feat</span> <span class="o">=</span> <span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict_18_feat</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># evaluate pretrained NNs on observed data</span>
+<span class="n">analyser_18_feat</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="n">events_sm</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">analyser_18_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">models_evaluated_18_feat</span> <span class="o">=</span> <span class="n">analyser_18_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">models_evaluated_18_feat</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">,</span> <span class="s1">&#39;ctGRe&#39;</span><span class="p">];</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="tutorial.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">&lt;no title&gt;</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../_autosummary/ml4eft.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">ml4eft</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By R. Gomez Ambrosio, J. ter Hoeve, M. Madigan, J. Rojo, V. Sanz<br/>
+  
+      &copy; Copyright 2022, ML4EFT developer team.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>
