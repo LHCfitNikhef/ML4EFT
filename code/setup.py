@@ -1,15 +1,12 @@
 import setuptools
 
-with open("./readme.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
-
 setuptools.setup(
-    name="ML4EFT",
+    name="ml4eft",
     version="0.0.1",
-    author="J.J. ter Hoeve",
+    author="J.J. ter Hoeve, M. Madigan, R.G. Ambrosio, J.Rojo, V.Sanz.",
     author_email="j.j.ter.hoeve@vu.nl",
-    description="ML4EFT",
-    long_description=long_description,
+    description="Machine Learning for Effective Field Theories",
+    long_description="ML4EFT is a general open-source framework for the integration of unbinned multivariate observables into global fits of particle physics data. It makes use of machine learning regression and classification techniques to parameterise high-dimensional likelihood ratios, and can be seamlessly integrated into global analyses of, for example, the Standard Model Effective Field Theory and Parton Distribution Functions.",
     long_description_content_type="text/markdown",
     classifiers=[
         "Operating System :: Unix",
@@ -20,16 +17,14 @@ setuptools.setup(
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     install_requires=[
-        "ncempy>=1.8.0",
-        "matplotlib>=3.3.2",
-        "numpy>=1.19.2",
-        "natsort>=7.1.0",
-        "scipy>=1.5.2",
-        "pandas>=1.0.5",
-        "seaborn>=0.11.0",
-        "torch>=1.6.0",
-        "scikit_learn>=1.0",
-        "wget>=3.2",
+        "matplotlib",
+        "numpy",
+        "scipy",
+        "pandas",
+        "seaborn",
+        "torch",
+        "scikit_learn",
+        "wget",
         ],
     python_requires=">=3.7",
 )

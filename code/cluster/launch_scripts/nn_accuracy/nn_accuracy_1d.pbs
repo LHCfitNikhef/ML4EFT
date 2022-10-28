@@ -1,4 +1,0 @@
-source /data/theorie/jthoeve/miniconda3/etc/profile.d/conda.sh
-conda activate ml4eft
-
-python /data/theorie/jthoeve/ML4EFT_higgs/code/plotting/accuracy.py

@@ -1,4 +1,0 @@
-source /data/theorie/jthoeve/miniconda3/etc/profile.d/conda.sh
-conda activate eels_kk
-
-python /data/theorie/jthoeve/ML4EFT_higgs/code/launch_scripts/nn_accuracy/point_by_point_comp_init.py
