@@ -278,5 +278,4 @@ class Animate:
         anim = animation.FuncAnimation(fig, animate, init_func=init,
                                        frames=self.frames, interval=150, blit=True)
         return anim
-        #anim.save('/Users/jaco/Documents/ML4EFT/plots/2022/talk_juan/animations/training_animation_chq3.gif')
 

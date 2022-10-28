@@ -42,7 +42,7 @@ class Analyse:
     Post-training analyser that loads and evaluates models
     """
 
-    def __init__(self, path_to_models, order='quad'):
+    def __init__(self, path_to_models, order='quad', all=True):
 
         """
         Analyse constructor
@@ -98,6 +98,7 @@ class Analyse:
         self.model_df = None
         self.models_evaluated_df = None
         self.coeff_truth = None
+        self.all = True
 
     @staticmethod
     def get_event_paths(root_path):
@@ -252,8 +253,7 @@ class Analyse:
 
         return run_card
 
-    @staticmethod
-    def filter_out_models(losses):
+    def filter_out_models(self, losses):
         """
         Filter out the badly trained models based on kmeans clustering.
 
@@ -268,7 +268,12 @@ class Analyse:
             Array indices of the 'good' models
         """
 
-        kmeans = KMeans(n_clusters=2, random_state=0).fit(losses.reshape(-1, 1))
+        if self.all:
+            return np.arange(len(losses.flatten()))
+        else:
+            n_clusters = 2
+
+        kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(losses.reshape(-1, 1))
         cluster_labels = kmeans.labels_
         cluster_nr_low_loss = np.argmin(kmeans.cluster_centers_)
 
@@ -947,7 +952,7 @@ class Analyse:
 
         return fig1, fig2
 
-    def plot_loss_overview(self, c_name, order, ax=None, rep=None):
+    def plot_loss_overview(self, c_name, order, ax=None, rep=None, xlim=None):
         """
         Plots the loss evolution per replica and returns an overview plot
 
@@ -1018,14 +1023,25 @@ class Analyse:
 
             epochs = np.arange(len(loss_tr[i]))
 
-            label_val = r'$L_{\mathrm{val}}$' if model_idx[i] == rep else None
-            label_train = r'$L_{\mathrm{tr}}$' if model_idx[i] == rep else None
+            label_val = r'$L_{\mathrm{val}}$' if model_idx[i] == 0 else None
+            label_train = r'$L_{\mathrm{tr}}$' if model_idx[i] == 0 else None
 
             loss_train_rep = np.array(loss_tr[i])
             loss_val_rep = np.array(loss_val[i])
 
-            ax.plot(epochs, loss_train_rep, label=label_train)
-            ax.plot(epochs, loss_val_rep, label=label_val)
+            if xlim is None:
+                ax.set_xlim(left=50)
+                ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
+                            max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
+
+                ax.plot(epochs, loss_train_rep, label=label_train)
+                ax.plot(epochs, loss_val_rep, label=label_val)
+
+            else:
+                ax.plot(epochs[xlim:], loss_train_rep[xlim:], label=label_train)
+                ax.plot(epochs[xlim:], loss_val_rep[xlim:], label=label_val)
+
+
             ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
 
             # ax.set_yscale('log')
@@ -1039,7 +1055,8 @@ class Analyse:
                     verticalalignment='center',
                     transform=ax.transAxes)
 
-            ax.set_xlim(left=50)
+
+
 
             ax.set_xlabel(r'$\mathrm{Epoch}$')
             ax.set_ylabel(r'$\mathrm{Loss}$')
@@ -1060,14 +1077,6 @@ class Analyse:
             #             min(loss_train_rep[-1], loss_val_rep[-1]) + 2 * max(loss_sigma_val, loss_sigma_tr))
 
             # everything visible (not the same scale)
-            ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
-                        max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
-
-            signif = (train_loss_best[i] - med_loss_tr) / loss_sigma_tr
-
-            # ax.text(0.9, 0.8, r"$Z={:.2f}$".format(signif), horizontalalignment='right',
-            #         verticalalignment='center',
-            #         transform=ax.transAxes)
 
             if model_idx[i] == 0:
                 ax.legend(loc="lower left", frameon=False)
