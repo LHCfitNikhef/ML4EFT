@@ -43,7 +43,9 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosummary",
-    "sphinxcontrib.bibtex"]
+    "sphinxcontrib.bibtex",
+    "nbsphinx"
+    ]
 
 autodoc_default_flags = ['members']
 autosummary_generate = True

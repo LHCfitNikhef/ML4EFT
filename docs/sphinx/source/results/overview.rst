@@ -19,7 +19,7 @@ Click on the links below for more details.
 
 
 Contents:
------------
+---------
 .. toctree::
    :maxdepth: 5
    

@@ -17,7 +17,6 @@ ml4eft.core.truth.tt\_prod.crossSectionSMEFT
    .. autosummary::
    
       ~crossSectionSMEFT.__init__
-      ~crossSectionSMEFT.dsigma_part_gg_dpt
       ~crossSectionSMEFT.dsigma_part_qq_dpt
       ~crossSectionSMEFT.sigma_part_gg
       ~crossSectionSMEFT.sigma_part_qq
