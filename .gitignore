@@ -319,6 +319,10 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 #keynotes
 *.key
 
+*.pkl.gz
+
+*.pdf
+
 #large (> 100 mb) files
 /talks/ML4EFT-14-07.key
 
@@ -327,10 +331,9 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 # specific files
 /2d_data_fitter.ipynb
 
-
-
-/sphinx/source/_autosummary/
-/training_data/zh/
 /zenodo/*
-/observed_data/*
-/code/dev/
+/notebooks/
+/plotting/
+/code/dist/
+/docs/sphinx/source/_autosummary/
+/docs/sphinx/build/doctrees/
