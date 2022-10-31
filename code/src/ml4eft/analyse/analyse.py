@@ -34,7 +34,7 @@ mt = constants.mt
 col_s = constants.col_s
 
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
-rc('text', usetex=False)
+rc('text', usetex=True)
 
 
 class Analyse:
@@ -157,11 +157,12 @@ class Analyse:
 
         for model_dir in os.listdir(root):
             if model_dir.startswith(prefix):
-                if 'sm' in model_dir: # sm has already been added
+                if 'sm' in model_dir:  # sm has already been added
                     continue
                 # linear
                 if model_dir.count('_') == 1:
-                    path_to_models['lin'].update({model_dir.split("{}_".format(prefix),1)[1]: os.path.join(root, model_dir)})
+                    path_to_models['lin'].update(
+                        {model_dir.split("{}_".format(prefix), 1)[1]: os.path.join(root, model_dir)})
 
                 if model_dir.count('_') == 2 and order == 'quad':
                     path_to_models['quad'].update(
@@ -911,17 +912,10 @@ class Analyse:
 
         x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
 
-        # for k, v in c.items():
-        #     if v != 0:
-        #         import pdb; pdb.set_trace()
-        #         model_idx = self.model_df.loc[order, k]['idx']
         model_idx = self.model_df.loc[order, c_name]['idx']
 
         for i in np.argsort(model_idx):
             ax = plt.subplot(nrows, ncols, model_idx[i] + 1)
-
-            # plt.scatter(tau_truth[mask_comp], tau_nn[i, mask_comp], s=2, color='k')
-            # plt.scatter(tau_truth[mask], tau_nn[i, mask], s=2, color='red')
 
             plt.scatter(tau_truth, tau_nn[i, :], s=2, color='k')
             plt.plot(x, x, linestyle='dashed', color='grey')
@@ -937,9 +931,6 @@ class Analyse:
         # median
         fig2, ax = plt.subplots(figsize=(8, 8))
         x = np.linspace(np.min(tau_truth) - 0.1, np.max(tau_truth) + 0.1, 100)
-
-        # plt.scatter(tau_truth[mask_comp], np.median(tau_nn, axis=0)[mask_comp], s=5, color='k')
-        # plt.scatter(tau_truth[mask], np.median(tau_nn, axis=0)[mask], s=5, color='red')
 
         plt.scatter(tau_truth, np.median(tau_nn, axis=0), s=2, color='k')
         plt.plot(x, x, linestyle='dashed', color='grey')
@@ -1041,7 +1032,6 @@ class Analyse:
                 ax.plot(epochs[xlim:], loss_train_rep[xlim:], label=label_train)
                 ax.plot(epochs[xlim:], loss_val_rep[xlim:], label=label_val)
 
-
             ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
 
             # ax.set_yscale('log')
@@ -1054,9 +1044,6 @@ class Analyse:
             ax.text(0.95, 0.9, r"$\mathrm{{rep}}\;{}$".format(model_idx[i]), horizontalalignment='right',
                     verticalalignment='center',
                     transform=ax.transAxes)
-
-
-
 
             ax.set_xlabel(r'$\mathrm{Epoch}$')
             ax.set_ylabel(r'$\mathrm{Loss}$')
@@ -1077,6 +1064,8 @@ class Analyse:
             #             min(loss_train_rep[-1], loss_val_rep[-1]) + 2 * max(loss_sigma_val, loss_sigma_tr))
 
             # everything visible (not the same scale)
+            ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
+                        max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
 
             if model_idx[i] == 0:
                 ax.legend(loc="lower left", frameon=False)
@@ -1135,8 +1124,7 @@ class Analyse:
         elif process == 'ZH':
             df = pd.DataFrame(x, columns=['y', 'm_zh'])
 
-        features = self.model_df['run_card'][order][c_name]['features'] # TODO: order not correct
-
+        features = self.model_df['run_card'][order][c_name]['features']
 
         f_ana_lin = self.decision_function_truth(df, c, df.columns.values, process, order)
         f_preds_nn = self.decision_function_nn(c, df, epoch=epoch)
@@ -1144,13 +1132,12 @@ class Analyse:
         f_pred_up = np.percentile(f_preds_nn, 84, axis=0)
         f_pred_down = np.percentile(f_preds_nn, 16, axis=0)
 
-        ax.fill_between(x[:, 1], f_pred_down, f_pred_up, label=r"$\mathrm{Unbinned}\;\mathrm{ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$",
+        ax.fill_between(x[:, 1], f_pred_down, f_pred_up,
+                        label=r"$\mathrm{Unbinned}\;\mathrm{ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$",
                         alpha=0.4)
 
-        ax.plot(x[:, 1], f_ana_lin, '--', c='red', label=r"$\mathrm{Unbinned}\;\mathrm{exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$")
-
-        # single replica
-        # ax.plot(x[:, 0], f_preds_nn[0,:], '--', c='blue', label=r'$\rm{NN}\;\mathcal{O}\left(\Lambda^{-2}\right)$')
+        ax.plot(x[:, 1], f_ana_lin, '--', c='red',
+                label=r"$\mathrm{Unbinned}\;\mathrm{exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$")
 
         ax.set_ylim((0, 1))
         ax.set_xlim(np.min(x[:, 1]), np.max(x[:, 1]))
@@ -1310,7 +1297,8 @@ class Analyse:
         else:
             fig = plt.figure(figsize=(10, 8))
 
-        im = ax.imshow(data, extent=extent, origin='lower', aspect=(extent[1]-extent[0])/(extent[3] - extent[2]) * 10 / 8, cmap=cmap_copy, norm=norm)
+        im = ax.imshow(data, extent=extent, origin='lower',
+                       aspect=(extent[1] - extent[0]) / (extent[3] - extent[2]) * 10 / 8, cmap=cmap_copy, norm=norm)
 
         if rep is not None:
             ax.text(0.95, 0.95, r"$\mathrm{{rep}}\;{}$".format(rep), horizontalalignment='right',

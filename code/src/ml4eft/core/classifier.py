@@ -26,11 +26,9 @@ from sklearn.preprocessing import StandardScaler, RobustScaler, QuantileTransfor
 import joblib
 import sys
 
-rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 rc('text', usetex=True)
 
-mz = 91.188 * 10 ** -3  # z boson mass [TeV]
-mh = 0.125
 
 class MLP(nn.Module):
     """ Multi Layer Perceptron that serves as building block for the binary classifier
@@ -60,7 +58,7 @@ class MLP(nn.Module):
             layers += [nn.Linear(layer_sizes[layer_index - 1], layer_sizes[layer_index]), nn.ReLU()]
         layers += [nn.Linear(layer_sizes[-1], output_size)]
         self.layers = nn.Sequential(
-            *layers)  # nn.Sequential summarizes a list of modules into a single module, applying them in sequence
+            *layers)
 
     def forward(self, x):
         """
@@ -146,8 +144,8 @@ class Classifier(nn.Module):
         g = 1 / (1 + (1 + self.c * NN_out))
         return g
 
-class PreProcessing():
 
+class PreProcessing():
     """
     A feature preprocessor and data loader
     """
@@ -196,7 +194,6 @@ class PreProcessing():
         self.xsec_eft = df_eft_full.iloc[0, 0]
         self.df_eft = df_eft_wo_xsec.sample(fitter.n_dat)
 
-
     def feature_scaling(self, fitter, scaler_path):
         """
 
@@ -232,6 +229,7 @@ class PreProcessing():
         joblib.dump(self.scaler, scaler_path)
 
         return df_sm_scaled, df_eft_scaled
+
 
 class EventDataset(data.Dataset):
     """
@@ -289,13 +287,12 @@ class EventDataset(data.Dataset):
         logging.info("Dataset loaded from {}".format(path))
 
     def __len__(self):
-
         return len(self.events)
 
     def __getitem__(self, idx):
-
         data_sample, weight_sample, label_sample = self.events[idx], self.weights[idx], self.labels[idx]
         return data_sample, weight_sample, label_sample
+
 
 class Fitter:
     """
@@ -321,8 +318,6 @@ class Fitter:
             prints to a log file only
         """
         # read the json run card
-
-
         with open(json_path) as json_data:
             self.run_options = json.load(json_data)
 
@@ -330,7 +325,6 @@ class Fitter:
         self.process_id = self.run_options["process_id"]
         self.lr = self.run_options["lr"]
         self.n_batches = self.run_options["n_batches"]
-
 
         self.loss_type = self.run_options['loss_type']
         self.scaler_type = self.run_options['scaler_type']
@@ -372,7 +366,6 @@ class Fitter:
             os.makedirs(mc_path)
             os.makedirs(log_path)
 
-
         # initialise all paths to None, unless we run at pure quadratic or cross term level
         self.path_lin_1 = self.path_lin_2 = self.path_quad_1 = self.path_quad_2 = None
 
@@ -380,7 +373,7 @@ class Fitter:
         if self.quadratic:
             self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = Classifier(self.network_size, self.c_train_value)
-        else: # linear
+        else:  # linear
             self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = Classifier(self.network_size, self.c_train_value)
 
@@ -408,7 +401,6 @@ class Fitter:
         data_train, data_val = self.load_data()
 
         # copy run card to the appropriate folder
-
         with open(mc_path + 'run_card.json', 'w') as outfile:
             json.dump(self.run_options, outfile)
 
@@ -430,7 +422,9 @@ class Fitter:
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
         path_sm = os.path.join(self.event_data_path, self.process_id + '_sm/events_{}.pkl.gz'.format(self.mc_run))
-        path_eft = os.path.join(self.event_data_path, self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.c_name, mc_run=self.mc_run))
+        path_eft = os.path.join(self.event_data_path,
+                                self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.c_name,
+                                                                                               mc_run=self.mc_run))
 
         path_dict = {'sm': path_sm, 'eft': path_eft}
 
@@ -443,11 +437,7 @@ class Fitter:
 
         self.n_dat = min(len(df_eft_scaled), len(df_sm_scaled))
 
-        # We construct an eft and a sm data set for each value of c in c_values and make a list out of it
-        # As of the new version of the code where only the sm and any non-zero point in EFT space are needed
-        # as an input, the list seems redundant, but this functionality is kept in case one would like to train
-        # on multiple EFT points.
-
+        # construct an eft and a sm data set for each value of c in c_values and make a list out of it
         data_eft = EventDataset(df_eft_scaled,
                                 xsec=preproc.xsec_eft,
                                 path=path_eft,
@@ -494,7 +484,7 @@ class Fitter:
         optimizer = optim.AdamW(self.model.parameters(), lr=self.lr)
 
         # Use PyTorche's DataLoader to allow for mini-batches. After each epoch, the minibatches reshuffle.
-        # we create a dataloader object for each eft point + sm and put them all in one big list called train_data_loader
+        # Create a dataloader object for each eft point + sm and put them all in one big list called train_data_loader
         # or val_data_loader
         train_data_loader = [
             data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__() / self.n_batches), shuffle=True) for
@@ -524,9 +514,8 @@ class Fitter:
 
         loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
-        # we want to be able to keep track of potential over-fitting, so introduce a counter that gets increased
+        # To be able to keep track of potential over-fitting, introduce a counter that gets increased
         # by one whenever the the validation loss increases during an epoch
-
         overfit_counter = 0
 
         # outer loop that runs over the number of epochs
@@ -559,12 +548,11 @@ class Fitter:
 
                     loss_val += val_loss.item()
 
-
             # loop over the mini-batches.
             for j, minibatch in enumerate(zip(*train_loader)):
                 train_loss = torch.zeros(1)
                 # loop over all the datasets within the minibatch and compute their contribution to the loss
-                for i, [event, weight, label] in enumerate(minibatch): # i=0: eft, i=1: sm
+                for i, [event, weight, label] in enumerate(minibatch):  # i=0: eft, i=1: sm
                     if isinstance(self.model, Classifier):
                         output = self.model(event.float())
 
@@ -582,21 +570,20 @@ class Fitter:
             loss_list_val.append(loss_val)
 
             training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val, overfit=overfit_counter)
+                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val,
+                       overfit=overfit_counter)
             logging.info(training_status)
 
             np.savetxt(path + 'loss.out', loss_list_train)
             np.savetxt(path + 'loss_val.out', loss_list_val)
 
-            # in case we reach the maximum number of epochs, save the final state
+            # in case the maximum number of epochs is reached, save the final state
             if epoch == self.epochs:
                 torch.save(self.model.state_dict(), path + 'trained_nn.pt')
                 break
 
             # check whether the network is overfitting by increasing the overfit_counter by one if the
-            # validation loss increases during the epoch. If the counter increases for patience epochs straight
-            # the training is stopped
-
+            # validation loss increases during the epoch.
             if epoch > 20:
                 if loss_val > min(loss_list_val):
                     overfit_counter += 1
@@ -627,7 +614,6 @@ class Fitter:
         if isinstance(m, nn.Linear):
             m.reset_parameters()
 
-
     def loss_fn(self, outputs, labels, w_e):
         """
         Loss function
@@ -655,8 +641,3 @@ class Fitter:
 
         # average over all the losses in the batch
         return torch.mean(loss, dim=0)
-
-
-
-
-

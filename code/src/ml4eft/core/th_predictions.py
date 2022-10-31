@@ -9,6 +9,7 @@ import ml4eft.analyse.analyse as analyse
 from ml4eft.core.truth import vh_prod, tt_prod
 from collections import defaultdict
 
+
 class TheoryPred:
     """
     SMEFT theory calculator
@@ -102,7 +103,6 @@ class TheoryPred:
         c_names = np.array(c_names)
         return np.unique(c_names)
 
-
     def compute_th_pred(self, path_to_events):
         """
         Computes cross-section in the SMEFT for a given binning if specified in `bins`. Otherwise it returns an
@@ -171,30 +171,15 @@ class TheoryPred:
                 [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 0, lin=True, quad=False) for index, row in
                  observed_data.iterrows()])
 
-            # dsigma_dx_sm = np.array(
-            #     [vh_prod.dsigma_dmvh(row['m_zh'], 0, 0, lin=True, quad=False) for index, row
-            #      in
-            #      observed_data.iterrows()])
-
             dsigma_dx_c1 = np.array(
                 [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 10, 0, lin=True, quad=False) for index, row in
                  observed_data.iterrows()])
 
             dsigma_dx_c1_lin_coef = (dsigma_dx_c1 - dsigma_dx_sm) / 10
 
-            # dsigma_dx_c1 = np.array(
-            #     [vh_prod.dsigma_dmvh(row['m_zh'], 10, 0, lin=True, quad=False) for index, row
-            #      in
-            #      observed_data.iterrows()])
-
             dsigma_dx_c2 = np.array(
                 [vh_prod.dsigma_dmvh_dy(row['y'], row['m_zh'], 0, 10, lin=True, quad=False) for index, row in
                  observed_data.iterrows()])
-
-            # dsigma_dx_c2 = np.array(
-            #     [vh_prod.dsigma_dmvh(row['m_zh'], 0, 10, lin=True, quad=False) for index, row
-            #      in
-            #      observed_data.iterrows()])
 
             dsigma_dx_c2_lin_coef = (dsigma_dx_c2 - dsigma_dx_sm) / 10
 
@@ -236,4 +221,3 @@ class TheoryPred:
                          'quad': {'ctGRe_ctGRe': dsigma_dx_c1_quad_coef, 'ctu8_ctu8': dsigma_dx_c2_quad_coef}}
 
         return dsigma_dx
-

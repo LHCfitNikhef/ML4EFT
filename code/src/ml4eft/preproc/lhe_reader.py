@@ -5,11 +5,11 @@ Module to compute kinematic variables from a LHE file
 import pylhe
 import numpy as np
 
+
 class Kinematics(pylhe.LHEParticle):
     """
     LHE kinematics class
     """
-
 
     def __init__(self, particle):
         """
@@ -25,12 +25,12 @@ class Kinematics(pylhe.LHEParticle):
         We consider :math:`pp\\rightarrow ZH \\rightarrow \ell^+\ell^-b\\bar{b}\;` as a simple example
 
         >>> import pylhe
-        >>> lhe_init = pylhe.readLHEInit(path_to_lhe)
+        >>> lhe_init = pylhe.read_lhe_init(path_to_lhe)
 
         Loop over the events in the LHE file and append kinematics
 
         >>> events = []
-        >>> for e in pylhe.readLHE(path_to_lhe):
+        >>> for e in pylhe.read_lhe(path_to_lhe):
         ...     incoming_part = []
         ...     # create particle instances
         ...     for part in e.particles:
@@ -109,7 +109,7 @@ class Kinematics(pylhe.LHEParticle):
 
         """
         return np.sqrt(
-            sum((1 if mu == 'e' else -1) * getattr(self,mu) ** 2 for mu in ['e', 'px', 'py', 'pz']))
+            sum((1 if mu == 'e' else -1) * getattr(self, mu) ** 2 for mu in ['e', 'px', 'py', 'pz']))
 
     def get_pt(self):
         """
@@ -121,7 +121,6 @@ class Kinematics(pylhe.LHEParticle):
             Transverse momentum in GeV
         """
         return np.sqrt(getattr(self, 'px') ** 2 + getattr(self, 'py') ** 2)
-
 
     def get_p(self):
         """
@@ -176,7 +175,7 @@ class Kinematics(pylhe.LHEParticle):
             Pseudorapidity
         """
         theta = self.get_theta()
-        eta = - np.log(np.tan(theta/2))
+        eta = - np.log(np.tan(theta / 2))
         return eta
 
     def get_rapidity(self):
@@ -188,7 +187,7 @@ class Kinematics(pylhe.LHEParticle):
         y: float
             Rapidity
         """
-        q0 = getattr(self, 'e')   # energy of the top quark pair in the pp COM frame
+        q0 = getattr(self, 'e')  # energy of the top quark pair in the pp COM frame
         q3 = getattr(self, 'pz')
         y = 0.5 * np.log((q0 + q3) / (q0 - q3))
         return y
@@ -231,5 +230,3 @@ def get_dphi(phi1, phi2):
     """
     dphi = np.abs(phi1 - phi2)
     return dphi if dphi <= np.pi else 2 * np.pi - dphi
-
-

@@ -13,7 +13,6 @@ import sys
 from . import analyse
 from ..preproc import constants
 
-
 # constants
 mz = constants.mz
 mh = constants.mh
@@ -38,7 +37,6 @@ class Animate:
         """
         self.c = c
         self.frames = frames
-
 
     def make_animation_1d(self, analyser, df):
         """
@@ -120,7 +118,7 @@ class Animate:
         def animate(i):
             print(i)
 
-            analyser.build_model_dict(epoch=i+1)
+            analyser.build_model_dict(epoch=i + 1)
             analyser.evaluate_models(df)
             g_preds_nn = analyser.decision_function_nn(self.c)
 
@@ -203,10 +201,9 @@ class Animate:
 
         """
         coeff_function_ana = analyser.coeff_function_truth(df, c_name, df.columns.values, process, order).reshape(shape)
-        np.ma.masked_where(coeff_function_ana == 1.0, coeff_function_ana) # necessary?
+        np.ma.masked_where(coeff_function_ana == 1.0, coeff_function_ana)  # necessary?
 
         def load_coeff_nn_rep(analyser, df, epoch, order):
-
             analyser.build_model_dict(epoch=epoch)
             analyser.evaluate_models(df)
 
@@ -229,7 +226,7 @@ class Animate:
         img = plt.imshow(np.zeros(coeff_function_ana.shape),
                          extent=[df['m_tt'].min() * 10 ** 3, 2000.0, df['y'].min(), df['y'].max()],
                          origin='lower', cmap=cmap_copy,
-                         aspect=(2000.0 -df['m_tt'].min() * 10 ** 3) / ( df['y'].max() - df['y'].min()),
+                         aspect=(2000.0 - df['m_tt'].min() * 10 ** 3) / (df['y'].max() - df['y'].min()),
                          interpolation='quadric', norm=norm)
 
         cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap_copy), ax=ax)
@@ -242,23 +239,15 @@ class Animate:
         plt.title(title)
         plt.tight_layout()
 
-        # plt.colorbar()
-
-        # plt.title('NN performance at ctG = {}'.format(ctg))
         epoch_text = ax.text(0.95, 0.95, '', transform=ax.transAxes, horizontalalignment='right')
-
-        # loss_text = ax.text(0.70, 0.90, '', transform=ax.transAxes)
-        # loss = np.loadtxt(path + 'loss.out')
 
         # initialization function: plot the background of each frame
         def init():
             img.set_data(np.zeros(coeff_function_ana.shape))
             epoch_text.set_text('')
-            # loss_text.set_text('')
-            return img, epoch_text  # , loss_text
+            return img, epoch_text
 
         # animation function.  This is called sequentially
-
         def animate(epoch):
             sys.stdout.write('\r')
             sys.stdout.flush()
@@ -270,12 +259,10 @@ class Animate:
             img.set_array(ratio_epoch)
 
             epoch_text.set_text(r'$\rm{Epoch}\;%d$' % epoch)
-            # loss_text.set_text('loss = {:.4f}'.format(loss[i]))
-            return img, epoch_text  # , loss_text
+            return img, epoch_text
 
         # call the animator.  blit=True means only re-draw the parts that have changed.
         print("Creating the animation")
         anim = animation.FuncAnimation(fig, animate, init_func=init,
                                        frames=self.frames, interval=150, blit=True)
         return anim
-

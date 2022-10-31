@@ -8,6 +8,7 @@ from matplotlib.ticker import NullFormatter
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
+
 def plot_features(df_sm, dfs_eft, features, legend_labels):
     """
     Produces a plot showing the distribution of the training features
@@ -35,7 +36,6 @@ def plot_features(df_sm, dfs_eft, features, legend_labels):
 
     grid = plt.GridSpec(n_rows, n_cols, hspace=0.3, wspace=0.2)
 
-
     for i, (feature, label) in enumerate(features.items()):
 
         ax = fig.add_subplot(grid[i // n_cols, i % n_cols])
@@ -44,7 +44,6 @@ def plot_features(df_sm, dfs_eft, features, legend_labels):
                                         bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 30), density=True)
 
         for df_eft in dfs_eft:
-
             hist_mg_eft, bins = np.histogram(df_eft[feature],
                                              bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 30),
                                              density=True)
@@ -59,7 +58,6 @@ def plot_features(df_sm, dfs_eft, features, legend_labels):
         ax.axes.yaxis.set_ticklabels([])
         ax.set_xlabel(label)
 
-
     legend = ax.legend(
         labels=legend_labels,
         bbox_to_anchor=(1.17, 0., 1, 1),
@@ -67,7 +65,6 @@ def plot_features(df_sm, dfs_eft, features, legend_labels):
         handlelength=1,
         borderpad=1,
         handletextpad=1, ncol=2, frameon=False)
-
 
     bbox = legend.get_window_extent(fig.canvas.get_renderer()).transformed(fig.transFigure.inverted())
 

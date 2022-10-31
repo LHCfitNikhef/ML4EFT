@@ -16,13 +16,6 @@ import itertools
 
 import ml4eft.analyse.analyse as analyse
 import ml4eft.core.th_predictions as theory_pred
-from ml4eft.core.truth import vh_prod
-from ml4eft.preproc import constants
-
-from ml4eft.core.th_predictions import TheoryPred
-
-mz = constants.mz
-mh = constants.mh
 
 # fix randomness
 np.random.seed(0)
@@ -33,7 +26,7 @@ class Optimize:
     Optimizer to obtain confidence level intervals in the SMEFT using either binned or unbinned (ML level) observables
     """
 
-    def __init__(self, config, coeff=None):
+    def __init__(self, config, coeff=None, rep=None):
         """
         Optimize constructor
 
@@ -43,20 +36,22 @@ class Optimize:
             loaded json run card
         coeff: array_like, optional
             Subset of ``(N,) ndarray`` EFT parameter names to include in the fit. Takes all EFT parameters by default.
+        rep: int, optional
+            Run the optimiser on a specific replica numner, set to ``None`` by default, in which case the optimiser
+            works with the median over all replicas.
         """
         self.config = config.copy()
         self.coeff = coeff
+        self.rep = rep
 
         self.param_names = {}
 
         if "fit_id" in self.config.keys():
             self.fit_id = self.config["fit_id"]
-
         if "order" in self.config.keys():
             self.order = self.config["order"]
         if "prior" in self.config.keys():
             self.prior_range = self.config["prior"]
-
         if "process" in self.config.keys():
             self.process = self.config["process"]
         if "mode" in self.config.keys():
@@ -66,7 +61,6 @@ class Optimize:
                 "No mode (mode) selected, please specify one in the input card. Aborting."
             )
             sys.exit()
-
         if "nlive" in self.config.keys():
             self.live_points = self.config["nlive"]
         else:
@@ -74,7 +68,6 @@ class Optimize:
                 "Number of live points (nlive) not set in the input card. Using default: 500"
             )
             self.live_points = 500
-
         if "lumi" in self.config.keys():
             self.lumi = self.config["lumi"]
         else:
@@ -92,7 +85,8 @@ class Optimize:
                 sys.exit()
         elif self.mode == "nn":
             if "path_to_models" in self.config.keys():
-                self.path_to_models = analyse.Analyse.build_path_dict(self.config['path_to_models'], self.order, prefix='model')
+                self.path_to_models = analyse.Analyse.build_path_dict(self.config['path_to_models'], self.order,
+                                                                      prefix='model')
                 self.nn_analyser = analyse.Analyse(self.path_to_models, self.order)
             else:
                 print(
@@ -108,23 +102,20 @@ class Optimize:
             self.th_features = self.config['th_features']
 
         if "path_to_theory_pred" in self.config.keys():
-            self.path_to_theory_pred = analyse.Analyse.build_path_dict(self.config["path_to_theory_pred"], self.order, prefix=self.process)
+            self.path_to_theory_pred = analyse.Analyse.build_path_dict(self.config["path_to_theory_pred"], self.order,
+                                                                       prefix=self.process)
         else:
             print(
                 "No path to theory predictions (path_to_theory_pred) specified. Please set in the in the input card. Aborting."
             )
             sys.exit()
 
-
         self.th_pred = theory_pred.TheoryPred(self.path_to_theory_pred,
                                               bins=self.bins)
 
-
         if self.coeff is None:
             self.glob = True
-
-            #self.coeff = self.th_pred.th_dict['lin'].keys()
-            self.coeff = self.th_pred.get_c_names_unique() # coefficients to include in the fit
+            self.coeff = self.th_pred.get_c_names_unique()  # coefficients to include in the fit
         else:
             self.glob = False
 
@@ -134,8 +125,17 @@ class Optimize:
             for c in self.coeff:
                 self.suffix += c + '_'
             self.suffix = self.suffix[:-1]
-        #self.output_path = os.path.join(self.config["results_path"], '{}_{}'.format(self.mode, self.fit_id), self.suffix[1:])
-        self.output_path = os.path.join(self.config["results_path"], '{}_{}'.format(self.mode, self.fit_id))
+
+        if self.rep is not None:
+            self.output_path = os.path.join(self.config["results_path"], '{}_{}'.format(self.mode, self.fit_id),
+                                            'rep_{}'.format(self.rep))
+        else:
+            if self.glob is True:
+                self.output_path = os.path.join(self.config["results_path"], '{}_{}'.format(self.mode, self.fit_id))
+            else:
+                self.output_path = os.path.join(self.config["results_path"], '{}_{}'.format(self.mode, self.fit_id),
+                                                self.suffix[1:])
+
 
         Path(self.output_path).mkdir(parents=True, exist_ok=True)
 
@@ -159,18 +159,14 @@ class Optimize:
 
         if self.mode == "nn":
 
-
-
             # evaluated nn models on pseudo dataset
-            self.nn_analyser.evaluate_models(self.observed_data)
+            self.nn_analyser.evaluate_models(self.observed_data, rep=self.rep)
             models_evaluated = self.nn_analyser.models_evaluated_df['models']
 
-            #import pdb; pdb.set_trace()
-            # n_dat = len(self.nn_analyser.models_evaluated_df['models']['lin', 'cQj38'])
-            # fraction_cQj38 = np.sum(self.nn_analyser.models_evaluated_df['models']['lin', 'cQj38'] < 0) / n_dat
-
-            # taken median over models
-            self.nn_analyser.models_evaluated_df['models'] = models_evaluated.apply(lambda row: np.median(row, axis=0))
+            if self.rep is None:
+                # take median over models
+                self.nn_analyser.models_evaluated_df['models'] = models_evaluated.apply(
+                    lambda row: np.median(row, axis=0))
 
         if self.mode == "truth":
             self.dsigma_dx = self.th_pred.compute_diff_coefficients(self)
@@ -259,7 +255,7 @@ class Optimize:
         # median likelihood ratio
         ratio_med = self.nn_analyser.likelihood_ratio_nn(self.param_names)
         log_r_med = np.log(ratio_med)
-        
+
         return -nu + np.sum(log_r_med)
 
     def log_like_truth(self, cube):
@@ -295,7 +291,6 @@ class Optimize:
                 sigma += c_val * self.th_pred.th_dict['lin'][c_name]
                 dsigma_dx += c_val * self.dsigma_dx['lin'][c_name]
 
-
         if 'quad' in self.th_pred.th_dict:
 
             quad_pred = self.th_pred.th_dict['quad']
@@ -303,7 +298,8 @@ class Optimize:
                 c_name = '{}_{}'.format(c1, c2)
                 if c_name in quad_pred:
                     sigma += self.param_names[c1] * self.param_names[c2] * quad_pred['{}_{}'.format(c1, c2)]
-                    dsigma_dx += self.param_names[c1] * self.param_names[c2] * self.dsigma_dx['quad']['{}_{}'.format(c1, c2)]
+                    dsigma_dx += self.param_names[c1] * self.param_names[c2] * self.dsigma_dx['quad'][
+                        '{}_{}'.format(c1, c2)]
 
         nu = sigma * self.lumi
         log_like = -nu + np.sum(np.log(dsigma_dx / self.dsigma_dx['sm']))
@@ -412,9 +408,5 @@ class Optimize:
         for i, (c, samples) in enumerate(zip(self.param_names.keys(), result['samples'].T)):
             vals[c] = samples.tolist()
 
-        # with open(os.path.join(self.output_path, 'posterior' + self.suffix + '.json'), "w") as f:
-        #     json.dump(vals, f)
-
         with open(os.path.join(self.output_path, 'posterior.json'), "w") as f:
             json.dump(vals, f)
-

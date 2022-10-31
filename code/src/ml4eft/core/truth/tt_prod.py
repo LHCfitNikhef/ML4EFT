@@ -13,10 +13,10 @@ from ml4eft.core.truth import vh_prod
 
 try:
     import lhapdf
+
     p = lhapdf.mkPDF("NNPDF31_lo_as_0118", 0)
 except ImportError:
     print("lhapdf not found: exact models will not be available")
-
 
 mt = 0.17276
 s = 14 ** 2
@@ -27,9 +27,10 @@ LambdaSMEFT = 1
 pb_convert = 3.894E2
 yt = 1
 
-#matplotlib.use('PDF')
-rc('font',**{'family':'sans-serif','sans-serif':['Helvetica'], 'size': 22})
+# matplotlib.use('PDF')
+rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
+
 
 class crossSectionSMEFT:
     """
@@ -62,16 +63,16 @@ class crossSectionSMEFT:
 
         sqrt = np.sqrt(1 - 4 * mt ** 2 / hats)
         kappa_11 = ((v ** 2 * yt ** 2 * asQCD) / (24 * LambdaSMEFT ** 4 * hats ** 3)) * (
-                    6 * np.sqrt(hats ** 5 * (hats - 4 * mt ** 2)) + hats * mt ** 2 * (
-                        -3 * np.sqrt(hats * (hats - 4 * mt ** 2)) - 8 * hats * np.log(1 - sqrt) + 8 * hats * np.log(sqrt + 1)))
+                6 * np.sqrt(hats ** 5 * (hats - 4 * mt ** 2)) + hats * mt ** 2 * (
+                -3 * np.sqrt(hats * (hats - 4 * mt ** 2)) - 8 * hats * np.log(1 - sqrt) + 8 * hats * np.log(sqrt + 1)))
         kappa_1 = (np.sqrt(np.pi) * v * yt * mt * asQCD) / (6 * LambdaSMEFT ** 2 * hats ** 2 * np.sqrt(2)) * (
-                    9 * np.sqrt(hats * asQCD * (hats - 4 * mt ** 2)) + 8 * hats * np.sqrt(asQCD) * (
-                        np.log(1 - np.sqrt(1 - 4 * mt ** 2 / hats)) - np.log(np.sqrt(1 - 4 * mt ** 2 / hats) + 1)))
+                9 * np.sqrt(hats * asQCD * (hats - 4 * mt ** 2)) + 8 * hats * np.sqrt(asQCD) * (
+                np.log(1 - np.sqrt(1 - 4 * mt ** 2 / hats)) - np.log(np.sqrt(1 - 4 * mt ** 2 / hats) + 1)))
         sm = (-np.pi * asQCD ** 2) / (12 * hats ** 3) * (
-                    4 * mt ** 4 * (np.log(1 - sqrt) - np.log(sqrt + 1)) + mt ** 2 * (
-                        31 * np.sqrt(hats * (hats - 4 * mt ** 2)) + 16 * hats * np.log(1 - sqrt) - 16 * hats * np.log(
-                    sqrt + 1)) + hats * (7 * np.sqrt(hats * (hats - 4 * mt ** 2)) + 4 * hats * np.log(
-                1 - sqrt) - 4 * hats * np.log(sqrt + 1)))
+                4 * mt ** 4 * (np.log(1 - sqrt) - np.log(sqrt + 1)) + mt ** 2 * (
+                31 * np.sqrt(hats * (hats - 4 * mt ** 2)) + 16 * hats * np.log(1 - sqrt) - 16 * hats * np.log(
+            sqrt + 1)) + hats * (7 * np.sqrt(hats * (hats - 4 * mt ** 2)) + 4 * hats * np.log(
+            1 - sqrt) - 4 * hats * np.log(sqrt + 1)))
 
         if order is None:
             return sm
@@ -79,8 +80,6 @@ class crossSectionSMEFT:
             return sm + ctGRe * kappa_1
         elif order == 'quad':
             return sm + ctGRe ** 2 * kappa_11
-
-
 
     def sigma_part_qq(self, hats, cuGRe, ctu8, order):
         """
@@ -108,10 +107,10 @@ class crossSectionSMEFT:
 
         sqrt = np.sqrt(1 - 4 * mt ** 2 / hats)
         kappa_11 = sqrt * (8 * np.pi * v ** 2 * yt ** 2 * asQCD * (8 * mt ** 2 + hats)) / (
-                    108 * np.pi * LambdaSMEFT ** 4 * hats)
-        
-        #kappa_22 = (2.0 / 9.0) * sqrt * (hats - mt ** 2) / (48 * np.pi * LambdaSMEFT ** 4)
-        #kappa_22 = sqrt * (hats - mt ** 2) / (48 * np.pi * LambdaSMEFT ** 4)
+                108 * np.pi * LambdaSMEFT ** 4 * hats)
+
+        # kappa_22 = (2.0 / 9.0) * sqrt * (hats - mt ** 2) / (48 * np.pi * LambdaSMEFT ** 4)
+        # kappa_22 = sqrt * (hats - mt ** 2) / (48 * np.pi * LambdaSMEFT ** 4)
         kappa_22 = (2.0 / 9.0) * (hats * sqrt - mt ** 2 * sqrt) / (12 * 4 * np.pi * LambdaSMEFT ** 4)
 
         kappa_1 = - (8 * np.sqrt(2 * np.pi) * v * mt * asQCD ** (3 / 2) * sqrt) / (9 * hats * LambdaSMEFT ** 2)
@@ -124,8 +123,8 @@ class crossSectionSMEFT:
             return sm + cuGRe * kappa_1 + ctu8 * kappa_2
         elif order == 'quad':
             return sm + cuGRe ** 2 * kappa_11 + ctu8 ** 2 * kappa_22
-            #return kappa_22
-            #return sm + ctu8 ** 2 * kappa_22
+            # return kappa_22
+            # return sm + ctu8 ** 2 * kappa_22
 
     def dsigma_part_qq_dpt(self, hats, pt, ctGRe, cut, order):
         """
@@ -166,10 +165,14 @@ class crossSectionSMEFT:
             U = mt ** 2 - 2 * pi * (np.sqrt(mt ** 2 + pf2) - pf * np.cos(theta))
             T = 2 * mt ** 2 - S - U
 
-            me_sq_sm = 64 * asQCD ** 2 * np.pi ** 2 * (2 * mt ** 4 + T ** 2 + 2 * mt ** 2 * (S-T-U) + U ** 2) / (9 * S ** 2)
+            me_sq_sm = 64 * asQCD ** 2 * np.pi ** 2 * (2 * mt ** 4 + T ** 2 + 2 * mt ** 2 * (S - T - U) + U ** 2) / (
+                        9 * S ** 2)
 
-            me_sq_kappa_1 = - (128 * np.sqrt(2) * asQCD ** (3/2) * mt * np.pi ** (3/2) * (2 * mt ** 2 * (S-T-U) + (T+U) ** 2) * v)/(9 * S ** 2)
-            me_sq_kappa_11 = (64 * asQCD * np.pi * (4 * mt ** 2 * S * U - S * U * (S + U) + 2 * mt ** 2 * (T + U) * (T + 2 * U) + mt ** 4  * (3 * S - 4 * (T + 2 * U))) * v ** 2)/(9 * S ** 2)
+            me_sq_kappa_1 = - (128 * np.sqrt(2) * asQCD ** (3 / 2) * mt * np.pi ** (3 / 2) * (
+                        2 * mt ** 2 * (S - T - U) + (T + U) ** 2) * v) / (9 * S ** 2)
+            me_sq_kappa_11 = (64 * asQCD * np.pi * (
+                        4 * mt ** 2 * S * U - S * U * (S + U) + 2 * mt ** 2 * (T + U) * (T + 2 * U) + mt ** 4 * (
+                            3 * S - 4 * (T + 2 * U))) * v ** 2) / (9 * S ** 2)
 
             me_sq_kappa_22 = (U - mt ** 2) ** 2
 
@@ -189,10 +192,11 @@ class crossSectionSMEFT:
         dsigma_dpT_1 = 2 * np.pi * np.tan(theta) * me_sq_theta / (64 * np.pi ** 2 * S * pi)
         dsigma_dpT_2 = 2 * np.pi * np.abs(np.tan(theta)) * me_sq_pi_theta / (64 * np.pi ** 2 * S * pi)
 
-
         return dsigma_dpT_1 + dsigma_dpT_2
 
+
 xsec = crossSectionSMEFT()
+
 
 def weight(sqrts, mu, x1, x2, c, order):
     """
@@ -224,12 +228,12 @@ def weight(sqrts, mu, x1, x2, c, order):
     w_e = (xsec.sigma_part_gg(hats, ctGRe, cut, order)) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
 
     w_e += (xsec.sigma_part_qq(hats, ctGRe, 0, order)) * (
-                p.xfxQ(1, x1, mu) * p.xfxQ(-1, x2, mu) +
-                p.xfxQ(1, x2, mu) * p.xfxQ(-1, x1, mu) +
-                p.xfxQ(3, x1, mu) * p.xfxQ(-3, x2, mu) +
-                p.xfxQ(3, x2, mu) * p.xfxQ(-3, x1, mu) +
-                p.xfxQ(5, x1,mu) * p.xfxQ(-5, x2, mu) +
-                p.xfxQ(5, x2, mu) * p.xfxQ(-5, x1, mu)
+            p.xfxQ(1, x1, mu) * p.xfxQ(-1, x2, mu) +
+            p.xfxQ(1, x2, mu) * p.xfxQ(-1, x1, mu) +
+            p.xfxQ(3, x1, mu) * p.xfxQ(-3, x2, mu) +
+            p.xfxQ(3, x2, mu) * p.xfxQ(-3, x1, mu) +
+            p.xfxQ(5, x1, mu) * p.xfxQ(-5, x2, mu) +
+            p.xfxQ(5, x2, mu) * p.xfxQ(-5, x1, mu)
     )
 
     w_e += (xsec.sigma_part_qq(hats, ctGRe, cut, order)) * (
@@ -268,20 +272,24 @@ def weight_pt(sqrts, pt, mu, x1, x2, c, order):
     float
         Partonic cross-section convoluted with the PDFs
     """
-   
+
     ctGRe, cut = c
     hats = sqrts ** 2
     flavor_up = [2, 4]
     flavor_down = [1, 3, 5]
 
-    pdfs_up = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_up])
-    pdfs_down = np.sum([p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_down])
+    pdfs_up = np.sum(
+        [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in flavor_up])
+    pdfs_down = np.sum(
+        [p.xfxQ(pid, x1, mu) * p.xfxQ(-pid, x2, mu) + p.xfxQ(-pid, x1, mu) * p.xfxQ(pid, x2, mu) for pid in
+         flavor_down])
 
     w_e = xsec.dsigma_part_gg_dpt(hats, pt, ctGRe, cut, order) * (p.xfxQ(21, x1, mu) * p.xfxQ(21, x2, mu))
     w_e += (xsec.dsigma_part_qq_dpt(hats, pt, ctGRe, cut, order)) * pdfs_up
     w_e += (xsec.dsigma_part_qq_dpt(hats, pt, ctGRe, 0, order)) * pdfs_down
 
     return w_e
+
 
 v_weight = np.vectorize(weight, otypes=[np.float])
 v_weight.excluded.add(4)
@@ -325,6 +333,7 @@ def dsigma_dmtt_dy(y, mtt, c=None, order=None):
 
 dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float])
 dsigma_dmtt_dy_vec.excluded.add(2)
+
 
 def dsigma_dmtt(mtt, c=None, order=None):
     """
