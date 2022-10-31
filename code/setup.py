@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="ml4eft",
-    version="0.0.1",
+    version="0.0.3",
     author="J.J. ter Hoeve, M. Madigan, R.G. Ambrosio, J.Rojo, V.Sanz.",
     author_email="j.j.ter.hoeve@vu.nl",
     description="Machine Learning for Effective Field Theories",
@@ -14,6 +14,7 @@ setuptools.setup(
         "Topic :: Scientific/Engineering :: Physics",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
+    url="https://lhcfitnikhef.github.io/ML4EFT",
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     install_requires=[
@@ -25,6 +26,8 @@ setuptools.setup(
         "torch",
         "scikit_learn",
         "wget",
+        "joblib",
+        "pylhe>=0.4.0"
         ],
     python_requires=">=3.7",
 )
