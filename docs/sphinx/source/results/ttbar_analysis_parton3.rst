@@ -8,19 +8,17 @@ In the lower plots we use a single feature, :math:`m_{t \bar{t}}`.
 
 Two sets of binnings are used:
 
-- Binning 1: 
+- Binning 1:
 
 .. math::
-   m_{t \bar{t}} \in [1.45, 1.5, 1.55, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1,\\ 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, \infty) \textrm{ TeV}, \\
-   y_{t \bar{t}} \in \pm [0, 0.3, 0.6, 0.9, 1.2, 3.0]
-
+   m_{t \bar{t}} \in [1.45, 2.5, \infty) \textrm{ TeV}, \\
+   y_{t \bar{t}} \in \pm [0,1.5,3.0]
 
 - Binning 2:
 
 .. math::
-   m_{t \bar{t}} \in [1.45, 2.5, \infty) \textrm{ TeV}, \\
-   y_{t \bar{t}} \in \pm [0,1.5,3.0] 
-
+   m_{t \bar{t}} \in [1.45, 1.5, 1.55, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1,\\ 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, \infty) \textrm{ TeV}, \\
+   y_{t \bar{t}} \in \pm [0, 0.3, 0.6, 0.9, 1.2, 3.0]
 
 In the left plots, we obtain constraints by working to linear order :math:`O(\Lambda^{-2})` in the EFT calculation.
 In the right plots we work to quadratic order :math:`O(\Lambda^{-4})`.

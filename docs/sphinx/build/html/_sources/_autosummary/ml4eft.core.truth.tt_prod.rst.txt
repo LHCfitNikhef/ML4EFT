@@ -1,4 +1,4 @@
-﻿ml4eft.core.truth.tt\_prod
+ml4eft.core.truth.tt\_prod
 ==========================
 
 .. automodule:: ml4eft.core.truth.tt_prod

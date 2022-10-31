@@ -1,4 +1,4 @@
-﻿ml4eft.plotting
+ml4eft.plotting
 ===============
 
 .. automodule:: ml4eft.plotting

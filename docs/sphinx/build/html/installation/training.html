@@ -1009,7 +1009,7 @@ div.rendered_html tbody tr:hover {
 <h1>Tutorial<a class="headerlink" href="#Tutorial" title="Permalink to this headline">#</a></h1>
 <section id="Learning-unbinned-observables">
 <h2>Learning unbinned observables<a class="headerlink" href="#Learning-unbinned-observables" title="Permalink to this headline">#</a></h2>
-<p><a class="reference external" href="https://colab.research.google.com/github/LHCfitNikhef/ML4EFT/blob/website_clean_code/sphinx/source/installation/tutorials/training.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p><a class="reference external" href="https://colab.research.google.com/github/LHCfitNikhef/ML4EFT/blob/gh-pages/docs/sphinx/source/installation/training.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
 <p>The goal of this tutorial is to demonstrate how to obtain unbinned multivariate observables from machine learning. We consider inclusive top quark pair production at the particle level i.e. including top quark decays in the dilepton channel: <span class="math notranslate nohighlight">\(p p \rightarrow t \bar{t}, t \bar{t} \rightarrow b \bar{b} \ell^{+} \ell^{-} \nu_{\ell} \bar{\nu}_{\ell}\)</span>, at the LHC 14 TeV, in the presence of the following dimension-six operators:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split} \begin{align}\mathcal{O}_{tG} &amp;= ig_s(\bar{Q}\tau^{\mu\nu}T_A t)\tilde{\varphi}G_{\mu\nu}^A + \mathrm{h.c.}\\
@@ -1036,7 +1036,6 @@ div.rendered_html tbody tr:hover {
 <span class="kn">import</span> <span class="nn">ml4eft.core.classifier</span> <span class="k">as</span> <span class="nn">classifier</span>
 <span class="kn">import</span> <span class="nn">ml4eft.analyse.analyse</span> <span class="k">as</span> <span class="nn">analyse</span>
 <span class="kn">import</span> <span class="nn">ml4eft.plotting.features</span> <span class="k">as</span> <span class="nn">features</span>
-<span class="kn">from</span> <span class="nn">ml4eft.analyse.analyse</span> <span class="kn">import</span> <span class="n">Analyse</span>
 </pre></div>
 </div>
 </div>
@@ -1068,8 +1067,8 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <p>For simplicity, we will focus on a single replica here, but the method can be easily applied to <span class="math notranslate nohighlight">\(n_{\mathrm{rep}} &gt; 1\)</span> replicas in case one has a cluster available. Training data can be downloaded as follows and contains 100K events with 18 particle level features each:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1080,14 +1079,6 @@ div.rendered_html tbody tr:hover {
 <span class="n">untar</span><span class="p">(</span><span class="n">training_data</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-100% [....................................................] 86621208 / 86621208
-</pre></div></div>
 </div>
 <p>The events are stored as pandas dataframes that we will now load</p>
 <div class="nbinput nblast docutils container">
@@ -1175,7 +1166,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-100% [..............................................................] 781 / 781
+100% [..................................................................................] 781 / 781
 </pre></div></div>
 </div>
 <p>Let us open the training runcard to see the possible options that can be set</p>
@@ -1263,8 +1254,8 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 </div>
 <p>Once you are happy with the settings, the training can be launched as</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1279,135 +1270,24 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-2022-10-28 16:34:54,082 [INFO] All directories created, ready to load the data
-2022-10-28 16:34:54,459 [INFO] Dataset loaded from ./downloads/training_data/tt_ctGRe/events_0.pkl.gz
-2022-10-28 16:34:54,469 [INFO] Dataset loaded from ./downloads/training_data/tt_sm/events_0.pkl.gz
-2022-10-28 16:34:56,870 [INFO] Epoch 1, Training loss 18.902219593524933, Validation loss 69.91038143634796, Overfit counter = 0
-2022-10-28 16:34:59,260 [INFO] Epoch 2, Training loss 7.347292244434357, Validation loss 8.02843028306961, Overfit counter = 0
-2022-10-28 16:35:01,591 [INFO] Epoch 3, Training loss 5.885509043931961, Validation loss 6.604433611035347, Overfit counter = 0
-2022-10-28 16:35:03,995 [INFO] Epoch 4, Training loss 4.904211044311523, Validation loss 5.2463508695364, Overfit counter = 0
-2022-10-28 16:35:06,385 [INFO] Epoch 5, Training loss 4.452874734997749, Validation loss 4.6248762384057045, Overfit counter = 0
-2022-10-28 16:35:08,966 [INFO] Epoch 6, Training loss 4.2284610122442245, Validation loss 4.310291536152363, Overfit counter = 0
-2022-10-28 16:35:11,502 [INFO] Epoch 7, Training loss 4.131236217916012, Validation loss 4.1593205109238625, Overfit counter = 0
-2022-10-28 16:35:14,039 [INFO] Epoch 8, Training loss 4.103682294487953, Validation loss 4.111822567880154, Overfit counter = 0
-2022-10-28 16:35:16,515 [INFO] Epoch 9, Training loss 4.093126103281975, Validation loss 4.096851445734501, Overfit counter = 0
-2022-10-28 16:35:19,058 [INFO] Epoch 10, Training loss 4.08655060082674, Validation loss 4.089238442480564, Overfit counter = 0
-2022-10-28 16:35:21,583 [INFO] Epoch 11, Training loss 4.0810868218541145, Validation loss 4.083417072892189, Overfit counter = 0
-2022-10-28 16:35:24,222 [INFO] Epoch 12, Training loss 4.076269581913948, Validation loss 4.078438363969326, Overfit counter = 0
-2022-10-28 16:35:26,699 [INFO] Epoch 13, Training loss 4.071833945810795, Validation loss 4.073818504810333, Overfit counter = 0
-2022-10-28 16:35:29,224 [INFO] Epoch 14, Training loss 4.067843355238438, Validation loss 4.0696225836873055, Overfit counter = 0
-2022-10-28 16:35:31,927 [INFO] Epoch 15, Training loss 4.064311251044273, Validation loss 4.065904811024666, Overfit counter = 0
-2022-10-28 16:35:34,533 [INFO] Epoch 16, Training loss 4.060957454144955, Validation loss 4.0625583454966545, Overfit counter = 0
-2022-10-28 16:35:37,158 [INFO] Epoch 17, Training loss 4.056907273828983, Validation loss 4.058852061629295, Overfit counter = 0
-2022-10-28 16:35:39,851 [INFO] Epoch 18, Training loss 4.053087629377842, Validation loss 4.054487831890583, Overfit counter = 0
-2022-10-28 16:35:42,583 [INFO] Epoch 19, Training loss 4.049676440656185, Validation loss 4.05080222338438, Overfit counter = 0
-2022-10-28 16:35:45,215 [INFO] Epoch 20, Training loss 4.046823874115944, Validation loss 4.0475045666098595, Overfit counter = 0
-2022-10-28 16:35:47,831 [INFO] Epoch 21, Training loss 4.0443898141384125, Validation loss 4.044615224003792, Overfit counter = 0
-2022-10-28 16:35:50,569 [INFO] Epoch 22, Training loss 4.042216785252094, Validation loss 4.042022101581097, Overfit counter = 0
-2022-10-28 16:35:53,736 [INFO] Epoch 23, Training loss 4.04115853458643, Validation loss 4.039691522717476, Overfit counter = 0
-2022-10-28 16:35:57,166 [INFO] Epoch 24, Training loss 4.039157465100288, Validation loss 4.037211626768112, Overfit counter = 0
-2022-10-28 16:36:00,499 [INFO] Epoch 25, Training loss 4.037634260952473, Validation loss 4.034820169210434, Overfit counter = 0
-2022-10-28 16:36:03,755 [INFO] Epoch 26, Training loss 4.0368435978889465, Validation loss 4.0332823023200035, Overfit counter = 0
-2022-10-28 16:36:06,713 [INFO] Epoch 27, Training loss 4.036062374711037, Validation loss 4.032890662550926, Overfit counter = 0
-2022-10-28 16:36:09,336 [INFO] Epoch 28, Training loss 4.0353061109781265, Validation loss 4.031892493367195, Overfit counter = 0
-2022-10-28 16:36:11,997 [INFO] Epoch 29, Training loss 4.034753546118736, Validation loss 4.031272426247597, Overfit counter = 0
-2022-10-28 16:36:14,706 [INFO] Epoch 30, Training loss 4.034248448908329, Validation loss 4.030841127038002, Overfit counter = 0
-2022-10-28 16:36:17,351 [INFO] Epoch 31, Training loss 4.0338641703128815, Validation loss 4.030291013419628, Overfit counter = 0
-2022-10-28 16:36:19,995 [INFO] Epoch 32, Training loss 4.033515229821205, Validation loss 4.029871508479118, Overfit counter = 0
-2022-10-28 16:36:22,659 [INFO] Epoch 33, Training loss 4.033099427819252, Validation loss 4.02972487360239, Overfit counter = 0
-2022-10-28 16:36:25,304 [INFO] Epoch 34, Training loss 4.0325915440917015, Validation loss 4.029337614774704, Overfit counter = 0
-2022-10-28 16:36:27,925 [INFO] Epoch 35, Training loss 4.032626092433929, Validation loss 4.028886340558529, Overfit counter = 0
-2022-10-28 16:36:30,466 [INFO] Epoch 36, Training loss 4.03222282230854, Validation loss 4.029434405267239, Overfit counter = 0
-2022-10-28 16:36:33,101 [INFO] Epoch 37, Training loss 4.031624518334866, Validation loss 4.028657965362072, Overfit counter = 1
-2022-10-28 16:36:35,740 [INFO] Epoch 38, Training loss 4.031307354569435, Validation loss 4.028409399092197, Overfit counter = 0
-2022-10-28 16:36:38,372 [INFO] Epoch 39, Training loss 4.03096330165863, Validation loss 4.028002977371216, Overfit counter = 0
-2022-10-28 16:36:40,977 [INFO] Epoch 40, Training loss 4.030616320669651, Validation loss 4.027626022696495, Overfit counter = 0
-2022-10-28 16:36:43,508 [INFO] Epoch 41, Training loss 4.030275121331215, Validation loss 4.027450203895569, Overfit counter = 0
-2022-10-28 16:36:46,103 [INFO] Epoch 42, Training loss 4.030018888413906, Validation loss 4.027120567858219, Overfit counter = 0
-2022-10-28 16:36:48,692 [INFO] Epoch 43, Training loss 4.029755391180515, Validation loss 4.02679555863142, Overfit counter = 0
-2022-10-28 16:36:51,284 [INFO] Epoch 44, Training loss 4.029450610280037, Validation loss 4.0267003029584885, Overfit counter = 0
-2022-10-28 16:36:53,845 [INFO] Epoch 45, Training loss 4.029202505946159, Validation loss 4.026440784335136, Overfit counter = 0
-2022-10-28 16:36:56,404 [INFO] Epoch 46, Training loss 4.028933137655258, Validation loss 4.02640713006258, Overfit counter = 0
-2022-10-28 16:36:59,032 [INFO] Epoch 47, Training loss 4.028695814311504, Validation loss 4.026003673672676, Overfit counter = 0
-2022-10-28 16:37:01,574 [INFO] Epoch 48, Training loss 4.028450533747673, Validation loss 4.02595105022192, Overfit counter = 0
-2022-10-28 16:37:04,114 [INFO] Epoch 49, Training loss 4.02816391736269, Validation loss 4.025821693241596, Overfit counter = 0
-2022-10-28 16:37:06,681 [INFO] Epoch 50, Training loss 4.027905210852623, Validation loss 4.02552979439497, Overfit counter = 0
-2022-10-28 16:37:09,262 [INFO] Epoch 51, Training loss 4.027684196829796, Validation loss 4.025394134223461, Overfit counter = 0
-2022-10-28 16:37:11,877 [INFO] Epoch 52, Training loss 4.027446798980236, Validation loss 4.025138460099697, Overfit counter = 0
-2022-10-28 16:37:14,436 [INFO] Epoch 53, Training loss 4.0271605253219604, Validation loss 4.025079920887947, Overfit counter = 0
-2022-10-28 16:37:16,968 [INFO] Epoch 54, Training loss 4.027002699673176, Validation loss 4.024849154055119, Overfit counter = 0
-2022-10-28 16:37:19,477 [INFO] Epoch 55, Training loss 4.026734083890915, Validation loss 4.025207221508026, Overfit counter = 0
-2022-10-28 16:37:22,004 [INFO] Epoch 56, Training loss 4.026469863951206, Validation loss 4.024599239230156, Overfit counter = 1
-2022-10-28 16:37:24,611 [INFO] Epoch 57, Training loss 4.026208356022835, Validation loss 4.0245527774095535, Overfit counter = 0
-2022-10-28 16:37:27,138 [INFO] Epoch 58, Training loss 4.026083245873451, Validation loss 4.024448953568935, Overfit counter = 0
-2022-10-28 16:37:29,736 [INFO] Epoch 59, Training loss 4.02580027282238, Validation loss 4.024451375007629, Overfit counter = 0
-2022-10-28 16:37:32,427 [INFO] Epoch 60, Training loss 4.0255164578557014, Validation loss 4.024283230304718, Overfit counter = 1
-2022-10-28 16:37:35,003 [INFO] Epoch 61, Training loss 4.025316648185253, Validation loss 4.024177812039852, Overfit counter = 0
-2022-10-28 16:37:37,575 [INFO] Epoch 62, Training loss 4.025175280869007, Validation loss 4.023889645934105, Overfit counter = 0
-2022-10-28 16:37:40,086 [INFO] Epoch 63, Training loss 4.024998515844345, Validation loss 4.023937284946442, Overfit counter = 0
-2022-10-28 16:37:42,600 [INFO] Epoch 64, Training loss 4.02464697510004, Validation loss 4.023954376578331, Overfit counter = 1
-2022-10-28 16:37:45,143 [INFO] Epoch 65, Training loss 4.024477832019329, Validation loss 4.023694470524788, Overfit counter = 2
-2022-10-28 16:37:47,728 [INFO] Epoch 66, Training loss 4.024219550192356, Validation loss 4.0237066596746445, Overfit counter = 0
-2022-10-28 16:37:50,368 [INFO] Epoch 67, Training loss 4.024054899811745, Validation loss 4.023655869066715, Overfit counter = 1
-2022-10-28 16:37:52,948 [INFO] Epoch 68, Training loss 4.023775406181812, Validation loss 4.023552246391773, Overfit counter = 0
-2022-10-28 16:37:55,494 [INFO] Epoch 69, Training loss 4.023513801395893, Validation loss 4.023153737187386, Overfit counter = 0
-2022-10-28 16:37:58,137 [INFO] Epoch 70, Training loss 4.0233002081513405, Validation loss 4.02326624840498, Overfit counter = 0
-2022-10-28 16:38:00,844 [INFO] Epoch 71, Training loss 4.023091346025467, Validation loss 4.022999972105026, Overfit counter = 1
-2022-10-28 16:38:03,501 [INFO] Epoch 72, Training loss 4.022891156375408, Validation loss 4.02297531068325, Overfit counter = 0
-2022-10-28 16:38:06,010 [INFO] Epoch 73, Training loss 4.022682063281536, Validation loss 4.022925943136215, Overfit counter = 0
-2022-10-28 16:38:08,591 [INFO] Epoch 74, Training loss 4.022422432899475, Validation loss 4.02269796282053, Overfit counter = 0
-2022-10-28 16:38:11,229 [INFO] Epoch 75, Training loss 4.022177018225193, Validation loss 4.02258088439703, Overfit counter = 0
-2022-10-28 16:38:13,807 [INFO] Epoch 76, Training loss 4.022002503275871, Validation loss 4.02260023355484, Overfit counter = 0
-2022-10-28 16:38:16,365 [INFO] Epoch 77, Training loss 4.021772086620331, Validation loss 4.0225018709897995, Overfit counter = 1
-2022-10-28 16:38:18,952 [INFO] Epoch 78, Training loss 4.021674819290638, Validation loss 4.022661060094833, Overfit counter = 0
-2022-10-28 16:38:21,483 [INFO] Epoch 79, Training loss 4.021268732845783, Validation loss 4.022414714097977, Overfit counter = 1
-2022-10-28 16:38:23,980 [INFO] Epoch 80, Training loss 4.020928591489792, Validation loss 4.02230042219162, Overfit counter = 0
-2022-10-28 16:38:26,549 [INFO] Epoch 81, Training loss 4.020661778748035, Validation loss 4.02216724306345, Overfit counter = 0
-2022-10-28 16:38:29,184 [INFO] Epoch 82, Training loss 4.02048921585083, Validation loss 4.0220398008823395, Overfit counter = 0
-2022-10-28 16:38:31,769 [INFO] Epoch 83, Training loss 4.020158410072327, Validation loss 4.0222268253564835, Overfit counter = 0
-2022-10-28 16:38:34,340 [INFO] Epoch 84, Training loss 4.019948333501816, Validation loss 4.021899536252022, Overfit counter = 1
-2022-10-28 16:38:36,919 [INFO] Epoch 85, Training loss 4.019752651453018, Validation loss 4.021703585982323, Overfit counter = 0
-2022-10-28 16:38:39,415 [INFO] Epoch 86, Training loss 4.019520245492458, Validation loss 4.021780535578728, Overfit counter = 0
-2022-10-28 16:38:41,992 [INFO] Epoch 87, Training loss 4.019325494766235, Validation loss 4.0220137014985085, Overfit counter = 1
-2022-10-28 16:38:44,497 [INFO] Epoch 88, Training loss 4.019104644656181, Validation loss 4.021810099482536, Overfit counter = 2
-2022-10-28 16:38:47,072 [INFO] Epoch 89, Training loss 4.018792651593685, Validation loss 4.021538496017456, Overfit counter = 3
-2022-10-28 16:38:49,690 [INFO] Epoch 90, Training loss 4.018493689596653, Validation loss 4.021583095192909, Overfit counter = 0
-2022-10-28 16:38:52,258 [INFO] Epoch 91, Training loss 4.018292553722858, Validation loss 4.021547198295593, Overfit counter = 1
-2022-10-28 16:38:54,847 [INFO] Epoch 92, Training loss 4.018118232488632, Validation loss 4.021450385451317, Overfit counter = 2
-2022-10-28 16:38:57,386 [INFO] Epoch 93, Training loss 4.017816834151745, Validation loss 4.021393425762653, Overfit counter = 0
-2022-10-28 16:38:59,935 [INFO] Epoch 94, Training loss 4.0176922753453255, Validation loss 4.02138402312994, Overfit counter = 0
-2022-10-28 16:39:02,509 [INFO] Epoch 95, Training loss 4.017434559762478, Validation loss 4.021261505782604, Overfit counter = 0
-2022-10-28 16:39:05,089 [INFO] Epoch 96, Training loss 4.017132267355919, Validation loss 4.021533966064453, Overfit counter = 0
-2022-10-28 16:39:07,718 [INFO] Epoch 97, Training loss 4.016906462609768, Validation loss 4.020955130457878, Overfit counter = 1
-2022-10-28 16:39:10,268 [INFO] Epoch 98, Training loss 4.016648150980473, Validation loss 4.021143481135368, Overfit counter = 0
-2022-10-28 16:39:12,935 [INFO] Epoch 99, Training loss 4.016435466706753, Validation loss 4.021337643265724, Overfit counter = 1
-2022-10-28 16:39:15,623 [INFO] Epoch 100, Training loss 4.016142077744007, Validation loss 4.021115943789482, Overfit counter = 2
-2022-10-28 16:39:15,627 [INFO] Finished training
-</pre></div></div>
-</div>
 <p>In this runcard, <code class="docutils literal notranslate"><span class="pre">mc_run</span></code> specifies the replica number (must match with <code class="docutils literal notranslate"><span class="pre">events_&lt;mc_run&gt;.pkl.gz</span></code>), and <code class="docutils literal notranslate"><span class="pre">c_name</span></code> denotes the NN that will be trained. Possible options here are for instance <code class="docutils literal notranslate"><span class="pre">ctGRe_ctGRe</span></code>, <code class="docutils literal notranslate"><span class="pre">ctj8_ctj8</span></code> in case of a quadratic coefficient function, or <code class="docutils literal notranslate"><span class="pre">ctGRe</span></code> in case one wants to train the linear term in the likelihood ratio accomponying <span class="math notranslate nohighlight">\(c_{tG}\)</span>.</p>
 </section>
 <section id="Loading-models">
 <h2>Loading models<a class="headerlink" href="#Loading-models" title="Permalink to this headline">#</a></h2>
 <p>Trained models can be loaded into an <code class="docutils literal notranslate"><span class="pre">Analyse</span></code> object to make them accesible for later use</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">path_to_models_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;./models&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y/%m/</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">))</span>
 <span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;lin&#39;</span> <span class="c1"># or quad when quadratic models have been trained</span>
 
-<span class="n">models_paths_dict</span> <span class="o">=</span> <span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_root</span><span class="p">,</span>
+<span class="n">models_paths_dict</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_root</span><span class="p">,</span>
                         <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
                         <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
 
-<span class="n">analyser</span> <span class="o">=</span> <span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="nb">all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">analyser</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="nb">all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1432,8 +1312,8 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <section id="Pretrained-models">
 <h2>Pretrained models<a class="headerlink" href="#Pretrained-models" title="Permalink to this headline">#</a></h2>
 <p>We have provided a set of pretrained models that can be directly loaded and analysed. Lets download them. We will consider models that have been trained on 2 features <span class="math notranslate nohighlight">\(p_T^{\ell\bar{\ell}}\)</span> and <span class="math notranslate nohighlight">\(\eta_\ell\)</span> first.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1442,14 +1322,6 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <span class="n">untar</span><span class="p">(</span><span class="n">pretrained_models_2_feat</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s1">&#39;./downloads/models/tt_llvlvlbb_2_feat&#39;</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-100% [....................................................] 53293644 / 53293644
-</pre></div></div>
 </div>
 <p>Like before, we load the models into a <code class="docutils literal notranslate"><span class="pre">Analyse</span></code> object:</p>
 <div class="nbinput nblast docutils container">
@@ -1460,17 +1332,17 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <span></span><span class="n">path_to_models_2_feat_root</span> <span class="o">=</span> <span class="s1">&#39;./downloads/models/tt_llvlvlbb_2_feat&#39;</span>
 <span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;quad&#39;</span>
 
-<span class="n">models_paths_dict_2_feat</span> <span class="o">=</span> <span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_2_feat_root</span><span class="p">,</span>
+<span class="n">models_paths_dict_2_feat</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_2_feat_root</span><span class="p">,</span>
                         <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
                         <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
 
-<span class="n">analyser_2_feat</span> <span class="o">=</span> <span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict_2_feat</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+<span class="n">analyser_2_feat</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict_2_feat</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>Given some “observed” data (not used during training) drawn from the SM, we can evaluate the NNs on this data through the following syntax:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1549,7 +1421,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;mpl_toolkits.mplot3d.art3d.Poly3DCollection at 0x7fbfe845e250&gt;
+&lt;mpl_toolkits.mplot3d.art3d.Poly3DCollection at 0x7f79d65a45d0&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1562,8 +1434,8 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <section id="18-features">
 <h3>18 features<a class="headerlink" href="#18-features" title="Permalink to this headline">#</a></h3>
 <p>The fully multivariate models are also available, and can be loaded exactly like before</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1574,16 +1446,8 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-100% [..................................................] 101051331 / 101051331
-</pre></div></div>
-</div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1610,7 +1474,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1619,7 +1483,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1628,7 +1492,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
