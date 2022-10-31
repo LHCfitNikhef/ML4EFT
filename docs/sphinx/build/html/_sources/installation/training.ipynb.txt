@@ -33,6 +33,43 @@
    ]
   },
   {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Installing ML4EFT"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "To install ML4EFT, if not done already, one should run the following command:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!pip install ml4eft "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This is a necessary step if one chooses to run from google colab. This step can be skipped if one is running locally and ML4EFT has already been installed."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Loading the training data"
+   ]
+  },
+  {
    "cell_type": "code",
    "execution_count": null,
    "metadata": {},
@@ -49,13 +86,6 @@
     "import ml4eft.core.classifier as classifier\n",
     "import ml4eft.analyse.analyse as analyse\n",
     "import ml4eft.plotting.features as features"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "# Loading the training data"
    ]
   },
   {
@@ -201,7 +231,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Training unbinned observables"
+    "### Training unbinned observables"
    ]
   },
   {
@@ -369,7 +399,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Loading models"
+    "### Loading models"
    ]
   },
   {
@@ -428,7 +458,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Pretrained models"
+    "### Pretrained models"
    ]
   },
   {
@@ -585,7 +615,7 @@
    "source": [
     "# make a 3D interactive plot\n",
     "\n",
-    "%matplotlib inline\n",
+    "%matplotlib ipympl\n",
     "fig = plt.figure(figsize=(10,10))\n",
     "ax = plt.axes(projection='3d')\n",
     "ax.set_xlabel(r'$\\eta_\\ell$')\n",

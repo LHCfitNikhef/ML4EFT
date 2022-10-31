@@ -646,44 +646,40 @@ title="Print to PDF"
     </div>
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#">
-   Tutorial
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Learning-unbinned-observables">
+   Learning unbinned observables
   </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#Learning-unbinned-observables">
-     Learning unbinned observables
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Installing-ML4EFT">
+     Installing ML4EFT
     </a>
    </li>
-  </ul>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Loading-the-training-data">
-   Loading the training data
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Loading-the-training-data">
+     Loading the training data
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#Training-unbinned-observables">
      Training unbinned observables
     </a>
    </li>
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#Loading-models">
      Loading models
     </a>
    </li>
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#Pretrained-models">
      Pretrained models
     </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#18-features">
-       18 features
-      </a>
-     </li>
-    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#18-features">
+     18 features
+    </a>
    </li>
   </ul>
  </li>
@@ -706,44 +702,40 @@ title="Print to PDF"
                         </div>
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#">
-   Tutorial
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Learning-unbinned-observables">
+   Learning unbinned observables
   </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#Learning-unbinned-observables">
-     Learning unbinned observables
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Installing-ML4EFT">
+     Installing ML4EFT
     </a>
    </li>
-  </ul>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Loading-the-training-data">
-   Loading the training data
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Loading-the-training-data">
+     Loading the training data
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#Training-unbinned-observables">
      Training unbinned observables
     </a>
    </li>
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#Loading-models">
      Loading models
     </a>
    </li>
-   <li class="toc-h2 nav-item toc-entry">
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#Pretrained-models">
      Pretrained models
     </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h3 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#18-features">
-       18 features
-      </a>
-     </li>
-    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#18-features">
+     18 features
+    </a>
    </li>
   </ul>
  </li>
@@ -1020,6 +1012,22 @@ div.rendered_html tbody tr:hover {
 \[\mathcal{O}_{qu}^{8(ijkl)} = (\bar{q}_i\gamma^\mu T^A q_j)(\bar{u}_k\gamma_\mu T^A u_l).\]</div>
 <p>We will train models on either a pair of features, or the full set of kinematic features that are available in the final state. This tutorial is split into three parts. First, we show how to load the training data that got generated under the SM and the EFT hypotheses and how to plot their corresponding distributions for various kinematic features. The last two parts are about learning unbinned observables that depend on either the transverse momentum of the lepton-pair,
 <span class="math notranslate nohighlight">\(p_T^{\ell\bar{\ell}}\)</span>, and the pseudorapidity of the lepton, <span class="math notranslate nohighlight">\(\eta_\ell\)</span>, or on 18 features following a fully multivariate unbinned approach.</p>
+<section id="Installing-ML4EFT">
+<h3>Installing ML4EFT<a class="headerlink" href="#Installing-ML4EFT" title="Permalink to this headline">#</a></h3>
+<p>To install ML4EFT, if not done already, one should run the following command:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="o">!</span>pip install ml4eft
+</pre></div>
+</div>
+</div>
+<p>This is a necessary step if one chooses to run from google colab. This step can be skipped if one is running locally and ML4EFT has already been installed.</p>
+</section>
+<section id="Loading-the-training-data">
+<h3>Loading the training data<a class="headerlink" href="#Loading-the-training-data" title="Permalink to this headline">#</a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -1039,10 +1047,6 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</section>
-</section>
-<section id="Loading-the-training-data">
-<h1>Loading the training data<a class="headerlink" href="#Loading-the-training-data" title="Permalink to this headline">#</a></h1>
 <p>We define two helper functions that serve to download and untar remote files:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
@@ -1143,13 +1147,14 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/installation_training_13_0.png" src="../_images/installation_training_13_0.png" />
+<img alt="../_images/installation_training_17_0.png" src="../_images/installation_training_17_0.png" />
 </div>
 </div>
 <p>Looking at the distribution of the 18 features plotted above, we notice some clear departures away from the SM in nearly all kinematic features. We thus expect a full multivariate analysis to pay off compared to a simple binned analysis in one or two kinematics. The latter is also inherently bound by the curse of dimensionality: a binned analysis would require populating a 18-dim feature space through Monte Carlo, which is simply impossible since the number of simulated events required to
 populate a 18-dim feature space scales exponentially with the number of dimensions!</p>
+</section>
 <section id="Training-unbinned-observables">
-<h2>Training unbinned observables<a class="headerlink" href="#Training-unbinned-observables" title="Permalink to this headline">#</a></h2>
+<h3>Training unbinned observables<a class="headerlink" href="#Training-unbinned-observables" title="Permalink to this headline">#</a></h3>
 <p>Having loaded the training data, we now move on to the actual training. To this end, we download our training runcard that contains information regarding the setup, such as the architecture, number of mini-batches, epochs and data points, etc…</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -1273,7 +1278,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <p>In this runcard, <code class="docutils literal notranslate"><span class="pre">mc_run</span></code> specifies the replica number (must match with <code class="docutils literal notranslate"><span class="pre">events_&lt;mc_run&gt;.pkl.gz</span></code>), and <code class="docutils literal notranslate"><span class="pre">c_name</span></code> denotes the NN that will be trained. Possible options here are for instance <code class="docutils literal notranslate"><span class="pre">ctGRe_ctGRe</span></code>, <code class="docutils literal notranslate"><span class="pre">ctj8_ctj8</span></code> in case of a quadratic coefficient function, or <code class="docutils literal notranslate"><span class="pre">ctGRe</span></code> in case one wants to train the linear term in the likelihood ratio accomponying <span class="math notranslate nohighlight">\(c_{tG}\)</span>.</p>
 </section>
 <section id="Loading-models">
-<h2>Loading models<a class="headerlink" href="#Loading-models" title="Permalink to this headline">#</a></h2>
+<h3>Loading models<a class="headerlink" href="#Loading-models" title="Permalink to this headline">#</a></h3>
 <p>Trained models can be loaded into an <code class="docutils literal notranslate"><span class="pre">Analyse</span></code> object to make them accesible for later use</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
@@ -1305,12 +1310,12 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/installation_training_31_0.png" src="../_images/installation_training_31_0.png" />
+<img alt="../_images/installation_training_35_0.png" src="../_images/installation_training_35_0.png" />
 </div>
 </div>
 </section>
 <section id="Pretrained-models">
-<h2>Pretrained models<a class="headerlink" href="#Pretrained-models" title="Permalink to this headline">#</a></h2>
+<h3>Pretrained models<a class="headerlink" href="#Pretrained-models" title="Permalink to this headline">#</a></h3>
 <p>We have provided a set of pretrained models that can be directly loaded and analysed. Lets download them. We will consider models that have been trained on 2 features <span class="math notranslate nohighlight">\(p_T^{\ell\bar{\ell}}\)</span> and <span class="math notranslate nohighlight">\(\eta_\ell\)</span> first.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
@@ -1405,7 +1410,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># make a 3D interactive plot</span>
 
-<span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="o">%</span><span class="k">matplotlib</span> ipympl
 <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
 <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\eta_\ell$&#39;</span><span class="p">)</span>
@@ -1428,9 +1433,10 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/installation_training_45_1.png" src="../_images/installation_training_45_1.png" />
+<img alt="../_images/installation_training_49_1.png" src="../_images/installation_training_49_1.png" />
 </div>
 </div>
+</section>
 <section id="18-features">
 <h3>18 features<a class="headerlink" href="#18-features" title="Permalink to this headline">#</a></h3>
 <p>The fully multivariate models are also available, and can be loaded exactly like before</p>
