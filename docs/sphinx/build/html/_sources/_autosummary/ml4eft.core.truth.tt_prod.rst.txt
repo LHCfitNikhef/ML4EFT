@@ -1,4 +1,4 @@
-ml4eft.core.truth.tt\_prod
+﻿ml4eft.core.truth.tt\_prod
 ==========================
 
 .. automodule:: ml4eft.core.truth.tt_prod
@@ -16,7 +16,6 @@ ml4eft.core.truth.tt\_prod
    
       dsigma_dmtt
       dsigma_dmtt_dy
-      dsigma_dmtt_dy_dpt
       weight
       weight_pt
    

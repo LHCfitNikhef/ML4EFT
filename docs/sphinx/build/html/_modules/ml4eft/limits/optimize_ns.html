@@ -616,13 +616,6 @@ title="Fullscreen mode"
 
 <span class="kn">import</span> <span class="nn">ml4eft.analyse.analyse</span> <span class="k">as</span> <span class="nn">analyse</span>
 <span class="kn">import</span> <span class="nn">ml4eft.core.th_predictions</span> <span class="k">as</span> <span class="nn">theory_pred</span>
-<span class="kn">from</span> <span class="nn">ml4eft.core.truth</span> <span class="kn">import</span> <span class="n">vh_prod</span>
-<span class="kn">from</span> <span class="nn">ml4eft.preproc</span> <span class="kn">import</span> <span class="n">constants</span>
-
-<span class="kn">from</span> <span class="nn">ml4eft.core.th_predictions</span> <span class="kn">import</span> <span class="n">TheoryPred</span>
-
-<span class="n">mz</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">mz</span>
-<span class="n">mh</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">mh</span>
 
 <span class="c1"># fix randomness</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -633,7 +626,7 @@ title="Fullscreen mode"
 <span class="sd">    Optimizer to obtain confidence level intervals in the SMEFT using either binned or unbinned (ML level) observables</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Optimize.__init__"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">coeff</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Optimize.__init__"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">coeff</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rep</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Optimize constructor</span>
 
@@ -643,20 +636,22 @@ title="Fullscreen mode"
 <span class="sd">            loaded json run card</span>
 <span class="sd">        coeff: array_like, optional</span>
 <span class="sd">            Subset of ``(N,) ndarray`` EFT parameter names to include in the fit. Takes all EFT parameters by default.</span>
+<span class="sd">        rep: int, optional</span>
+<span class="sd">            Run the optimiser on a specific replica numner, set to ``None`` by default, in which case the optimiser</span>
+<span class="sd">            works with the median over all replicas.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span> <span class="o">=</span> <span class="n">coeff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rep</span> <span class="o">=</span> <span class="n">rep</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">if</span> <span class="s2">&quot;fit_id&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fit_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;fit_id&quot;</span><span class="p">]</span>
-
         <span class="k">if</span> <span class="s2">&quot;order&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;order&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="s2">&quot;prior&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">prior_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;prior&quot;</span><span class="p">]</span>
-
         <span class="k">if</span> <span class="s2">&quot;process&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;process&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="s2">&quot;mode&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -666,7 +661,6 @@ title="Fullscreen mode"
                 <span class="s2">&quot;No mode (mode) selected, please specify one in the input card. Aborting.&quot;</span>
             <span class="p">)</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
-
         <span class="k">if</span> <span class="s2">&quot;nlive&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">live_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;nlive&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -674,7 +668,6 @@ title="Fullscreen mode"
                 <span class="s2">&quot;Number of live points (nlive) not set in the input card. Using default: 500&quot;</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">live_points</span> <span class="o">=</span> <span class="mi">500</span>
-
         <span class="k">if</span> <span class="s2">&quot;lumi&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">lumi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;lumi&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -692,7 +685,8 @@ title="Fullscreen mode"
                 <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;nn&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="s2">&quot;path_to_models&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">path_to_models</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;path_to_models&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">path_to_models</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;path_to_models&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+                                                                      <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_to_models</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
@@ -708,23 +702,20 @@ title="Fullscreen mode"
             <span class="bp">self</span><span class="o">.</span><span class="n">th_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;th_features&#39;</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="s2">&quot;path_to_theory_pred&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">path_to_theory_pred</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;path_to_theory_pred&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path_to_theory_pred</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;path_to_theory_pred&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+                                                                       <span class="n">prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
                 <span class="s2">&quot;No path to theory predictions (path_to_theory_pred) specified. Please set in the in the input card. Aborting.&quot;</span>
             <span class="p">)</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
 
-
         <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span> <span class="o">=</span> <span class="n">theory_pred</span><span class="o">.</span><span class="n">TheoryPred</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_to_theory_pred</span><span class="p">,</span>
                                               <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">)</span>
 
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">glob</span> <span class="o">=</span> <span class="kc">True</span>
-
-            <span class="c1">#self.coeff = self.th_pred.th_dict[&#39;lin&#39;].keys()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">get_c_names_unique</span><span class="p">()</span> <span class="c1"># coefficients to include in the fit</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">get_c_names_unique</span><span class="p">()</span>  <span class="c1"># coefficients to include in the fit</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">glob</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -734,8 +725,17 @@ title="Fullscreen mode"
             <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span> <span class="o">+=</span> <span class="n">c</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="c1">#self.output_path = os.path.join(self.config[&quot;results_path&quot;], &#39;{}_{}&#39;.format(self.mode, self.fit_id), self.suffix[1:])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;results_path&quot;</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_id</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rep</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;results_path&quot;</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_id</span><span class="p">),</span>
+                                            <span class="s1">&#39;rep_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rep</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">glob</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;results_path&quot;</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_id</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;results_path&quot;</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_id</span><span class="p">),</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
 
         <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -759,18 +759,14 @@ title="Fullscreen mode"
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;nn&quot;</span><span class="p">:</span>
 
-
-
             <span class="c1"># evaluated nn models on pseudo dataset</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_data</span><span class="p">,</span> <span class="n">rep</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rep</span><span class="p">)</span>
             <span class="n">models_evaluated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span>
 
-            <span class="c1">#import pdb; pdb.set_trace()</span>
-            <span class="c1"># n_dat = len(self.nn_analyser.models_evaluated_df[&#39;models&#39;][&#39;lin&#39;, &#39;cQj38&#39;])</span>
-            <span class="c1"># fraction_cQj38 = np.sum(self.nn_analyser.models_evaluated_df[&#39;models&#39;][&#39;lin&#39;, &#39;cQj38&#39;] &lt; 0) / n_dat</span>
-
-            <span class="c1"># taken median over models</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">models_evaluated</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rep</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># take median over models</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">models_evaluated</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;truth&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">compute_diff_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -859,7 +855,7 @@ title="Fullscreen mode"
         <span class="c1"># median likelihood ratio</span>
         <span class="n">ratio_med</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nn_analyser</span><span class="o">.</span><span class="n">likelihood_ratio_nn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">)</span>
         <span class="n">log_r_med</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ratio_med</span><span class="p">)</span>
-        
+
         <span class="k">return</span> <span class="o">-</span><span class="n">nu</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">log_r_med</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Optimize.log_like_truth"><a class="viewcode-back" href="../../../_autosummary/ml4eft.limits.optimize_ns.Optimize.html#ml4eft.limits.optimize_ns.Optimize.log_like_truth">[docs]</a>    <span class="k">def</span> <span class="nf">log_like_truth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube</span><span class="p">):</span>
@@ -895,7 +891,6 @@ title="Fullscreen mode"
                 <span class="n">sigma</span> <span class="o">+=</span> <span class="n">c_val</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">][</span><span class="n">c_name</span><span class="p">]</span>
                 <span class="n">dsigma_dx</span> <span class="o">+=</span> <span class="n">c_val</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">][</span><span class="n">c_name</span><span class="p">]</span>
 
-
         <span class="k">if</span> <span class="s1">&#39;quad&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">:</span>
 
             <span class="n">quad_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_pred</span><span class="o">.</span><span class="n">th_dict</span><span class="p">[</span><span class="s1">&#39;quad&#39;</span><span class="p">]</span>
@@ -903,7 +898,8 @@ title="Fullscreen mode"
                 <span class="n">c_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="n">quad_pred</span><span class="p">:</span>
                     <span class="n">sigma</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">*</span> <span class="n">quad_pred</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
-                    <span class="n">dsigma_dx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span><span class="p">[</span><span class="s1">&#39;quad&#39;</span><span class="p">][</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
+                    <span class="n">dsigma_dx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span><span class="p">[</span><span class="s1">&#39;quad&#39;</span><span class="p">][</span>
+                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
 
         <span class="n">nu</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lumi</span>
         <span class="n">log_like</span> <span class="o">=</span> <span class="o">-</span><span class="n">nu</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dsigma_dx</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsigma_dx</span><span class="p">[</span><span class="s1">&#39;sm&#39;</span><span class="p">]))</span>
@@ -1012,12 +1008,8 @@ title="Fullscreen mode"
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">samples</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)):</span>
             <span class="n">vals</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 
-        <span class="c1"># with open(os.path.join(self.output_path, &#39;posterior&#39; + self.suffix + &#39;.json&#39;), &quot;w&quot;) as f:</span>
-        <span class="c1">#     json.dump(vals, f)</span>
-
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;posterior.json&#39;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div></div>
-
 </pre></div>
 
               </div>

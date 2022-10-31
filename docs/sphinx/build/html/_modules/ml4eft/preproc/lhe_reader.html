@@ -605,11 +605,11 @@ title="Fullscreen mode"
 <span class="kn">import</span> <span class="nn">pylhe</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+
 <div class="viewcode-block" id="Kinematics"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics">[docs]</a><span class="k">class</span> <span class="nc">Kinematics</span><span class="p">(</span><span class="n">pylhe</span><span class="o">.</span><span class="n">LHEParticle</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LHE kinematics class</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
 
 <div class="viewcode-block" id="Kinematics.__init__"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -625,12 +625,12 @@ title="Fullscreen mode"
 <span class="sd">        We consider :math:`pp\\rightarrow ZH \\rightarrow \ell^+\ell^-b\\bar{b}\;` as a simple example</span>
 
 <span class="sd">        &gt;&gt;&gt; import pylhe</span>
-<span class="sd">        &gt;&gt;&gt; lhe_init = pylhe.readLHEInit(path_to_lhe)</span>
+<span class="sd">        &gt;&gt;&gt; lhe_init = pylhe.read_lhe_init(path_to_lhe)</span>
 
 <span class="sd">        Loop over the events in the LHE file and append kinematics</span>
 
 <span class="sd">        &gt;&gt;&gt; events = []</span>
-<span class="sd">        &gt;&gt;&gt; for e in pylhe.readLHE(path_to_lhe):</span>
+<span class="sd">        &gt;&gt;&gt; for e in pylhe.read_lhe(path_to_lhe):</span>
 <span class="sd">        ...     incoming_part = []</span>
 <span class="sd">        ...     # create particle instances</span>
 <span class="sd">        ...     for part in e.particles:</span>
@@ -709,7 +709,7 @@ title="Fullscreen mode"
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
-            <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span> <span class="k">if</span> <span class="n">mu</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">mu</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">mu</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">,</span> <span class="s1">&#39;py&#39;</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">]))</span></div>
+            <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span> <span class="k">if</span> <span class="n">mu</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">mu</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">,</span> <span class="s1">&#39;py&#39;</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">]))</span></div>
 
 <div class="viewcode-block" id="Kinematics.get_pt"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_pt">[docs]</a>    <span class="k">def</span> <span class="nf">get_pt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -721,7 +721,6 @@ title="Fullscreen mode"
 <span class="sd">            Transverse momentum in GeV</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;py&#39;</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
-
 
 <div class="viewcode-block" id="Kinematics.get_p"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_p">[docs]</a>    <span class="k">def</span> <span class="nf">get_p</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -776,7 +775,7 @@ title="Fullscreen mode"
 <span class="sd">            Pseudorapidity</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_theta</span><span class="p">()</span>
-        <span class="n">eta</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">theta</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">theta</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">eta</span></div>
 
 <div class="viewcode-block" id="Kinematics.get_rapidity"><a class="viewcode-back" href="../../../_autosummary/ml4eft.preproc.lhe_reader.Kinematics.html#ml4eft.preproc.lhe_reader.Kinematics.get_rapidity">[docs]</a>    <span class="k">def</span> <span class="nf">get_rapidity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -788,7 +787,7 @@ title="Fullscreen mode"
 <span class="sd">        y: float</span>
 <span class="sd">            Rapidity</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">q0</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">)</span>   <span class="c1"># energy of the top quark pair in the pp COM frame</span>
+        <span class="n">q0</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">)</span>  <span class="c1"># energy of the top quark pair in the pp COM frame</span>
         <span class="n">q3</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;pz&#39;</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="n">q0</span> <span class="o">+</span> <span class="n">q3</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">q0</span> <span class="o">-</span> <span class="n">q3</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">y</span></div></div>
@@ -831,8 +830,6 @@ title="Fullscreen mode"
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dphi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">phi1</span> <span class="o">-</span> <span class="n">phi2</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dphi</span> <span class="k">if</span> <span class="n">dphi</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="k">else</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">dphi</span></div>
-
-
 </pre></div>
 
               </div>

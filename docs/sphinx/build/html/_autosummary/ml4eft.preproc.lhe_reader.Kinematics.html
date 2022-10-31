@@ -667,12 +667,12 @@ title="Print to PDF"
 <p class="rubric">Examples</p>
 <p>We consider <span class="math notranslate nohighlight">\(pp\rightarrow ZH \rightarrow \ell^+\ell^-b\bar{b}\;\)</span> as a simple example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pylhe</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lhe_init</span> <span class="o">=</span> <span class="n">pylhe</span><span class="o">.</span><span class="n">readLHEInit</span><span class="p">(</span><span class="n">path_to_lhe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lhe_init</span> <span class="o">=</span> <span class="n">pylhe</span><span class="o">.</span><span class="n">read_lhe_init</span><span class="p">(</span><span class="n">path_to_lhe</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Loop over the events in the LHE file and append kinematics</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">pylhe</span><span class="o">.</span><span class="n">readLHE</span><span class="p">(</span><span class="n">path_to_lhe</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">pylhe</span><span class="o">.</span><span class="n">read_lhe</span><span class="p">(</span><span class="n">path_to_lhe</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">incoming_part</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="gp">... </span>    <span class="c1"># create particle instances</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">particles</span><span class="p">:</span>

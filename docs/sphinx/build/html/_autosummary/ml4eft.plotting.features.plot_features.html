@@ -651,7 +651,24 @@ title="Print to PDF"
 <dl class="py function">
 <dt class="sig sig-object py" id="ml4eft.plotting.features.plot_features">
 <span class="sig-prename descclassname"><span class="pre">ml4eft.plotting.features.</span></span><span class="sig-name descname"><span class="pre">plot_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_sm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfs_eft</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ml4eft/plotting/features.html#plot_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ml4eft.plotting.features.plot_features" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Produces a plot showing the distribution of the training features</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df_sm</strong> (<em>pd.DataFrame</em>) – Standard Model events</p></li>
+<li><p><strong>dfs_eft</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – List of panda dataframes with EFT events</p></li>
+<li><p><strong>features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Of the form {‘kinematic_feature’: ‘latex_string’ }</p></li>
+<li><p><strong>legend_labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – List of legend elements</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Figure showing the distribution of the kinematic features under the SM and the EFT</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure" title="(in Matplotlib v3.6.0)">matplotlib.figure.Figure</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 

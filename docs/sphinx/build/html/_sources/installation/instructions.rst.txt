@@ -3,13 +3,12 @@
 Installation
 ============
 
-To install the ML4EFT code, all one need to do is open up a terminal and run 
+ML4EFT is made available via the `Python Package Index <https://pypi.org/project/ml4eft/>`_ and can be installed directly by running
 
 .. code-block::
 
    pip install ml4eft
 
-*add link to PyPi here once it's added*
 
 Alternatively, one can choose to clone our public `github repository <https://github.com/LHCfitNikhef/ML4EFT>`_ instead:
 

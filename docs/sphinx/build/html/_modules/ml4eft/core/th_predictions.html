@@ -609,6 +609,7 @@ title="Fullscreen mode"
 <span class="kn">from</span> <span class="nn">ml4eft.core.truth</span> <span class="kn">import</span> <span class="n">vh_prod</span><span class="p">,</span> <span class="n">tt_prod</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 
+
 <div class="viewcode-block" id="TheoryPred"><a class="viewcode-back" href="../../../_autosummary/ml4eft.core.th_predictions.TheoryPred.html#ml4eft.core.th_predictions.TheoryPred">[docs]</a><span class="k">class</span> <span class="nc">TheoryPred</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    SMEFT theory calculator</span>
@@ -702,7 +703,6 @@ title="Fullscreen mode"
         <span class="n">c_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">c_names</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">c_names</span><span class="p">)</span></div>
 
-
 <div class="viewcode-block" id="TheoryPred.compute_th_pred"><a class="viewcode-back" href="../../../_autosummary/ml4eft.core.th_predictions.TheoryPred.html#ml4eft.core.th_predictions.TheoryPred.compute_th_pred">[docs]</a>    <span class="k">def</span> <span class="nf">compute_th_pred</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_to_events</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes cross-section in the SMEFT for a given binning if specified in `bins`. Otherwise it returns an</span>
@@ -771,30 +771,15 @@ title="Fullscreen mode"
                 <span class="p">[</span><span class="n">vh_prod</span><span class="o">.</span><span class="n">dsigma_dmvh_dy</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;m_zh&#39;</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lin</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">quad</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span>
                  <span class="n">observed_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()])</span>
 
-            <span class="c1"># dsigma_dx_sm = np.array(</span>
-            <span class="c1">#     [vh_prod.dsigma_dmvh(row[&#39;m_zh&#39;], 0, 0, lin=True, quad=False) for index, row</span>
-            <span class="c1">#      in</span>
-            <span class="c1">#      observed_data.iterrows()])</span>
-
             <span class="n">dsigma_dx_c1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
                 <span class="p">[</span><span class="n">vh_prod</span><span class="o">.</span><span class="n">dsigma_dmvh_dy</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;m_zh&#39;</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lin</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">quad</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span>
                  <span class="n">observed_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()])</span>
 
             <span class="n">dsigma_dx_c1_lin_coef</span> <span class="o">=</span> <span class="p">(</span><span class="n">dsigma_dx_c1</span> <span class="o">-</span> <span class="n">dsigma_dx_sm</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
 
-            <span class="c1"># dsigma_dx_c1 = np.array(</span>
-            <span class="c1">#     [vh_prod.dsigma_dmvh(row[&#39;m_zh&#39;], 10, 0, lin=True, quad=False) for index, row</span>
-            <span class="c1">#      in</span>
-            <span class="c1">#      observed_data.iterrows()])</span>
-
             <span class="n">dsigma_dx_c2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
                 <span class="p">[</span><span class="n">vh_prod</span><span class="o">.</span><span class="n">dsigma_dmvh_dy</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;m_zh&#39;</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">lin</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">quad</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span>
                  <span class="n">observed_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()])</span>
-
-            <span class="c1"># dsigma_dx_c2 = np.array(</span>
-            <span class="c1">#     [vh_prod.dsigma_dmvh(row[&#39;m_zh&#39;], 0, 10, lin=True, quad=False) for index, row</span>
-            <span class="c1">#      in</span>
-            <span class="c1">#      observed_data.iterrows()])</span>
 
             <span class="n">dsigma_dx_c2_lin_coef</span> <span class="o">=</span> <span class="p">(</span><span class="n">dsigma_dx_c2</span> <span class="o">-</span> <span class="n">dsigma_dx_sm</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
 
@@ -836,7 +821,6 @@ title="Fullscreen mode"
                          <span class="s1">&#39;quad&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;ctGRe_ctGRe&#39;</span><span class="p">:</span> <span class="n">dsigma_dx_c1_quad_coef</span><span class="p">,</span> <span class="s1">&#39;ctu8_ctu8&#39;</span><span class="p">:</span> <span class="n">dsigma_dx_c2_quad_coef</span><span class="p">}}</span>
 
         <span class="k">return</span> <span class="n">dsigma_dx</span></div></div>
-
 </pre></div>
 
               </div>

@@ -1,4 +1,4 @@
-﻿ml4eft.core.classifier.EventDataset
+ml4eft.core.classifier.EventDataset
 ===================================
 
 .. currentmodule:: ml4eft.core.classifier

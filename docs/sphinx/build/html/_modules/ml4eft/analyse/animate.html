@@ -613,7 +613,6 @@ title="Fullscreen mode"
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">analyse</span>
 <span class="kn">from</span> <span class="nn">..preproc</span> <span class="kn">import</span> <span class="n">constants</span>
 
-
 <span class="c1"># constants</span>
 <span class="n">mz</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">mz</span>
 <span class="n">mh</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">mh</span>
@@ -638,7 +637,6 @@ title="Fullscreen mode"
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frames</span> <span class="o">=</span> <span class="n">frames</span></div>
-
 
 <div class="viewcode-block" id="Animate.make_animation_1d"><a class="viewcode-back" href="../../../_autosummary/ml4eft.analyse.animate.Animate.html#ml4eft.analyse.animate.Animate.make_animation_1d">[docs]</a>    <span class="k">def</span> <span class="nf">make_animation_1d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyser</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -720,7 +718,7 @@ title="Fullscreen mode"
         <span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
-            <span class="n">analyser</span><span class="o">.</span><span class="n">build_model_dict</span><span class="p">(</span><span class="n">epoch</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">analyser</span><span class="o">.</span><span class="n">build_model_dict</span><span class="p">(</span><span class="n">epoch</span><span class="o">=</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">analyser</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
             <span class="n">g_preds_nn</span> <span class="o">=</span> <span class="n">analyser</span><span class="o">.</span><span class="n">decision_function_nn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">)</span>
 
@@ -803,10 +801,9 @@ title="Fullscreen mode"
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">coeff_function_ana</span> <span class="o">=</span> <span class="n">analyser</span><span class="o">.</span><span class="n">coeff_function_truth</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">c_name</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">coeff_function_ana</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">coeff_function_ana</span><span class="p">)</span> <span class="c1"># necessary?</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">coeff_function_ana</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">coeff_function_ana</span><span class="p">)</span>  <span class="c1"># necessary?</span>
 
         <span class="k">def</span> <span class="nf">load_coeff_nn_rep</span><span class="p">(</span><span class="n">analyser</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
-
             <span class="n">analyser</span><span class="o">.</span><span class="n">build_model_dict</span><span class="p">(</span><span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">)</span>
             <span class="n">analyser</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 
@@ -829,7 +826,7 @@ title="Fullscreen mode"
         <span class="n">img</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">coeff_function_ana</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
                          <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;m_tt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">2000.0</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()],</span>
                          <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap_copy</span><span class="p">,</span>
-                         <span class="n">aspect</span><span class="o">=</span><span class="p">(</span><span class="mf">2000.0</span> <span class="o">-</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;m_tt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span>
+                         <span class="n">aspect</span><span class="o">=</span><span class="p">(</span><span class="mf">2000.0</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;m_tt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span>
                          <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;quadric&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
 
         <span class="n">cbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap_copy</span><span class="p">),</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
@@ -842,23 +839,15 @@ title="Fullscreen mode"
         <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 
-        <span class="c1"># plt.colorbar()</span>
-
-        <span class="c1"># plt.title(&#39;NN performance at ctG = {}&#39;.format(ctg))</span>
         <span class="n">epoch_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.95</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
-
-        <span class="c1"># loss_text = ax.text(0.70, 0.90, &#39;&#39;, transform=ax.transAxes)</span>
-        <span class="c1"># loss = np.loadtxt(path + &#39;loss.out&#39;)</span>
 
         <span class="c1"># initialization function: plot the background of each frame</span>
         <span class="k">def</span> <span class="nf">init</span><span class="p">():</span>
             <span class="n">img</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">coeff_function_ana</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             <span class="n">epoch_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-            <span class="c1"># loss_text.set_text(&#39;&#39;)</span>
-            <span class="k">return</span> <span class="n">img</span><span class="p">,</span> <span class="n">epoch_text</span>  <span class="c1"># , loss_text</span>
+            <span class="k">return</span> <span class="n">img</span><span class="p">,</span> <span class="n">epoch_text</span>
 
         <span class="c1"># animation function.  This is called sequentially</span>
-
         <span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">epoch</span><span class="p">):</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
@@ -870,16 +859,13 @@ title="Fullscreen mode"
             <span class="n">img</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">ratio_epoch</span><span class="p">)</span>
 
             <span class="n">epoch_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\rm</span><span class="si">{Epoch}</span><span class="s1">\;</span><span class="si">%d</span><span class="s1">$&#39;</span> <span class="o">%</span> <span class="n">epoch</span><span class="p">)</span>
-            <span class="c1"># loss_text.set_text(&#39;loss = {:.4f}&#39;.format(loss[i]))</span>
-            <span class="k">return</span> <span class="n">img</span><span class="p">,</span> <span class="n">epoch_text</span>  <span class="c1"># , loss_text</span>
+            <span class="k">return</span> <span class="n">img</span><span class="p">,</span> <span class="n">epoch_text</span>
 
         <span class="c1"># call the animator.  blit=True means only re-draw the parts that have changed.</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating the animation&quot;</span><span class="p">)</span>
         <span class="n">anim</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">init_func</span><span class="o">=</span><span class="n">init</span><span class="p">,</span>
                                        <span class="n">frames</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">blit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">anim</span></div></div>
-        <span class="c1">#anim.save(&#39;/Users/jaco/Documents/ML4EFT/plots/2022/talk_juan/animations/training_animation_chq3.gif&#39;)</span>
-
 </pre></div>
 
               </div>
