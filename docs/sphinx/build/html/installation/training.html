@@ -1013,12 +1013,12 @@ top-quark pair production:</p>
 \[\mathcal{O}_{qu}^{8(ijkl)} = (\bar{q}_i\gamma^\mu T^A q_j)(\bar{u}_k\gamma_\mu T^A u_l).\]</div>
 <p>The ML4EFT method generalises to an abritrary number of operators, but for the purpose of this tutorial we focus on the two operators defined above. We will parameterise the likelihood ratio (EFT over SM) using models that have either been trained on a pair of features, or on the full set of kinematic features available in the final state at the particle level. Since the actual training takes a bit of time, especially when working on a single core, we provide pretrained models that can be loaded
 and analysed directly. However, we do give instructions on how to train models yourself in the first part of this tutorial applied in a simplified setup.</p>
-<p>The likelihood ratio, denotes <span class="math notranslate nohighlight">\(r(x, c)\)</span>, takes the following form in the presence of <span class="math notranslate nohighlight">\(\mathcal{O}_{tG}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{O}_{tq}^{(8)}\)</span>:</p>
+<p>The likelihood ratio, denoted <span class="math notranslate nohighlight">\(r(x, c)\)</span>, takes the following form in the presence of <span class="math notranslate nohighlight">\(\mathcal{O}_{tG}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{O}_{tq}^{(8)}\)</span>:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align}r(\boldsymbol{x}, c_{tG}, c_{tq}^{(8)}) =&amp; 1 + c_{tG}\cdot \mathrm{NN}^{c_{tG}}(\boldsymbol{x}) + c_{tq}^{(8)}\cdot \mathrm{NN}^{c_{tq}^{(8)}}(\boldsymbol{x}) +\\
-&amp;c_{tG}^2\cdot \mathrm{NN}^{c_{tG}\cdot c_{tG}}(\boldsymbol{x}) + c_{tq}^{(8)}\cdot \mathrm{NN}^{c_{tq}^{(8)}\cdot c_{tq}^{(8)}}(\boldsymbol{x}) + c_{tq}^{(8)}\cdot c_{tG} \cdot\mathrm{NN}^{c_{tG}\cdot c_{tq}^{(8)}}(\boldsymbol{x})\end{align}\end{split}\]</div>
+&amp;c_{tG}^2\cdot \mathrm{NN}^{c_{tG}\cdot c_{tG}}(\boldsymbol{x}) + c_{tq}^{(8)^2}\cdot \mathrm{NN}^{c_{tq}^{(8)}\cdot c_{tq}^{(8)}}(\boldsymbol{x}) + c_{tq}^{(8)}\cdot c_{tG} \cdot\mathrm{NN}^{c_{tG}\cdot c_{tq}^{(8)}}(\boldsymbol{x})\end{align}\end{split}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\boldsymbol{x}\)</span> denotes the kinematic feature vector, e.g <span class="math notranslate nohighlight">\((p_T^{\ell\bar{\ell}}, \eta_\ell)\)</span>, corresponding to the transverse momentum of the lepton-pair and the pseudorapidity of the lepton respectively.</p>
-<p>The first part of this tutorial shows how to load and study the distribution of the training data, while the second part is about training unbinned observables in the presence of <span class="math notranslate nohighlight">\(p_T^{\ell\bar{\ell}}\)</span> and <span class="math notranslate nohighlight">\(\eta_\ell\)</span>. We will finish by showing how this method generalises to the fully multivariate analsysis that we trained on 18 features.</p>
+<p>The first part of this tutorial shows how to load and study the distribution of the training data, while the second part is about training unbinned observables in the presence of <span class="math notranslate nohighlight">\(p_T^{\ell\bar{\ell}}\)</span> and <span class="math notranslate nohighlight">\(\eta_\ell\)</span>. We will finish by showing how this method generalises to the fully multivariate analysis that we trained on 18 features.</p>
 <section id="Installing-ML4EFT">
 <h3>Installing ML4EFT<a class="headerlink" href="#Installing-ML4EFT" title="Permalink to this headline">#</a></h3>
 <p>To install ML4EFT, if not done already, one should run the following command:</p>
@@ -1031,7 +1031,7 @@ and analysed directly. However, we do give instructions on how to train models y
 </pre></div>
 </div>
 </div>
-<p>When running this notebook on google colab, please make sure to execute the cell below to enable interactive plotting.</p>
+<p>When running this notebook on google colab, please make sure to execute the cell below to enable interactive plotting. Currently, the default version of matplotlib might lead to some errors on google colab for some users. In that case we advise to simply rerun all cells.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -1064,8 +1064,6 @@ and analysed directly. However, we do give instructions on how to train models y
 <span class="kn">import</span> <span class="nn">ml4eft.core.classifier</span> <span class="k">as</span> <span class="nn">classifier</span>
 <span class="kn">import</span> <span class="nn">ml4eft.analyse.analyse</span> <span class="k">as</span> <span class="nn">analyse</span>
 <span class="kn">import</span> <span class="nn">ml4eft.plotting.features</span> <span class="k">as</span> <span class="nn">features</span>
-
-<span class="n">rc</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="n">usetex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1193,7 +1191,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-100% [..................................................................................] 781 / 781
+100% [..............................................................] 781 / 781
 </pre></div></div>
 </div>
 <p>Let us open the training runcard to see the possible options that can be set</p>
@@ -1263,7 +1261,8 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;epochs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+<span></span><span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;epochs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;lr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.001</span>
 <span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;n_batches&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
 <span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;patience&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1"># needs to be bigger than number of epochs</span>
 </pre></div>
@@ -1303,7 +1302,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <h3>Loading models<a class="headerlink" href="#Loading-models" title="Permalink to this headline">#</a></h3>
 <p>Trained models can be loaded into an <code class="docutils literal notranslate"><span class="pre">Analyse</span></code> object to make them accesible for later use</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1320,11 +1319,11 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 <p>The loss profile of the models we have just trained can be plotted via</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">fig</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">analyser</span><span class="o">.</span><span class="n">plot_loss_overview</span><span class="p">(</span><span class="n">c_name</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span></span><span class="n">fig</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">analyser</span><span class="o">.</span><span class="n">plot_loss_overview</span><span class="p">(</span><span class="n">c_name</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1340,7 +1339,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <h3>Pretrained models<a class="headerlink" href="#Pretrained-models" title="Permalink to this headline">#</a></h3>
 <p>Since properly training models takes a bit of time, we have provided a set of pretrained models that can be directly loaded and analysed. We consider the 2 feature case applied to <span class="math notranslate nohighlight">\(p_T^{\ell\bar{\ell}}\)</span> and <span class="math notranslate nohighlight">\(\eta_\ell\)</span> first.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1352,7 +1351,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 <p>Like before, we load the models into a <code class="docutils literal notranslate"><span class="pre">Analyse</span></code> object:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1385,7 +1384,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 <p>The output of all NN replicas for all coefficients is stored inside a pandas dataframe that can be called like</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1395,7 +1394,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 <p>To see for instance the output associated to the NN associated to <span class="math notranslate nohighlight">\(c_{tG}\)</span> at the linear level, one can run</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1405,7 +1404,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 <p>Let us finally plot the (median) <span class="math notranslate nohighlight">\(\mathrm{NN}^{c_{tG}}\)</span> as a 2-dimensional surface in the 2-dim feature space <span class="math notranslate nohighlight">\((p_{T}^{\ell, \bar{\ell}}, \eta_\ell)\)</span>:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1426,7 +1425,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1442,12 +1441,12 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;mpl_toolkits.mplot3d.art3d.Poly3DCollection at 0x7f9a02f2c1d0&gt;
+&lt;mpl_toolkits.mplot3d.art3d.Poly3DCollection at 0x7fc682f24d90&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">

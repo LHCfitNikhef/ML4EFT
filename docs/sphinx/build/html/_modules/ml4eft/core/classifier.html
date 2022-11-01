@@ -1126,7 +1126,7 @@ title="Fullscreen mode"
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">loss_list_train</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
                 <span class="c1"># if the loss after the first epoch queals the latest loss, we reset the weights</span>
                 <span class="k">if</span> <span class="n">loss_list_train</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">loss_list_train</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Detected stagant training, reset the weights&quot;</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Detected stagnant training, reset the weights&quot;</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_reset</span><span class="p">)</span>
 
             <span class="n">loss_train</span><span class="p">,</span> <span class="n">loss_val</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
