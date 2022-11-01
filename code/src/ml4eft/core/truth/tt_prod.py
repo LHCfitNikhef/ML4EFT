@@ -9,8 +9,6 @@ from scipy.integrate import quad, dblquad
 from scipy import integrate
 import pylhe
 
-from ml4eft.core.truth import vh_prod
-
 try:
     import lhapdf
 

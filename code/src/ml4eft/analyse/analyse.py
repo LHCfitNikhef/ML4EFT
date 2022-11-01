@@ -24,8 +24,7 @@ import itertools
 
 # import own pacakges
 from ml4eft.core import classifier as classifier
-from ml4eft.core.truth import tt_prod as axs
-from ml4eft.core.truth import vh_prod, tt_prod
+from ml4eft.core.truth import tt_prod
 from ..preproc import constants
 
 mz = constants.mz  # z boson mass [TeV]
@@ -42,7 +41,7 @@ class Analyse:
     Post-training analyser that loads and evaluates models
     """
 
-    def __init__(self, path_to_models, order='quad', all=True):
+    def __init__(self, path_to_models, order='quad', all=False):
 
         """
         Analyse constructor
@@ -54,6 +53,9 @@ class Analyse:
             {'c1_c2': ``<path_to_c1_c2_models>``}, {'c2_c2': ``<path_to_c2_c2_models>``}}
         order: str, default='quad'
             The order in the EFT expansion (choose between either 'lin' or 'quad')
+        all: bool, default='True'
+            When set to True, the analyser loads all replicas. Set to False by defualt, in which case
+            the replicas are clusterd into "good" and "bad" models based on their loss value.
 
         Examples
         --------
@@ -1064,8 +1066,13 @@ class Analyse:
             #             min(loss_train_rep[-1], loss_val_rep[-1]) + 2 * max(loss_sigma_val, loss_sigma_tr))
 
             # everything visible (not the same scale)
-            ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
-                        max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
+            if xlim is None:
+                ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
+                            max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
+            else:
+                y_min = np.min(np.concatenate((loss_train_rep[xlim:], loss_val_rep[xlim:])))
+                y_max = np.max(np.concatenate((loss_train_rep[xlim:], loss_val_rep[xlim:])))
+                ax.set_ylim(y_min, y_max)
 
             if model_idx[i] == 0:
                 ax.legend(loc="lower left", frameon=False)
@@ -1182,28 +1189,6 @@ class Analyse:
         """
 
         n_features = len(features)
-
-        if process == 'ZH':
-            c = np.array([c['cHW'], c['cHq3']])
-            if n_features == 1:
-                dsigma_0 = [vh_prod.dsigma_dmvh(*x[features], c, order) for index, x in
-                            events.iterrows()]  # EFT
-                dsigma_1 = [vh_prod.dsigma_dmvh(*x[features]) for index, x in
-                            events.iterrows()]  # SM
-            elif n_features == 2:
-                dsigma_0 = [vh_prod.dsigma_dmvh_dy(*x[features], c, order) for index, x in
-                            events.iterrows()]  # EFT
-                dsigma_1 = [vh_prod.dsigma_dmvh_dy(*x[features]) for index, x in
-                            events.iterrows()]  # SM
-            elif n_features == 3:
-                dsigma_0 = [vh_prod.dsigma_dmvh_dy_dpt(*x[features], c, order) for
-                            index, x in
-                            events.iterrows()]  # EFT
-                dsigma_1 = [vh_prod.dsigma_dmvh_dy_dpt(*x[features]) for
-                            index, x in
-                            events.iterrows()]  # SM
-            else:
-                raise NotImplementedError("No more than three features are currently supported")
 
         if process == 'tt':
             c = np.array([c['ctGRe'], c['ctu8']])
