@@ -526,7 +526,7 @@ class Fitter:
             if len(loss_list_train) > 10:
                 # if the loss after the first epoch queals the latest loss, we reset the weights
                 if loss_list_train[1] == loss_list_train[-1]:
-                    logging.info("Detected stagant training, reset the weights")
+                    logging.info("Detected stagnant training, reset the weights")
                     self.model.apply(self.weight_reset)
 
             loss_train, loss_val = 0.0, 0.0
