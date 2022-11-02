@@ -18,5 +18,5 @@ particle level Higgs production in association with a :math:`Z` boson in the dil
 By comparison with the corresponding bounds displayed on :ref:`the previous page<zh4>`, we confirm that these methodological
 uncertainties, as estimated with the replica method,
 do not modify the qualitative results obtained from the median of the likelihood ratio.
-In particular, the observation that bounds obtained using multivariate unbinned observables are much stronger than those based on unbinned models based on one or two kinematic features,
+In particular, the observation that bounds obtained using multivariate unbinned observables are much stronger than those based on unbinned models based on one or two kinematic features
 remains valid once replica uncertainties are accounted for.
