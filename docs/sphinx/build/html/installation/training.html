@@ -33,8 +33,8 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="ml4eft" href="../_autosummary/ml4eft.html" />
@@ -959,11 +959,12 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt a.copybtn {
+.prompt .copybtn {
     display: none;
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -972,10 +973,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -987,12 +992,15 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
@@ -1026,8 +1034,7 @@ and analysed directly. However, we do give instructions on how to train models y
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="o">!</span>pip install ml4eft
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!pip install ml4eft
 </pre></div>
 </div>
 </div>
@@ -1036,11 +1043,10 @@ and analysed directly. However, we do give instructions on how to train models y
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="o">!</span>pip install ipympl
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!pip install ipympl
 
-<span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">output</span>
-<span class="n">output</span><span class="o">.</span><span class="n">enable_custom_widget_manager</span><span class="p">()</span>
+from google.colab import output
+output.enable_custom_widget_manager()
 </pre></div>
 </div>
 </div>
@@ -1051,19 +1057,21 @@ and analysed directly. However, we do give instructions on how to train models y
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">wget</span>
-<span class="kn">import</span> <span class="nn">tarfile</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">rc</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import wget
+import tarfile
+import os
+import time
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib import rc
 
-<span class="kn">import</span> <span class="nn">ml4eft.core.classifier</span> <span class="k">as</span> <span class="nn">classifier</span>
-<span class="kn">import</span> <span class="nn">ml4eft.analyse.analyse</span> <span class="k">as</span> <span class="nn">analyse</span>
-<span class="kn">import</span> <span class="nn">ml4eft.plotting.features</span> <span class="k">as</span> <span class="nn">features</span>
+import ml4eft.core.classifier as classifier
+import ml4eft.analyse.analyse as analyse
+import ml4eft.plotting.features as features
+
+rc(&#39;text&#39;, usetex=False)
+rc(&#39;font&#39;, **{&#39;family&#39;: &#39;DejaVu Sans&#39;, &#39;size&#39;: 22})
 </pre></div>
 </div>
 </div>
@@ -1072,21 +1080,20 @@ and analysed directly. However, we do give instructions on how to train models y
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">def</span> <span class="nf">file_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">download_dir</span><span class="o">=</span><span class="s1">&#39;./downloads&#39;</span><span class="p">):</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def file_downloader(url, download_dir=&#39;./downloads&#39;):
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">download_dir</span><span class="p">):</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
+    if not os.path.exists(download_dir):
+        os.mkdir(download_dir)
 
-    <span class="n">file</span> <span class="o">=</span> <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">download_dir</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">file</span>
+    file = wget.download(url, out=download_dir)
+    return file
 
-<span class="k">def</span> <span class="nf">untar</span><span class="p">(</span><span class="n">path_to_tar</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s1">&#39;./downloads&#39;</span><span class="p">):</span>
+def untar(path_to_tar, destination=&#39;./downloads&#39;):
 
-    <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path_to_tar</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+    with tarfile.open(path_to_tar) as f:
+        f.extractall(destination)
 
-<span class="n">download_dir</span> <span class="o">=</span> <span class="s1">&#39;./downloads&#39;</span>
+download_dir = &#39;./downloads&#39;
 </pre></div>
 </div>
 </div>
@@ -1095,12 +1102,11 @@ and analysed directly. However, we do give instructions on how to train models y
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">training_data_url</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/z16fz2ggbn244pl/training_data.tar.gz?dl=0&#39;</span>
-<span class="n">training_data</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">training_data_url</span><span class="p">);</span>
-<span class="n">data_train_loc</span> <span class="o">=</span> <span class="n">training_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.tar&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>training_data_url = &#39;https://dl.dropboxusercontent.com/s/z16fz2ggbn244pl/training_data.tar.gz?dl=0&#39;
+training_data = file_downloader(training_data_url);
+data_train_loc = training_data.split(&#39;.tar&#39;)[0]
 
-<span class="n">untar</span><span class="p">(</span><span class="n">training_data</span><span class="p">);</span>
+untar(training_data);
 </pre></div>
 </div>
 </div>
@@ -1109,17 +1115,16 @@ and analysed directly. However, we do give instructions on how to train models y
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># load eft events</span>
-<span class="n">coeff</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ctGRe&quot;</span><span class="p">,</span> <span class="s2">&quot;ctj8&quot;</span><span class="p">]</span>
-<span class="n">events_eft</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coeff</span><span class="p">:</span>
-    <span class="n">path_to_events</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_train_loc</span><span class="p">,</span> <span class="s1">&#39;tt_</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">/events_0.pkl.gz&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
-    <span class="n">events</span><span class="p">,</span> <span class="n">xsec</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">load_events</span><span class="p">(</span><span class="n">path_to_events</span><span class="p">)</span>
-    <span class="n">events_eft</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># load eft events
+coeff = [&quot;ctGRe&quot;, &quot;ctj8&quot;]
+events_eft = []
+for c in coeff:
+    path_to_events = os.path.join(data_train_loc, &#39;tt_{}_{}/events_0.pkl.gz&#39;.format(c, c))
+    events, xsec = analyse.Analyse.load_events(path_to_events)
+    events_eft.append(events)
 
-<span class="c1"># load sm events</span>
-<span class="n">events_sm</span><span class="p">,</span> <span class="n">xsec_sm</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">load_events</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">download_dir</span><span class="p">,</span> <span class="s1">&#39;training_data/tt_sm/events_0.pkl.gz&#39;</span><span class="p">))</span>
+# load sm events
+events_sm, xsec_sm = analyse.Analyse.load_events(os.path.join(download_dir, &#39;training_data/tt_sm/events_0.pkl.gz&#39;))
 </pre></div>
 </div>
 </div>
@@ -1128,38 +1133,35 @@ and analysed directly. However, we do give instructions on how to train models y
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">feature_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pt_l1&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\ell}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;pt_l2&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\bar{\ell}}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;pt_l_leading&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\ell}\;(\mathrm</span><span class="si">{leading}</span><span class="s1">)\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;pt_l_trailing&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\ell}\;(\mathrm</span><span class="si">{trailing}</span><span class="s1">)\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;eta_l1&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_\ell$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;eta_l2&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_{\bar{\ell}}$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;eta_l_leading&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_\ell\;(\mathrm</span><span class="si">{leading}</span><span class="s1">)$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;eta_l_trailing&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_\ell\;(\mathrm</span><span class="si">{trailing}</span><span class="s1">)$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;pt_ll&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{\ell\bar{\ell}}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;m_ll&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$m_{\ell\bar{\ell}}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;DeltaPhi_ll&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\Delta\phi(\ell, \bar{\ell})$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;DeltaEta_ll&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\Delta\eta(\ell, \bar{\ell})$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;pt_b_leading&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^</span><span class="si">{b}</span><span class="s1">\;(\mathrm</span><span class="si">{leading}</span><span class="s1">)\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;pt_b_trailing&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^</span><span class="si">{b}</span><span class="s1">\;(\mathrm</span><span class="si">{trailing}</span><span class="s1">)\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;eta_b_leading&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_</span><span class="si">{b}</span><span class="s1">\;(\mathrm</span><span class="si">{leading}</span><span class="s1">)$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;eta_b_trailing&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\eta_</span><span class="si">{b}</span><span class="s1">\;(\mathrm</span><span class="si">{trailing}</span><span class="s1">)$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;pt_bb&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$p_T^{b\bar</span><span class="si">{b}</span><span class="s1">}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;m_bb&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$m_{b\bar</span><span class="si">{b}</span><span class="s1">}\;[\mathrm</span><span class="si">{GeV}</span><span class="s1">]$&#39;</span>
-         <span class="p">}</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>feature_dict = {&#39;pt_l1&#39;: r&#39;$p_T^{\ell}\;[\mathrm{GeV}]$&#39;,
+            &#39;pt_l2&#39;: r&#39;$p_T^{\bar{\ell}}\;[\mathrm{GeV}]$&#39;,
+            &#39;pt_l_leading&#39;: r&#39;$p_T^{\ell}\;(\mathrm{leading})\;[\mathrm{GeV}]$&#39;,
+            &#39;pt_l_trailing&#39;: r&#39;$p_T^{\ell}\;(\mathrm{trailing})\;[\mathrm{GeV}]$&#39;,
+            &#39;eta_l1&#39;: r&#39;$\eta_\ell$&#39;,
+            &#39;eta_l2&#39;: r&#39;$\eta_{\bar{\ell}}$&#39;,
+            &#39;eta_l_leading&#39;: r&#39;$\eta_\ell\;(\mathrm{leading})$&#39;,
+            &#39;eta_l_trailing&#39;: r&#39;$\eta_\ell\;(\mathrm{trailing})$&#39;,
+            &#39;pt_ll&#39;: r&#39;$p_T^{\ell\bar{\ell}}\;[\mathrm{GeV}]$&#39;,
+            &#39;m_ll&#39;: r&#39;$m_{\ell\bar{\ell}}\;[\mathrm{GeV}]$&#39;,
+            &#39;DeltaPhi_ll&#39;: r&#39;$\Delta\phi(\ell, \bar{\ell})$&#39;,
+            &#39;DeltaEta_ll&#39;: r&#39;$\Delta\eta(\ell, \bar{\ell})$&#39;,
+            &#39;pt_b_leading&#39;: r&#39;$p_T^{b}\;(\mathrm{leading})\;[\mathrm{GeV}]$&#39;,
+            &#39;pt_b_trailing&#39;: r&#39;$p_T^{b}\;(\mathrm{trailing})\;[\mathrm{GeV}]$&#39;,
+            &#39;eta_b_leading&#39;: r&#39;$\eta_{b}\;(\mathrm{leading})$&#39;,
+            &#39;eta_b_trailing&#39;: r&#39;$\eta_{b}\;(\mathrm{trailing})$&#39;,
+            &#39;pt_bb&#39;: r&#39;$p_T^{b\bar{b}}\;[\mathrm{GeV}]$&#39;,
+            &#39;m_bb&#39;: r&#39;$m_{b\bar{b}}\;[\mathrm{GeV}]$&#39;
+         }
 
-<span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">r</span><span class="s1">&#39;$c_</span><span class="si">{tG}</span><span class="s1">=10$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$c_</span><span class="si">{qt}</span><span class="s1">^{(8)}=10$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$\mathrm</span><span class="si">{SM}</span><span class="s1">$&#39;</span><span class="p">]</span>
-
-</pre></div>
+legend_labels = [r&#39;$c_{tG}=10$&#39;, r&#39;$c_{qt}^{(8)}=10$&#39;, r&#39;$\mathrm{SM}$&#39;]
+<br/></pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">plot_features</span><span class="p">(</span><span class="n">events_sm</span><span class="p">,</span> <span class="n">events_eft</span><span class="p">,</span> <span class="n">feature_dict</span><span class="p">,</span> <span class="n">legend_labels</span><span class="p">);</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig = features.plot_features(events_sm, events_eft, feature_dict, legend_labels);
 </pre></div>
 </div>
 </div>
@@ -1180,9 +1182,8 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">path_to_runcard</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/v4ulo6icveh63fw/run_card_tt_llvlvlbb.json?dl=0&#39;</span>
-<span class="n">runcard</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">path_to_runcard</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>path_to_runcard = &#39;https://dl.dropboxusercontent.com/s/v4ulo6icveh63fw/run_card_tt_llvlvlbb.json?dl=0&#39;
+runcard = file_downloader(path_to_runcard)
 </pre></div>
 </div>
 </div>
@@ -1199,13 +1200,12 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">json</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import json
 
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">runcard</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_runcard</span><span class="p">:</span>
-    <span class="n">json_runcard_loaded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_runcard</span><span class="p">)</span>
+with open(runcard) as json_runcard:
+    json_runcard_loaded = json.load(json_runcard)
 
-<span class="n">json_runcard_loaded</span>
+json_runcard_loaded
 </pre></div>
 </div>
 </div>
@@ -1260,11 +1260,10 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;epochs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
-<span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;lr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.001</span>
-<span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;n_batches&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
-<span class="n">json_runcard_loaded</span><span class="p">[</span><span class="s1">&#39;patience&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1"># needs to be bigger than number of epochs</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>json_runcard_loaded[&#39;epochs&#39;] = 200
+json_runcard_loaded[&#39;lr&#39;] = 0.001
+json_runcard_loaded[&#39;n_batches&#39;] = 50
+json_runcard_loaded[&#39;patience&#39;] = 20 # needs to be bigger than number of epochs
 </pre></div>
 </div>
 </div>
@@ -1273,9 +1272,8 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">runcard</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">runcard_updated</span><span class="p">:</span>
-    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">json_runcard_loaded</span><span class="p">,</span> <span class="n">runcard_updated</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>with open(runcard, &#39;w&#39;) as runcard_updated:
+    json.dump(json_runcard_loaded, runcard_updated)
 </pre></div>
 </div>
 </div>
@@ -1284,15 +1282,14 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">output_dir</span> <span class="o">=</span> <span class="s1">&#39;./models&#39;</span>
-<span class="n">c_name</span> <span class="o">=</span> <span class="s1">&#39;ctGRe&#39;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>output_dir = &#39;./models&#39;
+c_name = &#39;ctGRe&#39;
 
-<span class="n">fitter</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">Fitter</span><span class="p">(</span><span class="n">json_path</span> <span class="o">=</span> <span class="n">runcard</span><span class="p">,</span>
-                           <span class="n">mc_run</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-                           <span class="n">c_name</span> <span class="o">=</span> <span class="n">c_name</span><span class="p">,</span>
-                           <span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_dir</span><span class="p">,</span>
-                           <span class="n">print_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+fitter = classifier.Fitter(json_path = runcard,
+                           mc_run = 0,
+                           c_name = c_name,
+                           output_dir = output_dir,
+                           print_log=True)
 </pre></div>
 </div>
 </div>
@@ -1305,15 +1302,14 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">path_to_models_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;./models&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y/%m/</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">))</span>
-<span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;lin&#39;</span> <span class="c1"># or quad when quadratic models have been trained</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>path_to_models_root = os.path.join(&#39;./models&#39;, time.strftime(&quot;%Y/%m/%d&quot;))
+order = &#39;lin&#39; # or quad when quadratic models have been trained
 
-<span class="n">models_paths_dict</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_root</span><span class="p">,</span>
-                        <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+models_paths_dict = analyse.Analyse.build_path_dict(root=path_to_models_root,
+                        order=order,
+                        prefix=&#39;model&#39;)
 
-<span class="n">analyser</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="nb">all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+analyser = analyse.Analyse(models_paths_dict, order, all=True)
 </pre></div>
 </div>
 </div>
@@ -1322,8 +1318,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">fig</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">analyser</span><span class="o">.</span><span class="n">plot_loss_overview</span><span class="p">(</span><span class="n">c_name</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig, _ = analyser.plot_loss_overview(c_name, order, xlim=12)
 </pre></div>
 </div>
 </div>
@@ -1342,10 +1337,9 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">models_2_feat_url</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/dy7ni8t4g8x68u0/tt_particle_ptll_etal.tar.gz?dl=0&#39;</span>
-<span class="n">pretrained_models_2_feat</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">models_2_feat_url</span><span class="p">);</span>
-<span class="n">untar</span><span class="p">(</span><span class="n">pretrained_models_2_feat</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s1">&#39;./downloads/models/tt_llvlvlbb_2_feat&#39;</span><span class="p">);</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>models_2_feat_url = &#39;https://dl.dropboxusercontent.com/s/dy7ni8t4g8x68u0/tt_particle_ptll_etal.tar.gz?dl=0&#39;
+pretrained_models_2_feat = file_downloader(models_2_feat_url);
+untar(pretrained_models_2_feat, destination=&#39;./downloads/models/tt_llvlvlbb_2_feat&#39;);
 </pre></div>
 </div>
 </div>
@@ -1354,15 +1348,14 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">path_to_models_2_feat_root</span> <span class="o">=</span> <span class="s1">&#39;./downloads/models/tt_llvlvlbb_2_feat&#39;</span>
-<span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;quad&#39;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>path_to_models_2_feat_root = &#39;./downloads/models/tt_llvlvlbb_2_feat&#39;
+order = &#39;quad&#39;
 
-<span class="n">models_paths_dict_2_feat</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_2_feat_root</span><span class="p">,</span>
-                        <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+models_paths_dict_2_feat = analyse.Analyse.build_path_dict(root=path_to_models_2_feat_root,
+                        order=order,
+                        prefix=&#39;model&#39;)
 
-<span class="n">analyser_2_feat</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict_2_feat</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+analyser_2_feat = analyse.Analyse(models_paths_dict_2_feat, order)
 </pre></div>
 </div>
 </div>
@@ -1371,14 +1364,13 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">observed_data_url</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/igjt97vfaxdn9y1/events_0.pkl.gz?dl=0&#39;</span>
-<span class="n">observed_data</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">observed_data_url</span><span class="p">,</span> <span class="s1">&#39;./downloads/observed_data&#39;</span><span class="p">);</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>observed_data_url = &#39;https://dl.dropboxusercontent.com/s/igjt97vfaxdn9y1/events_0.pkl.gz?dl=0&#39;
+observed_data = file_downloader(observed_data_url, &#39;./downloads/observed_data&#39;);
 
-<span class="n">events_sm</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">load_events</span><span class="p">(</span><span class="s1">&#39;./downloads/observed_data/events_0.pkl.gz&#39;</span><span class="p">)</span>
+events_sm, _ = analyse.Analyse.load_events(&#39;./downloads/observed_data/events_0.pkl.gz&#39;)
 
-<span class="c1"># evaluate pretrained NNs on observed data</span>
-<span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="n">events_sm</span><span class="p">)</span>
+# evaluate pretrained NNs on observed data
+analyser_2_feat.evaluate_models(events_sm)
 </pre></div>
 </div>
 </div>
@@ -1387,8 +1379,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">models_evaluated_2_feat</span> <span class="o">=</span> <span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>models_evaluated_2_feat = analyser_2_feat.models_evaluated_df;
 </pre></div>
 </div>
 </div>
@@ -1397,8 +1388,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">models_evaluated_2_feat</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">][</span><span class="s1">&#39;lin&#39;</span><span class="p">,</span> <span class="s1">&#39;ctGRe&#39;</span><span class="p">];</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>models_evaluated_2_feat[&#39;models&#39;][&#39;lin&#39;, &#39;ctGRe&#39;];
 </pre></div>
 </div>
 </div>
@@ -1407,20 +1397,19 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># create the 2-dim grid in feature space</span>
-<span class="n">eta_l_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
-<span class="n">pt_ll_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">450</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
-<span class="n">eta_l_grid</span><span class="p">,</span> <span class="n">pt_ll_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">eta_l_span</span><span class="p">,</span> <span class="n">pt_ll_span</span><span class="p">)</span>
-<span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">eta_l_grid</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">pt_ll_grid</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;pt_ll&#39;</span><span class="p">:</span> <span class="n">grid</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;eta_l1&#39;</span><span class="p">:</span> <span class="n">grid</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]})</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># create the 2-dim grid in feature space
+eta_l_span = np.linspace(-2.5, 2.5, 100)
+pt_ll_span = np.linspace(0, 450, 50)
+eta_l_grid, pt_ll_grid = np.meshgrid(eta_l_span, pt_ll_span)
+grid = np.c_[eta_l_grid.ravel(), pt_ll_grid.ravel()]
+df = pd.DataFrame({&#39;pt_ll&#39;: grid[:, 1], &#39;eta_l1&#39;: grid[:, 0]})
 
-<span class="c1"># evaluate the NNs on this grid and</span>
-<span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-<span class="n">models_evaluated</span> <span class="o">=</span> <span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span>
-<span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">models_evaluated</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+# evaluate the NNs on this grid and
+analyser_2_feat.evaluate_models(df)
+models_evaluated = analyser_2_feat.models_evaluated_df[&#39;models&#39;]
+analyser_2_feat.models_evaluated_df[&#39;models&#39;] = models_evaluated.apply(lambda row: np.median(row, axis=0))
 
-<span class="n">nn_ctG</span> <span class="o">=</span> <span class="n">analyser_2_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">][</span><span class="s1">&#39;lin&#39;</span><span class="p">,</span> <span class="s1">&#39;ctGRe&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">eta_l_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+nn_ctG = analyser_2_feat.models_evaluated_df[&#39;models&#39;][&#39;lin&#39;, &#39;ctGRe&#39;].reshape(eta_l_grid.shape)
 </pre></div>
 </div>
 </div>
@@ -1428,15 +1417,14 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># make a 3D interactive plot</span>
-<span class="o">%</span><span class="k">matplotlib</span> inline
-<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
-<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\eta_\ell$&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$p_T^{\ell\bar{\ell}}\;\mathrm{[GeV]}$&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\mathrm</span><span class="si">{NN}</span><span class="s1">^{c_</span><span class="si">{tG}</span><span class="s1">}$&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">eta_l_grid</span><span class="p">,</span> <span class="n">pt_ll_grid</span><span class="p">,</span> <span class="n">nn_ctG</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># make a 3D interactive plot
+%matplotlib ipympl
+fig = plt.figure(figsize=(10,10))
+ax = plt.axes(projection=&#39;3d&#39;)
+ax.set_xlabel(r&#39;$\eta_\ell$&#39;)
+ax.set_ylabel(r&#39;$p_T^{\ell\bar{\ell}}\;\mathrm{[GeV]}$&#39;)
+ax.set_zlabel(r&#39;$\mathrm{NN}^{c_{tG}}$&#39;)
+ax.plot_surface(eta_l_grid, pt_ll_grid, nn_ctG, cmap=&#39;viridis&#39;, alpha=0.5)
 </pre></div>
 </div>
 </div>
@@ -1464,11 +1452,10 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># download the models</span>
-<span class="n">models_18_feat_url</span> <span class="o">=</span> <span class="s1">&#39;https://dl.dropboxusercontent.com/s/xu6o2fxqtw6l8e9/tt_particle_18_feat.tar.gz?dl=0&#39;</span>
-<span class="n">pretrained_models_18_feat</span> <span class="o">=</span> <span class="n">file_downloader</span><span class="p">(</span><span class="n">models_18_feat_url</span><span class="p">);</span>
-<span class="n">untar</span><span class="p">(</span><span class="n">pretrained_models_18_feat</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="s1">&#39;./downloads/models/tt_llvlvlbb_18_feat&#39;</span><span class="p">);</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># download the models
+models_18_feat_url = &#39;https://dl.dropboxusercontent.com/s/xu6o2fxqtw6l8e9/tt_particle_18_feat.tar.gz?dl=0&#39;
+pretrained_models_18_feat = file_downloader(models_18_feat_url);
+untar(pretrained_models_18_feat, destination=&#39;./downloads/models/tt_llvlvlbb_18_feat&#39;);
 </pre></div>
 </div>
 </div>
@@ -1476,16 +1463,15 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># load the models</span>
-<span class="n">path_to_models_18_feat_root</span> <span class="o">=</span> <span class="s1">&#39;./downloads/models/tt_llvlvlbb_18_feat&#39;</span>
-<span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;quad&#39;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># load the models
+path_to_models_18_feat_root = &#39;./downloads/models/tt_llvlvlbb_18_feat&#39;
+order = &#39;quad&#39;
 
-<span class="n">models_paths_dict_18_feat</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="o">.</span><span class="n">build_path_dict</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">path_to_models_18_feat_root</span><span class="p">,</span>
-                        <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+models_paths_dict_18_feat = analyse.Analyse.build_path_dict(root=path_to_models_18_feat_root,
+                        order=order,
+                        prefix=&#39;model&#39;)
 
-<span class="n">analyser_18_feat</span> <span class="o">=</span> <span class="n">analyse</span><span class="o">.</span><span class="n">Analyse</span><span class="p">(</span><span class="n">models_paths_dict_18_feat</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+analyser_18_feat = analyse.Analyse(models_paths_dict_18_feat, order)
 </pre></div>
 </div>
 </div>
@@ -1493,9 +1479,8 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># evaluate pretrained NNs on observed data</span>
-<span class="n">analyser_18_feat</span><span class="o">.</span><span class="n">evaluate_models</span><span class="p">(</span><span class="n">events_sm</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># evaluate pretrained NNs on observed data
+analyser_18_feat.evaluate_models(events_sm)
 </pre></div>
 </div>
 </div>
@@ -1503,8 +1488,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">analyser_18_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>analyser_18_feat.models_evaluated_df;
 </pre></div>
 </div>
 </div>
@@ -1512,8 +1496,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">models_evaluated_18_feat</span> <span class="o">=</span> <span class="n">analyser_18_feat</span><span class="o">.</span><span class="n">models_evaluated_df</span><span class="p">[</span><span class="s1">&#39;models&#39;</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>models_evaluated_18_feat = analyser_18_feat.models_evaluated_df[&#39;models&#39;]
 </pre></div>
 </div>
 </div>
@@ -1521,8 +1504,7 @@ populate a 18-dim feature space scales exponentially with the number of dimensio
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">models_evaluated_18_feat</span><span class="p">[</span><span class="s1">&#39;lin&#39;</span><span class="p">,</span> <span class="s1">&#39;ctGRe&#39;</span><span class="p">];</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>models_evaluated_18_feat[&#39;lin&#39;, &#39;ctGRe&#39;];
 </pre></div>
 </div>
 </div>

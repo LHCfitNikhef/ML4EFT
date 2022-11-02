@@ -29,7 +29,12 @@ ml4eft.core.classifier.ConstraintActivation
       ~ConstraintActivation.extra_repr
       ~ConstraintActivation.float
       ~ConstraintActivation.forward
+      ~ConstraintActivation.get_buffer
+      ~ConstraintActivation.get_extra_state
+      ~ConstraintActivation.get_parameter
+      ~ConstraintActivation.get_submodule
       ~ConstraintActivation.half
+      ~ConstraintActivation.ipu
       ~ConstraintActivation.load_state_dict
       ~ConstraintActivation.modules
       ~ConstraintActivation.named_buffers
@@ -41,13 +46,19 @@ ml4eft.core.classifier.ConstraintActivation
       ~ConstraintActivation.register_buffer
       ~ConstraintActivation.register_forward_hook
       ~ConstraintActivation.register_forward_pre_hook
+      ~ConstraintActivation.register_full_backward_hook
+      ~ConstraintActivation.register_load_state_dict_post_hook
+      ~ConstraintActivation.register_module
       ~ConstraintActivation.register_parameter
       ~ConstraintActivation.requires_grad_
+      ~ConstraintActivation.set_extra_state
       ~ConstraintActivation.share_memory
       ~ConstraintActivation.state_dict
       ~ConstraintActivation.to
+      ~ConstraintActivation.to_empty
       ~ConstraintActivation.train
       ~ConstraintActivation.type
+      ~ConstraintActivation.xpu
       ~ConstraintActivation.zero_grad
    
    

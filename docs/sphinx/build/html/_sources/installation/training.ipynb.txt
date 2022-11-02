@@ -106,7 +106,10 @@
     "\n",
     "import ml4eft.core.classifier as classifier\n",
     "import ml4eft.analyse.analyse as analyse\n",
-    "import ml4eft.plotting.features as features"
+    "import ml4eft.plotting.features as features\n",
+    "\n",
+    "rc('text', usetex=False)\n",
+    "rc('font', **{'family': 'DejaVu Sans', 'size': 22})"
    ]
   },
   {
@@ -636,7 +639,7 @@
    ],
    "source": [
     "# make a 3D interactive plot\n",
-    "%matplotlib inline\n",
+    "%matplotlib ipympl\n",
     "fig = plt.figure(figsize=(10,10))\n",
     "ax = plt.axes(projection='3d')\n",
     "ax.set_xlabel(r'$\\eta_\\ell$')\n",
