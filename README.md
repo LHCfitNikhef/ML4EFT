@@ -4,10 +4,12 @@ It makes use of machine learning regression and classification techniques to par
 and can be seamlessly integrated into
 global analyses of, for example, the Standard Model Effective Field Theory and Parton Distribution Functions.
 
-The ML4EFT framework is made available via the Python Package Index (pip) and can be installed directly 
-by running 
+The ML4EFT framework is made available via the [Python Package Index](https://pypi.org/project/ml4eft/) (pip) and can be installed directly 
+by running
 
-``pip install ml4eft``
+```shell
+pip install ml4eft
+```
 
 or alternatively the code can be downloaded from this public GitHub repository, and then installed by running
 
