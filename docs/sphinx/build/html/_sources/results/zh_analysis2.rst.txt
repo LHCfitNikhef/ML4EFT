@@ -1,5 +1,5 @@
 Results from the ML model vs binning in :math:`p_{T}^{Z}`, :math:`O(\Lambda^{-2})`, pair-wise fit
-====================================================================================================
+=================================================================================================
 Figure 5.6 of :cite:`ML4EFT_temp_id`.
 
 95% CL intervals on :math:`n_{eft}=7` Wilson coefficients relevant for the description of Higgs production

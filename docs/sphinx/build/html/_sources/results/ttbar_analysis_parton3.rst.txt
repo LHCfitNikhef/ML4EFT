@@ -1,5 +1,5 @@
 Constraints on the SMEFT
-============================================================
+========================
 We compare the constraints on :math:`C_{tu}^{(8)}` and :math:`C_{tG}` at 95% CL obtained from a binned analysis to those obtained from the unbinned ML model.
 
 

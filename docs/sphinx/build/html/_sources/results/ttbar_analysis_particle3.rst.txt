@@ -1,7 +1,7 @@
 .. _particle3:
 
 Results from the ML model trained on two features vs all features, :math:`O(\Lambda^{-2})`
-======================================================================================================================
+==========================================================================================
 Figure 5.3 of :cite:`ML4EFT_temp_id`.
 
 Following from :ref:`the previous results<particle2>`, we now present a comparison of the results obtained by

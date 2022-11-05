@@ -1,7 +1,7 @@
 .. _particle4:
 
 Results from the ML model vs binning in two features, :math:`O(\Lambda^{-4})`
-==============================================================================
+=============================================================================
 Figure 5.4 of :cite:`ML4EFT_temp_id`.
 
 95% CL intervals for the :math:`n_{eft} = 8` Wilson coefficients relevant for the description of top quark pair
