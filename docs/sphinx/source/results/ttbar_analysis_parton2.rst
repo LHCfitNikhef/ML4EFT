@@ -21,17 +21,20 @@ From left to right and top to bottom we display:
 .. image:: ../images/nn_perf_overview.png
 
 
-Animation of the progression of the Truth/NN comparison with training
-----------------------------------------------------------------------
-The following animation shows the evolution of the median of the ratio between the ML model and the analytical calculation in the :math:`(m_{t \bar{t}}, y_{t \bar{t}})` feature space
+Animations of the progression of the exact/ML model comparison with training
+----------------------------------------------------------------------------
+The following animations show the evolution of the median of the ratio between the ML model and the analytical calculation in the :math:`(m_{t \bar{t}}, y_{t \bar{t}})` feature space
 with the neural network training.
 
-.. image:: ../images/anim_2d.gif
+.. image:: ../images/anim_ctgre_2d.gif
+.. image:: ../images/anim_ctgre_ctgre_2d.gif
+.. image:: ../images/anim_ctu8_2d.gif
+.. image:: ../images/anim_ctu8_ctu8_2d.gif
 
 
 Animation of the training of the decision boundary function
 ------------------------------------------------------------
-The following animation shows the evolution of the per-replica decision boundary function :math:`g(x,c)`, this time trained on :math:`m_{t \bar{t}}` only.  
+The following animation shows the evolution of the per-replica decision boundary function :math:`g(x,c)` along :math:`y_{t\bar{t}}=0`.
 The uncertainty on :math:`g(x,c)` is obtained from the spread of replicas.
 We compare this to the exact calculation of :math:`g(x,c)`, shown in red.
 Excellent agreement between the neural network and exact calculation is found.

@@ -1,7 +1,7 @@
 .. _particle6:
 
 Impact of methodological uncertainties
-======================================================================================
+======================================
 Figure 5.9 of :cite:`ML4EFT_temp_id`.
 
 Pair-wise 68% CL contours for the Wilson coefficients entering top quark pair production in the dilepton final state. 

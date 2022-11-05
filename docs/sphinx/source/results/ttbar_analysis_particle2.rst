@@ -2,7 +2,7 @@
 
 
 Results from the ML model vs binning in two features, :math:`O(\Lambda^{-2})`
-==============================================================================
+=============================================================================
 Figure 5.2 of :cite:`ML4EFT_temp_id`.
 
 95% CL intervals on :math:`n_{eft}=5` Wilson coefficients relevant for the description of top quark pair

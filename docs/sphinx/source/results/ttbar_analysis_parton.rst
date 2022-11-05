@@ -1,5 +1,5 @@
 Inclusive top pair production at the parton level
-===================================================
+=================================================
 
 We present here the plots and animations related to Sections 4.2 and 5.1 of :cite:`ML4EFT_temp_id`.
 

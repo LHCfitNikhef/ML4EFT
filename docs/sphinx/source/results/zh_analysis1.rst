@@ -1,7 +1,7 @@
 .. _kinematics_zh:
 
 Kinematic features used as inputs to the neural network
-============================================================
+=======================================================
 
 We display here the kinematic features used as inputs to the neural network,
 calculated both in the SM and at representative points in the SMEFT parameter space.

@@ -1,7 +1,7 @@
 .. _particle5:
 
 Results from the ML model training on two features vs all features, :math:`O(Λ^{-4})`
-======================================================================================
+=====================================================================================
 Figure 5.5 of :cite:`ML4EFT_temp_id`.
 
 Following from :ref:`the previous results<particle4>`, we now present a comparison of the results obtained by

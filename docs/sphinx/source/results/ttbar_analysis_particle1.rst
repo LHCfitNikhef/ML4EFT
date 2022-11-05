@@ -1,7 +1,7 @@
 .. _kinematics:
 
 Kinematic features used as inputs to the neural network
-============================================================
+=======================================================
 
 In the case of top quark pair production in the dileptonic decay channel,
 

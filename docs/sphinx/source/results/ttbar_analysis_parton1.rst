@@ -1,5 +1,5 @@
 Pseudo-data generation and benchmarking
-============================================================
+=======================================
 
 Pseudo-data is generated using ``MadGraph5_aMC@NLO`` :cite:`Alwall:2014hca`
 interfaced to ``SMEFTsim`` :cite:`Brivio:2017btx`, :cite:`Brivio:2020onw`
