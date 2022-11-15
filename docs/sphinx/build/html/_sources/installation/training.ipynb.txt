@@ -668,8 +668,8 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# download the models \n",
-    "models_18_feat_url = 'https://dl.dropboxusercontent.com/s/xu6o2fxqtw6l8e9/tt_particle_18_feat.tar.gz?dl=0'\n",
+    "# download the models\n",
+    "models_18_feat_url = 'https://dl.dropboxusercontent.com/s/54uchr1w7pkjrqf/tt_particle_18_feat.tar.gz?dl=0'\n",
     "pretrained_models_18_feat = file_downloader(models_18_feat_url);\n",
     "untar(pretrained_models_18_feat, destination='./downloads/models/tt_llvlvlbb_18_feat');"
    ]
