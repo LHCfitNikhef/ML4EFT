@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import re
 import os
 import ml4eft.analyse.analyse as analyse
-from ml4eft.core.truth import vh_prod, tt_prod
+from ml4eft.core.truth import tt_prod
 from collections import defaultdict
 
 
