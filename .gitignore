@@ -338,3 +338,4 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 /docs/sphinx/source/_autosummary/
 /docs/sphinx/build/doctrees/
 /code/cluster/
+/results/
