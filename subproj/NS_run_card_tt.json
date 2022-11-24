@@ -1,0 +1,48 @@
+{
+  "fit_id": "ctu8_subproj",
+  "mode": "nn",
+  "process": "ttparton",
+  "order": "lin",
+  "nlive": 50,
+  "results_path": "/data/theorie/pherbsch/ML4EFT/personal_code/subproj/results/ctu8_mtt",
+  "lumi": 2571,
+  "observed_data_path": "/data/theorie/pherbsch/ML4EFT/personal_code/subproj/theory_data/ttparton_ctu8/events_0.pkl.gz",
+  "bins": {
+    "m_tt": [
+      1.45,
+      1.5,
+      1.55,
+      1.6,
+      1.7,
+      1.8,
+      1.9,
+      2.0,
+      2.1,
+      2.2,
+      2.3,
+      2.4,
+      2.5,
+      2.6,
+      2.7,
+      2.8,
+      2.9,
+      3.0,
+      10
+    ]
+  },
+  "path_to_models": "/data/theorie/pherbsch/ML4EFT/personal_code/subproj/models/model_ctu8",
+  "path_to_theory_pred": "/data/theorie/pherbsch/ML4EFT/personal_code/subproj/theory_data/ttparton_ctu8",
+  "prior": {
+    "ctGRe": [
+      -1,
+      1
+    ],
+    "ctu8": [
+      -1,
+      1
+    ]
+  },
+  "th_features": [
+    "m_tt"
+  ]
+}
