@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: ml4eft
+Version: 0.0.3
+Summary: Machine Learning for Effective Field Theories
+Home-page: https://lhcfitnikhef.github.io/ML4EFT
+Author: J.J. ter Hoeve, M. Madigan, R.G. Ambrosio, J.Rojo, V.Sanz.
+Author-email: j.j.ter.hoeve@vu.nl
+Classifier: Operating System :: Unix
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+
+ML4EFT is a general open-source framework for the integration of unbinned multivariate observables into global fits of particle physics data. It makes use of machine learning regression and classification techniques to parameterise high-dimensional likelihood ratios, and can be seamlessly integrated into global analyses of, for example, the Standard Model Effective Field Theory and Parton Distribution Functions.
