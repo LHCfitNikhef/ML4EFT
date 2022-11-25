@@ -30,8 +30,8 @@
       10
     ]
   },
-  "path_to_models": "/data/theorie/pherbsch/ML4EFT/subproj/models/model_ctu8",
-  "path_to_theory_pred": "/data/theorie/pherbsch/ML4EFT/subproj/theory_data/ttparton_ctu8",
+  "path_to_models": "/data/theorie/pherbsch/ML4EFT/subproj/models",
+  "path_to_theory_pred": "/data/theorie/pherbsch/ML4EFT/subproj/theory_data",
   "prior": {
     "ctGRe": [
       -1,
