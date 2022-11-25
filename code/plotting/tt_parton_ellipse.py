@@ -18,9 +18,9 @@ rc('text', usetex=True)
 coeff_dict = {"ctGRe": r'$c_{tG}$', "ctu8": r'$c_{tu}^{(8)}$'}
 
 # LINEAR
-samples_nn_lin_mtt = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/binned_ctu8_subproj_binned/posterior.json'
-samples_nn_lin_mtt_y = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/nn_ctu8_ctGRe_subproj/posterior.json'
-# samples_nn_lin_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/nn_glob_lin_mtt/posterior.json'
+samples_nn_lin_mtt1 = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/binned_ctu8_subproj_binned1/posterior.json'
+samples_nn_lin_mtt2 = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/binned_ctu8_subproj_binned/posterior.json'
+samples_nn_lin_mtt3 = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/nn_ctu8_ctGRe_subproj/posterior.json'
 
 # samples_binned_lin_mtt_y_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt_y_c/posterior.json'
 # samples_binned_lin_mtt_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt_c/posterior.json'
@@ -45,17 +45,17 @@ samples_nn_lin_mtt_y = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe
 
 # PLOT 1
 
-df_plot_1 = [Analyse.posterior_loader(samples_nn_lin_mtt)
-            ,Analyse.posterior_loader(samples_nn_lin_mtt_y)
+df_plot_1 = [Analyse.posterior_loader(samples_nn_lin_mtt1)
+            ,Analyse.posterior_loader(samples_nn_lin_mtt2)
+            ,Analyse.posterior_loader(samples_nn_lin_mtt3)
             # ,
-            #  Analyse.posterior_loader(samples_truth_lin_mtt_y),
             #  Analyse.posterior_loader(samples_nn_lin_mtt_y)
              ]
 
-labels_plot_1 = [r'$\mathrm{Binning}\:2\;(m_{t\bar{t}})$'
+labels_plot_1 = [r'$\mathrm{Binning}\:1\;(m_{t\bar{t}})$'
 # , y_{t\bar{t}})$'
-                ,'nn'
-                # ,
+                ,r'$\mathrm{Binning}\:2\;(m_{t\bar{t}})$'
+                , 'nn'
                 #  r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
                 #  r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
                 #  r'$\mathrm{SM}$'
@@ -154,4 +154,4 @@ for i, df in enumerate(dfs):
 
 grid.tight_layout(fig)
 
-fig.savefig('/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/plots/nn_binned_ctu8_ctGRe')
+fig.savefig('/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/plots/nn_binned1_binned2_ctu8_ctGRe')
