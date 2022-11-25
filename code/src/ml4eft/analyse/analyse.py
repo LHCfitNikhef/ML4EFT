@@ -339,7 +339,6 @@ class Analyse:
         scalers = []
 
         for rep_path in rep_paths:
-
             path_to_run_card = os.path.join(rep_path, 'run_card.json')
             path_to_scaler = os.path.join(rep_path, 'scaler.gz')
 
