@@ -148,4 +148,4 @@ for i, df in enumerate(dfs):
 
 grid.tight_layout(fig)
 
-fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_10/tt_parton_ellipse_2x2_v2.pdf')
+fig.savefig('/data/theorie/pherbsch/ML4EFT/results/nn_ctu8_ctGRe_subproj')
