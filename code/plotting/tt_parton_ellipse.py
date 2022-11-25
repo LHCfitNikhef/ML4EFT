@@ -18,8 +18,8 @@ rc('text', usetex=True)
 coeff_dict = {"ctGRe": r'$c_{tG}$', "ctu8": r'$c_{tu}^{(8)}$'}
 
 # LINEAR
-samples_nn_lin_mtt = '/data/theorie/pherbsch/ML4EFT/results/nn_ctu8_ctGRe_subproj/posterior.json'
-# samples_nn_lin_mtt_y = '/data/theorie/jthoeve/ns_samples/tt_parton/nn_glob_lin_mtt_y/posterior.json'
+samples_nn_lin_mtt = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/binned_ctu8_subproj_binned/posterior.json'
+samples_nn_lin_mtt_y = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/nn_ctu8_ctGRe_subproj/posterior.json'
 # samples_nn_lin_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/nn_glob_lin_mtt/posterior.json'
 
 # samples_binned_lin_mtt_y_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt_y_c/posterior.json'
@@ -46,13 +46,16 @@ samples_nn_lin_mtt = '/data/theorie/pherbsch/ML4EFT/results/nn_ctu8_ctGRe_subpro
 # PLOT 1
 
 df_plot_1 = [Analyse.posterior_loader(samples_nn_lin_mtt)
-            # ,Analyse.posterior_loader(samples_binned_lin_mtt_y_f),
+            ,Analyse.posterior_loader(samples_nn_lin_mtt_y)
+            # ,
             #  Analyse.posterior_loader(samples_truth_lin_mtt_y),
             #  Analyse.posterior_loader(samples_nn_lin_mtt_y)
              ]
 
-labels_plot_1 = [r'$\mathrm{Binning}\:1\;(m_{t\bar{t}}, y_{t\bar{t}})$'
-                # ,r'$\mathrm{Binning}\:2\;(m_{t\bar{t}}, y_{t\bar{t}})$',
+labels_plot_1 = [r'$\mathrm{Binning}\:2\;(m_{t\bar{t}})$'
+# , y_{t\bar{t}})$'
+                ,'nn'
+                # ,
                 #  r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
                 #  r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
                 #  r'$\mathrm{SM}$'
@@ -107,7 +110,7 @@ labels = [labels_plot_1
  ]
 
 titles = [
-    r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-2}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$"
+    r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-2}\right)\mathrm{at\:}\mathcal{L}=2571\:\mathrm{fb}^{-1}$"
     # ,r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-4}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$",
     # r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-2}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$",
     # r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-4}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$"
@@ -146,9 +149,9 @@ for i, df in enumerate(dfs):
     if col_idx == 1:
         ax.set(ylabel=None)
     if row_idx == 0:
-        ax.set(xlabel=None)
+        ax.set(xlabel=coeff_dict["ctGRe"])
         ax.set_title(titles[i], fontsize=25)
 
 grid.tight_layout(fig)
 
-fig.savefig('/data/theorie/pherbsch/ML4EFT/results/nn_ctu8_ctGRe_subproj/ctu8_ctGRe_plot')
+fig.savefig('/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/plots/nn_binned_ctu8_ctGRe')
