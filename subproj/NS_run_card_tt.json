@@ -1,6 +1,6 @@
 {
-  "fit_id": "ctu8_subproj",
-  "mode": "nn",
+  "fit_id": "ctu8_subproj_binned1.2",
+  "mode": "binned",
   "process": "ttparton",
   "order": "lin",
   "nlive": 50,
@@ -43,6 +43,7 @@
     ]
   },
   "th_features": [
-    "m_tt"
+    "m_tt",
+    "y"
   ]
 }
