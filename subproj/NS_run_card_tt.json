@@ -1,8 +1,8 @@
 {
-  "fit_id": "ctu8_subproj_binned1.2",
+  "fit_id": "ctu8_ctGRe_quad_fine_binned",
   "mode": "binned",
   "process": "ttparton",
-  "order": "lin",
+  "order": "quad",
   "nlive": 50,
   "results_path": "/data/theorie/pherbsch/ML4EFT/results",
   "lumi": 2571,
@@ -38,6 +38,14 @@
       1
     ],
     "ctu8": [
+      -1,
+      1
+    ],
+    "ctGRe_ctGRe": [
+      -1,
+      1
+    ],
+    "ctu8_ctu8": [
       -1,
       1
     ]
