@@ -86,7 +86,7 @@ with open(runcard, 'w') as runcard_updated:
 #now lets train a few models in a row.
 
 output_dir = './models'
-c_name = ctu8
+c_name = 'ctu8'
 
 fitter = classifier.Fitter(json_path = runcard,
                         mc_run = 0,

@@ -136,7 +136,6 @@ for i, df in enumerate(dfs):
 
     if col_idx == 1:
         ax.set_xlim(-0.22, 0.3)
-
         plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
                      ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
                      labels=labels[i], loc="lower right")

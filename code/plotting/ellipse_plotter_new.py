@@ -28,7 +28,6 @@ class EllipsePlotter:
         self.replica_handle_add = False
         pass
 
-
     def confidence_contour_kde(self, x, y, ax, hndls, facecolor=None, edgecolor='k', alpha=0.3, taken_together=False):
 
         if not taken_together:
