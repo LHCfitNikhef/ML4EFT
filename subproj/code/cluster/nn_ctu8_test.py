@@ -34,7 +34,7 @@ json_runcard_loaded['epochs'] = 20
 json_runcard_loaded['lr'] = 0.001
 json_runcard_loaded['n_batches'] = 50
 json_runcard_loaded['patience'] = 2 # needs to be bigger than number of epochs
-
+json_runcard_loaded['event_data"'] = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/downloads'
 
 
 # %%
