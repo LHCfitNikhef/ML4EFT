@@ -339,3 +339,5 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 /docs/sphinx/build/doctrees/
 /code/cluster/
 /results/
+/subproj/code/cluster/downloads/
+/subproj/code/cluster/downloads/

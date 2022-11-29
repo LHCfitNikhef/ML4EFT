@@ -15,7 +15,7 @@ def cornerplot(coeff_dict, path_to_samples, handles, labels, order="lin"):
     n_cols = len(coeff_dict) - 1
     n_rows = n_cols
 
-    fig = plt.figure(figsize=(n_cols * 4, n_rows * 4))
+    fig = plt.figure(figsize=(n_cols * 14, n_rows * 14))
 
     grid = plt.GridSpec(n_rows, n_cols, hspace=0.4, wspace=0.4)
 
@@ -56,7 +56,7 @@ def cornerplot(coeff_dict, path_to_samples, handles, labels, order="lin"):
         col_idx -= 1
 
     ax.legend(handles, labels, bbox_to_anchor=(1, 1), loc='upper left',
-              frameon=False, fontsize=24,
+              frameon=False, fontsize=12,
               handlelength=1,
               borderpad=0.5,
               handletextpad=1,
@@ -69,14 +69,13 @@ def cornerplot(coeff_dict, path_to_samples, handles, labels, order="lin"):
     return fig
 
 
-coeff_dict = {"ctd8": r'$c_{td}^{(8)}$', "cQj18": r'$c_{Qq}^{(1,8)}$', "cQu8": r'$c_{Qu}^{(8)}$',
-              "ctj8": r'$c_{qt}^{(8)}$', "ctGRe": r'$c_{tG}$'}
+coeff_dict = {"ctu8": r'$c_{tu}^{(8)}$',"ctGRe": r'$c_{tG}$'}
 
-handles = [plt.Rectangle((0, 0), 1, 1, fc='C0', alpha=0.3, linewidth=0.5, edgecolor='C0')]
+handles = [plt.Rectangle((0,0), 1, 1, fc='C0', alpha=0.3, linewidth=0.5, edgecolor='C0')]
 labels = [r"$\mathrm{Unbinned}\;\mathrm{ML}\;(18\;\mathrm{features})$"]
 
 
-path_to_samples = ['./example/posterior_glob_lin_18.json']
+path_to_samples = ['/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/binned_ctu8_ctGRe_quad_fine_binned/posterior.json']
 
-fig = cornerplot(coeff_dict, path_to_samples, handles, labels, order="lin")
-fig.savefig('cornerplot.pdf')
+fig = cornerplot(coeff_dict, path_to_samples, handles, labels, order="quad")
+fig.savefig('/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/plots/test')
