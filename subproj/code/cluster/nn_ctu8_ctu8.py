@@ -34,7 +34,7 @@ json_runcard_loaded['epochs'] = 200
 json_runcard_loaded['lr'] = 0.001
 json_runcard_loaded['n_batches'] = 50
 json_runcard_loaded['patience'] = 10 # needs to be bigger than number of epochs
-
+json_runcard_loaded['event_data"'] = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/downloads'
 
 
 # %%
@@ -46,14 +46,14 @@ with open(runcard, 'w') as runcard_updated:
 # %%
 #now lets train a few models in a row.
 
-output_dir = './models'
+output_dir = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/models'
 c_name = 'ctu8_ctu8'
 
 fitter = classifier.Fitter(json_path = runcard,
                         mc_run = 0,
                         c_name = c_name,
                         output_dir = output_dir,
-                        print_log=True)
+                        print_log=False)
                             
 
 
