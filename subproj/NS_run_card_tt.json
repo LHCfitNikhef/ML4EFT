@@ -1,8 +1,8 @@
 {
-  "fit_id": "ctu8_ctGRe_quad_fine_binned",
-  "mode": "binned",
+  "fit_id": "self_trained_nn_ctu8_ctGRe",
+  "mode": "nn",
   "process": "ttparton",
-  "order": "quad",
+  "order": "lin",
   "nlive": 50,
   "results_path": "/data/theorie/pherbsch/ML4EFT/results",
   "lumi": 2571,
@@ -30,7 +30,7 @@
       10
     ]
   },
-  "path_to_models": "/data/theorie/pherbsch/ML4EFT/subproj/models",
+  "path_to_models": "/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/models/2022/12/08",
   "path_to_theory_pred": "/data/theorie/pherbsch/ML4EFT/subproj/theory_data",
   "prior": {
     "ctGRe": [
@@ -40,14 +40,6 @@
     "ctu8": [
       -1,
       1
-    ],
-    "ctGRe_ctGRe": [
-      -1,
-      1
-    ],
-    "ctu8_ctu8": [
-      -1,
-      1
     ]
   },
   "th_features": [
@@ -55,3 +47,5 @@
     "y"
   ]
 }
+
+"pt_l1", "pt_l2", "pt_l_leading", "pt_l_trailing", "eta_l1", "eta_l2", "eta_l_leading", "eta_l_trailing", "pt_ll", "m_ll", "DeltaPhi_ll", "DeltaEta_ll", "pt_b_leading", "pt_b_trailing", "eta_b_leading", "eta_b_trailing", "pt_bb", "m_bb"

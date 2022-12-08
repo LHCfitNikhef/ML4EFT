@@ -29,8 +29,8 @@ def confidence_region_quad(x, y, ax, facecolor=None, edgecolor='k', alpha=0.3):
         Transparency
     """
 
-    sns.kdeplot(x, y, levels=[0.317, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=alpha, color=facecolor)
-    sns.kdeplot(x, y, levels=[0.317], bw_adjust=1.2, ax=ax, alpha=1, color=edgecolor)
+    sns.kdeplot(x=x, y=y, levels=[0.317, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=alpha, color=facecolor)
+    sns.kdeplot(x=x, y=y, levels=[0.317], bw_adjust=1.2, ax=ax, alpha=1, color=edgecolor)
 
 
 def confidence_region_lin(x, y, ax, facecolor="none", **kwargs):

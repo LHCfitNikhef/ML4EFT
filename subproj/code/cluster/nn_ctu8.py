@@ -19,7 +19,7 @@ rc('font', **{'family': 'DejaVu Sans', 'size': 22})
 
 # %%
 #loading the runcard
-runcard = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/downloads/run_card_tt_llvlvlbb.json'
+runcard = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/downloads/run_card_tt_parton_ctGRe.json'
 # %%
 #open the runcard to see what the options are.
 with open(runcard) as json_runcard:
@@ -47,13 +47,13 @@ with open(runcard, 'w') as runcard_updated:
 #now lets train a few models in a row.
 
 output_dir = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/models'
-c_name = 'ctu8'
+c_name = 'ctGRe'
 
 fitter = classifier.Fitter(json_path = runcard,
                         mc_run = 0,
                         c_name = c_name,
                         output_dir = output_dir,
-                        print_log=False)
+                        print_log=True)
                             
 
 

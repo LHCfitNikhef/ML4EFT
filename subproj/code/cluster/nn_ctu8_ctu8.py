@@ -19,7 +19,7 @@ rc('font', **{'family': 'DejaVu Sans', 'size': 22})
 
 # %%
 #loading the runcard
-runcard = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/downloads/run_card_tt_llvlvlbb.json'
+runcard = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/downloads/run_card_tt_mtt_y.json'
 # %%
 #open the runcard to see what the options are.
 with open(runcard) as json_runcard:
