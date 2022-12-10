@@ -19,7 +19,7 @@ rc('font', **{'family': 'DejaVu Sans', 'size': 22})
 
 # %%
 #loading the runcard
-runcard = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/downloads/run_card_tt_parton_ctGRe.json'
+runcard = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/downloads/run_card_tt_parton_ctGRe_ctGRe.json'
 # %%
 #open the runcard to see what the options are.
 with open(runcard) as json_runcard:
@@ -30,10 +30,10 @@ json_runcard_loaded
 
 # %%
 # to change the runcard I can do the following
-json_runcard_loaded['epochs'] = 200
+#json_runcard_loaded['epochs'] = 200
 json_runcard_loaded['lr'] = 0.001
-json_runcard_loaded['n_batches'] = 50
-json_runcard_loaded['patience'] = 10 # needs to be bigger than number of epochs
+#json_runcard_loaded['n_batches'] = 50
+#json_runcard_loaded['patience'] = 10 # needs to be bigger than number of epochs
 json_runcard_loaded['event_data"'] = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/downloads'
 
 
@@ -47,7 +47,7 @@ with open(runcard, 'w') as runcard_updated:
 #now lets train a few models in a row.
 
 output_dir = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/models'
-c_name = 'ctGRe'
+c_name = 'ctGRe_ctGRe'
 
 fitter = classifier.Fitter(json_path = runcard,
                         mc_run = 0,

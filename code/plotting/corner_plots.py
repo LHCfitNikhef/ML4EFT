@@ -75,7 +75,7 @@ handles = [plt.Rectangle((0,0), 1, 1, fc='C0', alpha=0.3, linewidth=0.5, edgecol
 labels = [r"$\mathrm{Unbinned}\;\mathrm{ML}\;(18\;\mathrm{features})$"]
 
 
-path_to_samples = ['/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/binned_ctu8_ctGRe_quad_fine_binned/posterior.json']
+path_to_samples = ['/data/theorie/pherbsch/ML4EFT/results/binned_test_baseline_3/posterior.json']
 
 fig = cornerplot(coeff_dict, path_to_samples, handles, labels, order="quad")
-fig.savefig('/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/plots/test')
+fig.savefig('/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/plots/self_test_quad_binned_200')

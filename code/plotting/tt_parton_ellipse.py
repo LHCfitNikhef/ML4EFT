@@ -18,7 +18,7 @@ rc('text', usetex=True)
 coeff_dict = {"ctGRe": r'$c_{tG}$', "ctu8": r'$c_{tu}^{(8)}$'}
 
 # LINEAR
-samples_nn_lin_mtt1 = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/binned_ctu8_ctGRe_quad_fine_binned/posterior.json'
+samples_nn_lin_mtt1 = '/data/theorie/pherbsch/ML4EFT/results/nn_test_self_trained_ctu8_quad_new/posterior.json'
 # samples_nn_lin_mtt2 = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/2_feat_ctu8_ctGRe_binned1.2/posterior.json'
 # samples_nn_lin_mtt3 = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/nn_ctu8_ctGRe_subproj/posterior.json'
 
@@ -152,4 +152,4 @@ for i, df in enumerate(dfs):
 
 grid.tight_layout(fig)
 
-fig.savefig('/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/plots/2_feat_ctu8_ctGRe_binned_quad')
+fig.savefig('/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/plots/self_trained_test_nn_new')
