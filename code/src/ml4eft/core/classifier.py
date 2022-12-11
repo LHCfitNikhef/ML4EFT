@@ -123,7 +123,7 @@ class Classifier(nn.Module):
         super().__init__()
         self.c = c
         self.n_alpha = MLP(architecture)
-        self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
+        #self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
 
     def forward(self, x):
         """
@@ -299,7 +299,7 @@ class Fitter:
     Training class
     """
 
-    def __init__(self, json_path, mc_run, c_name, output_dir, print_log=False):
+    def __init__(self, json_path, mc_run, c_name, print_log=False):
         """
         Fitter constructor
 
@@ -349,7 +349,7 @@ class Fitter:
 
         self.mc_run = mc_run
 
-        output_dir = os.path.join(output_dir, time.strftime("%Y/%m/%d"))
+        output_dir = os.path.join(self.run_options["result_dir"], time.strftime("%Y/%m/%d"))
         os.makedirs(output_dir, exist_ok=True)
 
         model_path = os.path.join(output_dir, 'model_{}'.format(self.c_name))

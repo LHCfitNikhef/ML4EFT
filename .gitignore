@@ -323,13 +323,11 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 
 *.pdf
 
-#large (> 100 mb) files
-/talks/ML4EFT-14-07.key
 
 
 
-# specific files
-/2d_data_fitter.ipynb
+
+# specific dirs
 
 /zenodo/*
 /notebooks/
@@ -337,3 +335,7 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 /code/dist/
 /docs/sphinx/source/_autosummary/
 /docs/sphinx/build/doctrees/
+/code/training_time.py
+/code/launch_scripts/
+/models/
+/runcards/
