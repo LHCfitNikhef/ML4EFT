@@ -96,7 +96,7 @@ class EllipsePlotter:
             coeff_values: numplt.ndarray
                 posterior distribution
         """
-        
+
         # utils, to avoid repetition
 
         if coeff in self.full_labels[fit]:
