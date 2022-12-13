@@ -1,0 +1,47 @@
+{
+  "process_id": "tt",
+  "epochs": 2000,
+  "lr": 0.0001,
+  "n_batches": 50,
+  "hidden_sizes": [
+    100,
+    100,
+    100
+  ],
+  "n_dat": 100000,
+  "event_data": "/data/theorie/jthoeve/ML4EFT/training_data//tt_llvlvlbb",
+  "features": [
+    "pt_l1",
+    "pt_l2",
+    "pt_l_leading",
+    "pt_l_trailing",
+    "eta_l1",
+    "eta_l2",
+    "eta_l_leading",
+    "eta_l_trailing",
+    "pt_ll",
+    "m_ll",
+    "DeltaPhi_ll",
+    "DeltaEta_ll",
+    "pt_b_leading",
+    "pt_b_trailing",
+    "eta_b_leading",
+    "eta_b_trailing",
+    "pt_bb",
+    "m_bb"
+  ],
+  "loss_type": "CE",
+  "scaler_type": "robust",
+  "patience": 200,
+  "val_ratio": 0.2,
+  "c_train": {
+    "cQd8": 10,
+    "cQj18": 10,
+    "cQj38": 10,
+    "cQu8": 10,
+    "ctd8": 10,
+    "ctGRe": -10,
+    "ctj8": 10,
+    "ctu8": 10
+  }
+}
