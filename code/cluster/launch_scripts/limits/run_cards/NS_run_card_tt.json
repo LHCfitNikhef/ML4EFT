@@ -1,0 +1,48 @@
+{
+  "fit_id": "glob_lin_mtt_v3",
+  "mode": "truth",
+  "process": "ttparton",
+  "order": "lin",
+  "nlive": 500,
+  "results_path": "/data/theorie/jthoeve/ns_samples/tt_parton",
+  "lumi": 2571,
+  "observed_data_path": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/observed_data/tt_parton_sm/events_0.pkl.gz",
+  "bins": {
+    "m_tt": [
+      1.45,
+      1.5,
+      1.55,
+      1.6,
+      1.7,
+      1.8,
+      1.9,
+      2.0,
+      2.1,
+      2.2,
+      2.3,
+      2.4,
+      2.5,
+      2.6,
+      2.7,
+      2.8,
+      2.9,
+      3.0,
+      10
+    ]
+  },
+  "path_to_models": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_mtt_y_ptt/2022/10/16",
+  "path_to_theory_pred": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt/mtt_145",
+  "prior": {
+    "ctGRe": [
+      -1,
+      1
+    ],
+    "ctu8": [
+      -1,
+      1
+    ]
+  },
+  "th_features": [
+    "m_tt"
+  ]
+}

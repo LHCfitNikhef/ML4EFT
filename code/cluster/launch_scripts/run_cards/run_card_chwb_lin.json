@@ -1,0 +1,41 @@
+{
+  "name": "chwb_lin",
+  "epochs": 4000,
+  "lr": 0.001,
+  "n_batches": 5,
+  "input_size": 8,
+  "output_size": 1,
+  "hidden_sizes": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "n_dat": 100000,
+  "quadratic": 0,
+  "cross_term": 0,
+  "animation": 0,
+  "coeff": [
+    {
+      "op": "chwb",
+      "value": 20.0
+    },
+    {
+      "op": "cHq3",
+      "value": 0
+    }
+  ],
+  "event_data": "/data/theorie/jthoeve/training_data",
+  "features": [
+    "pt_z",
+    "pt_bbar",
+    "m_bb",
+    "deltaR_bb",
+    "deltaPhi_b_bb",
+    "deltaEta_z_bb",
+    "m_ll",
+    "deltaPhi_l_b"],
+  "training_report": 0
+}
+

@@ -1,0 +1,37 @@
+{
+  "name": "cHj3_cHj3",
+  "process_id": "zh",
+  "epochs": 2000,
+  "lr": 0.001,
+  "n_batches": 100,
+  "input_size": 7,
+  "output_size": 1,
+  "hidden_sizes": [
+    100,
+    100,
+    100
+  ],
+  "n_dat": 100000,
+  "quadratic": 1,
+  "coeff_train": {
+    "cHj3": 10,
+    "c": 0
+  },
+  "event_data": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh_llbb_final",
+  "features": [
+    "pt_b",
+    "pt_z",
+    "deltaR_bb",
+    "deltaPhi_b_bb",
+    "deltaEta_z_bb",
+    "m_ll",
+    "deltaPhi_l_b"
+  ],
+  "lag_mult": 0,
+  "loss_type": "CE",
+  "scaler_type": "robust",
+  "patience": 200,
+  "threshold_cut": 0,
+  "delta_min": 0.0,
+  "val_ratio": 0.2
+}

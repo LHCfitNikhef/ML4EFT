@@ -1,0 +1,30 @@
+{
+  "fit_id": "glob_ptz_lin_5c",
+  "mode": "nn",
+  "process": "zh",
+  "order": "lin",
+  "nlive": 50,
+  "results_path": "/data/theorie/jthoeve/ns_samples/zh_llbb/",
+  "lumi": 3e5,
+  "observed_data_path": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/observed_data/zh_llbb_sm/events_0.pkl.gz",
+  "bins": {
+    "pt_z": [
+      75,
+      150,
+      250,
+      400,
+      10000
+    ]
+  },
+  "path_to_models": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/zh_llbb/2022/07/20",
+  "path_to_theory_pred": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh_llbb_final",
+  "prior": {
+    "cHu":  [-50, 50],
+    "cHd":  [-50, 50],
+    "cHj1":  [-50, 50],
+    "cHj3":  [-50, 50],
+    "cbHRe":  [-50, 50],
+    "cHW":  [-50, 50],
+    "cHWB":  [-50, 50]},
+  "th_features": ["y", "m_tt", "pt_t"]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "chq3_lin",
+  "epochs": 150,
+  "lr": 0.001,
+  "n_batches": 5,
+  "input_size": 2,
+  "output_size": 1,
+  "hidden_sizes": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "n_dat": 100000,
+  "quadratic": 0,
+  "cross_term": 0,
+  "animation": 0,
+  "coeff": [
+    {
+      "op": "chw",
+      "value": 0.0
+    },
+    {
+      "op": "chq3",
+      "value": 10.0
+    }
+  ],
+  "event_data": "/data/theorie/jthoeve/training_data/zh/features_mzh_y_ptz_v2",
+  "features": [
+    "log_m_zh",
+    "y"],
+  "lag_mult": 100,
+  "training_report": 0
+}
+

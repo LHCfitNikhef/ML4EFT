@@ -1,0 +1,31 @@
+{
+  "name": "chw_lin_baseline_v2",
+  "epochs": 1000,
+  "lr": 0.001,
+  "n_batches": 1,
+  "input_size": 2,
+  "output_size": 1,
+  "hidden_sizes": [100, 100, 100],
+  "n_dat": 65000,
+  "quadratic": 0,
+  "cross_term": 0,
+  "coeff": [
+    {
+      "op": "cHW",
+      "value": 10.0
+    },
+    {
+      "op": "chq3",
+      "value": 0.0
+    }
+  ],
+  "event_data": "/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/zh/features_mzh_y_ptz",
+  "features": [
+    "m_zh",
+    "y"
+  ],
+  "lag_mult": 0,
+  "loss_type": "CE",
+  "scaler_type": "robust",
+  "patience": 100
+}
