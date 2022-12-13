@@ -324,9 +324,6 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 *.pdf
 
 
-
-
-
 # specific dirs
 
 /zenodo/*
