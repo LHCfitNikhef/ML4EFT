@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="ml4eft",
-    version="0.0.3",
+    version="0.0.5",
     author="J.J. ter Hoeve, M. Madigan, R.G. Ambrosio, J.Rojo, V.Sanz.",
     author_email="j.j.ter.hoeve@vu.nl",
     description="Machine Learning for Effective Field Theories",
