@@ -339,3 +339,4 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 /code/launch_scripts/
 /models/
 /runcards/
+/training_data/
