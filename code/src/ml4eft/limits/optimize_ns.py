@@ -362,6 +362,7 @@ class Optimize:
         elif self.mode == "binned":
             log_likelihood = self.log_like_binned
 
+        
         result = pymultinest.solve(LogLikelihood=log_likelihood,
                                    Prior=self.my_prior,
                                    n_dims=self.n_params,

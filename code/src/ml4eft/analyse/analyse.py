@@ -171,7 +171,6 @@ class Analyse:
                         {model_dir.split("{}_".format(prefix), 1)[1]: os.path.join(root, model_dir)})
             else:
                 continue
-
         return path_to_models
 
     @staticmethod
