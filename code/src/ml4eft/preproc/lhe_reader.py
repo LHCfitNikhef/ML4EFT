@@ -79,7 +79,7 @@ class Kinematics(pylhe.LHEParticle):
         dict['pz'] = self.pz + other.pz
 
         return self.add_system(dict)
-
+    
     @classmethod
     def add_system(cls, dict):
         """
@@ -97,6 +97,12 @@ class Kinematics(pylhe.LHEParticle):
 
         """
         return cls(dict)
+
+    #I'm just adding something to get the separate momenta of the particles, there's probably a smarter way, but I think this is good enough.
+    def get_pxpypze(self):
+        "return the px, py, pz of a particle/four momentum provided"
+        return getattr(self,'px'), getattr(self,'py'), getattr(self,'pz'), getattr(self,'e')
+
 
     def get_inv_mass(self):
         """

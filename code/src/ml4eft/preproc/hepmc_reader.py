@@ -47,21 +47,32 @@ if mask.any():
                 np.sqrt(p.momentum.px**2 + p.momentum.py**2))
 
 # make an array of energies of the final state particles
-# energies = np.array([p.momentum.e for p in final_state_particles])
+energies = np.array([p.momentum.e for p in final_state_particles])
 
 # Convert the list to a numpy array
 transverse_momenta = np.array(transverse_momenta)
 
 
 # Create an empty DataFrame
-df = pd.DataFrame()
+df1 = pd.DataFrame()
 
 # Add a column for transverse momentum of electrons
-df['pt_e'] = transverse_momenta
+df1 = pd.DataFrame({'pt_e': transverse_momenta})
 
-# add the cross section of the process as a first row in the dataframe
-df = pd.concat([pd.DataFrame([xsec], columns=df.columns), df],
-               ignore_index=True)
+new_row = pd.DataFrame({'pt_e': [xsec]})
+
+df1 = pd.concat([new_row, df1], ignore_index=True)
+
+
+df2 = pd.DataFrame()
+
+# Add a column for transverse momentum of electrons
+df2 = pd.DataFrame({'e': energies})
+
+new_row = pd.DataFrame({'e': [xsec]})
+
+df2 = pd.concat([new_row, df2], ignore_index=True)
+
 
 # here I'm saving the pandas dataframe as a pkl.gz file
-df.to_pickle(os.path.join(save_loc, "events_0.pkl.gz"), compression="infer")
+# df.to_pickle(os.path.join(save_loc, "events_0.pkl.gz"), compression="infer")
