@@ -1,0 +1,2 @@
+automatic_html_opening = False
+auto_update = 0
