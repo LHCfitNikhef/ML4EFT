@@ -1,0 +1,15 @@
+The KTClusCXX package is based on the physics described in:
+
+The main reference:
+S. Catani, Yu.L. Dokshitzer, M.H. Seymour and B.R. Webber, Nucl.Phys.B406(1993)187.
+The ep version:
+S. Catani, Yu.L. Dokshitzer and B.R. Webber, Phys.Lett.285B(1992)291.
+The inclusive reconstruction method:
+S.D. Ellis and D.E. Soper, Phys.Rev.D48(1993)3160.
+
+And aims to emulate the 'ktclus.f' package by M.~Seymour, 1992-2010,
+but uses a new FastJet techniques, e.g. the NNH strategy and object-orinted approach.
+
+---
+
+The code 'example.cc' illustrates a basic usage of the package.
