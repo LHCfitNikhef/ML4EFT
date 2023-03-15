@@ -26,13 +26,14 @@ function submit_job () {
 
 # SETUP
 
-MCREPS=25
+MCREPS=50
 
 # tt (parton)
 
-#RUN_CARD_ROOT="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt/run_card_tt_parton_"
+RUN_CARD="/data/theorie/jthoeve/ML4EFT/runcards/tt_parton_mtt.json"
 #
 #coeff=( "ctGRe" "ctu8" "ctGRe_ctGRe" "ctu8_ctu8")
+coeff=( "ctGRe")
 
 # zh -> llbb
 
@@ -46,12 +47,12 @@ MCREPS=25
 
 
 # tt -> llvlvlbb
-
-RUN_CARD="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb/run_card_tt_llvlvlbb_all.json"
-
-coeff=( "cQd8" "cQj18" "cQj38" "cQu8" "ctd8" "ctGRe" "ctj8" "ctu8" "cQd8_cQd8" "cQd8_cQj18" "cQd8_cQj38" "cQd8_ctd8" "cQd8_ctGRe" "cQd8_ctj8" "cQj18_cQj18" "cQj18_cQj38" "cQj18_cQu8" "cQj18_ctd8"
-"cQj18_ctGRe" "cQj18_ctj8" "cQj18_ctu8" "cQj38_cQj38" "cQj38_cQu8" "cQj38_ctd8" "cQj38_ctGRe" "cQj38_ctj8" "cQj38_ctu8" "cQu8_cQu8" "cQu8_ctGRe"
-"cQu8_ctj8" "cQu8_ctu8" "ctd8_ctd8" "ctd8_ctGRe" "ctd8_ctj8" "ctGRe_ctGRe" "ctGRe_ctj8" "ctGRe_ctu8" "ctj8_ctj8" "ctj8_ctu8" "ctu8_ctu8")
+#
+#RUN_CARD="/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/code/cluster/launch_scripts/run_cards/tt_llvlvlbb/run_card_tt_llvlvlbb_all.json"
+#
+#coeff=( "cQd8" "cQj18" "cQj38" "cQu8" "ctd8" "ctGRe" "ctj8" "ctu8" "cQd8_cQd8" "cQd8_cQj18" "cQd8_cQj38" "cQd8_ctd8" "cQd8_ctGRe" "cQd8_ctj8" "cQj18_cQj18" "cQj18_cQj38" "cQj18_cQu8" "cQj18_ctd8"
+#"cQj18_ctGRe" "cQj18_ctj8" "cQj18_ctu8" "cQj38_cQj38" "cQj38_cQu8" "cQj38_ctd8" "cQj38_ctGRe" "cQj38_ctj8" "cQj38_ctu8" "cQu8_cQu8" "cQu8_ctGRe"
+#"cQu8_ctj8" "cQu8_ctu8" "ctd8_ctd8" "ctd8_ctGRe" "ctd8_ctj8" "ctGRe_ctGRe" "ctGRe_ctj8" "ctGRe_ctu8" "ctj8_ctj8" "ctj8_ctu8" "ctu8_ctu8")
 
 #coeff=( "ctu8")
 
@@ -61,21 +62,3 @@ do
     submit_job $RUN_CARD $rep $c
   done
 done
-
-#submit_job $RUN_CARD 1 cQu8_cQu8
-#submit_job $RUN_CARD 3 cQu8_cQu8
-#submit_job $RUN_CARD 6 cQu8_cQu8
-#submit_job $RUN_CARD 13 cQu8_cQu8
-#submit_job $RUN_CARD 15 cQu8_cQu8
-#submit_job $RUN_CARD 20 cQu8_cQu8
-#submit_job $RUN_CARD 21 cQu8_cQu8
-
-#submit_job $RUN_CARD 16 cQj18_cQj18
-#submit_job $RUN_CARD 24 cQj18_cQj18
-#
-#submit_job $RUN_CARD 0 cQj18_cQj38
-#submit_job $RUN_CARD 2 cQj18_cQj38
-#submit_job $RUN_CARD 24 cQj18_cQj38
-#
-#submit_job $RUN_CARD 2 cQj38_cQj38
-#submit_job $RUN_CARD 12 cQj38_cQj38

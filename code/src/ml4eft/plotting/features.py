@@ -40,23 +40,32 @@ def plot_features(df_sm, dfs_eft, features, legend_labels):
 
         ax = fig.add_subplot(grid[i // n_cols, i % n_cols])
 
-        hist_mg_sm, bins = np.histogram(df_sm[feature],
-                                        bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 30), density=True)
+        hist_mg_sm, bins = np.histogram(df_sm[feature].iloc[1:],
+                                        bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 20), density=True)
 
         for df_eft in dfs_eft:
-            hist_mg_eft, bins = np.histogram(df_eft[feature],
-                                             bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 30),
+            hist_mg_eft, bins = np.histogram(df_eft[feature].iloc[1:],
+                                             bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 20),
                                              density=True)
 
-            ax.step(bins[:-1], hist_mg_eft, where='post', linewidth=.7)
+            ax.step(bins[:-1], df_eft.iloc[0, 0] * hist_mg_eft , where='post',
+                    linewidth=.7)
+            ax.step(bins[:-1], (df_eft.iloc[0,0] / df_sm.iloc[0,0]) * (hist_mg_eft / hist_mg_sm), where='post', linewidth=.7)
 
-        ax.step(bins[:-1], hist_mg_sm, where='post', linewidth=1.5, color='k', linestyle='dashed')
+        ax.axhline(0, color='k')
+        ax.set_ylim(-5, 10)
+        #ax.step(bins[:-1], df_sm.iloc[0,0] * hist_mg_sm, where='post', linewidth=1.5, color='k', linestyle='dashed')
 
-        ax.set_yscale('log')
-        ax.yaxis.set_major_formatter(NullFormatter())
-        ax.yaxis.set_minor_formatter(NullFormatter())
-        ax.axes.yaxis.set_ticklabels([])
+        #ax.set_yscale('log')
+        #ax.yaxis.set_major_formatter(NullFormatter())
+        #ax.yaxis.set_minor_formatter(NullFormatter())
+        #ax.axes.yaxis.set_ticklabels([])
         ax.set_xlabel(label)
+
+        if i % n_cols == 0:
+            ax.set_ylabel(r'$r(x, c)$')
+        else:
+            ax.tick_params(axis='y', which='both', labelleft=False)
 
     legend = ax.legend(
         labels=legend_labels,

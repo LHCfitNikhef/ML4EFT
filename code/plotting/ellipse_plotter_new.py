@@ -238,7 +238,7 @@ class EllipsePlotter:
 
         if labels is not None:
             ax.legend(
-                loc=loc, handles=hndls, labels=labels, frameon=False, prop={"size": 24}
+                loc=loc, handles=hndls, labels=labels, frameon=False, prop={"size": 23}
             )
         else:
             return hndls

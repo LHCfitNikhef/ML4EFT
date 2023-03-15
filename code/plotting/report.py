@@ -11,20 +11,20 @@ import PyPDF2
 import sys
 
 # generate report for
-order = "quad"
-c_name = "ctu8_ctu8"
-c_value = [0, 2]
-c_latex = r'$c=c_{{tu}}^{{(8)}}={}\;(\mathrm{{quadratic}})$'.format(c_value[1])
-#c_latex = r'$c=c_{{tG}}={}\;(\mathrm{{quadratic}})$'.format(c_value[0])
+order = "lin"
+c_name = "ctGRe"
+c_value = [-2, 0]
+#c_latex = r'$c=c_{{tu}}^{{(8)}}={}\;(\mathrm{{quadratic}})$'.format(c_value[1])
+c_latex = r'$c=c_{{tG}}={}\;(\mathrm{{quadratic}})$'.format(c_value[0])
 
 yr = "2022"
-month = "10"
-day = "16"
+month = "12"
+day = "19"
 date = "{yr}_{m}_{d}".format(yr=yr, m=month, d=day)
 
-name = "model_ctu8_quad_mtt"
+name = "model_ctGRe_lin_"
 
-path_to_models_root = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_mtt/2022/10/16'
+path_to_models_root = '/data/theorie/jthoeve/ML4EFT/models/ttparton/2022/12/19'
 path_to_models = analyse.Analyse.build_path_dict(path_to_models_root, order, prefix='model')
 
 if order == "quad":

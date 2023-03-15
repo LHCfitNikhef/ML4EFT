@@ -38,7 +38,7 @@ class Animate:
         self.c = c
         self.frames = frames
 
-    def make_animation_1d(self, analyser, df):
+    def make_animation_nn(self, analyser, df, order):
         """
         Returns a 1-dimensional animation of the EFT ratio functions, comparing the analytical result and the ML model
 
@@ -65,7 +65,116 @@ class Animate:
 
         """
 
-        g_ana = analyser.decision_function_truth(df, self.c, df.columns.values, process='tt', order='quad')
+        r_truth = analyser.likelihood_ratio_truth(df, self.c, df.columns.values, process='tt', order=order)
+        nn_truth = (r_truth - 1)/ self.c["ctGRe"]
+        fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
+
+        # load models and evaluate them
+        analyser.build_model_dict(epoch=1)
+        analyser.evaluate_models(df, epoch=1)
+
+        # decission function at first epoch
+        g_nn_init = analyser.decision_function_nn(self.c, epoch=1)/10
+
+        # create empty line objects
+        lines = []
+        n_reps = g_nn_init.shape[0]
+
+        for i in range(0, n_reps):
+            # only attach a label to the first replica to avoid a busy legend
+            if i == 1:
+                lobj = ax.plot([], [], lw=1, color='green')[0]
+            else:
+                lobj = ax.plot([], [], lw=1, color='C0')[0]
+            lines.append(lobj)
+
+        # create uncertainty band and plot
+        g_preds_init_up = np.percentile(g_nn_init, 84, axis=0)
+        g_preds_init_down = np.percentile(g_nn_init, 16, axis=0)
+
+        fill = ax.fill_between(df['m_tt'], g_preds_init_up, g_preds_init_down, color='C0', alpha=0.3,
+                               label=r"$\mathrm{ML}\;\mathrm{model}\;1\sigma\mathrm{-band}\;(m_{t\bar{t}})$")
+
+        ax.plot(df['m_tt'], nn_truth, '--', c='red', label=r"$\mathrm{Analytical}\;(m_{t\bar{t}})$")
+        ax.axhline(0.2, color='black', linestyle='dashed', linewidth=3)
+
+        epoch_text = ax.text(0.02, 0.92, '', transform=ax.transAxes, fontsize=15)
+
+        plt.legend(loc='upper right', fontsize=15, frameon=False)
+        plt.ylim((-0.5, 1.5))
+        plt.xlim((1.5, df['m_tt'].max()))
+
+        plt.ylabel(r'$NN\;(x, c)$')
+
+        plt.xlabel(r'$m_{t\bar{t}}\;[\mathrm{TeV}]$')
+        plt.tight_layout()
+
+        # initialization function: plot the background of each frame
+        def init():
+            for line in lines:
+                line.set_data([], [])
+            epoch_text.set_text('')
+            return lines
+
+        # animation function.  This is called sequentially
+        def animate(i):
+            print(i)
+
+            analyser.build_model_dict(epoch=i + 1)
+            analyser.evaluate_models(df)
+            g_preds_nn = analyser.decision_function_nn(self.c)
+            nn = (1/g_preds_nn-2)/self.c["ctGRe"]/10
+
+            for rep_nr, line in enumerate(lines):
+                line.set_data(df['m_tt'], nn[rep_nr, :])
+                if np.all(nn[rep_nr, :] > 0.2) and i ==0 :
+                    line.set_color('green')
+
+            epoch_text.set_text(r'$\rm{epoch\;%d}$' % i)
+
+            g_pred_up = np.percentile(nn, 84, axis=0)
+            g_pred_down = np.percentile(nn, 16, axis=0)
+
+            path = fill.get_paths()[0]
+
+            verts = path.vertices
+            verts[1:len(df) + 1, 1] = g_pred_up[:]
+            verts[len(df) + 2:-1, 1] = g_pred_down[:][::-1]
+            return lines
+
+        anim = animation.FuncAnimation(fig, animate, init_func=init,
+                                       frames=self.frames, interval=50, blit=True)
+
+        return anim
+    
+    def make_animation_1d(self, analyser, df, order):
+        """
+        Returns a 1-dimensional animation of the EFT ratio functions, comparing the analytical result and the ML model
+
+        Parameters
+        ----------
+        analyser: :class:`ml4eft.analyse.analyse.Analyse`
+            Analyser object
+        df: pandas.DataFrame
+            phase space 1-d grid stored as a DataFrame
+
+
+        Returns
+        -------
+        anim: matplotlib.animation.FuncAnimation
+            matplotlib.animation.FuncAnimation object
+
+        Examples
+        --------
+        >>> anim = Animate(c={'ctgre': 2, 'cut': 0}, frames=200)
+        >>> anim_tt = anim.make_animation_1d(analyser, df)
+        >>> anim_tt
+
+        .. image:: ../images/anim_1d.gif
+
+        """
+
+        g_ana = analyser.decision_function_truth(df, self.c, df.columns.values, process='tt', order=order)
         fig, ax = plt.subplots(figsize=(1.1 * 10, 1.1 * 6))
 
         # load models and evaluate them
@@ -82,7 +191,7 @@ class Animate:
         for i in range(0, n_reps):
             # only attach a label to the first replica to avoid a busy legend
             if i == 1:
-                lobj = ax.plot([], [], lw=1, color='C0', label=r"$\mathrm{ML}\;\mathrm{model}\;(m_{t\bar{t}}, Y)$")[0]
+                lobj = ax.plot([], [], lw=1, color='C0')[0]
             else:
                 lobj = ax.plot([], [], lw=1, color='C0')[0]
             lines.append(lobj)
@@ -92,14 +201,14 @@ class Animate:
         g_preds_init_down = np.percentile(g_nn_init, 16, axis=0)
 
         fill = ax.fill_between(df['m_tt'], g_preds_init_up, g_preds_init_down, color='C0', alpha=0.3,
-                               label=r"$\mathrm{ML}\;\mathrm{model}\;1\sigma\mathrm{-band}\;(m_{t\bar{t}}, Y)$")
+                               label=r"$\mathrm{ML}\;\mathrm{model}\;1\sigma\mathrm{-band}\;(m_{t\bar{t}})$")
 
-        ax.plot(df['m_tt'], g_ana, '--', c='red', label=r"$\mathrm{Analytical}\;(m_{t\bar{t}}, Y)$")
+        ax.plot(df['m_tt'], g_ana, '--', c='red', label=r"$\mathrm{Analytical}\;(m_{t\bar{t}})$")
 
         epoch_text = ax.text(0.02, 0.92, '', transform=ax.transAxes, fontsize=15)
 
         plt.legend(loc='upper right', fontsize=15, frameon=False)
-        plt.ylim((0, 1))
+        plt.ylim((-1, 1))
         plt.xlim((1.5, df['m_tt'].max()))
 
         plt.ylabel(r'$g\;(x, c)$')

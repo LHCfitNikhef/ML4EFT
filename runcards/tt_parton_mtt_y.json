@@ -9,13 +9,14 @@
     25,
     25
   ],
-  "n_dat": 100000,
+  "n_dat": 10000,
   "event_data": "/data/theorie/jthoeve/ML4EFT/training_data/tt/mtt_145",
+  "result_path": "/data/theorie/jthoeve/ML4EFT/models",
   "features": [
     "m_tt",
     "y"
   ],
-  "loss_type": "CE",
+  "loss_type": "direct",
   "scaler_type": "robust",
   "patience": 100,
   "val_ratio": 0.2,

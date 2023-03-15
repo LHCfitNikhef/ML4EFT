@@ -33,7 +33,7 @@ mt = constants.mt
 col_s = constants.col_s
 
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
-rc('text', usetex=True)
+rc('text', usetex=False)
 
 
 class Analyse:
@@ -1023,23 +1023,24 @@ class Analyse:
             loss_val_rep = np.array(loss_val[i])
 
             if xlim is None:
-                ax.set_xlim(left=50)
-                ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
-                            max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
+
+
+                # ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
+                #             max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
 
                 ax.plot(epochs, loss_train_rep, label=label_train)
                 ax.plot(epochs, loss_val_rep, label=label_val)
-
-            else:
-                ax.plot(epochs[xlim:], loss_train_rep[xlim:], label=label_train)
-                ax.plot(epochs[xlim:], loss_val_rep[xlim:], label=label_val)
+            #
+            # else:
+            #     ax.plot(epochs[xlim:], loss_train_rep[xlim:], label=label_train)
+            #     ax.plot(epochs[xlim:], loss_val_rep[xlim:], label=label_val)
 
             ax.axvline(epochs[-patience], 0, 0.75, color='red', linestyle='dotted')
 
-            # ax.set_yscale('log')
-            # ax.yaxis.set_major_formatter(NullFormatter())
-            # ax.yaxis.set_minor_formatter(NullFormatter())
-            # ax.axes.yaxis.set_ticklabels([])
+            #ax.set_yscale('log')
+            #ax.yaxis.set_major_formatter(NullFormatter())
+            #ax.yaxis.set_minor_formatter(NullFormatter())
+            #ax.axes.yaxis.set_ticklabels([])
             ax.set_ymargin(0.1)
             ax.set_xmargin(0)
 
@@ -1069,6 +1070,7 @@ class Analyse:
             if xlim is None:
                 ax.set_ylim(min(loss_train_rep[-1], loss_val_rep[-1]) - 0.2 * max(loss_sigma_val, loss_sigma_tr),
                             max(loss_train_rep[-1], loss_val_rep[-1]) + 0.8 * max(loss_sigma_val, loss_sigma_tr))
+                ax.set_xlim((50, epochs[-1]))
             else:
                 y_min = np.min(np.concatenate((loss_train_rep[xlim:], loss_val_rep[xlim:])))
                 y_max = np.max(np.concatenate((loss_train_rep[xlim:], loss_val_rep[xlim:])))

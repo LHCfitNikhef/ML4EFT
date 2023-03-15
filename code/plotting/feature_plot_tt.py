@@ -7,15 +7,17 @@ import os
 
 plot_directory = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/15_08'
 
-df_sm = pd.read_pickle("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt_llvlvlbb/tt_sm/events_0.pkl.gz").iloc[1:,:]
-df_eft = pd.read_pickle("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt_llvlvlbb/tt_cQj18/events_0.pkl.gz").iloc[1:,:]
+df_sm = pd.read_pickle("/data/theorie/jthoeve/ML4EFT/training_data/tt_llvlvlbb/tt_sm/events_0.pkl.gz")
+#df_eft = pd.read_pickle("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt_llvlvlbb/tt_cQj18/events_0.pkl.gz").iloc[1:,:]
 
+labels = [r'$c_{tG}=-10$', r'$c_{Qq}^{(1,8)}=10$', r'$c_{Qq}^{(3,8)}=10$', r'$c_{tq}^{(8)}=10$', r'$c_{tu}^{(8)}=10$',r'$c_{Qu}^{(8)}=10$',
+          r'$c_{Qd}^{(8)}=10$', r'$c_{td}^{(8)}=10$', r'$\mathrm{SM}$']
 
-coeff = ["cQj38"]
+coeff = ["ctGRe", "cQj18", "cQj38", "ctj8", "ctu8", "cQu8", "cQd8", "ctd8"]
 
 dfs_eft = []
 for c in coeff:
-    df = pd.read_pickle("/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/training_data/tt_llvlvlbb/tt_{}/events_0.pkl.gz".format(c)).iloc[1:,:]
+    df = pd.read_pickle("/data/theorie/jthoeve/ML4EFT/training_data/tt_llvlvlbb/tt_{}/events_0.pkl.gz".format(c))
     dfs_eft.append(df)
 
 
@@ -74,6 +76,9 @@ for k, v in zip(feature_names, x_labels):
 
 # labels = [r'$c_{tG}=-10$', r'$c_{Qq}^{(1,8)}=10$', r'$c_{Qq}^{(3,8)}=10$', r'$c_{tq}^{(8)}=10$', r'$c_{tu}^{(8)}=10$',r'$c_{Qu}^{(8)}=10$',
 #           r'$c_{Qd}^{(8)}=10$', r'$c_{td}^{(8)}=10$', r'$\mathrm{SM}$']
-labels = [r'$c_{Qq}^{(3,8)}=10$']
+
+labels = [r'$c_{tG}=-10$', r'$c_{Qq}^{(1,8)}=10$', r'$c_{Qq}^{(3,8)}=10$', r'$c_{tq}^{(8)}=10$', r'$c_{tu}^{(8)}=10$',r'$c_{Qu}^{(8)}=10$',
+          r'$c_{Qd}^{(8)}=10$', r'$c_{td}^{(8)}=10$']
+#labels = [r'$c_{Qq}^{(3,8)}=10$']
 fig = features.plot_features(df_sm, dfs_eft, features_dict, legend_labels=labels)
-fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_10/features_tt_lin.pdf')
+fig.savefig('/data/theorie/jthoeve/ML4EFT/plots/referee/features_tt_lin_noratio.pdf')

@@ -16,8 +16,5 @@ path_to_json = sys.argv[1]
 nn_rep = sys.argv[2]
 coeff = sys.argv[3]
 
-# model directory
-output_path = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_llvlvlbb'
-
 # launch fit
-fitter = classifier.Fitter(path_to_json, int(nn_rep), coeff, output_path)
+fitter = classifier.Fitter(path_to_json, int(nn_rep), coeff)

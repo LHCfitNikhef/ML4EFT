@@ -336,8 +336,7 @@ class Fitter:
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
         self.features = self.run_options['features']
-        self.network_size = [len(self.features)] + self.run_options['hidden_sizes'] + [
-            self.run_options['output_size']]
+        self.network_size = [len(self.features)] + self.run_options['hidden_sizes'] + [1]
         self.event_data_path = self.run_options['event_data']  # path to training data
 
         self.quadratic = True if '_' in self.c_name else False
@@ -349,7 +348,9 @@ class Fitter:
 
         self.mc_run = mc_run
 
-        output_dir = os.path.join(self.run_options["result_dir"], time.strftime("%Y/%m/%d"))
+        output_dir = os.path.join(self.run_options["result_path"],
+                                  self.run_options["process_id"],
+                                  time.strftime("%Y/%m/%d"))
         os.makedirs(output_dir, exist_ok=True)
 
         model_path = os.path.join(output_dir, 'model_{}'.format(self.c_name))
@@ -550,11 +551,15 @@ class Fitter:
 
             # loop over the mini-batches.
             for j, minibatch in enumerate(zip(*train_loader)):
+
                 train_loss = torch.zeros(1)
                 # loop over all the datasets within the minibatch and compute their contribution to the loss
                 for i, [event, weight, label] in enumerate(minibatch):  # i=0: eft, i=1: sm
+
                     if isinstance(self.model, Classifier):
                         output = self.model(event.float())
+                        if torch.any(output >= 1).item():
+                            logging.info("g >= 1 detected!")
 
                     loss = self.loss_fn(output, label, weight)
                     train_loss += loss
@@ -570,7 +575,7 @@ class Fitter:
             loss_list_val.append(loss_val)
 
             training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train, val_loss=loss_val,
+                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train/self.n_batches, val_loss=loss_val/self.n_batches,
                        overfit=overfit_counter)
             logging.info(training_status)
 
@@ -638,6 +643,9 @@ class Fitter:
 
         elif self.loss_type == 'QC':
             loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
+
+        elif self.loss_type == 'direct':
+            loss = -(1 - labels) * w_e * outputs - labels * (1 / (2 * self.c_train_value)) * (-1 + self.c_train_value * outputs) ** 2
 
         # average over all the losses in the batch
         return torch.mean(loss, dim=0)

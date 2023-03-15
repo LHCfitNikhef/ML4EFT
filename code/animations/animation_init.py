@@ -17,10 +17,10 @@ import os, sys
 # tt
 #
 
-order = 'quad'
-save_path = '/data/theorie/jthoeve/ML4EFT/plots/2022/02_11'
+order = 'lin'
+save_path = '/data/theorie/jthoeve/ML4EFT/animations'
 
-path_to_models_root = '/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/models/tt_mtt_y/2022/10/15'
+path_to_models_root = '/data/theorie/jthoeve/ML4EFT/models/ttparton/2023/03/09'
 path_to_models = analyse.Analyse.build_path_dict(path_to_models_root, order, prefix='model')
 
 if order == "quad":
@@ -28,16 +28,19 @@ if order == "quad":
 
 analyser = analyse.Analyse(path_to_models)
 
-x = np.linspace(1.45, 3.0, 200)
-x = np.stack((np.zeros(len(x)), x), axis=-1)
+x = np.linspace(1.45, 3.0, 200).reshape(-1,1)
+#x = np.stack((np.zeros(len(x)), x), axis=-1)
 
 
-df = pd.DataFrame(x, columns=['y', 'm_tt'])
+df = pd.DataFrame(x, columns=['m_tt'])
 
-anim = Animate(c={'ctGRe': 0, 'ctu8': 2}, frames=10)
-anim_tt = anim.make_animation_1d(analyser, df)
+anim = Animate(c={'ctGRe': -2, 'ctu8': 0}, frames=50)
+#anim_tt = anim.make_animation_1d(analyser, df, order)
 
-anim_tt.save(os.path.join(save_path, 'anim_ctu8_ctu8.gif'))
+anim_nn = anim.make_animation_nn(analyser, df, order)
+
+#anim_tt.save(os.path.join(save_path, 'anim_ctGRe_QC.gif'))
+anim_nn.save(os.path.join(save_path, 'anim_ctGRe_QC_nn_c_1.gif'))
 
 
 

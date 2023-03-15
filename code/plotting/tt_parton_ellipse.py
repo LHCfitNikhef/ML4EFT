@@ -39,6 +39,8 @@ samples_binned_quad_mtt_y_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned
 samples_binned_quad_mtt_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_quad_mtt_c/posterior.json'
 samples_binned_quad_mtt_y_f = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_quad_mtt_y_f/posterior.json'
 samples_binned_quad_mtt_f = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_quad_mtt_f/posterior.json'
+samples_binned_quad_mtt_3 = '/data/theorie/jthoeve/ML4EFT/ns_samples/binned_glob_quad_mtt_binning_3/posterior.json'
+
 
 samples_truth_quad_mtt = '/data/theorie/jthoeve/ns_samples/tt_parton/truth_glob_quad_mtt/posterior.json'
 samples_truth_quad_mtt_y = '/data/theorie/jthoeve/ns_samples/tt_parton/truth_glob_quad_mtt_y/posterior.json'
@@ -88,18 +90,21 @@ labels_plot_3 = [r'$\mathrm{Binning}\:1\;(m_{t\bar{t}})$',
 
 df_plot_4 = [Analyse.posterior_loader(samples_binned_quad_mtt_c),
              Analyse.posterior_loader(samples_binned_quad_mtt_f),
+             Analyse.posterior_loader(samples_binned_quad_mtt_3),
              Analyse.posterior_loader(samples_truth_quad_mtt),
              Analyse.posterior_loader(samples_nn_quad_mtt)
              ]
 
 labels_plot_4 = [r'$\mathrm{Binning}\:1\;(m_{t\bar{t}})$',
                  r'$\mathrm{Binning}\:2\;(m_{t\bar{t}})$',
+                 r'$\mathrm{Binning}\:3\;(m_{t\bar{t}})$',
                  r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}})$',
                  r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}})$',
                  r'$\mathrm{SM}$']
 
 dfs = [df_plot_1, df_plot_2, df_plot_3, df_plot_4]
 labels = [labels_plot_1, labels_plot_2, labels_plot_3, labels_plot_4]
+
 
 titles = [
     r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-2}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$",
@@ -108,6 +113,7 @@ titles = [
     r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-4}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$"]
 
 order = [False, True, False, True]
+
 
 plotter = EllipsePlotter()
 
@@ -126,13 +132,18 @@ for i, df in enumerate(dfs):
     if col_idx == 1:
         ax.set_xlim(-0.22, 0.3)
 
-        plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
-                     ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
-                     labels=labels[i], loc="lower right")
+        if row_idx == 1:
+            plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
+                         ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
+                         labels=labels[i], loc="lower right", colors=['C0', 'C1', 'C5', 'C2', 'C4'])
+        else:
+            plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
+                         ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
+                         labels=labels[i], loc="lower right", colors=['C0', 'C1', 'C2', 'C4'])
     else:
         plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
                      ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
-                     labels=labels[i], loc="upper left")
+                     labels=labels[i], loc="upper left", colors=['C0', 'C1', 'C2', 'C4'])
 
     if col_idx == 1:
         ax.set(ylabel=None)
@@ -142,4 +153,4 @@ for i, df in enumerate(dfs):
 
 grid.tight_layout(fig)
 
-fig.savefig('/data/theorie/jthoeve/ML4EFT_jan/ML4EFT/plots/2022/20_10/tt_parton_ellipse_2x2_v2.pdf')
+fig.savefig('/data/theorie/jthoeve/ML4EFT/plots/referee/tt_parton_bin_limit_check.pdf')

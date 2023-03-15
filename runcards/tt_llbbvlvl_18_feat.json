@@ -9,7 +9,7 @@
     100
   ],
   "n_dat": 100000,
-  "event_data": "/data/theorie/jthoeve/ML4EFT/training_data//tt_llvlvlbb",
+  "event_data": "/data/theorie/jthoeve/ML4EFT/training_data/tt_llvlvlbb",
   "features": [
     "pt_l1",
     "pt_l2",
