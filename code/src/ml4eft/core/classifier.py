@@ -144,8 +144,7 @@ class PreProcessing():
         else:
             self.scaler = QuantileTransformer(n_quantiles=1000, output_distribution='normal')
 
-
-    def feature_scaling(self, fitter, data, scaler_path):
+    def preprocess(self, fitter, data_dict, scaler_path):
         """
 
         Parameters
@@ -163,19 +162,26 @@ class PreProcessing():
             Rescaled EFT events
         """
         
-        datasets_all = [dataset[i][1] for dataset in data.values() for i in range(len(dataset))]
+        datasets_all = [dataset[i][1] for dataset in data_dict.values() for i in range(len(dataset))]
         df = pd.concat(datasets_all)
 
         # fit the scaler transformer to the eft and sm features
         self.scaler.fit(df[fitter.features])
 
+        n_val_points = int(fitter.val_ratio * fitter.n_dat)
+        n_train_points = fitter.n_dat - n_val_points
+
         # rescale the sm and eft data
         loaded_data_scaled = {}
-        for wc, datasets_wc in data.items():
+        for wc, datasets_wc in data_dict.items():
+            hypothesis = 1 if wc == 'sm' else 0
             temp = []
             for c_val, events, xsec in datasets_wc:
                 events_scaled = self.scaler.transform(events[fitter.features])
-                temp.append([c_val, pd.DataFrame(events_scaled, columns=fitter.features), xsec])
+                df_scaled = pd.DataFrame(events_scaled, columns=fitter.features)
+                event_dataset = EventDataset(df_scaled, xsec, hypothesis)
+                train, val = data.random_split(event_dataset, [n_train_points, n_val_points])
+                temp.append([c_val, train, val])
             loaded_data_scaled[wc] = temp
 
         # save the scaler
@@ -189,7 +195,7 @@ class EventDataset(data.Dataset):
     Event loader
     """
 
-    def __init__(self, c, path, features, hypothesis=0):
+    def __init__(self, df, xsec, hypothesis):
         """
         EventDataset constructor
 
@@ -211,34 +217,10 @@ class EventDataset(data.Dataset):
         """
         super().__init__()
 
-        self.c = c
-        self.hypothesis = hypothesis
-        self.features = features
-
-        self.events = None
-        self.weights = None
-        self.labels = None
-
-        self.event_loader(path)
-
-    def event_loader(self, path):
-        """
-        Set the weights of the evevnts, labels and convert the events to torch.Tensor,
-
-        Parameters
-        ----------
-        path: str
-            Path to dataset
-        """
-        n_dat = len(self.df)
-
-
-
-        self.weights = self.xsec * torch.ones(n_dat).unsqueeze(-1)
-        self.events = torch.tensor(self.df[self.features].values)
-        self.labels = torch.ones(n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(n_dat).unsqueeze(-1)
-
-        logging.info("Dataset loaded from {}".format(path))
+        self.events = torch.tensor(df.values)
+        self.n_dat = len(self.events)
+        self.weights = xsec * torch.ones(self.n_dat).unsqueeze(-1)
+        self.labels = torch.ones(self.n_dat).unsqueeze(-1) if hypothesis else torch.zeros(self.n_dat).unsqueeze(-1)
 
     def __len__(self):
         return len(self.events)
@@ -367,10 +349,6 @@ class Fitter:
             Validation data set
         """
 
-        # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
-        # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
-
-
         loaded_data = {}
         for wc, paths in self.data_dict.items():
             dataset_wc = []
@@ -383,50 +361,9 @@ class Fitter:
         # preprocessing of the data
         preprocessor = PreProcessing(self)
         scaler_path = self.output_dir / 'scaler.gz'
-        loaded_data_scaled = preprocessor.feature_scaling(self, loaded_data, scaler_path)
+        data_preprocessed = preprocessor.preprocess(self, loaded_data, scaler_path)
 
-        import pdb; pdb.set_trace()
-
-        self.n_dat = min(len(df_eft_scaled), len(df_sm_scaled))
-
-        c_values = path_dict_eft.keys()
-        # we construct an eft and a sm data set for each value of c in c_values and make a list out of it
-        # data_all = [EventDataset(c, , path=path_dict[c], n_dat=n_dat, hypothesis=0) for c in
-        #             c_values]
-        # data_all += [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in
-        #              c_values]
-
-        # construct an eft and a sm data set for each value of c in c_values and make a list out of it
-        data_eft = EventDataset(df_eft_scaled,
-                                xsec=preproc.xsec_eft,
-                                path=path_eft,
-                                n_dat=self.n_dat,
-                                features=self.features,
-                                hypothesis=0)
-
-        data_sm = EventDataset(df_sm_scaled,
-                               xsec=preproc.xsec_sm,
-                               path=path_sm,
-                               n_dat=self.n_dat,
-                               features=self.features,
-                               hypothesis=1)
-
-        data_all = [data_eft, data_sm]
-
-        # split each data set in training and validation
-        data_split = []
-        for dataset in data_all:
-            n_val_points = int(self.val_ratio * len(dataset))
-            n_train_points = len(dataset) - n_val_points
-            data_split.append(data.random_split(dataset, [n_train_points, n_val_points]))
-
-        # collect all the training and validation sets
-        data_train, data_val = [], []
-        for dataset in data_split:
-            data_train.append(dataset[0])
-            data_val.append(dataset[1])
-
-        return data_train, data_val
+        return data_preprocessed
 
     def train_classifier(self, data_train, data_val):
         """
