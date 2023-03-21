@@ -15,6 +15,7 @@ import os
 import time
 import pandas as pd
 from joblib import dump, load
+import pathlib
 
 from matplotlib import pyplot as plt
 from matplotlib import rc
@@ -28,6 +29,9 @@ import sys
 
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 rc('text', usetex=True)
+
+eft_points = [[-10.0, 0], [10, 0], [0, -10], [0, 10]]
+n_eft_points = len(eft_points)
 
 
 class MLP(nn.Module):
@@ -77,55 +81,21 @@ class MLP(nn.Module):
         out = self.layers(x)
         return out
 
-
-class CustomActivationFunction(nn.Module):
-    """
-    Class to construct custom activation functions
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.name = self.__class__.__name__
-        self.config = {"name": self.name}
-
-
-class ConstraintActivation(CustomActivationFunction):
-    """Class to transform the classifier output to ensure a positive likelihood ratio
-
-    """
-
-    def __init__(self, c):
-        """
-
-        Parameters
-        ----------
-        c: float
-            Traning parameter :math:`c^{(\mathrm{tr})}` at which the EFT data set is generated
-        """
-        super().__init__()
-        self.c = c
-
-    def forward(self, x):
-        if self.c > 0:
-            return torch.relu(x) - 1 / self.c + 1e-6
-        else:
-
-            return - torch.relu(x) - 1 / self.c - 1e-6
-
-
 class Classifier(nn.Module):
     """ The decssion function :math:`g(x, c)`
 
     Implementation of the decision boundary `g(x, c)`
     """
 
-    def __init__(self, architecture, c):
+    def __init__(self, architecture):
         super().__init__()
-        self.c = c
-        self.n_alpha = MLP(architecture)
-        #self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
 
-    def forward(self, x):
+        self.NN1 = MLP(architecture)
+        self.NN2 = MLP(architecture)
+        self.NN11 = MLP(architecture)
+        self.NN22 = MLP(architecture)
+
+    def forward(self, x, c1, c2):
         """
 
         Parameters
@@ -140,8 +110,13 @@ class Classifier(nn.Module):
 
         """
 
-        NN_out = self.n_alpha(x)
-        g = 1 / (1 + (1 + self.c * NN_out))
+        NN1_out = self.NN1(x)
+        NN2_out = self.NN2(x)
+        NN11_out = self.NN11(x)
+        NN22_out = self.NN22(x)
+
+        r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out)
+        g = 1 / (1 + r)
         return g
 
 
@@ -236,7 +211,7 @@ class EventDataset(data.Dataset):
     Event loader
     """
 
-    def __init__(self, df, xsec, path, n_dat, features, hypothesis=0):
+    def __init__(self, c, path, features, hypothesis=0):
         """
         EventDataset constructor
 
@@ -258,8 +233,7 @@ class EventDataset(data.Dataset):
         """
         super().__init__()
 
-        self.df = df
-        self.xsec = xsec
+        self.c = c
         self.hypothesis = hypothesis
         self.features = features
 
@@ -280,6 +254,8 @@ class EventDataset(data.Dataset):
         """
         n_dat = len(self.df)
 
+
+
         self.weights = self.xsec * torch.ones(n_dat).unsqueeze(-1)
         self.events = torch.tensor(self.df[self.features].values)
         self.labels = torch.ones(n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(n_dat).unsqueeze(-1)
@@ -299,7 +275,7 @@ class Fitter:
     Training class
     """
 
-    def __init__(self, json_path, mc_run, c_name, print_log=False):
+    def __init__(self, json_path, mc_run, print_log=False):
         """
         Fitter constructor
 
@@ -321,8 +297,6 @@ class Fitter:
         with open(json_path) as json_data:
             self.run_options = json.load(json_data)
 
-        self.c_name = c_name
-        self.process_id = self.run_options["process_id"]
         self.lr = self.run_options["lr"]
         self.n_batches = self.run_options["n_batches"]
 
@@ -338,45 +312,15 @@ class Fitter:
         self.features = self.run_options['features']
         self.network_size = [len(self.features)] + self.run_options['hidden_sizes'] + [1]
         self.event_data_path = self.run_options['event_data']  # path to training data
-
-        self.quadratic = True if '_' in self.c_name else False
-        if self.quadratic:
-            c1, c2 = self.c_name.split('_')
-            self.c_train_value = self.c_train[c1] * self.c_train[c2]
-        else:
-            self.c_train_value = self.c_train[self.c_name]
+        self.result_path = pathlib.Path(self.run_options["result_path"])
 
         self.mc_run = mc_run
-
-        output_dir = os.path.join(self.run_options["result_path"],
-                                  self.run_options["process_id"],
-                                  time.strftime("%Y/%m/%d"))
-        os.makedirs(output_dir, exist_ok=True)
-
-        model_path = os.path.join(output_dir, 'model_{}'.format(self.c_name))
-        mc_path = os.path.join(model_path, 'mc_run_{}/'.format(self.mc_run))
-        log_path = os.path.join(mc_path, 'logs')
-
-        self.path_dict = {'model': model_path,
-                          'mc_path': mc_path,
-                          'log_path': log_path}
+    
+        self.output_dir, self.log_path = self.create_folder_structure()
 
         self.scaler = None
 
-        if not os.path.exists(mc_path):
-            os.makedirs(mc_path)
-            os.makedirs(log_path)
 
-        # initialise all paths to None, unless we run at pure quadratic or cross term level
-        self.path_lin_1 = self.path_lin_2 = self.path_quad_1 = self.path_quad_2 = None
-
-        # build the paths to the eft event data and initialize the right model
-        if self.quadratic:
-            self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = Classifier(self.network_size, self.c_train_value)
-        else:  # linear
-            self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = Classifier(self.network_size, self.c_train_value)
 
         # create log file with timestamp
         t = time.localtime()
@@ -384,11 +328,12 @@ class Fitter:
 
         # print log to stdout when print_log is True, else only save to log file
         if print_log:
-            handlers = [logging.FileHandler(log_path + '/training_{}.log'.format(current_time)),
+            handlers = [logging.FileHandler(self.log_path / 'training_{}.log'.format(current_time)),
                         logging.StreamHandler(sys.stdout)
-                        ]
+            ]
         else:
-            handlers = [logging.FileHandler(log_path + '/training_{}.log'.format(current_time))]
+            handlers = [logging.FileHandler(self.log_path / 'training_{}.log'.format(current_time))]
+
 
         logging.basicConfig(
             level=logging.INFO,
@@ -407,6 +352,21 @@ class Fitter:
 
         # start the training
         self.train_classifier(data_train, data_val)
+        
+    def create_folder_structure(self):
+
+        output_dir = self.result_path / self.run_options["run_id"]
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        for c_train in self.c_train.keys():
+            model_dir = output_dir / c_train / "mc_run_{}".format(self.mc_run)
+            model_dir.mkdir(parents=True, exist_ok=True)
+
+        log_path = output_dir / "log"
+        log_path.mkdir(parents=True, exist_ok=True)
+
+        return output_dir, log_path
+
 
     def load_data(self):
         """
@@ -419,6 +379,8 @@ class Fitter:
         data_val: array_like
             Validation data set
         """
+
+
 
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
@@ -437,6 +399,13 @@ class Fitter:
         df_sm_scaled, df_eft_scaled = preproc.feature_scaling(self, scaler_path)
 
         self.n_dat = min(len(df_eft_scaled), len(df_sm_scaled))
+
+        c_values = path_dict_eft.keys()
+        # we construct an eft and a sm data set for each value of c in c_values and make a list out of it
+        # data_all = [EventDataset(c, , path=path_dict[c], n_dat=n_dat, hypothesis=0) for c in
+        #             c_values]
+        # data_all += [EventDataset(c, network_size[0], path_dict=path_dict_sm, n_dat=n_dat, hypothesis=1) for c in
+        #              c_values]
 
         # construct an eft and a sm data set for each value of c in c_values and make a list out of it
         data_eft = EventDataset(df_eft_scaled,
@@ -540,9 +509,9 @@ class Fitter:
                 for minibatch in zip(*val_loader):
                     val_loss = torch.zeros(1)
                     for i, [event, weight, label] in enumerate(minibatch):
+                        c1, c2 = eft_points[i % n_eft_points]
                         if isinstance(self.model, Classifier):
-                            output = self.model(event.float())
-
+                            output = self.model(event.float(), c1, c2)
                         loss = self.loss_fn(output, label, weight)
                         val_loss += loss
                     assert val_loss.requires_grad is False
