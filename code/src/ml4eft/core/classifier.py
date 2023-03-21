@@ -125,7 +125,7 @@ class PreProcessing():
     A feature preprocessor and data loader
     """
 
-    def __init__(self, fitter, path):
+    def __init__(self, fitter):
         """
 
         Parameters
@@ -137,8 +137,6 @@ class PreProcessing():
             :code:`{'sm': <path_to_sm_dataset>, 'eft': <path_to_eft_dataset>}`
         """
 
-        self.path = path
-
         if fitter.scaler_type == 'robust':
             self.scaler = RobustScaler(quantile_range=(5, 95))
         elif fitter.scaler_type == 'standardise':
@@ -146,30 +144,8 @@ class PreProcessing():
         else:
             self.scaler = QuantileTransformer(n_quantiles=1000, output_distribution='normal')
 
-        self.load_data(fitter)
 
-    def load_data(self, fitter):
-        """
-        Loads ``pandas.DataFrame`` into SM and EFT dataframes.
-        """
-        # sm
-
-        df_sm_full = pd.read_pickle(self.path['sm'], compression="infer")
-        df_sm_wo_xsec = df_sm_full.iloc[1:, :]
-
-        # cross section before cuts
-        self.xsec_sm = df_sm_full.iloc[0, 0]
-        self.df_sm = df_sm_wo_xsec.sample(fitter.n_dat)
-
-        # eft
-        df_eft_full = pd.read_pickle(self.path['eft'], compression="infer")
-        df_eft_wo_xsec = df_eft_full.iloc[1:, :]
-
-        # cross section before cuts
-        self.xsec_eft = df_eft_full.iloc[0, 0]
-        self.df_eft = df_eft_wo_xsec.sample(fitter.n_dat)
-
-    def feature_scaling(self, fitter, scaler_path):
+    def feature_scaling(self, fitter, data, scaler_path):
         """
 
         Parameters
@@ -186,24 +162,26 @@ class PreProcessing():
         df_eft_scaled : pandas.DataFrame
             Rescaled EFT events
         """
-
-        df = pd.concat([self.df_sm, self.df_eft])
+        
+        datasets_all = [dataset[i][1] for dataset in data.values() for i in range(len(dataset))]
+        df = pd.concat(datasets_all)
 
         # fit the scaler transformer to the eft and sm features
         self.scaler.fit(df[fitter.features])
 
         # rescale the sm and eft data
-        features_sm_scaled = self.scaler.transform(self.df_sm[fitter.features])
-        features_eft_scaled = self.scaler.transform(self.df_eft[fitter.features])
-
-        # convert transformed features to dataframe
-        df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=fitter.features)
-        df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=fitter.features)
+        loaded_data_scaled = {}
+        for wc, datasets_wc in data.items():
+            temp = []
+            for c_val, events, xsec in datasets_wc:
+                events_scaled = self.scaler.transform(events[fitter.features])
+                temp.append([c_val, pd.DataFrame(events_scaled, columns=fitter.features), xsec])
+            loaded_data_scaled[wc] = temp
 
         # save the scaler
         joblib.dump(self.scaler, scaler_path)
 
-        return df_sm_scaled, df_eft_scaled
+        return loaded_data_scaled
 
 
 class EventDataset(data.Dataset):
@@ -311,16 +289,15 @@ class Fitter:
         self.epochs = self.run_options['epochs']
         self.features = self.run_options['features']
         self.network_size = [len(self.features)] + self.run_options['hidden_sizes'] + [1]
-        self.event_data_path = self.run_options['event_data']  # path to training data
+        self.event_data_path = pathlib.Path(self.run_options['event_data'])  # path to training data
         self.result_path = pathlib.Path(self.run_options["result_path"])
 
         self.mc_run = mc_run
     
-        self.output_dir, self.log_path = self.create_folder_structure()
+        self.output_dir, self.log_path = self.set_folder_structure()
+        self.data_dict = self.get_data_dict()
 
         self.scaler = None
-
-
 
         # create log file with timestamp
         t = time.localtime()
@@ -333,7 +310,6 @@ class Fitter:
             ]
         else:
             handlers = [logging.FileHandler(self.log_path / 'training_{}.log'.format(current_time))]
-
 
         logging.basicConfig(
             level=logging.INFO,
@@ -353,7 +329,7 @@ class Fitter:
         # start the training
         self.train_classifier(data_train, data_val)
         
-    def create_folder_structure(self):
+    def set_folder_structure(self):
 
         output_dir = self.result_path / self.run_options["run_id"]
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -367,6 +343,17 @@ class Fitter:
 
         return output_dir, log_path
 
+    def get_data_dict(self):
+
+        path_sm = self.event_data_path / 'sm' / 'events_{}.pkl.gz'.format(self.mc_run)
+        data_dict = {'sm': [[0, path_sm]]}
+
+        for c_train, c_vals in self.c_train.items():
+            data_dict[c_train] = [
+                [c_val, self.event_data_path / '{}'.format(c_train) / '{}_{}'.format(c_train, i) / 'events_{}.pkl.gz'.format(self.mc_run)] for
+                (i, c_val) in enumerate(c_vals)]
+
+        return data_dict
 
     def load_data(self):
         """
@@ -380,23 +367,25 @@ class Fitter:
             Validation data set
         """
 
-
-
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
-        path_sm = os.path.join(self.event_data_path, self.process_id + '_sm/events_{}.pkl.gz'.format(self.mc_run))
-        path_eft = os.path.join(self.event_data_path,
-                                self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.c_name,
-                                                                                               mc_run=self.mc_run))
 
-        path_dict = {'sm': path_sm, 'eft': path_eft}
+
+        loaded_data = {}
+        for wc, paths in self.data_dict.items():
+            dataset_wc = []
+            for c_val, dataset_path in paths:
+                # split cross-section from events and draw a subset
+                dataset = pd.read_pickle(dataset_path, compression="infer")
+                dataset_wc.append([c_val, dataset.iloc[1:].sample(self.n_dat), dataset.iloc[1, 1]])
+            loaded_data[wc] = dataset_wc
 
         # preprocessing of the data
-        preproc = PreProcessing(self, path_dict)
+        preprocessor = PreProcessing(self)
+        scaler_path = self.output_dir / 'scaler.gz'
+        loaded_data_scaled = preprocessor.feature_scaling(self, loaded_data, scaler_path)
 
-        # save the scaler
-        scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
-        df_sm_scaled, df_eft_scaled = preproc.feature_scaling(self, scaler_path)
+        import pdb; pdb.set_trace()
 
         self.n_dat = min(len(df_eft_scaled), len(df_sm_scaled))
 
