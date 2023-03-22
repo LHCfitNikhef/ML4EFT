@@ -81,6 +81,7 @@ class MLP(nn.Module):
         out = self.layers(x)
         return out
 
+
 class Classifier(nn.Module):
     """ The decssion function :math:`g(x, c)`
 
@@ -144,7 +145,7 @@ class PreProcessing():
         else:
             self.scaler = QuantileTransformer(n_quantiles=1000, output_distribution='normal')
 
-    def preprocess(self, fitter, data_dict, scaler_path):
+    def preprocess(self, fitter, scaler_path):
         """
 
         Parameters
@@ -161,8 +162,8 @@ class PreProcessing():
         df_eft_scaled : pandas.DataFrame
             Rescaled EFT events
         """
-        
-        datasets_all = [dataset[i][1] for dataset in data_dict.values() for i in range(len(dataset))]
+
+        datasets_all = [dataset for dataset in fitter.path_df['data']]
         df = pd.concat(datasets_all)
 
         # fit the scaler transformer to the eft and sm features
@@ -172,22 +173,31 @@ class PreProcessing():
         n_train_points = fitter.n_dat - n_val_points
 
         # rescale the sm and eft data
-        loaded_data_scaled = {}
-        for wc, datasets_wc in data_dict.items():
-            hypothesis = 1 if wc == 'sm' else 0
-            temp = []
-            for c_val, events, xsec in datasets_wc:
-                events_scaled = self.scaler.transform(events[fitter.features])
-                df_scaled = pd.DataFrame(events_scaled, columns=fitter.features)
-                event_dataset = EventDataset(df_scaled, xsec, hypothesis)
-                train, val = data.random_split(event_dataset, [n_train_points, n_val_points])
-                temp.append([c_val, train, val])
-            loaded_data_scaled[wc] = temp
+        data_train, data_val = [], []
+
+        for _, row in fitter.path_df[['data', 'xsec', 'wc_val']].iterrows():
+            hypothesis = 1 if sum(row['wc_val']) == 0 else 0
+
+            events_scaled = self.scaler.transform(row['data'][fitter.features])
+            df_scaled = pd.DataFrame(events_scaled, columns=fitter.features)
+            event_dataset = EventDataset(df_scaled, row['xsec'], hypothesis)
+
+            train, val = data.random_split(event_dataset, [n_train_points, n_val_points])
+
+            training_loader = data.DataLoader(train, batch_size=int(len(train) / fitter.n_batches), shuffle=True)
+            validation_loader = data.DataLoader(val, batch_size=int(len(val) / fitter.n_batches), shuffle=True)
+
+            data_train.append(training_loader)
+            data_val.append(validation_loader)
+
+        fitter.path_df['data_train'] = data_train
+        fitter.path_df['data_val'] = data_val
 
         # save the scaler
         joblib.dump(self.scaler, scaler_path)
 
-        return loaded_data_scaled
+        return fitter.path_df
+
 
 
 class EventDataset(data.Dataset):
@@ -275,9 +285,9 @@ class Fitter:
         self.result_path = pathlib.Path(self.run_options["result_path"])
 
         self.mc_run = mc_run
-    
+
         self.output_dir, self.log_path = self.set_folder_structure()
-        self.data_dict = self.get_data_dict()
+        self.path_df = self.get_path_df()
 
         self.scaler = None
 
@@ -289,7 +299,7 @@ class Fitter:
         if print_log:
             handlers = [logging.FileHandler(self.log_path / 'training_{}.log'.format(current_time)),
                         logging.StreamHandler(sys.stdout)
-            ]
+                        ]
         else:
             handlers = [logging.FileHandler(self.log_path / 'training_{}.log'.format(current_time))]
 
@@ -302,15 +312,16 @@ class Fitter:
         logging.info("All directories created, ready to load the data")
 
         # load the training and validation data
-        data_train, data_val = self.load_data()
+        self.load_data()
 
         # copy run card to the appropriate folder
-        with open(mc_path + 'run_card.json', 'w') as outfile:
+        with open(self.output_dir / 'run_card.json', 'w') as outfile:
             json.dump(self.run_options, outfile)
 
-        # start the training
-        self.train_classifier(data_train, data_val)
-        
+        # initialise model and start the training
+        self.model = Classifier(self.network_size)
+        self.train_classifier()
+
     def set_folder_structure(self):
 
         output_dir = self.result_path / self.run_options["run_id"]
@@ -325,17 +336,19 @@ class Fitter:
 
         return output_dir, log_path
 
-    def get_data_dict(self):
+    def get_path_df(self):
 
         path_sm = self.event_data_path / 'sm' / 'events_{}.pkl.gz'.format(self.mc_run)
-        data_dict = {'sm': [[0, path_sm]]}
+        paths = [[[0, 0], path_sm]]
 
         for c_train, c_vals in self.c_train.items():
-            data_dict[c_train] = [
-                [c_val, self.event_data_path / '{}'.format(c_train) / '{}_{}'.format(c_train, i) / 'events_{}.pkl.gz'.format(self.mc_run)] for
-                (i, c_val) in enumerate(c_vals)]
-
-        return data_dict
+            for i, c_val in enumerate(c_vals):
+                paths.append([c_val, self.event_data_path / '{}'.format(c_train) / '{}_{}'.format(c_train,
+                                                                                                      i) / 'events_{}.pkl.gz'.format(
+                    self.mc_run)])
+                
+        df = pd.DataFrame(paths, columns=['wc_val', 'paths'])
+        return df
 
     def load_data(self):
         """
@@ -348,24 +361,20 @@ class Fitter:
         data_val: array_like
             Validation data set
         """
-
-        loaded_data = {}
-        for wc, paths in self.data_dict.items():
-            dataset_wc = []
-            for c_val, dataset_path in paths:
-                # split cross-section from events and draw a subset
-                dataset = pd.read_pickle(dataset_path, compression="infer")
-                dataset_wc.append([c_val, dataset.iloc[1:].sample(self.n_dat), dataset.iloc[1, 1]])
-            loaded_data[wc] = dataset_wc
+        events, xsec = [], []
+        for path in self.path_df['paths']:
+            dataset = pd.read_pickle(path, compression="infer")
+            events.append(dataset.iloc[1:].sample(self.n_dat))
+            xsec.append(dataset.iloc[1,1])
+        self.path_df['data'] = events
+        self.path_df['xsec'] = xsec
 
         # preprocessing of the data
         preprocessor = PreProcessing(self)
         scaler_path = self.output_dir / 'scaler.gz'
-        data_preprocessed = preprocessor.preprocess(self, loaded_data, scaler_path)
+        self.path_df = preprocessor.preprocess(self, scaler_path)
 
-        return data_preprocessed
-
-    def train_classifier(self, data_train, data_val):
+    def train_classifier(self):
         """
         Starts the training of the binary classifier
 
@@ -379,34 +388,7 @@ class Fitter:
         # define the optimizer
         optimizer = optim.AdamW(self.model.parameters(), lr=self.lr)
 
-        # Use PyTorche's DataLoader to allow for mini-batches. After each epoch, the minibatches reshuffle.
-        # Create a dataloader object for each eft point + sm and put them all in one big list called train_data_loader
-        # or val_data_loader
-        train_data_loader = [
-            data.DataLoader(dataset_train, batch_size=int(dataset_train.__len__() / self.n_batches), shuffle=True) for
-            dataset_train in data_train]
-        val_data_loader = [
-            data.DataLoader(dataset_val, batch_size=int(dataset_val.__len__() / self.n_batches), shuffle=False) for
-            dataset_val in data_val]
-
-        # call the training loop
-        self.training_loop(optimizer=optimizer, train_loader=train_data_loader, val_loader=val_data_loader)
-
-    def training_loop(self, optimizer, train_loader, val_loader):
-        """
-        Optimize the classifier with `optimizer` on the training data set `train_loader`. Keeps track of potential
-        overfitting through `val_loader`.
-
-        Parameters
-        ----------
-        optimizer: torch.optim
-            Optimizer, e.g. torch.optim.AdamW
-        train_loader: array_like
-            List of torch.utils.data.DataLoader objects, one for the SM and the EFT (training)
-        val_loader: array_like
-            List of torch.utils.data.DataLoader objects, one for the SM and the EFT (validation)
-        """
-        path = self.path_dict['mc_path']
+        # path = self.path_dict['mc_path']
 
         loss_list_train, loss_list_val = [], []  # stores the training loss per epoch
 
@@ -428,58 +410,71 @@ class Fitter:
             loss_train, loss_val = 0.0, 0.0
 
             # We save the model parameters at the start of each epoch
-            torch.save(self.model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
-
-            # compute validation loss
+            # torch.save(self.model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
+                        
             with torch.no_grad():
-                for minibatch in zip(*val_loader):
+                for n_minibatch, minibatch in enumerate(zip(*self.path_df['data_val'])):
                     val_loss = torch.zeros(1)
                     for i, [event, weight, label] in enumerate(minibatch):
-                        c1, c2 = eft_points[i % n_eft_points]
-                        if isinstance(self.model, Classifier):
-                            output = self.model(event.float(), c1, c2)
-                        loss = self.loss_fn(output, label, weight)
+                        # print("WC {}, Minibatch {}".format(c_val, n_minibatch))
+                        c_val = self.path_df['wc_val'][i]
+                        g = self.model(event.float(), *c_val)
+                        loss = self.loss_fn(g, label, weight)
                         val_loss += loss
                     assert val_loss.requires_grad is False
-
                     loss_val += val_loss.item()
 
-            # loop over the mini-batches.
-            for j, minibatch in enumerate(zip(*train_loader)):
-
+            for n_minibatch, minibatch in enumerate(zip(*self.path_df['data_train'])):
                 train_loss = torch.zeros(1)
-                # loop over all the datasets within the minibatch and compute their contribution to the loss
-                for i, [event, weight, label] in enumerate(minibatch):  # i=0: eft, i=1: sm
-
-                    if isinstance(self.model, Classifier):
-                        output = self.model(event.float())
-                        if torch.any(output >= 1).item():
-                            logging.info("g >= 1 detected!")
-
-                    loss = self.loss_fn(output, label, weight)
+                for i, [event, weight, label] in enumerate(minibatch):
+                    c_val = self.path_df['wc_val'][i]
+                    g = self.model(event.float(), *c_val)
+                    loss = self.loss_fn(g, label, weight)
                     train_loss += loss
 
-                # perform gradient descent after each minibatch. Move to the next epoch when all minibatches are looped over.
                 optimizer.zero_grad()
                 train_loss.backward()
                 optimizer.step()
 
                 loss_train += train_loss.item()
 
+            # # loop over the mini-batches.
+            # for j, minibatch in enumerate(zip(*train_loader)):
+            #
+            #     train_loss = torch.zeros(1)
+            #     # loop over all the datasets within the minibatch and compute their contribution to the loss
+            #     for i, [event, weight, label] in enumerate(minibatch):  # i=0: eft, i=1: sm
+            #
+            #         if isinstance(self.model, Classifier):
+            #             output = self.model(event.float())
+            #             if torch.any(output >= 1).item():
+            #                 logging.info("g >= 1 detected!")
+            #
+            #         loss = self.loss_fn(output, label, weight)
+            #         train_loss += loss
+            #
+            #     # perform gradient descent after each minibatch. Move to the next epoch when all minibatches are looped over.
+            #     optimizer.zero_grad()
+            #     train_loss.backward()
+            #     optimizer.step()
+            #
+            #     loss_train += train_loss.item()
+
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
 
             training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train/self.n_batches, val_loss=loss_val/self.n_batches,
+                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train / self.n_batches,
+                       val_loss=loss_val / self.n_batches,
                        overfit=overfit_counter)
             logging.info(training_status)
 
-            np.savetxt(path + 'loss.out', loss_list_train)
-            np.savetxt(path + 'loss_val.out', loss_list_val)
+            #np.savetxt(path + 'loss.out', loss_list_train)
+            #np.savetxt(path + 'loss_val.out', loss_list_val)
 
             # in case the maximum number of epochs is reached, save the final state
             if epoch == self.epochs:
-                torch.save(self.model.state_dict(), path + 'trained_nn.pt')
+                # torch.save(self.model.state_dict(), path + 'trained_nn.pt')
                 break
 
             # check whether the network is overfitting by increasing the overfit_counter by one if the
@@ -501,6 +496,21 @@ class Fitter:
             iterations += 1
 
         logging.info("Finished training")
+
+    def training_loop(self, optimizer, train_loader, val_loader):
+        """
+        Optimize the classifier with `optimizer` on the training data set `train_loader`. Keeps track of potential
+        overfitting through `val_loader`.
+
+        Parameters
+        ----------
+        optimizer: torch.optim
+            Optimizer, e.g. torch.optim.AdamW
+        train_loader: array_like
+            List of torch.utils.data.DataLoader objects, one for the SM and the EFT (training)
+        val_loader: array_like
+            List of torch.utils.data.DataLoader objects, one for the SM and the EFT (validation)
+        """
 
     def weight_reset(self, m):
         """
@@ -540,7 +550,8 @@ class Fitter:
             loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
 
         elif self.loss_type == 'direct':
-            loss = -(1 - labels) * w_e * outputs - labels * (1 / (2 * self.c_train_value)) * (-1 + self.c_train_value * outputs) ** 2
+            loss = -(1 - labels) * w_e * outputs - labels * (1 / (2 * self.c_train_value)) * (
+                        -1 + self.c_train_value * outputs) ** 2
 
         # average over all the losses in the batch
         return torch.mean(loss, dim=0)
