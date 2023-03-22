@@ -269,14 +269,11 @@ class Fitter:
 
         self.lr = self.run_options["lr"]
         self.n_batches = self.run_options["n_batches"]
-
         self.loss_type = self.run_options['loss_type']
         self.scaler_type = self.run_options['scaler_type']
         self.patience = self.run_options['patience']
         self.val_ratio = self.run_options['val_ratio']
-
         self.c_train = self.run_options["c_train"]
-
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
         self.features = self.run_options['features']
@@ -285,11 +282,10 @@ class Fitter:
         self.result_path = pathlib.Path(self.run_options["result_path"])
 
         self.mc_run = mc_run
+        self.scaler = None
 
         self.output_dir, self.log_path = self.set_folder_structure()
         self.path_df = self.get_path_df()
-
-        self.scaler = None
 
         # create log file with timestamp
         t = time.localtime()
@@ -324,12 +320,8 @@ class Fitter:
 
     def set_folder_structure(self):
 
-        output_dir = self.result_path / self.run_options["run_id"]
+        output_dir = self.result_path / self.run_options["run_id"] / "mc_run_{}".format(self.mc_run)
         output_dir.mkdir(parents=True, exist_ok=True)
-
-        for c_train in self.c_train.keys():
-            model_dir = output_dir / c_train / "mc_run_{}".format(self.mc_run)
-            model_dir.mkdir(parents=True, exist_ok=True)
 
         log_path = output_dir / "log"
         log_path.mkdir(parents=True, exist_ok=True)
@@ -410,7 +402,7 @@ class Fitter:
             loss_train, loss_val = 0.0, 0.0
 
             # We save the model parameters at the start of each epoch
-            # torch.save(self.model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
+            torch.save(self.model.state_dict(), self.output_dir / 'trained_nn_{}.pt'.format(epoch))
                         
             with torch.no_grad():
                 for n_minibatch, minibatch in enumerate(zip(*self.path_df['data_val'])):
@@ -436,38 +428,17 @@ class Fitter:
                 train_loss.backward()
                 optimizer.step()
 
-                loss_train += train_loss.item()
+                training_status = "Epoch {epoch}, minibatch {batch}/{nbatches} loss_tr {train_loss}, loss_val {val_loss}, Overfit counter = {overfit}". \
+                    format(time=datetime.datetime.now(), epoch=epoch, batch=n_minibatch, nbatches = self.n_batches, train_loss=loss_train / self.n_batches,
+                           val_loss=loss_val / self.n_batches,
+                           overfit=overfit_counter)
+                logging.info(training_status)
 
-            # # loop over the mini-batches.
-            # for j, minibatch in enumerate(zip(*train_loader)):
-            #
-            #     train_loss = torch.zeros(1)
-            #     # loop over all the datasets within the minibatch and compute their contribution to the loss
-            #     for i, [event, weight, label] in enumerate(minibatch):  # i=0: eft, i=1: sm
-            #
-            #         if isinstance(self.model, Classifier):
-            #             output = self.model(event.float())
-            #             if torch.any(output >= 1).item():
-            #                 logging.info("g >= 1 detected!")
-            #
-            #         loss = self.loss_fn(output, label, weight)
-            #         train_loss += loss
-            #
-            #     # perform gradient descent after each minibatch. Move to the next epoch when all minibatches are looped over.
-            #     optimizer.zero_grad()
-            #     train_loss.backward()
-            #     optimizer.step()
-            #
-            #     loss_train += train_loss.item()
+                loss_train += train_loss.item()
 
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
 
-            training_status = "Epoch {epoch}, Training loss {train_loss}, Validation loss {val_loss}, Overfit counter = {overfit}". \
-                format(time=datetime.datetime.now(), epoch=epoch, train_loss=loss_train / self.n_batches,
-                       val_loss=loss_val / self.n_batches,
-                       overfit=overfit_counter)
-            logging.info(training_status)
 
             #np.savetxt(path + 'loss.out', loss_list_train)
             #np.savetxt(path + 'loss_val.out', loss_list_val)
@@ -547,7 +518,9 @@ class Fitter:
             loss = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
 
         elif self.loss_type == 'QC':
-            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
+            r = (1 - outputs) / outputs
+            lagrange_mp = 5
+            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + lagrange_mp * torch.relu(-r) ** 2
 
         elif self.loss_type == 'direct':
             loss = -(1 - labels) * w_e * outputs - labels * (1 / (2 * self.c_train_value)) * (
