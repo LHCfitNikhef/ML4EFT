@@ -111,78 +111,73 @@ class ConstraintActivation(CustomActivationFunction):
             return - torch.relu(x) - 1 / self.c - 1e-6
 
 
-class Classifier(nn.Module):
-    """ The decssion function :math:`g(x, c)`
-    Implementation of the decision boundary `g(x, c)`
-    """
-
-    def __init__(self, architecture, c):
-        super().__init__()
-        self.c = c
-        self.n_alpha = MLP(architecture)
-        self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
-
-    def forward(self, x, c1, c2):
-        """
-        Parameters
-        ----------
-        x: array_like
-            Input ``(N, ) torch.Tensor`` with ``N`` the number of input nodes
-        Returns
-        -------
-        g: Torch.Tensor
-            decision boundary between two
-        """
-
-        NN_out = self.n_alpha(x)
-        g = 1 / (1 + (1 + self.c * NN_out))
-        return g
-
-
 # class Classifier(nn.Module):
 #     """ The decssion function :math:`g(x, c)`
-#
 #     Implementation of the decision boundary `g(x, c)`
 #     """
 #
-#     def __init__(self, architecture):
+#     def __init__(self, architecture, c):
 #         super().__init__()
-#
-#         self.NN1 = MLP(architecture)
-#         self.NN2 = MLP(architecture)
-#         self.NN11 = MLP(architecture)
-#         self.NN22 = MLP(architecture)
+#         self.c = c
+#         self.n_alpha = MLP(architecture)
+#         self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
 #
 #     def forward(self, x, c1, c2):
 #         """
-#
 #         Parameters
 #         ----------
 #         x: array_like
 #             Input ``(N, ) torch.Tensor`` with ``N`` the number of input nodes
-#
 #         Returns
 #         -------
 #         g: Torch.Tensor
 #             decision boundary between two
-#
 #         """
 #
-#         NN1_out = self.NN1(x)
-#         #NN2_out = self.NN2(x)
-#
-#         #NN11_out = self.NN11(x)
-#         #NN22_out = self.NN22(x)
-#
-#         #r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out ** 2 + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out ** 2)
-#         #r = torch.relu(1 + c1 * NN1_out + c1 ** 2 * NN11_out)
-#
-#
-#
-#         r = 1 + c1 * NN1_out
-#
-#         g = 1 / (1 + r)
+#         NN_out = self.n_alpha(x)
+#         g = 1 / (1 + (1 + self.c * NN_out))
 #         return g
+
+
+class Classifier(nn.Module):
+    """ The decssion function :math:`g(x, c)`
+
+    Implementation of the decision boundary `g(x, c)`
+    """
+
+    def __init__(self, architecture):
+        super().__init__()
+
+        self.NN1 = MLP(architecture)
+        self.NN2 = MLP(architecture)
+        self.NN11 = MLP(architecture)
+        self.NN22 = MLP(architecture)
+
+    def forward(self, x, c1, c2):
+        """
+
+        Parameters
+        ----------
+        x: array_like
+            Input ``(N, ) torch.Tensor`` with ``N`` the number of input nodes
+
+        Returns
+        -------
+        g: Torch.Tensor
+            decision boundary between two
+
+        """
+
+        NN1_out = self.NN1(x)
+        #NN2_out = self.NN2(x)
+
+        NN11_out = self.NN11(x)
+        #NN22_out = self.NN22(x)
+
+        #r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out ** 2 + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out ** 2)
+        r = torch.relu(1 + c1 * NN1_out + c1 ** 2 * NN11_out)
+        g = 1 / (1 + r)
+        return g
 
 
 class PreProcessing():
@@ -380,7 +375,7 @@ class Fitter:
             json.dump(self.run_options, outfile)
 
         # initialise model and start the training
-        self.model = Classifier(self.network_size, -10)
+        self.model = Classifier(self.network_size)
         self.train_classifier()
 
     def set_folder_structure(self):
@@ -477,7 +472,7 @@ class Fitter:
                     for i, [event, weight, label] in enumerate(minibatch[1:]):
 
                         c_val = self.path_df['wc_val'][i+1]
-                        print("{}, WC {}, Minibatch {}".format(i+1, c_val, n_minibatch))
+                        #print("{}, WC {}, Minibatch {}".format(i+1, c_val, n_minibatch))
                         g_eft = self.model(event.float(), *c_val)
                         g_sm = self.model(event_sm.float(), *c_val)
 
@@ -598,9 +593,9 @@ class Fitter:
 
         elif self.loss_type == 'QC':
             r = (1 - outputs) / outputs
-            lagrange_mp = 50
+            lagrange_mp = 5
 
-            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 #+ lagrange_mp * torch.relu(-r) ** 2
+            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + lagrange_mp * torch.relu(-r) ** 2
 
         elif self.loss_type == 'direct':
             loss = -(1 - labels) * w_e * outputs - labels * (1 / (2 * self.c_train_value)) * (
