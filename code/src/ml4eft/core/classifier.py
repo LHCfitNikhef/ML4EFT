@@ -78,66 +78,6 @@ class MLP(nn.Module):
         out = self.layers(x)
         return out
 
-class CustomActivationFunction(nn.Module):
-    """
-    Class to construct custom activation functions
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.name = self.__class__.__name__
-        self.config = {"name": self.name}
-
-
-class ConstraintActivation(CustomActivationFunction):
-    """Class to transform the classifier output to ensure a positive likelihood ratio
-    """
-
-    def __init__(self, c):
-        """
-        Parameters
-        ----------
-        c: float
-            Traning parameter :math:`c^{(\mathrm{tr})}` at which the EFT data set is generated
-        """
-        super().__init__()
-        self.c = c
-
-    def forward(self, x):
-        if self.c > 0:
-            return torch.relu(x) - 1 / self.c + 1e-6
-        else:
-
-            return - torch.relu(x) - 1 / self.c - 1e-6
-
-
-# class Classifier(nn.Module):
-#     """ The decssion function :math:`g(x, c)`
-#     Implementation of the decision boundary `g(x, c)`
-#     """
-#
-#     def __init__(self, architecture, c):
-#         super().__init__()
-#         self.c = c
-#         self.n_alpha = MLP(architecture)
-#         self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
-#
-#     def forward(self, x, c1, c2):
-#         """
-#         Parameters
-#         ----------
-#         x: array_like
-#             Input ``(N, ) torch.Tensor`` with ``N`` the number of input nodes
-#         Returns
-#         -------
-#         g: Torch.Tensor
-#             decision boundary between two
-#         """
-#
-#         NN_out = self.n_alpha(x)
-#         g = 1 / (1 + (1 + self.c * NN_out))
-#         return g
-
 
 class Classifier(nn.Module):
     """ The decssion function :math:`g(x, c)`
@@ -169,13 +109,14 @@ class Classifier(nn.Module):
         """
 
         NN1_out = self.NN1(x)
-        #NN2_out = self.NN2(x)
+        NN2_out = self.NN2(x)
 
         NN11_out = self.NN11(x)
-        #NN22_out = self.NN22(x)
+        NN22_out = self.NN22(x)
 
-        #r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out ** 2 + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out ** 2)
-        r = torch.relu(1 + c1 * NN1_out + c1 ** 2 * NN11_out)
+        #r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out)
+        r = torch.relu(1 + c2 * NN2_out + c2 ** 2 * NN22_out)
+        #r = torch.relu(1 + c1 * NN1_out + c1 ** 2 * NN11_out)
         g = 1 / (1 + r)
         return g
 
