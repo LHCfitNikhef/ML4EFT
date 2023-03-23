@@ -30,9 +30,6 @@ import sys
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 rc('text', usetex=True)
 
-eft_points = [[-10.0, 0], [10, 0], [0, -10], [0, 10]]
-n_eft_points = len(eft_points)
-
 
 class MLP(nn.Module):
     """ Multi Layer Perceptron that serves as building block for the binary classifier
@@ -81,44 +78,111 @@ class MLP(nn.Module):
         out = self.layers(x)
         return out
 
+class CustomActivationFunction(nn.Module):
+    """
+    Class to construct custom activation functions
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.name = self.__class__.__name__
+        self.config = {"name": self.name}
+
+
+class ConstraintActivation(CustomActivationFunction):
+    """Class to transform the classifier output to ensure a positive likelihood ratio
+    """
+
+    def __init__(self, c):
+        """
+        Parameters
+        ----------
+        c: float
+            Traning parameter :math:`c^{(\mathrm{tr})}` at which the EFT data set is generated
+        """
+        super().__init__()
+        self.c = c
+
+    def forward(self, x):
+        if self.c > 0:
+            return torch.relu(x) - 1 / self.c + 1e-6
+        else:
+
+            return - torch.relu(x) - 1 / self.c - 1e-6
+
 
 class Classifier(nn.Module):
     """ The decssion function :math:`g(x, c)`
-
     Implementation of the decision boundary `g(x, c)`
     """
 
-    def __init__(self, architecture):
+    def __init__(self, architecture, c):
         super().__init__()
-
-        self.NN1 = MLP(architecture)
-        self.NN2 = MLP(architecture)
-        self.NN11 = MLP(architecture)
-        self.NN22 = MLP(architecture)
+        self.c = c
+        self.n_alpha = MLP(architecture)
+        self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
 
     def forward(self, x, c1, c2):
         """
-
         Parameters
         ----------
         x: array_like
             Input ``(N, ) torch.Tensor`` with ``N`` the number of input nodes
-
         Returns
         -------
         g: Torch.Tensor
             decision boundary between two
-
         """
 
-        NN1_out = self.NN1(x)
-        NN2_out = self.NN2(x)
-        NN11_out = self.NN11(x)
-        NN22_out = self.NN22(x)
-
-        r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out)
-        g = 1 / (1 + r)
+        NN_out = self.n_alpha(x)
+        g = 1 / (1 + (1 + self.c * NN_out))
         return g
+
+
+# class Classifier(nn.Module):
+#     """ The decssion function :math:`g(x, c)`
+#
+#     Implementation of the decision boundary `g(x, c)`
+#     """
+#
+#     def __init__(self, architecture):
+#         super().__init__()
+#
+#         self.NN1 = MLP(architecture)
+#         self.NN2 = MLP(architecture)
+#         self.NN11 = MLP(architecture)
+#         self.NN22 = MLP(architecture)
+#
+#     def forward(self, x, c1, c2):
+#         """
+#
+#         Parameters
+#         ----------
+#         x: array_like
+#             Input ``(N, ) torch.Tensor`` with ``N`` the number of input nodes
+#
+#         Returns
+#         -------
+#         g: Torch.Tensor
+#             decision boundary between two
+#
+#         """
+#
+#         NN1_out = self.NN1(x)
+#         #NN2_out = self.NN2(x)
+#
+#         #NN11_out = self.NN11(x)
+#         #NN22_out = self.NN22(x)
+#
+#         #r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out ** 2 + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out ** 2)
+#         #r = torch.relu(1 + c1 * NN1_out + c1 ** 2 * NN11_out)
+#
+#
+#
+#         r = 1 + c1 * NN1_out
+#
+#         g = 1 / (1 + r)
+#         return g
 
 
 class PreProcessing():
@@ -187,6 +251,8 @@ class PreProcessing():
             training_loader = data.DataLoader(train, batch_size=int(len(train) / fitter.n_batches), shuffle=True)
             validation_loader = data.DataLoader(val, batch_size=int(len(val) / fitter.n_batches), shuffle=True)
 
+            # TODO: len(training_loader) != self.n_batches
+
             data_train.append(training_loader)
             data_val.append(validation_loader)
 
@@ -197,7 +263,6 @@ class PreProcessing():
         joblib.dump(self.scaler, scaler_path)
 
         return fitter.path_df
-
 
 
 class EventDataset(data.Dataset):
@@ -315,7 +380,7 @@ class Fitter:
             json.dump(self.run_options, outfile)
 
         # initialise model and start the training
-        self.model = Classifier(self.network_size)
+        self.model = Classifier(self.network_size, -10)
         self.train_classifier()
 
     def set_folder_structure(self):
@@ -357,7 +422,7 @@ class Fitter:
         for path in self.path_df['paths']:
             dataset = pd.read_pickle(path, compression="infer")
             events.append(dataset.iloc[1:].sample(self.n_dat))
-            xsec.append(dataset.iloc[1,1])
+            xsec.append(dataset.iloc[0,0])
         self.path_df['data'] = events
         self.path_df['xsec'] = xsec
 
@@ -379,6 +444,7 @@ class Fitter:
         """
         # define the optimizer
         optimizer = optim.AdamW(self.model.parameters(), lr=self.lr)
+        self.model.apply(self.weight_reset)
 
         # path = self.path_dict['mc_path']
 
@@ -407,37 +473,54 @@ class Fitter:
             with torch.no_grad():
                 for n_minibatch, minibatch in enumerate(zip(*self.path_df['data_val'])):
                     val_loss = torch.zeros(1)
-                    for i, [event, weight, label] in enumerate(minibatch):
-                        # print("WC {}, Minibatch {}".format(c_val, n_minibatch))
-                        c_val = self.path_df['wc_val'][i]
-                        g = self.model(event.float(), *c_val)
-                        loss = self.loss_fn(g, label, weight)
-                        val_loss += loss
+                    event_sm, weight_sm, label_sm = minibatch[0]
+                    for i, [event, weight, label] in enumerate(minibatch[1:]):
+
+                        c_val = self.path_df['wc_val'][i+1]
+                        print("{}, WC {}, Minibatch {}".format(i+1, c_val, n_minibatch))
+                        g_eft = self.model(event.float(), *c_val)
+                        g_sm = self.model(event_sm.float(), *c_val)
+
+                        # NN = (((1 - g_eft) / g_eft) - 1) / 100
+                        # print(NN.mean())
+
+                        loss_eft = self.loss_fn(g_eft, label, weight)
+                        loss_sm = self.loss_fn(g_sm, label_sm, weight_sm)
+                        val_loss += loss_eft
+                        val_loss += loss_sm
                     assert val_loss.requires_grad is False
                     loss_val += val_loss.item()
 
             for n_minibatch, minibatch in enumerate(zip(*self.path_df['data_train'])):
                 train_loss = torch.zeros(1)
-                for i, [event, weight, label] in enumerate(minibatch):
-                    c_val = self.path_df['wc_val'][i]
-                    g = self.model(event.float(), *c_val)
-                    loss = self.loss_fn(g, label, weight)
-                    train_loss += loss
+                event_sm, weight_sm, label_sm = minibatch[0]
+                for i, [event, weight, label] in enumerate(minibatch[1:]):
+                    c_val = self.path_df['wc_val'][i + 1]
+
+                    # print("{}, WC {}, Minibatch {}".format(i, c_val, n_minibatch))
+                    g_eft = self.model(event.float(), *c_val)
+                    g_sm = self.model(event_sm.float(), *c_val)
+
+                    loss_eft = self.loss_fn(g_eft, label, weight)
+                    loss_sm = self.loss_fn(g_sm, label_sm, weight_sm)
+                    train_loss += loss_eft
+                    train_loss += loss_sm
 
                 optimizer.zero_grad()
                 train_loss.backward()
                 optimizer.step()
 
-                training_status = "Epoch {epoch}, minibatch {batch}/{nbatches} loss_tr {train_loss}, loss_val {val_loss}, Overfit counter = {overfit}". \
-                    format(time=datetime.datetime.now(), epoch=epoch, batch=n_minibatch, nbatches = self.n_batches, train_loss=loss_train / self.n_batches,
-                           val_loss=loss_val / self.n_batches,
-                           overfit=overfit_counter)
-                logging.info(training_status)
-
                 loss_train += train_loss.item()
 
             loss_list_train.append(loss_train)
             loss_list_val.append(loss_val)
+
+            training_status = "Epoch {epoch}, loss_tr {train_loss}, loss_val {val_loss}, Overfit counter = {overfit}". \
+                format(time=datetime.datetime.now(), epoch=epoch,
+                       train_loss=loss_train / self.n_batches,
+                       val_loss=loss_val / self.n_batches,
+                       overfit=overfit_counter)
+            logging.info(training_status)
 
 
             #np.savetxt(path + 'loss.out', loss_list_train)
@@ -445,7 +528,7 @@ class Fitter:
 
             # in case the maximum number of epochs is reached, save the final state
             if epoch == self.epochs:
-                # torch.save(self.model.state_dict(), path + 'trained_nn.pt')
+                torch.save(self.model.state_dict(), self.output_dir / 'trained_nn.pt')
                 break
 
             # check whether the network is overfitting by increasing the overfit_counter by one if the
@@ -487,10 +570,6 @@ class Fitter:
         """
         Reset the weights and biases associated with the model ``m``.
 
-        Parameters
-        ----------
-        m: MLP
-            Model of type :py:meth:`MLP <MLP>`.
         """
         if isinstance(m, nn.Linear):
             m.reset_parameters()
@@ -519,8 +598,9 @@ class Fitter:
 
         elif self.loss_type == 'QC':
             r = (1 - outputs) / outputs
-            lagrange_mp = 5
-            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + lagrange_mp * torch.relu(-r) ** 2
+            lagrange_mp = 50
+
+            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 #+ lagrange_mp * torch.relu(-r) ** 2
 
         elif self.loss_type == 'direct':
             loss = -(1 - labels) * w_e * outputs - labels * (1 / (2 * self.c_train_value)) * (
