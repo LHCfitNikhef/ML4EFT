@@ -114,8 +114,8 @@ class Classifier(nn.Module):
         NN11_out = self.NN11(x)
         NN22_out = self.NN22(x)
 
-        #r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out)
-        r = torch.relu(1 + c2 * NN2_out + c2 ** 2 * NN22_out)
+        r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out)
+        #r = torch.relu(1 + c2 * NN2_out + c2 ** 2 * NN22_out)
         #r = torch.relu(1 + c1 * NN1_out + c1 ** 2 * NN11_out)
         g = 1 / (1 + r)
         return g
@@ -330,17 +330,24 @@ class Fitter:
         return output_dir, log_path
 
     def get_path_df(self):
+        """
+        Constructs a DataFrame with the WC values and the dataset paths as columns
 
+        Returns
+        -------
+        df: pd.DataFrame
+            DataFrame with WC values and dataset paths as columns
+        """
         path_sm = self.event_data_path / 'sm' / 'events_{}.pkl.gz'.format(self.mc_run)
         paths = [[[0, 0], path_sm]]
 
         for c_train, c_vals in self.c_train.items():
             for i, c_val in enumerate(c_vals):
-                paths.append([c_val, self.event_data_path / '{}'.format(c_train) / '{}_{}'.format(c_train,
-                                                                                                      i) / 'events_{}.pkl.gz'.format(
+                paths.append([c_val, self.event_data_path / '{}'.format(c_train) / 'point_{}'.format(i) / 'events_{}.pkl.gz'.format(
                     self.mc_run)])
                 
         df = pd.DataFrame(paths, columns=['wc_val', 'paths'])
+        
         return df
 
     def load_data(self):
@@ -407,18 +414,25 @@ class Fitter:
             torch.save(self.model.state_dict(), self.output_dir / 'trained_nn_{}.pt'.format(epoch))
                         
             with torch.no_grad():
-                for n_minibatch, minibatch in enumerate(zip(*self.path_df['data_val'])):
+
+                # len(self.path_df['data_val']) = # eft points
+                # len(self.path_df['data_val'][i] = # mini-batches
+
+                for minibatch_nr, minibatch in enumerate(zip(*self.path_df['data_val'])):
                     val_loss = torch.zeros(1)
+                    
+                    # each minibatch consists of a SM dataset and an EFT dataset at each WC point, e.g:
+                    # minibatch = [minibatch(sm), minibatch(ctg_0, 0), minibatch(ctg_1, 0), minibatch(0, ctu8_0),
+                    #               minibatch(ctu8_1, 0)]
+                    
                     event_sm, weight_sm, label_sm = minibatch[0]
                     for i, [event, weight, label] in enumerate(minibatch[1:]):
 
                         c_val = self.path_df['wc_val'][i+1]
-                        #print("{}, WC {}, Minibatch {}".format(i+1, c_val, n_minibatch))
+                        #print("{}, WC {}, Minibatch {}".format(i+1, c_val, minibatch_nr))
+
                         g_eft = self.model(event.float(), *c_val)
                         g_sm = self.model(event_sm.float(), *c_val)
-
-                        # NN = (((1 - g_eft) / g_eft) - 1) / 100
-                        # print(NN.mean())
 
                         loss_eft = self.loss_fn(g_eft, label, weight)
                         loss_sm = self.loss_fn(g_sm, label_sm, weight_sm)
@@ -427,7 +441,7 @@ class Fitter:
                     assert val_loss.requires_grad is False
                     loss_val += val_loss.item()
 
-            for n_minibatch, minibatch in enumerate(zip(*self.path_df['data_train'])):
+            for minibatch_nr, minibatch in enumerate(zip(*self.path_df['data_train'])):
                 train_loss = torch.zeros(1)
                 event_sm, weight_sm, label_sm = minibatch[0]
                 for i, [event, weight, label] in enumerate(minibatch[1:]):
@@ -458,7 +472,6 @@ class Fitter:
                        overfit=overfit_counter)
             logging.info(training_status)
 
-
             #np.savetxt(path + 'loss.out', loss_list_train)
             #np.savetxt(path + 'loss_val.out', loss_list_val)
 
@@ -478,7 +491,7 @@ class Fitter:
             if overfit_counter == self.patience:
                 stopping_point = epoch - self.patience
                 logging.info("Stopping point reached! Overfit counter = {}".format(overfit_counter))
-                shutil.copyfile(path + 'trained_nn_{}.pt'.format(stopping_point), path + 'trained_nn.pt')
+                shutil.copyfile(self.output_dir / 'trained_nn_{}.pt'.format(stopping_point), self.output_dir / 'trained_nn.pt')
                 logging.info("Backwards stopping done")
                 break
 
