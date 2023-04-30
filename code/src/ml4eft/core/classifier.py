@@ -89,9 +89,8 @@ class Classifier(nn.Module):
         super().__init__()
 
         self.NN1 = MLP(architecture)
-        self.NN2 = MLP(architecture)
         self.NN11 = MLP(architecture)
-        self.NN22 = MLP(architecture)
+
 
     def forward(self, x, c1, c2):
         """
@@ -109,16 +108,13 @@ class Classifier(nn.Module):
         """
 
         NN1_out = self.NN1(x)
-        NN2_out = self.NN2(x)
-
         NN11_out = self.NN11(x)
-        NN22_out = self.NN22(x)
 
-        r = torch.relu(1 + c1 * NN1_out + c2 * NN2_out + c1 ** 2 * NN11_out + c2 ** 2 * NN22_out)
-        #r = torch.relu(1 + c2 * NN2_out + c2 ** 2 * NN22_out)
-        #r = torch.relu(1 + c1 * NN1_out + c1 ** 2 * NN11_out)
+
+        r = torch.relu(1 + c1 * NN1_out + c1 ** 2 * NN11_out)
+
         g = 1 / (1 + r)
-        return g
+        return g, NN1_out, NN11_out
 
 
 class PreProcessing():
@@ -431,11 +427,11 @@ class Fitter:
                         c_val = self.path_df['wc_val'][i+1]
                         #print("{}, WC {}, Minibatch {}".format(i+1, c_val, minibatch_nr))
 
-                        g_eft = self.model(event.float(), *c_val)
-                        g_sm = self.model(event_sm.float(), *c_val)
+                        g_eft, NN1, NN11 = self.model(event.float(), *c_val)
+                        g_sm, NN1_sm, NN11_sm = self.model(event_sm.float(), *c_val)
 
-                        loss_eft = self.loss_fn(g_eft, label, weight)
-                        loss_sm = self.loss_fn(g_sm, label_sm, weight_sm)
+                        loss_eft = self.loss_fn(g_eft, label, weight, NN1, NN11)
+                        loss_sm = self.loss_fn(g_sm, label_sm, weight_sm, NN1_sm, NN11_sm)
                         val_loss += loss_eft
                         val_loss += loss_sm
                     assert val_loss.requires_grad is False
@@ -448,11 +444,11 @@ class Fitter:
                     c_val = self.path_df['wc_val'][i + 1]
 
                     # print("{}, WC {}, Minibatch {}".format(i, c_val, n_minibatch))
-                    g_eft = self.model(event.float(), *c_val)
-                    g_sm = self.model(event_sm.float(), *c_val)
+                    g_eft, NN1, NN11 = self.model(event.float(), *c_val)
+                    g_sm, NN1_sm, NN11_sm = self.model(event_sm.float(), *c_val)
 
-                    loss_eft = self.loss_fn(g_eft, label, weight)
-                    loss_sm = self.loss_fn(g_sm, label_sm, weight_sm)
+                    loss_eft = self.loss_fn(g_eft, label, weight, NN1, NN11)
+                    loss_sm = self.loss_fn(g_sm, label_sm, weight_sm, NN1_sm, NN11_sm)
                     train_loss += loss_eft
                     train_loss += loss_sm
 
@@ -523,7 +519,7 @@ class Fitter:
         if isinstance(m, nn.Linear):
             m.reset_parameters()
 
-    def loss_fn(self, outputs, labels, w_e):
+    def loss_fn(self, outputs, labels, w_e, NN1, NN11):
         """
         Loss function
 
@@ -549,7 +545,7 @@ class Fitter:
             r = (1 - outputs) / outputs
             lagrange_mp = 5
 
-            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + lagrange_mp * torch.relu(-r) ** 2
+            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + lagrange_mp * torch.relu(NN1 ** 2 / 4 - NN11) ** 2
 
         elif self.loss_type == 'direct':
             loss = -(1 - labels) * w_e * outputs - labels * (1 / (2 * self.c_train_value)) * (
