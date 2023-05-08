@@ -15,11 +15,11 @@ from ellipse_plotter_new import EllipsePlotter
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 30})
 rc('text', usetex=True)
 
-coeff_dict = {"ctGRe": r'$c_{tG}$', "ctu8": r'$c_{tu}^{(8)}$'}
+coeff_dict = {"ctd8": r'$c_{td}^{(8)}$', "cQu8": r'$c_{Qu}^{(8)}$'}
 
 # LINEAR
-samples_nn_lin_mtt1 = '/data/theorie/pherbsch/ML4EFT/results/nn_Shower_ctu8_ctGReee_high/posterior.json'
-samples_nn_lin_mtt2 = '/data/theorie/pherbsch/ML4EFT/results/binned_Shower_ctu8_ctGReee_high_lu/posterior.json'
+samples_nn_lin_mtt1 = '/data/theorie/pherbsch/ML4EFT/results/nn_shower_ctd8_cQu8.2/posterior.json'
+# samples_nn_lin_mtt2 = '/data/theorie/pherbsch/ML4EFT/results/binned_Shower_ctu8_ctGReee_high_lu/posterior.json'
 # samples_nn_lin_mtt3 = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/nn_ctu8_ctGRe_subproj/posterior.json'
 
 # samples_binned_lin_mtt_y_c = '/data/theorie/jthoeve/ns_samples/tt_parton/binned_glob_lin_mtt_y_c/posterior.json'
@@ -46,14 +46,14 @@ samples_nn_lin_mtt2 = '/data/theorie/pherbsch/ML4EFT/results/binned_Shower_ctu8_
 # PLOT 1
 
 df_plot_1 = [Analyse.posterior_loader(samples_nn_lin_mtt1)
-            ,Analyse.posterior_loader(samples_nn_lin_mtt2)
+            # ,Analyse.posterior_loader(samples_nn_lin_mtt2)
             # ,Analyse.posterior_loader(samples_nn_lin_mtt3)
             # ,
             #  Analyse.posterior_loader(samples_nn_lin_mtt_y)
              ]
 
-labels_plot_1 = [r'$\mathrm{nn500}\:1\;(m_{t\bar{t}},y_{t\bar{t}})$'
-                ,r'$\mathrm{bin200}\:1\;(m_{t\bar{t}},y_{t\bar{t}})$'
+labels_plot_1 = [r'$\mathrm{nn500}\:1\;(18 params)$'
+                # ,r'$\mathrm{bin200}\:1\;(m_{t\bar{t}},y_{t\bar{t}})$'
                 # , 'nn'
                 #  r'$\mathrm{Unbinned\;exact}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
                 #  r'$\mathrm{Unbinned\;ML}\;(m_{t\bar{t}}, y_{t\bar{t}})$',
@@ -109,7 +109,7 @@ labels = [labels_plot_1
  ]
 
 titles = [
-    r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-2}\right)\mathrm{at\:}\mathcal{L}=2571\:\mathrm{fb}^{-1}, lin$"
+    r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-2}\right)\mathrm{at\:}\mathcal{L}=...\:\mathrm{fb}^{-1}, lin$"
     # ,r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-4}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$",
     # r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-2}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$",
     # r"$95\:\%\:\mathrm{C.L.\:intervals},\;\mathcal{O}\left(\Lambda^{-4}\right)\mathrm{at\:}\mathcal{L}=300\:\mathrm{fb}^{-1}$"
@@ -136,21 +136,21 @@ for i, df in enumerate(dfs):
 
     if col_idx == 1:
         ax.set_xlim(-0.22, 0.3)
-        plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
-                     ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
+        plotter.plot(ax, df, coeff1="ctd8", coeff2="cQu8",
+                     ax_labels=[coeff_dict["ctd8"], coeff_dict["cQu8"]], kde=order[i],
                      labels=labels[i], loc="lower right")
     else:
-        plotter.plot(ax, df, coeff1="ctGRe", coeff2="ctu8",
-                     ax_labels=[coeff_dict["ctGRe"], coeff_dict["ctu8"]], kde=order[i],
+        plotter.plot(ax, df, coeff1="ctd8", coeff2="cQu8",
+                     ax_labels=[coeff_dict["ctd8"], coeff_dict["cQu8"]], kde=order[i],
                      labels=labels[i], loc="upper left")
 
     if col_idx == 1:
         ax.set(ylabel=None)
     if row_idx == 0:
-        ax.set(xlabel=coeff_dict["ctGRe"])
+        ax.set(xlabel=coeff_dict["ctd8"])
         ax.set_title(titles[i], fontsize=25)
 
 grid.tight_layout(fig)
 
-fig.savefig('/data/theorie/pherbsch/ML4EFT/subproj/high_lumi_nn_bin500')
+fig.savefig('/data/theorie/pherbsch/ML4EFT/subproj/random_plot_bin/shower_posterior_ctd8_cQu8.png')
 

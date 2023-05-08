@@ -24,7 +24,7 @@
 #ifndef __FASTJET_CONTRIB_SOFTDROP_HH__
 #define __FASTJET_CONTRIB_SOFTDROP_HH__
 
-#include "RecursiveSymmetryCutBase.hh"
+#include "fastjet/contrib/RecursiveSymmetryCutBase.hh"
 
 FASTJET_BEGIN_NAMESPACE      // defined in fastjet/internal/base.hh
 

@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/data/theorie/pherbsch/ML4EFT/packages/fastjet-3.4.0/../fastjet-install/lib'
+libdir='/data/theorie/pherbsch/ML4EFT/packages/fastjet-install/lib'

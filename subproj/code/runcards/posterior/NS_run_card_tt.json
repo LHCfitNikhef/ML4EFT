@@ -1,12 +1,12 @@
 {
-  "fit_id": "Shower_ctu8_ctGReee_high",
+  "fit_id": "shower_ctd8_cQu8.2",
   "mode": "nn",
-  "process": "ttpartonshower",
+  "process": "tt",
   "order": "lin",
-  "nlive": 500,
+  "nlive": 50,
   "results_path": "/data/theorie/pherbsch/ML4EFT/results",
-  "lumi": 857100,
-  "observed_data_path": "/data/theorie/pherbsch/ML4EFT/subproj/theory_data/observed_data_shower/events_0.pkl.gz",
+  "lumi": 160000,
+  "observed_data_path": "/data/theorie/pherbsch/ML4EFT/subproj/output/pkl_files/event/tt_sm/events_0.pkl.gz",
   "bins": {
     "pt_e": [
       0.0,
@@ -30,19 +30,20 @@
       1000
     ]
   },
-  "path_to_models": "/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/models/2023/01/26",
-  "path_to_theory_pred": "/data/theorie/pherbsch/ML4EFT/subproj/theory_data",
+  "path_to_models": "/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/models/2023/05/02",
+  "path_to_theory_pred": "/data/theorie/pherbsch/ML4EFT/subproj/output/pkl_files/event",
   "prior": {
-    "ctGRe": [
-      -1,
-      1
+    "ctd8": [
+      -3,
+      3
     ],
-    "ctu8": [
-      -1,
-      1
+    "cQu8": [
+      -3,
+      3
     ]
   },
   "th_features": [
-    "pt_e"
+    "eta_l1",
+    "pt_ll"
   ]
 }

@@ -8,7 +8,7 @@
  |  |   P  P   Y Y     T    H   H   I    A A     This is PYTHIA version 8.308      |  | 
  |  |   PPP     Y      T    HHHHH   I   AAAAA    Last date of change: 16 Nov 2022  |  | 
  |  |   P       Y      T    H   H   I   A   A                                      |  | 
- |  |   P       Y      T    H   H  III  A   A    Now is 13 Mar 2023 at 20:30:11    |  | 
+ |  |   P       Y      T    H   H  III  A   A    Now is 15 Mar 2023 at 15:24:34    |  | 
  |  |                                                                              |  | 
  |  |   Program documentation and an archive of historic versions is found on:     |  | 
  |  |                                                                              |  | 
@@ -1921,233 +1921,180 @@
                                    Charge sum:  2.000           Momentum sum:     -0.000      0.000      0.000  14000.000  14000.000
 
  --------  End PYTHIA Event Listing  -----------------------------------------------------------------------------------------------
- PYTHIA Warning in StringFragmentation::fragmentToJunction: bad convergence junction rest frame  
- PYTHIA Warning in SimpleTimeShower::findMEcorr: ME weight above PS one  
- PYTHIA Warning in Pythia::check: energy-momentum not quite conserved  
- PYTHIA Warning in SimpleTimeShower::pTnext: negative dipole mass.  
- PYTHIA Error in StringFragmentation::fragment: stuck in joining  
- PYTHIA Error in Pythia::next: hadronLevel failed; try again  
- PYTHIA Error in SimpleSpaceShower::pT2nearThreshold: stuck in loop  
-
- Pythia::next(): 1000 events have been generated 
-
- Pythia::next(): 2000 events have been generated 
- PYTHIA Warning in Pythia::check: not quite matched particle energy/momentum/mass  
- PYTHIA Warning in SimpleSpaceShower::pT2nextQCD: small daughter PDF  
-
- Pythia::next(): 3000 events have been generated 
- PYTHIA Warning in MultipartonInteractions::pTnext: weight above unity  
-
- Pythia::next(): 4000 events have been generated 
-
- Pythia::next(): 5000 events have been generated 
-
- Pythia::next(): 6000 events have been generated 
- PYTHIA Warning in SimpleSpaceShower::pT2nextQCD: weight above unity  
-
- Pythia::next(): 7000 events have been generated 
-
- Pythia::next(): 8000 events have been generated 
-
- Pythia::next(): 9000 events have been generated 
-
- Pythia::next(): 10000 events have been generated 
-
- Pythia::next(): 11000 events have been generated 
-
- Pythia::next(): 12000 events have been generated 
-
- Pythia::next(): 13000 events have been generated 
-
- Pythia::next(): 14000 events have been generated 
-
- Pythia::next(): 15000 events have been generated 
-
- Pythia::next(): 16000 events have been generated 
-
- Pythia::next(): 17000 events have been generated 
-
- Pythia::next(): 18000 events have been generated 
-
- Pythia::next(): 19000 events have been generated 
-
- Pythia::next(): 20000 events have been generated 
- PYTHIA Error in StringFragmentation::fragmentToJunction: caught in junction flavour loop  
-
- Pythia::next(): 21000 events have been generated 
-
- Pythia::next(): 22000 events have been generated 
-
- Pythia::next(): 23000 events have been generated 
-
- Pythia::next(): 24000 events have been generated 
-
- Pythia::next(): 25000 events have been generated 
-
- Pythia::next(): 26000 events have been generated 
-
- Pythia::next(): 27000 events have been generated 
-
- Pythia::next(): 28000 events have been generated 
-
- Pythia::next(): 29000 events have been generated 
-
- Pythia::next(): 30000 events have been generated 
-
- Pythia::next(): 31000 events have been generated 
-
- Pythia::next(): 32000 events have been generated 
-
- Pythia::next(): 33000 events have been generated 
-
- Pythia::next(): 34000 events have been generated 
-
- Pythia::next(): 35000 events have been generated 
- PYTHIA Warning in HadronWidths::pickMasses: angular momentum and running widths not used  
-
- Pythia::next(): 36000 events have been generated 
-
- Pythia::next(): 37000 events have been generated 
-
- Pythia::next(): 38000 events have been generated 
-
- Pythia::next(): 39000 events have been generated 
-
- Pythia::next(): 40000 events have been generated 
-
- Pythia::next(): 41000 events have been generated 
-
- Pythia::next(): 42000 events have been generated 
-
- Pythia::next(): 43000 events have been generated 
-
- Pythia::next(): 44000 events have been generated 
-
- Pythia::next(): 45000 events have been generated 
-
- Pythia::next(): 46000 events have been generated 
-
- Pythia::next(): 47000 events have been generated 
-
- Pythia::next(): 48000 events have been generated 
-
- Pythia::next(): 49000 events have been generated 
-
- Pythia::next(): 50000 events have been generated 
-
- Pythia::next(): 51000 events have been generated 
- PYTHIA Error in Pythia::check: energy-momentum not conserved  
- PYTHIA Error in Pythia::next: check of event revealed problems  
-
- Pythia::next(): 52000 events have been generated 
-
- Pythia::next(): 53000 events have been generated 
-
- Pythia::next(): 54000 events have been generated 
-
- Pythia::next(): 55000 events have been generated 
-
- Pythia::next(): 56000 events have been generated 
-
- Pythia::next(): 57000 events have been generated 
-
- Pythia::next(): 58000 events have been generated 
-
- Pythia::next(): 59000 events have been generated 
-
- Pythia::next(): 60000 events have been generated 
-
- Pythia::next(): 61000 events have been generated 
-
- Pythia::next(): 62000 events have been generated 
-
- Pythia::next(): 63000 events have been generated 
- PYTHIA Warning in TauDecays::decay: unknown correlated tau production, assuming from unpolarized photon  
-
- Pythia::next(): 64000 events have been generated 
-
- Pythia::next(): 65000 events have been generated 
-
- Pythia::next(): 66000 events have been generated 
-
- Pythia::next(): 67000 events have been generated 
-
- Pythia::next(): 68000 events have been generated 
-
- Pythia::next(): 69000 events have been generated 
-
- Pythia::next(): 70000 events have been generated 
-
- Pythia::next(): 71000 events have been generated 
-
- Pythia::next(): 72000 events have been generated 
-
- Pythia::next(): 73000 events have been generated 
-
- Pythia::next(): 74000 events have been generated 
-
- Pythia::next(): 75000 events have been generated 
-
- Pythia::next(): 76000 events have been generated 
-
- Pythia::next(): 77000 events have been generated 
-
- Pythia::next(): 78000 events have been generated 
-
- Pythia::next(): 79000 events have been generated 
-
- Pythia::next(): 80000 events have been generated 
-
- Pythia::next(): 81000 events have been generated 
-
- Pythia::next(): 82000 events have been generated 
-
- Pythia::next(): 83000 events have been generated 
-
- Pythia::next(): 84000 events have been generated 
-
- Pythia::next(): 85000 events have been generated 
-
- Pythia::next(): 86000 events have been generated 
-
- Pythia::next(): 87000 events have been generated 
-
- Pythia::next(): 88000 events have been generated 
-
- Pythia::next(): 89000 events have been generated 
-
- Pythia::next(): 90000 events have been generated 
-
- Pythia::next(): 91000 events have been generated 
-
- Pythia::next(): 92000 events have been generated 
-
- Pythia::next(): 93000 events have been generated 
-
- Pythia::next(): 94000 events have been generated 
-
- Pythia::next(): 95000 events have been generated 
-
- Pythia::next(): 96000 events have been generated 
-
- Pythia::next(): 97000 events have been generated 
-
- Pythia::next(): 98000 events have been generated 
-
- Pythia::next(): 99000 events have been generated 
-
- Pythia::next(): 100000 events have been generated 
- PYTHIA Abort from Pythia::next: reached end of Les Houches Events File  
-size pt_l = 100000
-size pt_lbar = 100000
-size pt_l_lead = 100000
-size pt_l_trail = 100000
-size pt_ll = 100000
-size h_pt_l = 100000
-size h_pt_lbar = 100000
-size h_pt_l_lead = 100000
-size h_pt_l_trail = 100000
-size h_pt_ll = 100000
+#--------------------------------------------------------------------------
+#                         FastJet release 3.4.0
+#                 M. Cacciari, G.P. Salam and G. Soyez                  
+#     A software package for jet finding and analysis at colliders      
+#                           http://fastjet.fr                           
+#	                                                                      
+# Please cite EPJC72(2012)1896 [arXiv:1111.6097] if you use this package
+# for scientific work and optionally PLB641(2006)57 [hep-ph/0512210].   
+#                                                                       
+# FastJet is provided without warranty under the GNU GPL v2 or higher.  
+# It uses T. Chan's closest pair algorithm, S. Fortune's Voronoi code
+# and 3rd party plugin jet algorithms. See COPYING file for details.
+#--------------------------------------------------------------------------
+Ran Longitudinally invariant anti-kt algorithm with R = 0.4 and E scheme recombination
+Strategy adopted by FastJet was N2Tiled
+
+Et_tot = 1498.164
+    0     -0.54287333      2.60113999    675.19272607
+    1     -1.42643964      5.85661662    608.38557112
+    2     -1.99880350      5.20909690     94.39467050
+    3     -0.32942181      4.97497538     62.47344388
+    4     -0.90175452      2.24657413     57.71782839
+Et_tot = 802.003
+    0      2.39886576      2.85844466    320.70292585
+    1      0.04599270      5.99298218    229.21116110
+    2     -0.67131639      0.24679274     92.81003084
+    3     -0.41884835      5.69172025     84.24749030
+    4      1.75889530      2.63892772     43.78540748
+    5      2.35473158      3.58659658     31.24637609
+Et_tot = 699.921
+    0     -2.10481162      4.74507093    235.46887097
+    1      1.01026865      1.65335178    204.75108439
+    2      1.61259228      0.95569031    108.42199600
+    3      0.55928283      4.65714568     61.98496110
+    4      1.54341754      2.17222032     46.61413789
+    5     -1.31274721      3.82456329     42.67989419
+Et_tot = 927.577
+    0      1.19876689      5.72660808    389.50320713
+    1      1.40095304      1.49354879    180.12045425
+    2     -1.32415752      2.75197294    127.43040465
+    3     -2.19693500      3.71935048    100.48919370
+    4      2.11582103      3.01812752     47.81919625
+    5     -1.67187726      2.45016561     41.73619931
+    6     -1.54455786      3.93522881     40.47882882
+Et_tot = 1141.099
+    0      0.42804519      6.04991132    497.50511162
+    1     -1.01792509      3.07464160    463.45799473
+    2      0.26585054      0.42764208     85.40264058
+    3     -1.46690990      2.67932628     58.92689002
+    4      0.14791814      2.80277832     35.80627155
+Et_tot = 1594.860
+    0     -0.26307128      4.31869542    448.44660927
+    1     -1.29097625      1.18434392    366.11000948
+    2     -0.15192961      3.50035873    208.87805071
+    3      2.01762095      6.28160497    169.95868639
+    4      0.31598129      3.80559489     96.66844043
+    5      1.62909691      0.63903390     93.61593785
+    6      0.93831080      0.18593136     79.55600628
+    7     -2.18277281      2.27651456     63.91881168
+    8     -2.96243486      6.05639424     34.81569419
+    9     -1.61139118      2.29587713     32.89215610
+Et_tot = 1088.581
+    0      0.61453009      0.14358446    429.04390721
+    1     -0.95069110      3.45493748    253.65265599
+    2     -1.48746533      3.62626431    189.35953640
+    3      0.72240765      0.76788634    129.85584187
+    4     -1.51763279      2.86722017     52.80083013
+    5     -2.41105758      2.37739229     33.86826222
+Et_tot = 1625.023
+    0      0.42617394      6.28155442    580.52966590
+    1     -0.66062124      2.88251754    323.93818066
+    2     -0.25917275      2.83557668    287.30443465
+    3     -0.34715399      3.56322866    174.91729024
+    4      2.28575795      0.00311366    123.85456910
+    5      0.25813528      5.43722799     57.53441496
+    6     -4.00559262      4.00982756     42.57006379
+    7     -1.98626158      6.21439394     34.37394120
+Et_tot = 541.796
+    0     -0.97583787      5.44201196    190.26466781
+    1      2.08682799      2.41027658    158.96013242
+    2     -1.27059708      0.35189248    111.54770414
+    3     -4.42557618      3.58965044     41.41261307
+    4      2.01734367      1.51936172     39.61100429
+Et_tot = 731.603
+    0     -1.74067850      4.38807019    277.91153346
+    1     -0.07551421      0.63803609    167.00921284
+    2      1.77724574      2.70667854     92.80967025
+    3     -0.76796020      0.63720956     90.49366616
+    4      1.57580535      2.15023025     52.80905300
+    5      0.47957258      0.91740936     50.57035593
+Et_tot = 1145.679
+    0      0.29863693      5.02837576    282.68699251
+    1     -1.01171538      2.05449665    232.96116769
+    2      0.60173253      4.71967696    216.70623697
+    3     -0.92693190      1.44549779    173.73561392
+    4     -1.32389297      1.80009898    170.91318067
+    5      1.06107872      5.17261596     68.67538770
+Et_tot = 1421.896
+    0     -1.59704583      1.37899966    584.60693638
+    1     -1.60258311      4.74095911    423.57414259
+    2     -1.76877311      4.36166290    255.67786240
+    3     -1.37598288      2.03580548    118.63573671
+    4     -1.41262236      5.12951662     39.40152553
+Et_tot = 707.969
+    0      1.29299975      0.71695793    150.89972648
+    1     -1.28507188      2.91643855    122.55298574
+    2     -1.39136050      4.05702957    121.82735803
+    3      1.38647258      5.99705811    118.85027783
+    4     -0.97663212      3.37287685    116.78421427
+    5      1.88843538      0.42858727     77.05477361
+Et_tot = 914.082
+    0     -0.81232860      0.05397694    293.15027689
+    1      1.93792356      3.41520211    247.46813722
+    2     -0.52904931      1.85014227    143.09657161
+    3      1.91262076      4.11983719     96.31904071
+    4     -1.23524612      6.19695255     87.54595856
+    5     -2.82141557      3.24622478     46.50178220
+Et_tot = 908.899
+    0     -1.73443842      4.00193087    231.73559309
+    1      1.67869708      1.19102884    228.79140365
+    2      0.37574968      6.05522715    122.09885368
+    3      1.03390022      1.86254874    107.43624582
+    4     -0.84375941      4.66466111     89.13177460
+    5     -1.84080384      2.89368758     56.24723359
+    6     -1.68485936      4.99874692     39.76058984
+    7      1.74739780      4.49524606     33.69730880
+Et_tot = 1902.230
+    0     -0.29238003      0.42073631    776.95020491
+    1     -0.19766653      3.67342050    688.87076816
+    2      0.39609398      3.08818088    187.21526345
+    3      1.99359371      1.34031706    127.31597084
+    4     -0.95430645      6.23189009     44.22050083
+    5      0.90237751      3.38795975     38.88973346
+    6     -0.02524977      4.86734327     38.76747525
+Et_tot = 985.863
+    0     -0.97392164      4.85801696    315.21730125
+    1      1.83414555      1.67541667    242.37910391
+    2      1.62861463      2.28923383    156.49708645
+    3     -1.01430956      5.35008970    124.13902051
+    4      1.32995360      1.67842966     99.63883764
+    5     -0.02052094      5.01399355     47.99122324
+Et_tot = 697.829
+    0     -3.08631962      6.06604833    137.27441867
+    1      1.25473417      1.87457466    135.17021045
+    2     -0.17130144      3.95176538     93.91996534
+    3      0.00445531      1.72022127     81.58449739
+    4     -2.72968444      5.41698281     80.03368331
+    5     -1.63982578      5.27541059     64.39567296
+    6      0.93911614      2.40258123     58.96872373
+    7     -1.54947524      3.52405337     46.48183627
+Et_tot = 1469.894
+    0     -0.71900742      5.48412514    615.28365259
+    1      1.33602470      2.53556080    587.51120699
+    2      1.22212361      1.99610749    105.54580756
+    3     -3.95492194      0.80078228    100.67574805
+    4     -1.29720114      5.63822505     60.87719007
+Et_tot = 835.755
+    0     -0.11989502      4.29374161    233.25389909
+    1     -1.94042381      1.96648358    232.02175566
+    2     -1.89467629      0.19523741    118.35730545
+    3      1.18082886      0.23663400    100.28874565
+    4     -0.40907873      3.78924503     60.94064659
+    5     -0.42006179      4.94896601     58.05282887
+    6     -0.02636840      3.20846209     32.84013701
+size pt_l = 20
+size pt_lbar = 20
+size pt_l_lead = 20
+size pt_l_trail = 20
+size pt_ll = 20
+size h_pt_l = 20
+size h_pt_lbar = 20
+size h_pt_l_lead = 20
+size h_pt_l_trail = 20
+size h_pt_ll = 20
 
  *-------  PYTHIA Event and Cross Section Statistics  -------------------------------------------------------------*
  |                                                                                                                 |
@@ -2156,10 +2103,10 @@ size h_pt_ll = 100000
  |                                                    |                                   |                        |
  |-----------------------------------------------------------------------------------------------------------------|
  |                                                    |                                   |                        |
- | Les Houches User Process(es)                  9999 |      100000     100000     100000 |   3.230e-11  0.000e+00 |
- |    ... whereof user classification code          1 |      100000     100000     100000 |                        | 
+ | Les Houches User Process(es)                  9999 |          20         20         20 |   3.234e-11  0.000e+00 |
+ |    ... whereof user classification code          1 |          20         20         20 |                        | 
  |                                                    |                                   |                        |
- | sum                                                |      100000     100000     100000 |   3.230e-11  0.000e+00 |
+ | sum                                                |          20         20         20 |   3.234e-11  0.000e+00 |
  |                                                                                                                 |
  *-------  End PYTHIA Event and Cross Section Statistics ----------------------------------------------------------*
 
@@ -2167,27 +2114,10 @@ size h_pt_ll = 100000
  |                                                                                                                 | 
  |  times   message                                                                                                | 
  |                                                                                                                 | 
- |      1   Abort from Pythia::next: reached end of Les Houches Events File                                        | 
- |      1   Error in Pythia::check: energy-momentum not conserved                                                  | 
- |      1   Error in Pythia::next: check of event revealed problems                                                | 
- |     88   Error in Pythia::next: hadronLevel failed; try again                                                   | 
- |     59   Error in SimpleSpaceShower::pT2nearThreshold: stuck in loop                                            | 
- |     84   Error in StringFragmentation::fragment: stuck in joining                                               | 
- |      4   Error in StringFragmentation::fragmentToJunction: caught in junction flavour loop                      | 
  |      1   Info from SLHAinterface::initSLHA: No MODSEL found, keeping internal SUSY switched off                 | 
  |      1   Info from SLHAinterface::initSLHA: importing MASS entries                                              | 
- |      7   Warning in HadronWidths::pickMasses: angular momentum and running widths not used                      | 
- |      3   Warning in MultipartonInteractions::pTnext: weight above unity                                         | 
- |    661   Warning in Pythia::check: energy-momentum not quite conserved                                          | 
- |     24   Warning in Pythia::check: not quite matched particle energy/momentum/mass                              | 
  |      1   Warning in SLHAinterface::initSLHA: ignoring DECAY tables                                              | 
  |      1   Warning in SLHAinterface::initSLHA: ignoring MASS entries                                              | 
  |      1   Warning in SLHAinterface::initSLHA: ignoring empty DECAY tables                                        | 
- |      8   Warning in SimpleSpaceShower::pT2nextQCD: small daughter PDF                                           | 
- |      5   Warning in SimpleSpaceShower::pT2nextQCD: weight above unity                                           | 
- |   1197   Warning in SimpleTimeShower::findMEcorr: ME weight above PS one                                        | 
- |    460   Warning in SimpleTimeShower::pTnext: negative dipole mass.                                             | 
- |    478   Warning in StringFragmentation::fragmentToJunction: bad convergence junction rest frame                | 
- |      3   Warning in TauDecays::decay: unknown correlated tau production, assuming from unpolarized photon       | 
  |                                                                                                                 | 
  *-------  End PYTHIA Error and Warning Messages Statistics  ------------------------------------------------------* 

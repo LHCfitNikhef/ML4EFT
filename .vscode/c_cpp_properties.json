@@ -3,6 +3,18 @@
         {
             "name": "Linux",
             "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/packages/pythia8308/include/Pythia8"
+            ],
+            "defines": [],
+            "compilerPath": "/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        },
+        {
+            "name": "Test",
+            "includePath": [
                 "${workspaceFolder}/**"
             ],
             "defines": [],

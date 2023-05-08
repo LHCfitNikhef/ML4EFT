@@ -275,13 +275,13 @@ CCDEPMODE = depmode=gcc3
 CFLAGS = -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include
 CGAL_CPPFLAGS = 
 CGAL_LIBS = 
-CONFIGURE_INVOCATION = ./configure  '--prefix=/data/theorie/pherbsch/ML4EFT/packages/fastjet-3.4.0/fastjet-install' 'build_alias=x86_64-conda-linux-gnu' 'host_alias=x86_64-conda-linux-gnu' 'CC=/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/x86_64-conda-linux-gnu-cc' 'CFLAGS=-march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include' 'LDFLAGS=-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/data/theorie/pherbsch/miniconda3/envs/madgraph/lib -Wl,-rpath-link,/data/theorie/pherbsch/miniconda3/envs/madgraph/lib -L/data/theorie/pherbsch/miniconda3/envs/madgraph/lib' 'CPPFLAGS=-DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include' 'CPP=/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/x86_64-conda-linux-gnu-cpp'
+CONFIGURE_INVOCATION = ./configure  '--prefix=/data/theorie/pherbsch/ML4EFT/packages/fastjet-install' 'build_alias=x86_64-conda-linux-gnu' 'host_alias=x86_64-conda-linux-gnu' 'CC=/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/x86_64-conda-linux-gnu-cc' 'CFLAGS=-march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include' 'LDFLAGS=-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/data/theorie/pherbsch/miniconda3/envs/madgraph/lib -Wl,-rpath-link,/data/theorie/pherbsch/miniconda3/envs/madgraph/lib -L/data/theorie/pherbsch/miniconda3/envs/madgraph/lib' 'CPPFLAGS=-DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include' 'CPP=/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/x86_64-conda-linux-gnu-cpp'
 CONFIG_CXXFLAGS = 
 CONFIG_LIBS =  -lm 
 CONFIG_LIBS_PLUGINS =  -lfastjetplugins  -lsiscone_spherical -lsiscone
 CONFIG_LIBS_PLUGINS_STATIC =  ${installationdir}/lib/libfastjetplugins.a  ${installationdir}/lib/libsiscone.a ${installationdir}/lib/libsiscone_spherical.a
 CONFIG_RUNPATH_FLAGS = -Wl,--enable-new-dtags
-CONFIG_SUMMARY = Configuration summary:\n----------------------\n  Installation directory     /data/theorie/pherbsch/ML4EFT/packages/fastjet-3.4.0/fastjet-install\n  Shared libraries           yes\n  Static libraries           yes\n  Debug flag                 yes\n  CGAL support               no\n  Thread safety              no\n  Plugins: EECambridge       yes\n           Jade              yes\n           NestedDefs        yes\n           SISCone           yes\n           CDFCones          yes\n           D0RunICone        no\n           D0RunIICone       no\n           ATLASCone         no\n           CMSIterativeCone  no\n           PxCone            no\n           TrackJet          no\n           GridJet           yes\n  Monolithic plugins lib     yes\n  Python interface           no\n  Swig python generator      no\n
+CONFIG_SUMMARY = Configuration summary:\n----------------------\n  Installation directory     /data/theorie/pherbsch/ML4EFT/packages/fastjet-install\n  Shared libraries           yes\n  Static libraries           yes\n  Debug flag                 yes\n  CGAL support               no\n  Thread safety              no\n  Plugins: EECambridge       yes\n           Jade              yes\n           NestedDefs        yes\n           SISCone           yes\n           CDFCones          yes\n           D0RunICone        no\n           D0RunIICone       no\n           ATLASCone         no\n           CMSIterativeCone  no\n           PxCone            no\n           TrackJet          no\n           GridJet           yes\n  Monolithic plugins lib     yes\n  Python interface           no\n  Swig python generator      no\n
 CPP = /data/theorie/pherbsch/miniconda3/envs/madgraph/bin/x86_64-conda-linux-gnu-cpp
 CPPFLAGS = -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include
 CXX = x86_64-conda-linux-gnu-g++
@@ -403,7 +403,7 @@ oldincludedir = /usr/include
 pdfdir = ${docdir}
 pkgpyexecdir = 
 pkgpythondir = 
-prefix = /data/theorie/pherbsch/ML4EFT/packages/fastjet-3.4.0/fastjet-install
+prefix = /data/theorie/pherbsch/ML4EFT/packages/fastjet-install
 program_transform_name = s,x,x,
 psdir = ${docdir}
 pyexecdir = 

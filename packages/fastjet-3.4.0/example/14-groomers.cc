@@ -18,7 +18,7 @@
 //STARTHEADER
 // $Id$
 //
-// Copyright (c) 2005-2018, Matteo Cacciari, Gavin P. Salam and Gregory Soyez
+// Copyright (c) 2005-2018, Matteo Cacciari, Gavin P. Salam and Gregory Soyez.
 //
 //----------------------------------------------------------------------
 // This file is part of FastJet.
@@ -55,7 +55,7 @@
 using namespace fastjet;
 using namespace std;
 
-/// an example program showing how to use Filter and Pruner in FastJet
+/// an example program showing how to use Filter and Pruner in FastJet.
 int main(){
   // read in input particles
   //----------------------------------------------------------

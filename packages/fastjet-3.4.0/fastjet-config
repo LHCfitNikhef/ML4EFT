@@ -9,9 +9,9 @@
 
 # the list of plugins is dynamic so we need the following
 # line to deal with the static lib link
-prefix=/data/theorie/pherbsch/ML4EFT/packages/fastjet-3.4.0/fastjet-install
+prefix=/data/theorie/pherbsch/ML4EFT/packages/fastjet-install
 exec_prefix=${prefix}
-installationdir=/data/theorie/pherbsch/ML4EFT/packages/fastjet-3.4.0/fastjet-install
+installationdir=/data/theorie/pherbsch/ML4EFT/packages/fastjet-install
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
@@ -396,9 +396,9 @@ case $found_query in
 	echo ""
 	echo "Configuration invocation was"
 	echo ""
-	echo "  ./configure  '--prefix=/data/theorie/pherbsch/ML4EFT/packages/fastjet-3.4.0/fastjet-install' 'build_alias=x86_64-conda-linux-gnu' 'host_alias=x86_64-conda-linux-gnu' 'CC=/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/x86_64-conda-linux-gnu-cc' 'CFLAGS=-march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include' 'LDFLAGS=-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/data/theorie/pherbsch/miniconda3/envs/madgraph/lib -Wl,-rpath-link,/data/theorie/pherbsch/miniconda3/envs/madgraph/lib -L/data/theorie/pherbsch/miniconda3/envs/madgraph/lib' 'CPPFLAGS=-DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include' 'CPP=/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/x86_64-conda-linux-gnu-cpp'"
+	echo "  ./configure  '--prefix=/data/theorie/pherbsch/ML4EFT/packages/fastjet-install' 'build_alias=x86_64-conda-linux-gnu' 'host_alias=x86_64-conda-linux-gnu' 'CC=/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/x86_64-conda-linux-gnu-cc' 'CFLAGS=-march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include' 'LDFLAGS=-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/data/theorie/pherbsch/miniconda3/envs/madgraph/lib -Wl,-rpath-link,/data/theorie/pherbsch/miniconda3/envs/madgraph/lib -L/data/theorie/pherbsch/miniconda3/envs/madgraph/lib' 'CPPFLAGS=-DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /data/theorie/pherbsch/miniconda3/envs/madgraph/include' 'CPP=/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/x86_64-conda-linux-gnu-cpp'"
 	echo ""
-	printf "Configuration summary:\n----------------------\n  Installation directory     /data/theorie/pherbsch/ML4EFT/packages/fastjet-3.4.0/fastjet-install\n  Shared libraries           yes\n  Static libraries           yes\n  Debug flag                 yes\n  CGAL support               no\n  Thread safety              no\n  Plugins: EECambridge       yes\n           Jade              yes\n           NestedDefs        yes\n           SISCone           yes\n           CDFCones          yes\n           D0RunICone        no\n           D0RunIICone       no\n           ATLASCone         no\n           CMSIterativeCone  no\n           PxCone            no\n           TrackJet          no\n           GridJet           yes\n  Monolithic plugins lib     yes\n  Python interface           no\n  Swig python generator      no\n"
+	printf "Configuration summary:\n----------------------\n  Installation directory     /data/theorie/pherbsch/ML4EFT/packages/fastjet-install\n  Shared libraries           yes\n  Static libraries           yes\n  Debug flag                 yes\n  CGAL support               no\n  Thread safety              no\n  Plugins: EECambridge       yes\n           Jade              yes\n           NestedDefs        yes\n           SISCone           yes\n           CDFCones          yes\n           D0RunICone        no\n           D0RunIICone       no\n           ATLASCone         no\n           CMSIterativeCone  no\n           PxCone            no\n           TrackJet          no\n           GridJet           yes\n  Monolithic plugins lib     yes\n  Python interface           no\n  Swig python generator      no\n"
 	;;
     pythonpath)
         # we have potentially two path to include:

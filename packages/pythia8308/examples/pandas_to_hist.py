@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Read the data from the CSV file into a pandas dataframe
-df = pd.read_csv('kinematics_vector_test_ctu8.csv')
+df = pd.read_csv('kinematics_vector_with_b_jets.csv')
 
 # region columns
 pt_l = df["pt_l"]
@@ -23,7 +23,12 @@ h_eta_l = df["h_eta_l"]
 h_eta_lbar = df["h_eta_lbar"]
 h_eta_l_lead = df["h_eta_l_lead"]
 h_eta_l_trail = df["h_eta_l_trail"]
-
+b_pt_lead = df['b_pt_lead']
+b_pt_trail = df["b_pt_trail"]
+pt_bbar = df["pt_bbar"]
+b_eta_lead = df["b_eta_lead"]
+b_eta_trail = df["b_eta_trail"]
+m_bbar = df["m_bbar"]
 
 # endregion columns 
 
@@ -33,6 +38,11 @@ max_pt_lbar = max(pt_lbar.max(), h_pt_lbar.max())
 max_pt_l_lead = max(pt_l_lead.max(), h_pt_l_lead.max())
 max_pt_l_trail = max(pt_l_trail.max(), h_pt_l_trail.max())
 max_pt_ll = max(pt_ll.max(), h_pt_ll.max())
+max_b_pt_lead = max(b_pt_lead)
+max_b_pt_trail = max(b_pt_trail)
+max_pt_bbar = max(pt_bbar)
+max_m_bbar = max(m_bbar)
+
 # endregion max
 
 # region pt_l
@@ -187,6 +197,105 @@ plt.savefig("eta_l_trail_vs_h_eta_l_trail_test.png")
 plt.close()
 # endregion eta_l_trail
 
+# region b_pt_lead
+plt.hist(b_pt_lead, bins=50, histtype = 'step' ,edgecolor = 'blue' , fill = False, range = (50, max_b_pt_lead), label = 'b_pt_lead')
+# plt.hist(h_b_pt_lead, bins=50, histtype = 'step' ,edgecolor = 'orange' , fill = False, range = (50, max_b_pt_lead), label = 'h_b_pt_lead')
+
+plt.legend(loc='upper right')
+# Add axis labels and a title
+plt.xlabel('pt')
+plt.ylabel('Count')
+plt.title('Histogram of b_pt_lead and h_b_pt_lead')
+plt.yscale('log')
+
+# Display the plot
+plt.savefig("b_pt_lead_vs_h_b_pt_lead.png")
+plt.close()
+# endregion b_pt_lead
+
+# region b_pt_trail
+plt.hist(b_pt_trail, bins=50, histtype = 'step' ,edgecolor = 'blue' , fill = False, range = (50, max_b_pt_trail), label = 'b_pt_trail')
+# plt.hist(h_b_pt_trail, bins=50, histtype = 'step' ,edgecolor = 'orange' , fill = False, range = (50, max_b_pt_trail), label = 'h_b_pt_trail')
+
+plt.legend(loc='upper right')
+# Add axis labels and a title
+plt.xlabel('pt')
+plt.ylabel('Count')
+plt.title('Histogram of b_pt_trail and h_b_pt_trail')
+plt.yscale('log')
+
+# Display the plot
+plt.savefig("b_pt_trail_vs_h_b_pt_trail.png")
+plt.close()
+# endregion b_pt_trail
+
+# region pt_bbar
+plt.hist(pt_bbar, bins=50, histtype = 'step' ,edgecolor = 'blue' , fill = False, range = (50, max_pt_bbar), label = 'pt_bbar')
+# plt.hist(h_pt_bbar, bins=50, histtype = 'step' ,edgecolor = 'orange' , fill = False, range = (50, max_pt_bbar), label = 'h_pt_bbar')
+
+plt.legend(loc='upper right')
+# Add axis labels and a title
+plt.xlabel('pt')
+plt.ylabel('Count')
+plt.title('Histogram of pt_bbar and h_pt_bbar')
+plt.yscale('log')
+
+# Display the plot
+plt.savefig("pt_bbar_vs_h_pt_bbar.png")
+plt.close()
+# endregion pt_bbar
+
+# region m_bbar
+plt.hist(m_bbar, bins=50, histtype = 'step' ,edgecolor = 'blue' , fill = False, range = (50, max_m_bbar), label = 'm_bbar')
+# plt.hist(h_m_bbar, bins=50, histtype = 'step' ,edgecolor = 'orange' , fill = False, range = (50, max_m_bbar), label = 'h_m_bbar')
+
+plt.legend(loc='upper right')
+# Add axis labels and a title
+plt.xlabel('pt')
+plt.ylabel('Count')
+plt.title('Histogram of m_bbar and h_m_bbar')
+plt.yscale('log')
+
+# Display the plot
+plt.savefig("m_bbar_vs_h_m_bbar.png")
+plt.close()
+# endregion m_bbar
+
+# region b_eta_lead
+# Plot a histogram of the 'pt_ll' column
+plt.hist(b_eta_lead, bins=50, histtype = 'step' ,edgecolor = 'blue' , fill = False, range = (-2.5,2.5), label = "b_eta_lead")
+# plt.hist(h_b_eta_lead, bins=50, histtype = 'step' ,edgecolor = 'orange' , fill = False, range = (-2.5,2.5), label = "h_b_eta_lead")
+
+
+# Add axis labels and a title
+plt.legend(loc='upper right')
+plt.xlabel('eta')
+plt.ylabel('Count')
+plt.title('Histogram of b_eta_lead and h_b_eta_lead')
+plt.yscale('log')
+
+# Display the plot
+plt.savefig("b_eta_lead_vs_h_b_eta_lead_test.png")
+plt.close()
+# endregion b_eta_lead
+
+# region b_eta_trail
+# Plot a histogram of the 'pt_ll' column
+plt.hist(b_eta_trail, bins=50, histtype = 'step' ,edgecolor = 'blue' , fill = False, range = (-2.5,2.5), label = "b_eta_trail")
+# plt.hist(h_b_eta_trail, bins=50, histtype = 'step' ,edgecolor = 'orange' , fill = False, range = (-2.5,2.5), label = "h_b_eta_trail")
+
+
+# Add axis labels and a title
+plt.legend(loc='upper right')
+plt.xlabel('eta')
+plt.ylabel('Count')
+plt.title('Histogram of b_eta_trail and h_b_eta_trail')
+plt.yscale('log')
+
+# Display the plot
+plt.savefig("b_eta_trail_vs_h_b_eta_trail_test.png")
+plt.close()
+# endregion b_eta_trail
 
 
 
