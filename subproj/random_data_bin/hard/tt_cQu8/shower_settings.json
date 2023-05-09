@@ -1,0 +1,16 @@
+{
+    "base_directory": "/data/theorie/jthoeve/ML4EFT_events/",
+    "output_directory": "../random_data_bin",
+    "cpp_executable": "./shower_code/./clean_shower_big_data_groom",
+    "num_jobs_max": 50,
+    "num_events_per_job": 100000,
+    "coefficient": "cQu8",
+    "zcut_beta": [
+        "0.2,0.5"
+    ]
+}
+
+
+
+
+

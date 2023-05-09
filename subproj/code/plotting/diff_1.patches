@@ -1,0 +1,135 @@
+diff --git a/.gitignore b/.gitignore
+index a0e0c518..05c946c2 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -348,5 +348,4 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
+ /data/theorie/pherbsch/ML4EFT/packages/
+ /data/theorie/pherbsch/ML4EFT/subproj/random_plot_bin/
+ /data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/
+-/data/theorie/pherbsch/ML4EFT/subproj/output/
+-/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/shower/
+\ No newline at end of file
++/data/theorie/pherbsch/ML4EFT/subproj/output/
+\ No newline at end of file
+diff --git a/subproj/code/cluster/generic_init_jobs.sh b/subproj/code/cluster/generic_init_jobs.sh
+index b7444e02..3bb85ccb 100755
+--- a/subproj/code/cluster/generic_init_jobs.sh
++++ b/subproj/code/cluster/generic_init_jobs.sh
+@@ -3,11 +3,11 @@
+ cluster_message_err_dir="./cluster_message_output/err/"
+ cluster_message_output_dir="./cluster_message_output/out/"
+ 
+-coefficient_file="../parse_lists/parse_sm.txt"
+-zcut_beta="0.8;1"
++coefficient_file="../parse_lists/coefficient_parse_list.txt"
++zcut_beta="0.2;0.5"
+ 
+ while IFS= read -r coefficient || [ -n "$coefficient" ]; do
+     # ./job_list.sh "$coefficient"
+     # cat ../runcards/shower/shower_settings.json
+-    qsub -q short -l walltime=00:15:00 -o "${cluster_message_output_dir}" -e "${cluster_message_err_dir}" -v "coefficient=$coefficient,zcut_beta=$zcut_beta" job_list.sh
++    qsub -q generic -l walltime=06:00:00 -o "${cluster_message_output_dir}" -e "${cluster_message_err_dir}" -v "coefficient=$coefficient,zcut_beta=$zcut_beta" job_list.sh
+ done < "$coefficient_file"
+\ No newline at end of file
+diff --git a/subproj/code/cluster/job_list.sh b/subproj/code/cluster/job_list.sh
+index 111a786a..a6563c21 100755
+--- a/subproj/code/cluster/job_list.sh
++++ b/subproj/code/cluster/job_list.sh
+@@ -1,13 +1,36 @@
+ #!/bin/sh
+-export OMP_STACKSIZE=16000
+-export OMP_NUM_THREADS=4
+-export KMP_BLOCKTIME=0
+-export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
++# export OMP_STACKSIZE=16000
++# export OMP_NUM_THREADS=4
++# export KMP_BLOCKTIME=0
++# export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
++
++#maybe the problem on the cluster is with my conda env, let's activate it explicitly
++# source /data/theorie/pherbsch/miniconda3/condabin/conda.sh
++# conda activate madgraph
++
+ 
+ # coefficient="$1"
+ # zcut_beta="$2"
+ coefficient="$coefficient"
+ zcut_beta="$zcut_beta"
+ 
++# echo "Job list arguments:"
++# echo "Coefficient: $coefficient"
++# echo "Zcut_beta: $zcut_beta"
++
++# cd /data/theorie/pherbsch/ML4EFT/subproj/code/
++
++# Update the runcard with the coefficient given by the init file. 
++# sed searches for the sequence of the coefficient and replaces it with the new coefficient
++
++# sed -i "s/\"coefficient\": \".*\"/\"coefficient\": \"$coefficient\"/" ./runcards/shower/shower_settings.json
++
+ # echo "Executing command: python /data/theorie/pherbsch/ML4EFT/subproj/code/w_runcard_lhe_parser.py $coefficient $zcut_beta"
+-python /data/theorie/pherbsch/ML4EFT/subproj/code/w_runcard_lhe_parser_groom.py $coefficient $zcut_beta
++python /data/theorie/pherbsch/ML4EFT/subproj/code/w_runcard_lhe_parser.py $coefficient $zcut_beta
++
++
++# cat ./runcards/shower/shower_settings.json
++# # Print conda environment information only once
++# if [ ! -f ../random_data_bin/test/error/conda_list.txt ]; then
++#     conda list > ../random_data_bin/test/error/conda_list.txt
++# fi
+\ No newline at end of file
+diff --git a/subproj/code/plotting/total_hist.py b/subproj/code/plotting/total_hist.py
+index d4a216b7..e438def8 100644
+--- a/subproj/code/plotting/total_hist.py
++++ b/subproj/code/plotting/total_hist.py
+@@ -11,11 +11,11 @@ import ml4eft.core.classifier as classifier
+ import ml4eft.analyse.analyse as analyse
+ import ml4eft.plotting.features as features
+ 
+-df_hard = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/hard/tt_sm/zcut_0.0beta_0.5job_0.pkl.gz', compression='infer')
+-df1 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/event/tt_sm/zcut_0.2beta_0.5job_0.pkl.gz', compression='infer')
+-df2 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/event/tt_sm/zcut_0.3beta_0.5job_0.pkl.gz', compression='infer')
+-df3 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/event/tt_sm/zcut_0.4beta_0.5job_0.pkl.gz', compression='infer')
+-df4 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/event/tt_sm/zcut_0.5beta_0.5job_0.pkl.gz', compression='infer')
++df_hard = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/hard/tt_sm/zcut_0.0beta_0.0job_0.pkl.gz', compression='infer')
++df1 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/event/tt_sm/zcut_0.0beta_0.0job_0.pkl.gz', compression='infer')
++df2 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/event/tt_sm/zcut_0.2beta_0.0job_0.pkl.gz', compression='infer')
++df3 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/event/tt_sm/zcut_0.4beta_0.0job_0.pkl.gz', compression='infer')
++df4 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/event/tt_sm/zcut_0.5beta_0.0job_0.pkl.gz', compression='infer')
+ 
+ # df_hard = pd.read_csv('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/event/tt_sm/tt_sm_1.pkl.gz')
+ # df1 = pd.read_csv('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/event/tt_ctd8_ctd8/tt_ctd8_ctd8_1.csv')
+@@ -29,8 +29,8 @@ events_shower = []
+ for c in coeff:
+     events_shower.append(df1)
+     events_shower.append(df2)
+-    # events_shower.append(df3)
+-    # events_shower.append(df4)
++    events_shower.append(df3)
++    events_shower.append(df4)
+ 
+ 
+ feature_dict = {'pt_l1': r'$p_T^{\ell}\;[\mathrm{GeV}]$',
+@@ -53,7 +53,7 @@ feature_dict = {'pt_l1': r'$p_T^{\ell}\;[\mathrm{GeV}]$',
+             'm_bb': r'$m_{b\bar{b}}\;[\mathrm{GeV}]$'
+          }
+ 
+-legend_labels = [r'hard',r'zcut_0.2beta_0.5', r'zcut_0.3beta_0.5']
++legend_labels = [r'hard',r'z0', r'z0.2',r'z0.4',r'z0.5']
+ 
+ fig = features.plot_features(df_hard, events_shower, feature_dict, legend_labels)
+ plt.savefig('/data/theorie/pherbsch/ML4EFT/subproj/random_plot_bin/groom_Z_h_0,2,4,5.png')
+diff --git a/subproj/code/runcards/shower/shower_settings.json b/subproj/code/runcards/shower/shower_settings.json
+index cac9eb1a..c8bddb78 100644
+--- a/subproj/code/runcards/shower/shower_settings.json
++++ b/subproj/code/runcards/shower/shower_settings.json
+@@ -2,6 +2,6 @@
+     "base_directory": "/data/theorie/jthoeve/ML4EFT_events/",
+     "output_directory": "/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/test",
+     "cpp_executable": "/data/theorie/pherbsch/ML4EFT/subproj/code/shower_code/./clean_shower_big_data_groom",
+-    "num_jobs_max": 50,
+-    "num_events_per_job": 100000
++    "num_jobs_max": 1,
++    "num_events_per_job": 1000
+ }
+\ No newline at end of file
