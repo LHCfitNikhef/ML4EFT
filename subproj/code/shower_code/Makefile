@@ -5,13 +5,13 @@ LIBS = -L/data/theorie/pherbsch/ML4EFT/packages/pythia8308/lib -L/data/theorie/p
 RPATH = -Wl,-rpath,/data/theorie/pherbsch/ML4EFT/packages/pythia8308/lib -Wl,-rpath,/data/theorie/pherbsch/ML4EFT/packages/fastjet-install/lib
 LDLIBS = -lpythia8 -ldl -lfastjet -lz -lfastjettools
 
-TARGET = clean_shower_big_data_groom_actual
+TARGET = clean_shower_big_data_groom
 
 .PHONY: all clean
 
 all: $(TARGET)
 
-$(TARGET): clean_shower_big_data_groom_actual.cc
+$(TARGET): clean_shower_big_data_groom.cc
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $< -o $@ $(LIBS) $(RPATH) $(LDLIBS)
 
 clean:

@@ -59,12 +59,6 @@ for job_dir in job_dirs:
         shutil.copy("/data/theorie/pherbsch/ML4EFT/subproj/code/runcards/shower/shower_settings_groom.json", os.path.join(hard_dest_dir, "shower_settings.json"))
         shutil.copy("/data/theorie/pherbsch/ML4EFT/subproj/code/runcards/shower/shower_settings_groom.json", os.path.join(event_dest_dir, "shower_settings.json"))
 
-    # print("cpp_executable: ", cpp_executable)
-    # print("lhe_file_path: ", lhe_file_path)
-    # print("hard_dest_dir: ", hard_dest_dir)
-    # print("event_dest_dir: ", event_dest_dir)
-    # print("num_events_per_job: ", num_events_per_job)
-    # print("zcut_beta: ", zcut_beta)
     output = subprocess.run([cpp_executable, lhe_file_path, hard_dest_dir, event_dest_dir, str(num_events_per_job), str(zcut_beta)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
     if output.returncode != 0:
@@ -76,7 +70,7 @@ for job_dir in job_dirs:
         print("Command executed successfully")
 
     # Convert the .csv files to .pkl.gz files and delete the .csv files
-    #for hard
+    # for hard
     for file_name in os.listdir(hard_dest_dir):
         if file_name.endswith('.csv'):
             csv_path = os.path.join(hard_dest_dir, file_name)

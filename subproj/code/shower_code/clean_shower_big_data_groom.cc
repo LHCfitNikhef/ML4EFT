@@ -776,51 +776,20 @@ int main(int argc, char* argv[])
     //If we're doing a grooming analysis, we want to use the following
     std::string hard_outfile_name, outfile_name;
     
-    if(zcut_beta_vec.size() > 1)
-    {
-        std::stringstream hard_outfile_name_stream;
-        hard_outfile_name_stream << std::fixed << std::setprecision(1);
-        hard_outfile_name_stream << output_folder_hard << "zcut_" << zcut << "beta_" << beta << "job_" << (job_number - 1) << ".csv";
-        hard_outfile_name = hard_outfile_name_stream.str();
-
-        std::stringstream outfile_name_stream;
-        outfile_name_stream << std::fixed << std::setprecision(1);
-        outfile_name_stream << output_folder_event << "zcut_" << zcut << "beta_" << beta << "job_" << (job_number - 1) << ".csv";
-        outfile_name = outfile_name_stream.str();
-    }
-    else
-    {
-        hard_outfile_name = output_folder_hard + "events_" + std::to_string(job_number -1) + ".csv";
-        outfile_name = output_folder_event + "events_" +  std::to_string(job_number -1) + ".csv";
-    }
-
-    //check if the file already exists and prompt the user to override it
-    // if (file_exists(hard_outfile_name) && !prompt_override(hard_outfile_name))
-
-    // if (file_exists(hard_outfile_name))
-    // {
-    //     std::cerr << "Aborting. File not overridden." << std::endl;
-    //     return 1;
-    // }
-
-    // // if (file_exists(outfile_name) && !prompt_override(outfile_name))
-    // if (file_exists(outfile_name))
-    // {
-    //     std::cerr << "Aborting. File not overridden." << std::endl;
-    //     return 1;
-    // }
+    hard_outfile_name = output_folder_hard + "events_" + std::to_string(job_number -1) + ".csv";
+    outfile_name = output_folder_event + "events_" +  std::to_string(job_number -1) + ".csv";
 
     // Create the output files in the specified folder
     // Open output files in the specified folder
     std::ofstream hard_outfile(hard_outfile_name);
     std::ofstream outfile(outfile_name);
 
-    hard_kinematics_vector = {h_eta_b_leading, h_pt_l1, h_pt_l2, h_pt_l_leading, h_pt_l_trailing, h_eta_l1, h_eta_l2, h_eta_l_leading, h_eta_l_trailing,
+    hard_kinematics_vector = {h_pt_l1, h_pt_l2, h_pt_l_leading, h_pt_l_trailing, h_eta_l1, h_eta_l2, h_eta_l_leading, h_eta_l_trailing,
                               h_pt_ll, h_m_ll, h_DeltaPhi_ll, h_DeltaEta_ll, h_pt_b_leading, h_pt_b_trailing, h_eta_b_leading, h_eta_b_trailing, h_pt_bb, h_m_bb};
-    kinematics_vector = {eta_b_leading, pt_l1, pt_l2, pt_l_leading, pt_l_trailing, eta_l1, eta_l2, eta_l_leading, eta_l_trailing,
+    kinematics_vector = {pt_l1, pt_l2, pt_l_leading, pt_l_trailing, eta_l1, eta_l2, eta_l_leading, eta_l_trailing,
                          pt_ll, m_ll, DeltaPhi_ll, DeltaEta_ll, pt_b_leading, pt_b_trailing, eta_b_leading, eta_b_trailing, pt_bb, m_bb};
 
-    name_vector = {"eta_b_leading", "pt_l1", "pt_l2", "pt_l_leading", "pt_l_trailing", "eta_l1", "eta_l2", "eta_l_leading", "eta_l_trailing",
+    name_vector = {"pt_l1", "pt_l2", "pt_l_leading", "pt_l_trailing", "eta_l1", "eta_l2", "eta_l_leading", "eta_l_trailing",
                    "pt_ll", "m_ll", "DeltaPhi_ll", "DeltaEta_ll", "pt_b_leading", "pt_b_trailing", "eta_b_leading", "eta_b_trailing", "pt_bb", "m_bb"};
 
 
@@ -893,9 +862,11 @@ int main(int argc, char* argv[])
     //writing the data to the output files
     //Event file
     // Write the column names to the first row of the CSV file
-    for (auto &name : name_vector)
+    for (int i = 0; i < name_vector.size(); i++)
     {
-        outfile << name << ",";
+        outfile << name_vector[i];
+        if (i < name_vector.size() - 1)
+            outfile << ",";
     }
     outfile << "\n";
 
@@ -904,15 +875,19 @@ int main(int argc, char* argv[])
     {
         for (int j = 0; j < kinematics_vector.size(); j++)
         {
-            outfile << kinematics_vector[j][i] << ",";
+            outfile << kinematics_vector[j][i];
+            if (j < kinematics_vector.size() - 1)
+                outfile << ",";
         }
         outfile << "\n";
     }
 
     // Write the column names to the first row of the CSV file
-    for (auto &name : name_vector)
+    for (int i = 0; i < name_vector.size(); i++)
     {
-        hard_outfile << name << ",";
+        hard_outfile << name_vector[i];
+        if (i < name_vector.size() - 1)
+            hard_outfile << ",";
     }
     hard_outfile << "\n";
 
@@ -921,7 +896,9 @@ int main(int argc, char* argv[])
     {
         for (int j = 0; j < hard_kinematics_vector.size(); j++)
         {
-            hard_outfile << hard_kinematics_vector[j][i] << ",";
+            hard_outfile << hard_kinematics_vector[j][i];
+            if (j < hard_kinematics_vector.size() - 1)
+                hard_outfile << ",";
         }
         hard_outfile << "\n";
     }
