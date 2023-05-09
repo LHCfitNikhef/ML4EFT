@@ -1,8 +1,8 @@
 #!/bin/sh
-export OMP_STACKSIZE=16000
-export OMP_NUM_THREADS=4
-export KMP_BLOCKTIME=0
-export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
+# export OMP_STACKSIZE=16000
+# export OMP_NUM_THREADS=4
+# export KMP_BLOCKTIME=0
+# export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
 
 # coefficient="$1"
 # zcut_beta="$2"
