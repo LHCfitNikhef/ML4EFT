@@ -10,4 +10,4 @@ coefficient="$coefficient"
 zcut_beta="$zcut_beta"
 
 # echo "Executing command: python /data/theorie/pherbsch/ML4EFT/subproj/code/w_runcard_lhe_parser.py $coefficient $zcut_beta"
-python /data/theorie/pherbsch/ML4EFT/subproj/code/w_runcard_lhe_parser.py $coefficient $zcut_beta
+python /data/theorie/pherbsch/ML4EFT/subproj/code/w_runcard_lhe_parser_groom.py $coefficient $zcut_beta

@@ -11,11 +11,11 @@ import ml4eft.core.classifier as classifier
 import ml4eft.analyse.analyse as analyse
 import ml4eft.plotting.features as features
 
-df_hard = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/hard/tt_sm/zcut_0.0beta_0.0job_0.pkl.gz', compression='infer')
-df1 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/event/tt_sm/zcut_0.0beta_0.0job_0.pkl.gz', compression='infer')
-df2 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/event/tt_sm/zcut_0.2beta_0.0job_0.pkl.gz', compression='infer')
-df3 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/event/tt_sm/zcut_0.4beta_0.0job_0.pkl.gz', compression='infer')
-df4 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/output/groom/event/tt_sm/zcut_0.5beta_0.0job_0.pkl.gz', compression='infer')
+df_hard = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/hard/tt_sm/zcut_0.0beta_0.5job_0.pkl.gz', compression='infer')
+df1 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/event/tt_sm/zcut_0.2beta_0.5job_0.pkl.gz', compression='infer')
+df2 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/event/tt_sm/zcut_0.3beta_0.5job_0.pkl.gz', compression='infer')
+df3 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/event/tt_sm/zcut_0.4beta_0.5job_0.pkl.gz', compression='infer')
+df4 = pd.read_pickle('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/groom100000/event/tt_sm/zcut_0.5beta_0.5job_0.pkl.gz', compression='infer')
 
 # df_hard = pd.read_csv('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/event/tt_sm/tt_sm_1.pkl.gz')
 # df1 = pd.read_csv('/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/event/tt_ctd8_ctd8/tt_ctd8_ctd8_1.csv')
@@ -29,8 +29,8 @@ events_shower = []
 for c in coeff:
     events_shower.append(df1)
     events_shower.append(df2)
-    events_shower.append(df3)
-    events_shower.append(df4)
+    # events_shower.append(df3)
+    # events_shower.append(df4)
 
 
 feature_dict = {'pt_l1': r'$p_T^{\ell}\;[\mathrm{GeV}]$',
@@ -53,7 +53,7 @@ feature_dict = {'pt_l1': r'$p_T^{\ell}\;[\mathrm{GeV}]$',
             'm_bb': r'$m_{b\bar{b}}\;[\mathrm{GeV}]$'
          }
 
-legend_labels = [r'hard',r'z0', r'z0.2',r'z0.4',r'z0.5']
+legend_labels = [r'hard',r'zcut_0.2beta_0.5', r'zcut_0.3beta_0.5']
 
 fig = features.plot_features(df_hard, events_shower, feature_dict, legend_labels)
 plt.savefig('/data/theorie/pherbsch/ML4EFT/subproj/random_plot_bin/groom_Z_h_0,2,4,5.png')
