@@ -1,6 +1,6 @@
 {
     "base_directory": "/data/theorie/jthoeve/ML4EFT_events/",
-    "output_directory": "/data/theorie/pherbsch/ML4EFT/subproj/output/no_export_cluster_settings",
+    "output_directory": "/data/theorie/pherbsch/ML4EFT/subproj/output/big_data",
     "cpp_executable": "/data/theorie/pherbsch/ML4EFT/subproj/code/shower_code/./clean_shower_big_data_groom",
     "num_jobs_max": 50,
     "num_events_per_job": 100000

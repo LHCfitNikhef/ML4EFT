@@ -19,7 +19,7 @@ function submit_job () {
   chmod +x $PWD'/training_init.py'
 
   # submission
-  qsub -q short -l walltime=00:10:00 -l nodes=1:ppn=1 -l pvmem=4000mb $COMMAND
+  qsub -q short -l walltime=04:00:00 -l nodes=1:ppn=1 -l pvmem=4000mb $COMMAND
 
 #   qsub -q smefit -W group_list=smefit -l nodes=1:ppn=1 -l pvmem=4000mb $COMMAND
   rm $COMMAND
@@ -28,14 +28,14 @@ function submit_job () {
 
 # SETUP
 
-MCREPS=1
+MCREPS=25
 
 # tt -> llvlvlbb
 
 RUN_CARD="/data/theorie/pherbsch/ML4EFT/subproj/code/runcards/ml_training/tt_shower/runcard_meeting_jaco.json"
 
-coeff=( "ctu8")
-# coeff=( "ctu8" "ctj8" "ctGRe_ctGRe" "ctGRe_ctj8" "ctj8_ctj8")
+# coeff=( "ctu8" "ctj8")
+coeff=("ctu8")
 
 for c in "${coeff[@]}"
 do
