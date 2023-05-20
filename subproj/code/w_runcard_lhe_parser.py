@@ -6,8 +6,8 @@ import shutil
 import re
 import sys
 
-
-with open("/data/theorie/pherbsch/ML4EFT/subproj/code/runcards/shower/shower_settings.json", "r") as json_runcard:
+runcard_loc = "/data/theorie/pherbsch/ML4EFT/subproj/code/runcards/shower/shower_settings.json"
+with open(runcard_loc, "r") as json_runcard:
     settings = json.load(json_runcard)
 
 # reading the settings for the lhe_parser from the runcard
@@ -17,7 +17,7 @@ cpp_executable = settings["cpp_executable"]
 num_jobs_max = settings["num_jobs_max"]
 num_events_per_job = settings["num_events_per_job"]
 coefficient = sys.argv[1]
-zcut_beta = sys.argv[2].replace(';', ',') #This way of getting the zcut_beta info is important for passing the list of pairs onto the c++ code
+zcut_beta = sys.argv[2].replace(';', ',') 
 print("zcut_beta: ", zcut_beta)
 print("coefficient: ", coefficient)
 
@@ -31,23 +31,32 @@ dir_name = "tt_" + coefficient
 job_number = 0
 job_dirs = os.listdir(os.path.join(base_directory, dir_name))
 for job_dir in job_dirs:
-    #search for the job number in the job directory name
     job_num_search = re.search(r'job(\d+)', job_dir) 
     if job_num_search:
         job_number = int(job_num_search.group(1))
     else:
         continue
-    #stop at a specified number of jobs
+
     if job_number > (num_jobs_max):
         break
-    #check if the subdirectory of the coefficient in the ML4EFT events directory is a job directory
+
     if not job_dir.startswith('job'):
         continue
 
-    # Get the path to the LHE file
-    lhe_file_path = os.path.join(base_directory, dir_name, job_dir, 'Events', 'run_01', 'unweighted_events.lhe')
+    events_dir_path = os.path.join(base_directory, dir_name, job_dir, 'Events')
+    if not os.listdir(events_dir_path): # If 'Events' folder is empty, skip the job
+        continue
 
-    # Create the path to the output directory and create the directory if it doesn't exist
+    run_dir_path = os.path.join(events_dir_path, 'run_01')
+    lhe_file_path = os.path.join(run_dir_path, 'unweighted_events.lhe')
+    
+    if not os.path.exists(lhe_file_path): # If 'lhe' file is not found, check for 'lhe.gz'
+        lhe_file_path = lhe_file_path + ".gz"
+        if os.path.exists(lhe_file_path): # If 'lhe.gz' is found, this file is probably a bad run, so check for 'run_02'
+            run_dir_path = os.path.join(events_dir_path, 'run_02')
+            lhe_file_path = os.path.join(run_dir_path, 'unweighted_events.lhe')
+            if not os.path.exists(lhe_file_path): # If 'run_02' doesn't exist or doesn't have the 'lhe' file, skip the job
+                continue
     hard_dest_dir = os.path.join(output_directory, 'hard', dir_name + '/')
     event_dest_dir = os.path.join(output_directory, 'event', dir_name + '/')
     os.makedirs(hard_dest_dir, exist_ok=True)
@@ -56,10 +65,14 @@ for job_dir in job_dirs:
     #copy the runcard into the output directory
     if job_number == 1:
         print("Copying runcards to output directory")
-        shutil.copy("/data/theorie/pherbsch/ML4EFT/subproj/code/runcards/shower/shower_settings_groom.json", os.path.join(hard_dest_dir, "shower_settings.json"))
-        shutil.copy("/data/theorie/pherbsch/ML4EFT/subproj/code/runcards/shower/shower_settings_groom.json", os.path.join(event_dest_dir, "shower_settings.json"))
+        shutil.copy(runcard_loc, os.path.join(hard_dest_dir, "shower_settings.json"))
+        shutil.copy(runcard_loc, os.path.join(event_dest_dir, "shower_settings.json"))
 
     output = subprocess.run([cpp_executable, lhe_file_path, hard_dest_dir, event_dest_dir, str(num_events_per_job), str(zcut_beta)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+
+    log_dest_file = "/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/event_num_test/baseline_good/log.txt"
+    with open(log_dest_file, 'w') as log_file: 
+        log_file.write(output.stdout.decode('utf-8'))
 
     if output.returncode != 0:
         error_dest_file = "/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/test/error/" + "error_" + dir_name + str(job_number) + '.txt'
@@ -70,7 +83,7 @@ for job_dir in job_dirs:
         print("Command executed successfully")
 
     # Convert the .csv files to .pkl.gz files and delete the .csv files
-    # for hard
+    #for hard
     for file_name in os.listdir(hard_dest_dir):
         if file_name.endswith('.csv'):
             csv_path = os.path.join(hard_dest_dir, file_name)

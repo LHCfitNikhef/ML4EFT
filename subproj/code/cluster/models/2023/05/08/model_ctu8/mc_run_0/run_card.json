@@ -1,1 +1,0 @@
-{"process_id": "tt", "epochs": 20, "lr": 0.001, "n_batches": 1, "output_size": 1, "hidden_sizes": [25, 25, 25], "n_dat": 1000, "event_data": "/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/event", "features": ["pt_ll", "eta_l1"], "loss_type": "CE", "scaler_type": "robust", "patience": 100, "val_ratio": 0.2, "c_train": {"ctu8": 10}}

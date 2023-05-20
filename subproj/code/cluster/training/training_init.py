@@ -6,7 +6,7 @@ nn_rep = sys.argv[2]
 coeff = sys.argv[3]
 
 # model directory
-output_path = '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/models'
+output_path = '/data/theorie/pherbsch/ML4EFT/subproj/output/models/event'
 
 # launch fit
 fitter = classifier.Fitter(path_to_json, int(nn_rep), coeff, output_path)

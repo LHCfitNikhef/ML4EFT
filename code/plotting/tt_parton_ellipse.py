@@ -15,10 +15,10 @@ from ellipse_plotter_new import EllipsePlotter
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 30})
 rc('text', usetex=True)
 
-coeff_dict = {"ctd8": r'$c_{td}^{(8)}$', "cQu8": r'$c_{Qu}^{(8)}$'}
+coeff_dict = {"ctd8": r'$c_{td}^{(8)}$', "ctGRe": r'$c_{tG}$'}
 
 # LINEAR
-samples_nn_lin_mtt1 = '/data/theorie/pherbsch/ML4EFT/results/nn_shower_ctd8_cQu8.2/posterior.json'
+samples_nn_lin_mtt1 = '/data/theorie/pherbsch/posteriors/binned_testlin1/ctd8_ctGRe/posterior.json'
 # samples_nn_lin_mtt2 = '/data/theorie/pherbsch/ML4EFT/results/binned_Shower_ctu8_ctGReee_high_lu/posterior.json'
 # samples_nn_lin_mtt3 = '/data/theorie/pherbsch/ML4EFT/results/subproj_ctu8_ctGRe/posteriors/nn_ctu8_ctGRe_subproj/posterior.json'
 
@@ -136,12 +136,12 @@ for i, df in enumerate(dfs):
 
     if col_idx == 1:
         ax.set_xlim(-0.22, 0.3)
-        plotter.plot(ax, df, coeff1="ctd8", coeff2="cQu8",
-                     ax_labels=[coeff_dict["ctd8"], coeff_dict["cQu8"]], kde=order[i],
+        plotter.plot(ax, df, coeff1="ctd8", coeff2="ctGRe",
+                     ax_labels=[coeff_dict["ctd8"], coeff_dict["ctGRe"]], kde=order[i],
                      labels=labels[i], loc="lower right")
     else:
-        plotter.plot(ax, df, coeff1="ctd8", coeff2="cQu8",
-                     ax_labels=[coeff_dict["ctd8"], coeff_dict["cQu8"]], kde=order[i],
+        plotter.plot(ax, df, coeff1="ctd8", coeff2="ctGRe",
+                     ax_labels=[coeff_dict["ctd8"], coeff_dict["ctGRe"]], kde=order[i],
                      labels=labels[i], loc="upper left")
 
     if col_idx == 1:
@@ -152,5 +152,5 @@ for i, df in enumerate(dfs):
 
 grid.tight_layout(fig)
 
-fig.savefig('/data/theorie/pherbsch/ML4EFT/subproj/random_plot_bin/shower_posterior_ctd8_cQu8.png')
+fig.savefig('/data/theorie/pherbsch/ML4EFT/subproj/random_plot_bin/test_posteriors.png')
 
