@@ -289,10 +289,10 @@ def weight_pt(sqrts, pt, mu, x1, x2, c, order):
     return w_e
 
 
-v_weight = np.vectorize(weight, otypes=[np.float])
+v_weight = np.vectorize(weight, otypes=[np.float64])
 v_weight.excluded.add(4)
 
-v_weight_pt = np.vectorize(weight_pt, otypes=[np.float])
+v_weight_pt = np.vectorize(weight_pt, otypes=[np.float64])
 v_weight_pt.excluded.add(5)
 
 
@@ -329,7 +329,7 @@ def dsigma_dmtt_dy(y, mtt, c=None, order=None):
         return 0
 
 
-dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float])
+dsigma_dmtt_dy_vec = np.vectorize(dsigma_dmtt_dy, otypes=[np.float64])
 dsigma_dmtt_dy_vec.excluded.add(2)
 
 
