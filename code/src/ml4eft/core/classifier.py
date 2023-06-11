@@ -88,8 +88,8 @@ class Classifier(nn.Module):
     def __init__(self, architecture):
         super().__init__()
 
-        self.NN1 = MLP(architecture)
-        self.NN11 = MLP(architecture)
+        # self.NN1 = MLP(architecture)
+        # self.NN11 = MLP(architecture)
         self.NN2 = MLP(architecture)
         self.NN22 = MLP(architecture)
 
@@ -109,16 +109,17 @@ class Classifier(nn.Module):
 
         """
 
-        NN1_out = self.NN1(x)
-        NN11_out = self.NN11(x)
+        # NN1_out = self.NN1(x)
+        # NN11_out = self.NN11(x)
         NN2_out = self.NN2(x)
         NN22_out = self.NN22(x)
 
 
-        r = torch.relu(1 + c1 * NN1_out + c1 ** 2 * NN11_out + c2 * NN2_out + c2 ** 2 * NN22_out)
+        r = torch.relu(1 + c2 * NN2_out + c2 ** 2 * NN22_out)
 
         g = 1 / (1 + r)
-        return g, NN1_out, NN11_out, NN2_out, NN22_out
+        #return g, NN1_out, NN11_out, NN2_out, NN22_out
+        return g, NN2_out, NN22_out
 
 
 class PreProcessing():
@@ -163,7 +164,7 @@ class PreProcessing():
             Rescaled EFT events
         """
 
-        datasets_all = [dataset for dataset in fitter.path_df['data']]
+        datasets_all = [dataset for dataset in fitter.path_df['events']]
         df = pd.concat(datasets_all)
 
         # fit the scaler transformer to the eft and sm features
@@ -175,12 +176,14 @@ class PreProcessing():
         # rescale the sm and eft data
         data_train, data_val = [], []
 
-        for _, row in fitter.path_df[['data', 'xsec', 'wc_val']].iterrows():
+        for _, row in fitter.path_df[['events', 'wc_val']].iterrows():
             hypothesis = 1 if sum(row['wc_val']) == 0 else 0
 
-            events_scaled = self.scaler.transform(row['data'][fitter.features])
+            events_scaled = self.scaler.transform(row['events'][fitter.features])
             df_scaled = pd.DataFrame(events_scaled, columns=fitter.features)
-            event_dataset = EventDataset(df_scaled, row['xsec'], hypothesis)
+            weights = row['events'][['weight']]
+
+            event_dataset = EventDataset(df_scaled, weights, hypothesis)
 
             train, val = data.random_split(event_dataset, [n_train_points, n_val_points])
 
@@ -206,16 +209,16 @@ class EventDataset(data.Dataset):
     Event loader
     """
 
-    def __init__(self, df, xsec, hypothesis):
+    def __init__(self, events, weights, hypothesis):
         """
         EventDataset constructor
 
         Parameters
         ----------
-        df: pandas.DataFrame
+        events: pandas.DataFrame
             Event DataFrame
-        xsec: float
-            inclusive cross-section
+        weights: pandas.Series
+            weights
         path: str
             Path to dataset
         n_dat: int
@@ -228,9 +231,9 @@ class EventDataset(data.Dataset):
         """
         super().__init__()
 
-        self.events = torch.tensor(df.values)
+        self.events = torch.tensor(events.values)
+        self.weights = torch.tensor(weights.values)
         self.n_dat = len(self.events)
-        self.weights = xsec * torch.ones(self.n_dat).unsqueeze(-1)
         self.labels = torch.ones(self.n_dat).unsqueeze(-1) if hypothesis else torch.zeros(self.n_dat).unsqueeze(-1)
 
     def __len__(self):
@@ -364,9 +367,9 @@ class Fitter:
         events, xsec = [], []
         for path in self.path_df['paths']:
             dataset = pd.read_pickle(path, compression="infer")
-            events.append(dataset.iloc[1:].sample(self.n_dat))
+            events.append(dataset.iloc[1:].sample(self.n_dat, ignore_index=True))
             xsec.append(dataset.iloc[0,0])
-        self.path_df['data'] = events
+        self.path_df['events'] = events
         self.path_df['xsec'] = xsec
 
         # preprocessing of the data
@@ -431,11 +434,11 @@ class Fitter:
                         c_val = self.path_df['wc_val'][i+1]
                         #print("{}, WC {}, Minibatch {}".format(i+1, c_val, minibatch_nr))
 
-                        g_eft, NN1, NN11, NN2, NN22 = self.model(event.float(), *c_val)
-                        g_sm, NN1_sm, NN11_sm, NN2_sm, NN22_sm = self.model(event_sm.float(), *c_val)
+                        g_eft, NN2, NN22 = self.model(event.float(), *c_val)
+                        g_sm, NN2_sm, NN22_sm = self.model(event_sm.float(), *c_val)
 
-                        loss_eft = self.loss_fn(g_eft, label, weight, NN1, NN11, NN2, NN22)
-                        loss_sm = self.loss_fn(g_sm, label_sm, weight_sm, NN1_sm, NN11_sm, NN2_sm, NN22_sm)
+                        loss_eft = self.loss_fn(g_eft, label, weight, NN2, NN22)
+                        loss_sm = self.loss_fn(g_sm, label_sm, weight_sm, NN2_sm, NN22_sm)
                         val_loss += loss_eft
                         val_loss += loss_sm
                     assert val_loss.requires_grad is False
@@ -448,11 +451,11 @@ class Fitter:
                     c_val = self.path_df['wc_val'][i + 1]
 
                     # print("{}, WC {}, Minibatch {}".format(i, c_val, n_minibatch))
-                    g_eft, NN1, NN11, NN2, NN22 = self.model(event.float(), *c_val)
-                    g_sm, NN1_sm, NN11_sm, NN2_sm, NN22_sm = self.model(event_sm.float(), *c_val)
+                    g_eft, NN2, NN22 = self.model(event.float(), *c_val)
+                    g_sm, NN2_sm, NN22_sm = self.model(event_sm.float(), *c_val)
 
-                    loss_eft = self.loss_fn(g_eft, label, weight, NN1, NN11, NN2, NN22)
-                    loss_sm = self.loss_fn(g_sm, label_sm, weight_sm, NN1_sm, NN11_sm, NN2_sm, NN22_sm)
+                    loss_eft = self.loss_fn(g_eft, label, weight, NN2, NN22)
+                    loss_sm = self.loss_fn(g_sm, label_sm, weight_sm, NN2_sm, NN22_sm)
                     train_loss += loss_eft
                     train_loss += loss_sm
 
@@ -523,7 +526,7 @@ class Fitter:
         if isinstance(m, nn.Linear):
             m.reset_parameters()
 
-    def loss_fn(self, outputs, labels, w_e, NN1, NN11, NN2, NN22):
+    def loss_fn(self, outputs, labels, w_e, NN2, NN22):
         """
         Loss function
 
@@ -549,8 +552,7 @@ class Fitter:
             r = (1 - outputs) / outputs
             lagrange_mp = 5
 
-            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + lagrange_mp * torch.relu(NN1 ** 2 / 4 - NN11) ** 2\
-                   + lagrange_mp * torch.relu(NN2 ** 2 / 4 - NN22) ** 2
+            loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + lagrange_mp * torch.relu(NN2 ** 2 / 4 - NN22) ** 2
 
         elif self.loss_type == 'direct':
             loss = -(1 - labels) * w_e * outputs - labels * (1 / (2 * self.c_train_value)) * (
