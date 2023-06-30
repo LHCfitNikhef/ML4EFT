@@ -1,0 +1,2 @@
+/data/theorie/pherbsch/miniconda3/envs/madgraph/bin/python: can't open file '/data/theorie/pherbsch/ML4EFT/subproj/code/cluster/shower/python_script_FSR_ISR_MPI_sm_0.0': [Errno 2] No such file or directory
+/var/lib/torque/mom_priv/jobs/14320288.burrell.nikhef.nl.SC: line 16: 0.0.py: command not found

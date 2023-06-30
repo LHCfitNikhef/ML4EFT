@@ -1,0 +1,7 @@
+{
+    "base_directory": "/data/theorie/jthoeve/ML4EFT_events/",
+    "output_directory": "...",
+    "cpp_executable": "/data/theorie/pherbsch/ML4EFT/subproj/code/shower_code/./shower",
+    "num_jobs_max": 1,
+    "num_events_per_job": 10000
+}

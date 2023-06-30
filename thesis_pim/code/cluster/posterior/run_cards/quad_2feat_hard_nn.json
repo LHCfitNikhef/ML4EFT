@@ -1,0 +1,83 @@
+{
+    "fit_id": "h",
+    "mode": "nn",
+    "process": "tt",
+    "order": "quad",
+    "nlive": 500,
+    "results_path": "/data/theorie/pherbsch/q2f",
+    "lumi": 3e5,
+    "observed_data_path": "/data/theorie/pherbsch/ML4EFT/thesis_pim/data/hadron_level_data/hard/tt_sm_observed/events_0.pkl.gz",
+    "bins": {
+      "pt_ll": [
+        0,
+        10,
+        20,
+        40,
+        60,
+        100,
+        150,
+        400,
+        10000
+      ],
+      "eta_l1": [
+        -2.5,
+        -2.1,
+        -1.8,
+        -1.5,
+        -1.2,
+        -0.9,
+        -0.6,
+        -0.3,
+        0,
+        0.3,
+        0.6,
+        0.9,
+        1.2,
+        1.5,
+        1.8,
+        2.1,
+        2.5
+      ]
+    },
+    "path_to_models": "/data/theorie/pherbsch/ML4EFT/thesis_pim/data/models/quad_2feat/hard/2023/05/25",
+    "path_to_theory_pred": "/data/theorie/pherbsch/ML4EFT/thesis_pim/data/hadron_level_data/hard",
+    "prior": {
+      "ctGRe": [
+        -3,
+        3
+      ],
+      "cQj18": [
+        -3,
+        3
+      ],
+      "cQj38": [
+        -3,
+        3
+      ],
+      "ctj8": [
+        -3,
+        3
+      ],
+      "ctu8": [
+        -3,
+        3
+      ],
+      "cQu8": [
+        -3,
+        3
+      ],
+      "cQd8": [
+        -3,
+        3
+      ],
+      "ctd8": [
+        -3,
+        3
+      ]
+    },
+    "th_features": [
+      "y",
+      "m_tt",
+      "pt_t"
+    ]
+}
