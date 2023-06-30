@@ -29,25 +29,20 @@ class EllipsePlotter:
         pass
 
     def confidence_contour_kde(self, x, y, ax, hndls, facecolor=None, edgecolor='k', alpha=0.3, taken_together=False):
-
+        """Plot confidence contour using KDE estimation"""
         if not taken_together:
-            sns.kdeplot(x, y, levels=[0.05, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=alpha, color=facecolor)
+            sns.kdeplot(x=x, y=y, levels=[0.05, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=alpha, color=facecolor)
             hndls.append((mpatches.Patch(ec=edgecolor, fc=facecolor, fill=True, alpha=alpha),
-                          mpatches.Patch(ec=edgecolor, fc=facecolor, fill=False, alpha=1.0)))
-            sns.kdeplot(x, y, levels=[0.05], bw_adjust=1.2, ax=ax, alpha=1, color=edgecolor)
+                        mpatches.Patch(ec=edgecolor, fc=facecolor, fill=False, alpha=1.0)))
+            sns.kdeplot(x=x, y=y, levels=[0.05], bw_adjust=1.2, ax=ax, alpha=1, color=edgecolor)
         else:
-            sns.kdeplot(x, y, levels=[0.05, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=alpha, color=facecolor)
+            sns.kdeplot(x=x, y=y, levels=[0.05, 1.0], bw_adjust=1.2, ax=ax, fill=True, alpha=alpha, color=facecolor)
             hndls.append((mpatches.Patch(ec=edgecolor, fc=facecolor, fill=True, alpha=alpha),
-                          mpatches.Patch(ec=edgecolor, fc=facecolor, fill=False, alpha=1.0)))
-            sns.kdeplot(x, y, levels=[0.05], bw_adjust=1.2, ax=ax, alpha=1, color=edgecolor)
-
-        # if not self.replica_handle_add:
-        #     hndls.append(mpatches.Patch(ec='k', fc=None, fill=False, alpha=1.0))
-        #     self.replica_handle_add = True
-
-        # ax.scatter(x, y, s=4, alpha=0.2)
+                        mpatches.Patch(ec=edgecolor, fc=facecolor, fill=False, alpha=1.0)))
+            sns.kdeplot(x=x, y=y, levels=[0.05], bw_adjust=1.2, ax=ax, alpha=1, color=edgecolor)
 
         return hndls
+
 
     @staticmethod
     def confidence_ellipse(x, y, ax, facecolor="none", **kwargs):
@@ -194,8 +189,8 @@ class EllipsePlotter:
 
 
 
-                    hndls = self.confidence_contour_kde(coeff1_values,
-                                                        coeff2_values,
+                    hndls = self.confidence_contour_kde(df[coeff1],
+                                                        df[coeff2],
                                                         ax,
                                                         hndls,
                                                         facecolor=facecolor,

@@ -1,7 +1,0 @@
-{
-    "base_directory": "/data/theorie/jthoeve/ML4EFT_events/",
-    "output_directory": "/data/theorie/pherbsch/ML4EFT/subproj/random_data_bin/event_num_test/baseline_good",
-    "cpp_executable": "/data/theorie/pherbsch/ML4EFT/subproj/code/shower_code/./clean_shower_FSR",
-    "num_jobs_max": 1,
-    "num_events_per_job": 100000
-}

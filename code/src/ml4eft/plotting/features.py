@@ -8,6 +8,9 @@ from matplotlib.ticker import NullFormatter
 rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
 rc('text', usetex=True)
 
+normalise = False
+yscale = 'log'
+
 def plot_features(df_sm, dfs_eft, features, legend_labels):
     n_cols = 5
     n_rows = int(np.ceil(len(features) / n_cols))
@@ -20,19 +23,20 @@ def plot_features(df_sm, dfs_eft, features, legend_labels):
         ax = fig.add_subplot(grid[i // n_cols, i % n_cols])
 
         hist_mg_sm, bins = np.histogram(df_sm[feature],
-                                        bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 30), density=True)
+                                        bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 30), density=normalise)
 
         ax.step(bins[:-1], hist_mg_sm, where='post', linewidth=1.5, color='k', linestyle='dashed')
 
         for df_eft in dfs_eft:
             hist_mg_eft, bins = np.histogram(df_eft[feature],
                                              bins=np.linspace(df_sm[feature].min(), df_sm[feature].max(), 30),
-                                             density=True)
+                                             density=normalise)
 
             ax.step(bins[:-1], hist_mg_eft, where='post', linewidth=.7)
 
 
-        ax.set_yscale('log')
+        if (yscale == "log"):
+            ax.set_yscale('log')
         ax.yaxis.set_major_formatter(NullFormatter())
         ax.yaxis.set_minor_formatter(NullFormatter())
         ax.axes.yaxis.set_ticklabels([])
