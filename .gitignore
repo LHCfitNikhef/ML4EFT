@@ -340,3 +340,5 @@ code/cluster/launch_scripts/event_generation/mg5_runcards
 /thesis_pim/plots/
 /thesis_pim/posteriors/
 /packages/
+/code/
+/docs/
