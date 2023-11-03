@@ -221,6 +221,7 @@ class PreProcessing():
         features_sm_scaled = self.scaler.transform(self.df_sm[fitter.features])
         features_eft_scaled = self.scaler.transform(self.df_eft[fitter.features])
 
+
         # convert transformed features to dataframe
         df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=fitter.features)
         df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=fitter.features)
@@ -236,7 +237,7 @@ class EventDataset(data.Dataset):
     Event loader
     """
 
-    def __init__(self, df, xsec, path, n_dat, features, hypothesis=0):
+    def __init__(self, df, xsec, reweighted, path, n_dat, features, hypothesis=0):
         """
         EventDataset constructor
 
@@ -260,18 +261,18 @@ class EventDataset(data.Dataset):
 
         self.df = df
         self.xsec = xsec
+        self.reweighted = reweighted
         self.hypothesis = hypothesis
         self.features = features
 
         self.events = None
-        self.weights = None
         self.labels = None
 
         self.event_loader(path)
 
     def event_loader(self, path):
         """
-        Set the weights of the evevnts, labels and convert the events to torch.Tensor,
+        Set the weights of the events, labels and convert the events to torch.Tensor,
 
         Parameters
         ----------
@@ -280,7 +281,13 @@ class EventDataset(data.Dataset):
         """
         n_dat = len(self.df)
 
-        self.weights = self.xsec * torch.ones(n_dat).unsqueeze(-1)
+        if self.reweighted:
+            self.weights = torch.tensor(self.df['weight'].values).unsqueeze(-1)
+        else:
+            print("NO WEIGHTS")
+            self.weights = self.xsec * torch.ones(n_dat).unsqueeze(-1)
+        #print("TEST", self.df[self.features].head())
+        #print("SHAPE", self.weights, self.xsec * torch.ones(n_dat).unsqueeze(-1))
         self.events = torch.tensor(self.df[self.features].values)
         self.labels = torch.ones(n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(n_dat).unsqueeze(-1)
 
@@ -330,15 +337,18 @@ class Fitter:
         self.scaler_type = self.run_options['scaler_type']
         self.patience = self.run_options['patience']
         self.val_ratio = self.run_options['val_ratio']
+        self.features = self.run_options['features']
 
         self.c_train = self.run_options["c_train"]
 
         self.n_dat = self.run_options['n_dat']
         self.epochs = self.run_options['epochs']
-        self.features = self.run_options['features']
         self.network_size = [len(self.features)] + self.run_options['hidden_sizes'] + [
             self.run_options['output_size']]
         self.event_data_path = self.run_options['event_data']  # path to training data
+        self.weight_strategy = self.run_options['weight_strategy'] # reweighted or constant
+        # if self.weight_strategy == 'reweighted':
+        #     self.features.append('weight')
 
         self.quadratic = True if '_' in self.c_name else False
         if self.quadratic:
@@ -435,11 +445,17 @@ class Fitter:
         scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
         df_sm_scaled, df_eft_scaled = preproc.feature_scaling(self, scaler_path)
 
-        self.n_dat = min(len(df_eft_scaled), len(df_sm_scaled))
+        # we don't rescale the weights so append them later to df
+        df_sm_scaled['weight'] = preproc.df_sm['weight'].values
+        df_eft_scaled['weight'] = preproc.df_eft['weight'].values
+        #self.n_dat = min(len(df_eft_scaled), len(df_sm_scaled))
+        
+        print("TEST", df_eft_scaled.head())
 
         # construct an eft and a sm data set for each value of c in c_values and make a list out of it
         data_eft = EventDataset(df_eft_scaled,
                                 xsec=preproc.xsec_eft,
+                                reweighted=reweighted,
                                 path=path_eft,
                                 n_dat=self.n_dat,
                                 features=self.features,
@@ -447,6 +463,7 @@ class Fitter:
 
         data_sm = EventDataset(df_sm_scaled,
                                xsec=preproc.xsec_sm,
+                               reweighted=reweighted,
                                path=path_sm,
                                n_dat=self.n_dat,
                                features=self.features,
@@ -532,7 +549,9 @@ class Fitter:
             loss_train, loss_val = 0.0, 0.0
 
             # We save the model parameters at the start of each epoch
-            torch.save(self.model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
+            # TODO: to me all saved epochs on local device not optimal,
+            # disabled for now
+            #torch.save(self.model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
 
             # compute validation loss
             with torch.no_grad():
