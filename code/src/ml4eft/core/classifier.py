@@ -237,7 +237,7 @@ class EventDataset(data.Dataset):
     Event loader
     """
 
-    def __init__(self, df, xsec, path, n_dat, features, hypothesis=0):
+    def __init__(self, df, df_weights, xsec, path, n_dat, features, hypothesis=0):
         """
         EventDataset constructor
 
@@ -260,6 +260,7 @@ class EventDataset(data.Dataset):
         super().__init__()
 
         self.df = df
+        self.df_weights = df_weights
         self.xsec = xsec
         self.hypothesis = hypothesis
         self.features = features
@@ -280,8 +281,8 @@ class EventDataset(data.Dataset):
         """
         n_dat = len(self.df)
 
-        self.weights = torch.tensor(self.df['weight'].values).unsqueeze(-1)
-       
+        #self.weights = torch.tensor(self.df['weight'].values).unsqueeze(-1)
+        self.weights = torch.tensor(self.df_weights.values)
         self.events = torch.tensor(self.df[self.features].values)
         self.labels = torch.ones(n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(n_dat).unsqueeze(-1)
 
@@ -340,6 +341,7 @@ class Fitter:
         self.network_size = [len(self.features)] + self.run_options['hidden_sizes'] + [
             self.run_options['output_size']]
         self.event_data_path = self.run_options['event_data']  # path to training data
+        self.weight_data_path = self.run_options['weight_data']
 
         self.quadratic = True if '_' in self.c_name else False
         if self.quadratic:
@@ -377,6 +379,7 @@ class Fitter:
         else:  # linear
             self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = Classifier(self.network_size, self.c_train_value)
+        self.path_dict['eft_weights_path'] = '{eft_coeff}/weights_{mc_run}.pkl.gz'
 
         # create log file with timestamp
         t = time.localtime()
@@ -399,7 +402,7 @@ class Fitter:
         logging.info("All directories created, ready to load the data")
 
         # load the training and validation data
-        data_train, data_val = self.load_data()
+        data_train, data_val= self.load_data()
 
         # copy run card to the appropriate folder
         with open(mc_path + 'run_card.json', 'w') as outfile:
@@ -426,6 +429,10 @@ class Fitter:
         path_eft = os.path.join(self.event_data_path,
                                 self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.c_name,
                                                                                                mc_run=self.mc_run))
+        # weights
+        path_eft_weights = os.path.join(self.weight_data_path,
+                                self.process_id + '_' + self.path_dict['eft_weights_path'].format(eft_coeff=self.c_name,
+                                                                                               mc_run=self.mc_run))
 
         path_dict = {'sm': path_sm, 'eft': path_eft}
 
@@ -436,22 +443,13 @@ class Fitter:
         scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
         df_sm_scaled, df_eft_scaled = preproc.feature_scaling(self, scaler_path)
 
-        # create dict containing pd series of all weight values
-        weights_dict = dict()
-        # TODO: fake, generated sample, put in json?
-        weight_values = [10.0, -10.0]
-
-        for weight_value in weight_values:
-            weights_dict[weight_value] = preproc.df_eft['ctd8']
-        
-        df_dict_sm = {wc: df_sm_scaled.join(weight_df) for wc, weight_df in weights_dict.items()}
-        df_dict_eft = {wc: df_eft_scaled.join(weight_df) for wc, weight_df in weights_dict.items()}
-
-        #print(df_dict[-10.0][self.features])
-        #print(df_dict[-10.0]['ctd8'])
-
+        # create df containing all weight values (possible because feature_scaling
+        # does NOT shuffle order of events, so if ordered when pkls made still ordered)
+        df_weights = pd.read_pickle(path_eft_weights)
+    
         # construct an eft and a sm data set for each value of c in c_values and make a list out of it
         data_eft = EventDataset(df_eft_scaled,
+                                df_weights,
                                 xsec=preproc.xsec_eft,
                                 path=path_eft,
                                 n_dat=self.n_dat,
@@ -459,6 +457,7 @@ class Fitter:
                                 hypothesis=0)
 
         data_sm = EventDataset(df_sm_scaled,
+                               df_weights, # TODO geen weights voor sm?
                                xsec=preproc.xsec_sm,
                                path=path_sm,
                                n_dat=self.n_dat,
@@ -553,11 +552,11 @@ class Fitter:
             with torch.no_grad():
                 for minibatch in zip(*val_loader):
                     val_loss = torch.zeros(1)
-                    for i, [event, weight, label] in enumerate(minibatch):
+                    for i, [event, weights, label] in enumerate(minibatch):
                         if isinstance(self.model, Classifier):
                             output = self.model(event.float())
 
-                        loss = self.loss_fn(output, label, weight)
+                        loss = self.loss_fn(output, label, weights)
                         val_loss += loss
                     assert val_loss.requires_grad is False
 
@@ -648,8 +647,11 @@ class Fitter:
             Average loss of the mini-batch
         """
         if self.loss_type == 'CE':
-
-            loss = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
+            # this will be a tensor of shape n_events x n_coeff_values
+            loss_per_weight = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
+            loss = torch.sum(loss_per_weight, dim = 1)
+            #print(torch.sum(loss_per_weight, dim = 1))
+            #sys.exit()
 
         elif self.loss_type == 'QC':
             loss = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
