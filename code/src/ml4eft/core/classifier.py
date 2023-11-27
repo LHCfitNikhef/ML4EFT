@@ -543,6 +543,7 @@ class Fitter:
 
             loss_train, loss_val = 0.0, 0.0
 
+            #test
             # We save the model parameters at the start of each epoch
             # TODO: to me all saved epochs on local device not optimal,
             # disabled for now
