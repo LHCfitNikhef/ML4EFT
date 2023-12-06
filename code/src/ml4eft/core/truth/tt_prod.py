@@ -26,8 +26,8 @@ pb_convert = 3.894E2
 yt = 1
 
 # matplotlib.use('PDF')
-rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
-rc('text', usetex=True)
+#rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
+#rc('text', usetex=True)
 
 
 class crossSectionSMEFT:

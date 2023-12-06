@@ -32,8 +32,8 @@ mh = constants.mh
 mt = constants.mt
 col_s = constants.col_s
 
-rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
-rc('text', usetex=True)
+#rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
+#rc('text', usetex=True)
 
 
 class Analyse:
@@ -719,7 +719,7 @@ class Analyse:
         """
         from mpl_toolkits.axes_grid1 import AxesGrid
 
-        rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
+        #rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 50})
 
         n_cols = 4
         mc_reps = len(reps)
@@ -1278,7 +1278,7 @@ class Analyse:
 
         if rep is not None:
             fig = ax.figure
-            rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 30})
+            #rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 30})
         else:
             fig = plt.figure(figsize=(10, 8))
 

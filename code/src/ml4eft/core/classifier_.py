@@ -122,8 +122,8 @@ class Classifier(nn.Module):
     def __init__(self, architecture, c):
         super().__init__()
         self.c = c
-        self.n_alpha_1 = MLP(architecture)
-        self.n_alpha_2 = MLP(architecture)
+        self.n_alpha = MLP(architecture)
+        self.n_alpha.layers.add_module('constraint', ConstraintActivation(self.c))
 
     def forward(self, x):
         """
@@ -140,10 +140,8 @@ class Classifier(nn.Module):
 
         """
 
-        NN_lin = self.n_alpha_1(x)
-        NN_quad =self.n_alpha_2(x)
-        ratio = torch.relu(1 + self.c * NN_lin + self.c**2 * NN_quad)
-        g = 1 / (1 + ratio)
+        NN_out = self.n_alpha(x)
+        g = 1 / (1 + (1 + self.c * NN_out))
         return g
 
 
@@ -214,7 +212,7 @@ class PreProcessing():
             Rescaled EFT events
         """
 
-        df = pd.concat([self.df_sm])#, self.df_eft])
+        df = pd.concat([self.df_sm, self.df_eft])
 
         # fit the scaler transformer to the eft and sm features
         self.scaler.fit(df[fitter.features])
@@ -348,12 +346,9 @@ class Fitter:
         self.quadratic = True if '_' in self.c_name else False
         if self.quadratic:
             c1, c2 = self.c_name.split('_')
-            if c1 == c2:
-                self.c_train_value = np.prod(self.c_train[c1])
-            else:
-                self.c_train_value = self.c_train[c1] * self.c_train[c2]
+            self.c_train_value = self.c_train[c1] * self.c_train[c2]
         else:
-            self.c_train_value = self.c_train[self.c_name][0] #TODO
+            self.c_train_value = self.c_train[self.c_name]
 
         self.mc_run = mc_run
 
@@ -385,8 +380,6 @@ class Fitter:
             self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
             self.model = Classifier(self.network_size, self.c_train_value)
         self.path_dict['eft_weights_path'] = '{eft_coeff}/weights_{mc_run}.pkl.gz'
-
-        self.path_dict['sm_weights_path'] = '/weights_{mc_run}.pkl.gz'
 
         # create log file with timestamp
         t = time.localtime()
@@ -432,7 +425,7 @@ class Fitter:
 
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
-        #path_sm = os.path.join(self.event_data_path, self.process_id + '_sm/events_{}.pkl.gz'.format(self.mc_run))
+        path_sm = os.path.join(self.event_data_path, self.process_id + '_sm/events_{}.pkl.gz'.format(self.mc_run))
         path_eft = os.path.join(self.event_data_path,
                                 self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.c_name,
                                                                                                mc_run=self.mc_run))
@@ -440,13 +433,8 @@ class Fitter:
         path_eft_weights = os.path.join(self.weight_data_path,
                                 self.process_id + '_' + self.path_dict['eft_weights_path'].format(eft_coeff=self.c_name,
                                                                                                mc_run=self.mc_run))
-        path_sm_weights = os.path.join(self.weight_data_path,
-                                self.process_id + '_' + self.path_dict['eft_weights_path'].format(eft_coeff='sm',
-                                                                                               mc_run=self.mc_run))
 
-
-        path_dict = {'sm': path_eft, 'eft': path_eft}
-        #path_dict = {'eft': path_eft}
+        path_dict = {'sm': path_sm, 'eft': path_eft}
 
         # preprocessing of the data
         preproc = PreProcessing(self, path_dict)
@@ -454,16 +442,15 @@ class Fitter:
         # save the scaler
         scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
         df_sm_scaled, df_eft_scaled = preproc.feature_scaling(self, scaler_path)
-        #df_eft_scaled = preproc.feature_scaling(self, scaler_path)
 
         # create df containing all weight values (possible because feature_scaling
         # does NOT shuffle order of events, so if ordered when pkls made still ordered)
-        df_weights_sm = pd.read_pickle(path_sm_weights)
-        df_weights_eft = pd.read_pickle(path_eft_weights)
-        
+        df_weights = pd.read_pickle(path_eft_weights)
+        df_weights_sm = pd.DataFrame(np.ones(len(df_sm_scaled)))
+    
         # construct an eft and a sm data set for each value of c in c_values and make a list out of it
         data_eft = EventDataset(df_eft_scaled,
-                                df_weights_eft,
+                                df_weights,
                                 xsec=preproc.xsec_eft,
                                 path=path_eft,
                                 n_dat=self.n_dat,
@@ -472,10 +459,10 @@ class Fitter:
 
         # TODO: see if this works
         #data_sm = EventDataset(df_sm_scaled,
-        data_sm = EventDataset(df_sm_scaled,
-                               df_weights_sm, # ones TODO: haal uit lhe rij1
+        data_sm = EventDataset(df_eft_scaled,
+                               df_weights_sm, # ones
                                xsec=preproc.xsec_sm,
-                               path=path_eft,
+                               path=path_sm,
                                n_dat=self.n_dat,
                                features=self.features,
                                hypothesis=1)
@@ -571,7 +558,7 @@ class Fitter:
                     for i, [event, weights, label] in enumerate(minibatch):
                         if isinstance(self.model, Classifier):
                             output = self.model(event.float())
-                            
+
                         loss = self.loss_fn(output, label, weights)
                         val_loss += loss
                     assert val_loss.requires_grad is False

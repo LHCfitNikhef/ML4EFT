@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 from matplotlib.ticker import NullFormatter
 
-rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
-rc('text', usetex=True)
+#rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'], 'size': 22})
+#rc('text', usetex=True)
 
 
 def plot_features(df_sm, dfs_eft, features, legend_labels):
