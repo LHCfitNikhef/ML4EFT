@@ -214,7 +214,7 @@ class PreProcessing():
             Rescaled EFT events
         """
 
-        df = pd.concat([self.df_sm])#, self.df_eft])
+        df = pd.concat([self.df_sm, self.df_eft])
 
         # fit the scaler transformer to the eft and sm features
         self.scaler.fit(df[fitter.features])
@@ -471,9 +471,8 @@ class Fitter:
                                 hypothesis=0)
 
         # TODO: see if this works
-        #data_sm = EventDataset(df_sm_scaled,
         data_sm = EventDataset(df_sm_scaled,
-                               df_weights_sm, # ones TODO: haal uit lhe rij1
+                               df_weights_sm, 
                                xsec=preproc.xsec_sm,
                                path=path_eft,
                                n_dat=self.n_dat,
