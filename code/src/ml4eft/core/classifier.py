@@ -119,13 +119,13 @@ class Classifier(nn.Module):
     Implementation of the decision boundary `g(x, c)`
     """
 
-    def __init__(self, architecture, c):
+    def __init__(self, architecture):
         super().__init__()
-        self.c = c
+    
         self.n_alpha_1 = MLP(architecture)
         self.n_alpha_2 = MLP(architecture)
 
-    def forward(self, x):
+    def forward(self, x, c):
         """
 
         Parameters
@@ -142,9 +142,9 @@ class Classifier(nn.Module):
 
         NN_lin = self.n_alpha_1(x)
         NN_quad =self.n_alpha_2(x)
-        ratio = torch.relu(1 + self.c * NN_lin + self.c**2 * NN_quad)
+        ratio = torch.relu(1 + c * NN_lin + c**2 * NN_quad)
         g = 1 / (1 + ratio)
-        return g
+        return g, NN_lin, NN_quad
 
 
 class PreProcessing():
@@ -194,7 +194,7 @@ class PreProcessing():
 
         # cross section before cuts
         self.xsec_eft = df_eft_full.iloc[0, 0]
-        self.df_eft = df_eft_wo_xsec.sample(fitter.n_dat)
+        self.df_eft = self.df_sm#df_eft_wo_xsec.sample(fitter.n_dat)
 
     def feature_scaling(self, fitter, scaler_path):
         """
@@ -213,9 +213,9 @@ class PreProcessing():
         df_eft_scaled : pandas.DataFrame
             Rescaled EFT events
         """
-
+        
         df = pd.concat([self.df_sm, self.df_eft])
-
+        #print(self.df_sm, self.df_eft)
         # fit the scaler transformer to the eft and sm features
         self.scaler.fit(df[fitter.features])
 
@@ -227,6 +227,8 @@ class PreProcessing():
         # convert transformed features to dataframe
         df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=fitter.features)
         df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=fitter.features)
+        #print(df_sm_scaled, df_eft_scaled)
+        #sys.exit()
 
         # save the scaler
         joblib.dump(self.scaler, scaler_path)
@@ -345,15 +347,6 @@ class Fitter:
         self.event_data_path = self.run_options['event_data']  # path to training data
         self.weight_data_path = self.run_options['weight_data']
 
-        self.quadratic = True if '_' in self.c_name else False
-        if self.quadratic:
-            c1, c2 = self.c_name.split('_')
-            if c1 == c2:
-                self.c_train_value = np.prod(self.c_train[c1])
-            else:
-                self.c_train_value = self.c_train[c1] * self.c_train[c2]
-        else:
-            self.c_train_value = self.c_train[self.c_name][0] #TODO
 
         self.mc_run = mc_run
 
@@ -377,13 +370,10 @@ class Fitter:
         # initialise all paths to None, unless we run at pure quadratic or cross term level
         self.path_lin_1 = self.path_lin_2 = self.path_quad_1 = self.path_quad_2 = None
 
-        # build the paths to the eft event data and initialize the right model
-        if self.quadratic:
-            self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = Classifier(self.network_size, self.c_train_value)
-        else:  # linear
-            self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
-            self.model = Classifier(self.network_size, self.c_train_value)
+        
+        self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
+        self.model = Classifier(self.network_size)
+       
         self.path_dict['eft_weights_path'] = '{eft_coeff}/weights_{mc_run}.pkl.gz'
 
         self.path_dict['sm_weights_path'] = '/weights_{mc_run}.pkl.gz'
@@ -460,6 +450,7 @@ class Fitter:
         # does NOT shuffle order of events, so if ordered when pkls made still ordered)
         df_weights_sm = pd.read_pickle(path_sm_weights)
         df_weights_eft = pd.read_pickle(path_eft_weights)
+
         
         # construct an eft and a sm data set for each value of c in c_values and make a list out of it
         data_eft = EventDataset(df_eft_scaled,
@@ -567,11 +558,15 @@ class Fitter:
             with torch.no_grad():
                 for minibatch in zip(*val_loader):
                     val_loss = torch.zeros(1)
-                    for i, [event, weights, label] in enumerate(minibatch):
+                    for i, [event, weight, label] in enumerate(minibatch):
+                        loss = 0
                         if isinstance(self.model, Classifier):
-                            output = self.model(event.float())
-                            
-                        loss = self.loss_fn(output, label, weights)
+                            for k, c_value in enumerate(self.c_train):
+                                output, nn_lin, nn_quad = self.model(event.float(), c_value)
+                                if i == 1:
+                                    loss += self.loss_fn(output, label, weight, nn_lin, nn_quad)
+                                else:
+                                    loss += self.loss_fn(output, label, weight[:, k].unsqueeze(-1), nn_lin, nn_quad)
                         val_loss += loss
                     assert val_loss.requires_grad is False
 
@@ -582,12 +577,16 @@ class Fitter:
                 train_loss = torch.zeros(1)
                 # loop over all the datasets within the minibatch and compute their contribution to the loss
                 for i, [event, weight, label] in enumerate(minibatch):  # i=0: eft, i=1: sm
+                    loss = 0
                     if isinstance(self.model, Classifier):
-                        output = self.model(event.float())
-
-                    loss = self.loss_fn(output, label, weight)
+                        for k, c_value in enumerate(self.c_train):
+                            output, nn_lin, nn_quad = self.model(event.float(), c_value)
+                            if i == 1:
+                                loss += self.loss_fn(output, label, weight, nn_lin, nn_quad)
+                            else:
+                                loss += self.loss_fn(output, label, weight[:, k].unsqueeze(-1), nn_lin, nn_quad)
                     train_loss += loss
-
+    
                 # perform gradient descent after each minibatch. Move to the next epoch when all minibatches are looped over.
                 optimizer.zero_grad()
                 train_loss.backward()
@@ -643,7 +642,7 @@ class Fitter:
         if isinstance(m, nn.Linear):
             m.reset_parameters()
 
-    def loss_fn(self, outputs, labels, w_e):
+    def loss_fn(self, outputs, labels, w_e, nn_lin, nn_quad):
         """
         Loss function
 
@@ -661,6 +660,12 @@ class Fitter:
         torch.Tensor
             Average loss of the mini-batch
         """
+
+        ratio = (1-outputs) / outputs
+        lag_mp = 5
+        penalty = lag_mp * torch.relu(nn_lin ** 2 - 4 * nn_quad) ** 2
+
+
         if self.loss_type == 'CE':
             # this will be a tensor of shape n_events x n_coeff_values
             loss_per_weight = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
@@ -669,7 +674,7 @@ class Fitter:
             #sys.exit()
 
         elif self.loss_type == 'QC':
-            loss_per_weight = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2
+            loss_per_weight = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + penalty
             loss = torch.sum(loss_per_weight, dim = 1)
 
         # average over all the losses in the batch
