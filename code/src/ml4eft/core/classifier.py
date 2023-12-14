@@ -27,7 +27,7 @@ import joblib
 import sys
 
 #rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
-#rc('text', usetex=True)
+rc('text', usetex=False)
 
 
 class MLP(nn.Module):
@@ -180,18 +180,18 @@ class PreProcessing():
         Loads ``pandas.DataFrame`` into SM and EFT dataframes.
         """
         # sm
+        
 
         df_sm_full = pd.read_pickle(self.path['sm'], compression="infer")
         df_sm_wo_xsec = df_sm_full.iloc[1:, :]
-
+    
         # cross section before cuts
         self.xsec_sm = df_sm_full.iloc[0, 0]
-        self.df_sm = df_sm_wo_xsec.sample(fitter.n_dat)
-
+        #self.df_sm = df_sm_wo_xsec.sample(fitter.n_dat)
+        self.df_sm = df_sm_wo_xsec.iloc[:fitter.n_dat, :]
         # eft
         df_eft_full = pd.read_pickle(self.path['eft'], compression="infer")
         df_eft_wo_xsec = df_eft_full.iloc[1:, :]
-
         # cross section before cuts
         self.xsec_eft = df_eft_full.iloc[0, 0]
         self.df_eft = self.df_sm#df_eft_wo_xsec.sample(fitter.n_dat)
@@ -213,7 +213,6 @@ class PreProcessing():
         df_eft_scaled : pandas.DataFrame
             Rescaled EFT events
         """
-        
         df = pd.concat([self.df_sm, self.df_eft])
         #print(self.df_sm, self.df_eft)
         # fit the scaler transformer to the eft and sm features
@@ -450,7 +449,6 @@ class Fitter:
         # does NOT shuffle order of events, so if ordered when pkls made still ordered)
         df_weights_sm = pd.read_pickle(path_sm_weights)
         df_weights_eft = pd.read_pickle(path_eft_weights)
-
         
         # construct an eft and a sm data set for each value of c in c_values and make a list out of it
         data_eft = EventDataset(df_eft_scaled,
@@ -460,6 +458,7 @@ class Fitter:
                                 n_dat=self.n_dat,
                                 features=self.features,
                                 hypothesis=0)
+       
 
         # TODO: see if this works
         data_sm = EventDataset(df_sm_scaled,
@@ -484,7 +483,7 @@ class Fitter:
         for dataset in data_split:
             data_train.append(dataset[0])
             data_val.append(dataset[1])
-
+        
         return data_train, data_val
 
     def train_classifier(self, data_train, data_val):
@@ -674,7 +673,8 @@ class Fitter:
             #sys.exit()
 
         elif self.loss_type == 'QC':
-            loss_per_weight = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + penalty
+            #loss_per_weight = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + penalty
+            loss_per_weight = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (outputs - 1) ** 2 + penalty
             loss = torch.sum(loss_per_weight, dim = 1)
 
         # average over all the losses in the batch
