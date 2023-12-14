@@ -673,8 +673,7 @@ class Fitter:
             #sys.exit()
 
         elif self.loss_type == 'QC':
-            #loss_per_weight = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + penalty
-            loss_per_weight = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (outputs - 1) ** 2 + penalty
+            loss_per_weight = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + penalty
             loss = torch.sum(loss_per_weight, dim = 1)
 
         # average over all the losses in the batch
