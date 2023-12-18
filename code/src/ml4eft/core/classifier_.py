@@ -182,25 +182,19 @@ class PreProcessing():
         # sm
         
 
-        df_sm_full = (pd.read_pickle(self.path['sm'], compression="infer"))
+        df_sm_full = pd.read_pickle(self.path['sm'], compression="infer")
         df_sm_wo_xsec = df_sm_full.iloc[1:, :]
     
         # cross section before cuts
         self.xsec_sm = df_sm_full.iloc[0, 0]
         #self.df_sm = df_sm_wo_xsec.sample(fitter.n_dat)
-        self.df_sm = pd.DataFrame()
-        self.df_sm['m_tt_0'] = df_sm_wo_xsec.iloc[:fitter.n_dat, :]['m_tt']
-        self.df_sm['m_tt_1'] = df_sm_wo_xsec.iloc[:fitter.n_dat, :]['m_tt']
-        #self.df_sm = df_sm_wo_xsec.iloc[:fitter.n_dat]
+        self.df_sm = df_sm_wo_xsec.iloc[:fitter.n_dat, :]
         # eft
-        # +5
-        
-        df_eft_full = pd.read_pickle('/data/theorie/wgautier/wgautier/followup/sample_data/non_reweighted/tt_ctGRe/events_right.pkl.gz', compression="infer")
+        df_eft_full = pd.read_pickle(self.path['eft'], compression="infer")
         df_eft_wo_xsec = df_eft_full.iloc[1:, :]
         # cross section before cuts
         self.xsec_eft = df_eft_full.iloc[0, 0]
-        self.df_eft = df_eft_full.iloc[:fitter.n_dat, :].reset_index(drop=True)
-        #df_eft_wo_xsec.sample(fitter.n_dat)
+        self.df_eft = self.df_sm#df_eft_wo_xsec.sample(fitter.n_dat)
 
     def feature_scaling(self, fitter, scaler_path):
         """
@@ -219,24 +213,19 @@ class PreProcessing():
         df_eft_scaled : pandas.DataFrame
             Rescaled EFT events
         """
-        #import pdb; pdb.set_trace()
-        df = pd.concat([self.df_sm, self.df_eft], axis=0)        #print(self.df_sm, self.df_eft)
+        df = pd.concat([self.df_sm, self.df_eft])
+        #print(self.df_sm, self.df_eft)
         # fit the scaler transformer to the eft and sm features
-        #self.scaler.fit(df[fitter.features])
-        self.scaler.fit(df)
+        self.scaler.fit(df[fitter.features])
 
         # rescale the sm and eft data
-        #features_sm_scaled = self.scaler.transform(self.df_sm[fitter.features])
-        #features_eft_scaled = self.scaler.transform(self.df_eft[fitter.features])
-        features_sm_scaled = self.scaler.transform(self.df_sm)
-        features_eft_scaled = self.scaler.transform(self.df_eft)
+        features_sm_scaled = self.scaler.transform(self.df_sm[fitter.features])
+        features_eft_scaled = self.scaler.transform(self.df_eft[fitter.features])
 
 
         # convert transformed features to dataframe
-        #df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=fitter.features)
-        #df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=fitter.features)
-        df_sm_scaled = pd.DataFrame(features_sm_scaled)
-        df_eft_scaled = pd.DataFrame(features_eft_scaled)
+        df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=fitter.features)
+        df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=fitter.features)
         #print(df_sm_scaled, df_eft_scaled)
         #sys.exit()
 
@@ -297,8 +286,7 @@ class EventDataset(data.Dataset):
 
         #self.weights = torch.tensor(self.df['weight'].values).unsqueeze(-1)
         self.weights = torch.tensor(self.df_weights.values)
-        #self.events = torch.tensor(self.df[self.features].values)
-        self.events = torch.tensor(self.df.values)
+        self.events = torch.tensor(self.df[self.features].values)
         self.labels = torch.ones(n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(n_dat).unsqueeze(-1)
 
         logging.info("Dataset loaded from {}".format(path))
@@ -433,7 +421,7 @@ class Fitter:
 
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
-        path_sm = os.path.join(self.event_data_path, self.process_id + '_sm/events_{}.pkl.gz'.format(self.mc_run))
+        #path_sm = os.path.join(self.event_data_path, self.process_id + '_sm/events_{}.pkl.gz'.format(self.mc_run))
         path_eft = os.path.join(self.event_data_path,
                                 self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.c_name,
                                                                                                mc_run=self.mc_run))
@@ -446,7 +434,7 @@ class Fitter:
                                                                                                mc_run=self.mc_run))
 
 
-        path_dict = {'sm': path_sm, 'eft': path_eft}
+        path_dict = {'sm': path_eft, 'eft': path_eft}
         #path_dict = {'eft': path_eft}
 
         # preprocessing of the data
@@ -459,16 +447,8 @@ class Fitter:
 
         # create df containing all weight values (possible because feature_scaling
         # does NOT shuffle order of events, so if ordered when pkls made still ordered)
-        df_weights_sm = pd.DataFrame()
-        df_weights_sm['weight'] = (pd.read_pickle(path_sm))['weight']
-
-        df_wt_0 = (pd.read_pickle('/data/theorie/jthoeve/ML4EFT/training_data/ml4eft20/events_wolf/ctg/point_0/events_0.pkl.gz'))['weight']
-        df_wt_1 = (pd.read_pickle('/data/theorie/jthoeve/ML4EFT/training_data/ml4eft20/events_wolf/ctg/point_1/events_0.pkl.gz'))['weight']
-        df_weights_eft = pd.DataFrame()
-        df_weights_eft['weight_0'] = df_wt_0
-        df_weights_eft['weight_1'] = df_wt_1
-        #df_weights_sm = pd.read_pickle(path_sm_weights)
-        #df_weights_eft = pd.read_pickle(path_eft_weights)
+        df_weights_sm = pd.read_pickle(path_sm_weights)
+        df_weights_eft = pd.read_pickle(path_eft_weights)
         
         # construct an eft and a sm data set for each value of c in c_values and make a list out of it
         data_eft = EventDataset(df_eft_scaled,
@@ -581,9 +561,7 @@ class Fitter:
                         loss = 0
                         if isinstance(self.model, Classifier):
                             for k, c_value in enumerate(self.c_train):
-                                #import pdb;pdb.set_trace()
-                                output, nn_lin, nn_quad = self.model(event[:, k].unsqueeze(-1).float(), c_value)
-                                #output, nn_lin, nn_quad = self.model(label.float(), c_value)
+                                output, nn_lin, nn_quad = self.model(event.float(), c_value)
                                 if i == 1:
                                     loss += self.loss_fn(output, label, weight, nn_lin, nn_quad)
                                 else:
@@ -601,7 +579,7 @@ class Fitter:
                     loss = 0
                     if isinstance(self.model, Classifier):
                         for k, c_value in enumerate(self.c_train):
-                            output, nn_lin, nn_quad = self.model(event[:, k].unsqueeze(-1).float(), c_value)
+                            output, nn_lin, nn_quad = self.model(event.float(), c_value)
                             if i == 1:
                                 loss += self.loss_fn(output, label, weight, nn_lin, nn_quad)
                             else:

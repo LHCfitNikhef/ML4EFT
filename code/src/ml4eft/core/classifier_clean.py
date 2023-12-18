@@ -2,7 +2,6 @@
 
 """
 
-# !/usr/bin/env python
 # coding: utf-8
 import logging
 import torch
@@ -26,7 +25,6 @@ from sklearn.preprocessing import StandardScaler, RobustScaler, QuantileTransfor
 import joblib
 import sys
 
-#rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 rc('text', usetex=False)
 
 
@@ -42,7 +40,7 @@ class MLP(nn.Module):
         ----------
         architecture: array_like
             ``(N, ) ndarray`` that specifies the MLP's architecture as the number of input nodes followed
-            by the number of hidden nodes in each consecutive hidden layer. The last entry must corespond
+            by the number of hidden nodes in each consecutive hidden layer. The l  ast entry must corespond
             to the number of output units.
         """
         super().__init__()
@@ -178,29 +176,22 @@ class PreProcessing():
     def load_data(self, fitter):
         """
         Loads ``pandas.DataFrame`` into SM and EFT dataframes.
-        """
-        # sm
-        
-
-        df_sm_full = (pd.read_pickle(self.path['sm'], compression="infer"))
+        """        
+        # standard model
+        df_sm_full = pd.read_pickle(self.path['sm'], compression="infer")
         df_sm_wo_xsec = df_sm_full.iloc[1:, :]
-    
+
         # cross section before cuts
         self.xsec_sm = df_sm_full.iloc[0, 0]
-        #self.df_sm = df_sm_wo_xsec.sample(fitter.n_dat)
-        self.df_sm = pd.DataFrame()
-        self.df_sm['m_tt_0'] = df_sm_wo_xsec.iloc[:fitter.n_dat, :]['m_tt']
-        self.df_sm['m_tt_1'] = df_sm_wo_xsec.iloc[:fitter.n_dat, :]['m_tt']
-        #self.df_sm = df_sm_wo_xsec.iloc[:fitter.n_dat]
-        # eft
-        # +5
+        self.df_sm = df_sm_wo_xsec.iloc[:fitter.n_dat, :]
         
-        df_eft_full = pd.read_pickle('/data/theorie/wgautier/wgautier/followup/sample_data/non_reweighted/tt_ctGRe/events_right.pkl.gz', compression="infer")
+        # eft
+        df_eft_full = pd.read_pickle(self.path['eft'], compression="infer")
         df_eft_wo_xsec = df_eft_full.iloc[1:, :]
+        
         # cross section before cuts
         self.xsec_eft = df_eft_full.iloc[0, 0]
-        self.df_eft = df_eft_full.iloc[:fitter.n_dat, :].reset_index(drop=True)
-        #df_eft_wo_xsec.sample(fitter.n_dat)
+        self.df_eft = self.df_sm
 
     def feature_scaling(self, fitter, scaler_path):
         """
@@ -219,26 +210,18 @@ class PreProcessing():
         df_eft_scaled : pandas.DataFrame
             Rescaled EFT events
         """
-        #import pdb; pdb.set_trace()
-        df = pd.concat([self.df_sm, self.df_eft], axis=0)        #print(self.df_sm, self.df_eft)
+        df = pd.concat([self.df_sm, self.df_eft])
         # fit the scaler transformer to the eft and sm features
-        #self.scaler.fit(df[fitter.features])
-        self.scaler.fit(df)
+        self.scaler.fit(df[fitter.features])
 
         # rescale the sm and eft data
-        #features_sm_scaled = self.scaler.transform(self.df_sm[fitter.features])
-        #features_eft_scaled = self.scaler.transform(self.df_eft[fitter.features])
-        features_sm_scaled = self.scaler.transform(self.df_sm)
-        features_eft_scaled = self.scaler.transform(self.df_eft)
+        features_sm_scaled = self.scaler.transform(self.df_sm[fitter.features])
+        features_eft_scaled = self.scaler.transform(self.df_eft[fitter.features])
 
 
         # convert transformed features to dataframe
-        #df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=fitter.features)
-        #df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=fitter.features)
-        df_sm_scaled = pd.DataFrame(features_sm_scaled)
-        df_eft_scaled = pd.DataFrame(features_eft_scaled)
-        #print(df_sm_scaled, df_eft_scaled)
-        #sys.exit()
+        df_sm_scaled = pd.DataFrame(features_sm_scaled, columns=fitter.features)
+        df_eft_scaled = pd.DataFrame(features_eft_scaled, columns=fitter.features)
 
         # save the scaler
         joblib.dump(self.scaler, scaler_path)
@@ -295,10 +278,8 @@ class EventDataset(data.Dataset):
         """
         n_dat = len(self.df)
 
-        #self.weights = torch.tensor(self.df['weight'].values).unsqueeze(-1)
         self.weights = torch.tensor(self.df_weights.values)
-        #self.events = torch.tensor(self.df[self.features].values)
-        self.events = torch.tensor(self.df.values)
+        self.events = torch.tensor(self.df[self.features].values)
         self.labels = torch.ones(n_dat).unsqueeze(-1) if self.hypothesis else torch.zeros(n_dat).unsqueeze(-1)
 
         logging.info("Dataset loaded from {}".format(path))
@@ -380,7 +361,6 @@ class Fitter:
 
         # initialise all paths to None, unless we run at pure quadratic or cross term level
         self.path_lin_1 = self.path_lin_2 = self.path_quad_1 = self.path_quad_2 = None
-
         
         self.path_dict['eft_data_path'] = '{eft_coeff}/events_{mc_run}.pkl.gz'
         self.model = Classifier(self.network_size)
@@ -433,7 +413,6 @@ class Fitter:
 
         # event files are stored at event_data_path/sm, event_data_path/lin, event_data_path/quad
         # or event_data_path/cross for sm, linear, quadratic (single coefficient) and cross terms respectively
-        path_sm = os.path.join(self.event_data_path, self.process_id + '_sm/events_{}.pkl.gz'.format(self.mc_run))
         path_eft = os.path.join(self.event_data_path,
                                 self.process_id + '_' + self.path_dict['eft_data_path'].format(eft_coeff=self.c_name,
                                                                                                mc_run=self.mc_run))
@@ -446,8 +425,7 @@ class Fitter:
                                                                                                mc_run=self.mc_run))
 
 
-        path_dict = {'sm': path_sm, 'eft': path_eft}
-        #path_dict = {'eft': path_eft}
+        path_dict = {'sm': path_eft, 'eft': path_eft}
 
         # preprocessing of the data
         preproc = PreProcessing(self, path_dict)
@@ -455,20 +433,11 @@ class Fitter:
         # save the scaler
         scaler_path = os.path.join(self.path_dict['mc_path'], 'scaler.gz')
         df_sm_scaled, df_eft_scaled = preproc.feature_scaling(self, scaler_path)
-        #df_eft_scaled = preproc.feature_scaling(self, scaler_path)
 
         # create df containing all weight values (possible because feature_scaling
         # does NOT shuffle order of events, so if ordered when pkls made still ordered)
-        df_weights_sm = pd.DataFrame()
-        df_weights_sm['weight'] = (pd.read_pickle(path_sm))['weight']
-
-        df_wt_0 = (pd.read_pickle('/data/theorie/jthoeve/ML4EFT/training_data/ml4eft20/events_wolf/ctg/point_0/events_0.pkl.gz'))['weight']
-        df_wt_1 = (pd.read_pickle('/data/theorie/jthoeve/ML4EFT/training_data/ml4eft20/events_wolf/ctg/point_1/events_0.pkl.gz'))['weight']
-        df_weights_eft = pd.DataFrame()
-        df_weights_eft['weight_0'] = df_wt_0
-        df_weights_eft['weight_1'] = df_wt_1
-        #df_weights_sm = pd.read_pickle(path_sm_weights)
-        #df_weights_eft = pd.read_pickle(path_eft_weights)
+        df_weights_sm = pd.read_pickle(path_sm_weights)
+        df_weights_eft = pd.read_pickle(path_eft_weights)
         
         # construct an eft and a sm data set for each value of c in c_values and make a list out of it
         data_eft = EventDataset(df_eft_scaled,
@@ -479,8 +448,6 @@ class Fitter:
                                 features=self.features,
                                 hypothesis=0)
        
-
-        # TODO: see if this works
         data_sm = EventDataset(df_sm_scaled,
                                df_weights_sm, 
                                xsec=preproc.xsec_sm,
@@ -569,8 +536,6 @@ class Fitter:
             loss_train, loss_val = 0.0, 0.0
 
             # We save the model parameters at the start of each epoch
-            # TODO: to me all saved epochs on local device not optimal,
-            # disabled for now
             torch.save(self.model.state_dict(), path + 'trained_nn_{}.pt'.format(epoch))
 
             # compute validation loss
@@ -581,9 +546,7 @@ class Fitter:
                         loss = 0
                         if isinstance(self.model, Classifier):
                             for k, c_value in enumerate(self.c_train):
-                                #import pdb;pdb.set_trace()
-                                output, nn_lin, nn_quad = self.model(event[:, k].unsqueeze(-1).float(), c_value)
-                                #output, nn_lin, nn_quad = self.model(label.float(), c_value)
+                                output, nn_lin, nn_quad = self.model(event.float(), c_value)
                                 if i == 1:
                                     loss += self.loss_fn(output, label, weight, nn_lin, nn_quad)
                                 else:
@@ -601,7 +564,7 @@ class Fitter:
                     loss = 0
                     if isinstance(self.model, Classifier):
                         for k, c_value in enumerate(self.c_train):
-                            output, nn_lin, nn_quad = self.model(event[:, k].unsqueeze(-1).float(), c_value)
+                            output, nn_lin, nn_quad = self.model(event.float(), c_value)
                             if i == 1:
                                 loss += self.loss_fn(output, label, weight, nn_lin, nn_quad)
                             else:
@@ -686,13 +649,10 @@ class Fitter:
         lag_mp = 5
         penalty = lag_mp * torch.relu(nn_lin ** 2 - 4 * nn_quad) ** 2
 
-
         if self.loss_type == 'CE':
             # this will be a tensor of shape n_events x n_coeff_values
-            loss_per_weight = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs)
+            loss_per_weight = - (1 - labels) * w_e * torch.log(1 - outputs) - labels * w_e * torch.log(outputs) + penalty
             loss = torch.sum(loss_per_weight, dim = 1)
-            #print(torch.sum(loss_per_weight, dim = 1))
-            #sys.exit()
 
         elif self.loss_type == 'QC':
             loss_per_weight = (1 - labels) * w_e * outputs ** 2 + labels * w_e * (1 - outputs) ** 2 + penalty
